@@ -305,7 +305,7 @@ type ConnectionSender struct {
 
 	StructSelector []string     `json:"selector,omitempty"`
 	Union          *UnionSender `json:"union,omitempty"`
-	Meta           core.Meta    `json:"meta,omitempty"`
+	Meta           core.Meta    `json:"meta"`
 }
 
 // UnionSender represents union in connection sender.

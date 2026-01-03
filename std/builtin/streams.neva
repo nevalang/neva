@@ -102,7 +102,7 @@ pub def For<T>(data stream<T>) (res stream<T>, err error) {
     first First<T> // to check if current msg is the first
     lock1 Lock<stream<T>> // to lock current msg before sending to handler
     lock2 Lock<stream<T>> // to lock current msg before sending downstream
-    handler ISideEffector<T> // to process current msg
+    handler ISideEffector<T>? // to process current msg
     pass1 Pass // to unlock current msg to send to handler
     pass2 Pass // to unlock current msg to send downstream
     ---
@@ -115,7 +115,6 @@ pub def For<T>(data stream<T>) (res stream<T>, err error) {
     pass2 -> lock2:sig
 
     handler:res -> [pass1, pass2]
-    handler:err -> :err
 }
 
 pub interface ISideEffector<T>(T) (res any, err error)

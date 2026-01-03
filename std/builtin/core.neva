@@ -75,18 +75,40 @@ pub def Pass<T>(data T) (res T) {
 // dealing with locks manually. Handler can send error, in that case `Tap` will
 // propagate it up to parent node.
 pub def Tap<T>(data T) (res T, err error) {
-    proxy1 Pass<T>
-    proxy2 Pass<T>
-    lock Lock<T>
     handler ITapHandler<T>
+    race Race<T>
+    del Del
     ---
-    :data -> [lock:data, handler]
-
-    handler:res -> proxy1
-    handler:err -> [proxy2, :err]
-
-    [proxy1, proxy2] -> lock:sig
-    lock -> :res
+    :data -> [race:data, handler]
+    handler:res -> race:case[0] -> :res
+    handler:err -> [race:case[1], :err]
+    race:case[1] -> del
 }
 
 pub interface ITapHandler<T>(T) (res any, err error)
+
+// Enrich ...
+def Enrich<T, Y>(data T) (res EnrichResult, err error) {
+    handler ITapHandler<T>
+    builder Struct<EnrichResult<T, Y>>
+    race Race<T>
+    del Del
+    ---
+    :data -> [race:data, handler]
+    handler:res -> [race:case[0], builder:res]
+    race:case[0] -> builder:data
+    handler:err -> [race:case[1], :err]
+    race:case[1] -> del
+    builder -> :res
+}
+
+// EnrichResult is a structure that holds original input
+// and the result of an enrichment operation.
+type EnrichResult<T, Y> struct {
+    data T
+    res Y
+}
+
+// IEnrichHandler is an interface for enrich handlers.
+interface IEnrichHandler<T, Y>(data T) (res Y, err error)
+
