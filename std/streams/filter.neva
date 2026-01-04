@@ -1,0 +1,24 @@
+// Filter ...
+pub def Filter<T>(data stream<T>) (res stream<T>) {
+    split Split<T>{predicate IPredicate<T>}
+    s2l StreamToList
+    l2s ListToStream
+    ---
+    :data -> split
+    split:then -> s2l -> l2s -> :res
+}
+
+// Split splits a stream into two streams based on a predicate.
+// Notice that it does not modifies stream item indexes and last flag.
+pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
+    cond Cond<stream<T>>
+    predicate IPredicate<T>
+    ---
+    :data -> [cond:data, .data -> predicate]
+    predicate -> cond:if
+    cond:then -> :then
+    cond:else -> :else
+}
+
+// IPredicate ...
+pub interface IPredicate<T>(T) (bool)

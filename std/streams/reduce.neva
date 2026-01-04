@@ -7,22 +7,24 @@ pub interface IReducer<T, Y>(left T, right T) (res Y)
 // It takes an initial value and a stream of data, and produces a single result.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
     reducer IReducer<T, Y>
-    acc Accumulator<Y>
+    acc Accumulate<Y>
     ---
     :init -> acc:init
-    
-    :data -> [
-        .data -> reducer:right,
-        .last -> acc:last
-    ]
-    
+    :data -> [.data -> reducer:right, .last -> acc:last]
     acc:cur -> reducer:left
     reducer -> acc:upd
-
     acc:res -> :res
 }
 
-// Accumulator maintains the current state of the reduction.
+// Accumulate maintains the current state of the reduction.
 // It updates its value with each new input and outputs the final result when last is true.
-#extern(accumulator)
-pub def Accumulator<T>(init T, upd T, last bool) (cur T, res T)
+def Accumulate<T>(init T, upd T, last bool) (cur T, res T) {
+    state State<T>
+    gate Gate<T>
+    ---
+    :init -> state:init
+    :upd  -> state:upd
+    state:res -> [:cur, gate:data]
+    :last   -> gate:if
+    gate:res -> :res
+}
