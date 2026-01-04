@@ -8,7 +8,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    map Map<int, string>{Mapper}
+    map streams.Map<int, string>{Mapper}
     for For<string>{fmt.Println}
     wait streams.Wait
     panic runtime.Panic

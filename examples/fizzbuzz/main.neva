@@ -5,7 +5,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    map Map<int, any>{FizzBuzz}
+    map streams.Map<int, any>{FizzBuzz}
     for For{fmt.Println}
     wait streams.Wait
     panic runtime.Panic
