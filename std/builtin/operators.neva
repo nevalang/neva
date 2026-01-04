@@ -4,19 +4,19 @@
 #extern(not)
 pub def Not(data bool) (res bool)
 
-// Inc increments data by 1 and sends to result. It can be used with Map.
+// Inc increments data by 1 and sends to result. Can be used with streams.Map.
 #extern(int_inc)
 pub def Inc(data int) (res int)
 #extern(float_inc)
 pub def Inc(data float) (res float)
 
-// Dec decrements data by 1 and sends to result. It can be used with Map.
+// Dec decrements data by 1 and sends to result. Can be used with streams.Map.
 #extern(int_dec)
 pub def Dec(data int) (res int)
 #extern(float_dec)
 pub def Dec(data float) (res float)
 
-// Neg negates data and sends to result. It can be used with Map.
+// Neg negates data and sends to result. Can be used with streams.Map.
 #extern(int_neg)
 pub def Neg(data int) (res int)
 #extern(float_neg)

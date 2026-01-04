@@ -1,35 +1,4 @@
-// ArrPortToStream iterates over all array-inport's slots in order
-// and produces a stream of messages.
-#extern(array_port_to_stream)
-pub def ArrPortToStream<T>([port] T) (data stream<T>)
 
-// IPortReducer reduces a stream of messages to one single message.
-// It's expected to send a result message after every processed stream.
-pub interface IPortReducer<T>(stream<T>) (T)
-
-// === Iterators ===
-
-// --- Map ---
-
-// IMapHandler is a dependency for Map.
-pub interface IMapHandler<T, Y>(T) (Y)
-
-// Map maps one stream onto another.
-// Just like For, it does not block the stream. As soon as one item processed,
-// it sends an item downstream and processes the next one.
-// It's can receive next message before previous one is processed,
-// so it must never be used with side-effects.
-pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-    handler IMapHandler<T, Y>
-    wrap Struct<stream<Y>>
-    ---
-    :data -> [
-        .idx -> wrap:idx,
-        .last -> wrap:last,
-        .data -> handler -> wrap:data
-    ]
-    wrap -> :res
-}
 
 // --- For ---
 
