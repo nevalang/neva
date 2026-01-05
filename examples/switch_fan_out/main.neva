@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
     app:stop -> :stop
 }
 
-def Main(start any) (stop any, err error) {
+def App(start any) (stop any, err error) {
     print fmt.Print<any>
     scanln fmt.Scanln
     switch Switch<string>

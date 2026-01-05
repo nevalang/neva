@@ -452,9 +452,17 @@ func (a Analyzer) getResolvedPortType(
 				}
 			}
 		} else {
+			kind := "outports"
+			if isInput {
+				kind = "inports"
+			}
 			return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf("node '%v' has multiple ports - port name must be specified", portAddr.Node),
-				Meta:    &portAddr.Meta,
+				Message: fmt.Sprintf(
+					"node '%v' has multiple %s - port name must be specified",
+					portAddr.Node,
+					kind,
+				),
+				Meta: &portAddr.Meta,
 			}
 		}
 	}

@@ -24,7 +24,7 @@ def Accumulate<T>(init T, upd T, last bool) (cur T, res T) {
     ---
     :init -> state:init
     :upd  -> state:upd
-    state:res -> [:cur, gate:data]
+    state -> [:cur, gate:data]
     :last   -> gate:if
     gate:res -> :res
 }

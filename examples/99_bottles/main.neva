@@ -19,7 +19,7 @@ def Print2Lines(data int) (res any, err error) {
 	dec Dec
 	print_second_line PrintSecondLine?
 	---
-	:data -> print_first_line -> dec -> second -> :res
+	:data -> print_first_line -> dec -> print_second_line -> :res
 }
 
 def PrintFirstLine(data int) (res any, err error) {
