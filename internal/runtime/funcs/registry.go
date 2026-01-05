@@ -21,6 +21,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"match":         matchSelector{},
 		"select":        selector{},
 		"ternary":       ternarySelector{},
+		"race":          race{},
 
 		"eq":   eq{},
 		"ne":   notEq{},
