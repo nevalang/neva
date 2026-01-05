@@ -114,7 +114,7 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
-		false, // we're not inside switch
+		false, // pattern-matching branches are not expected here
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -615,8 +615,8 @@ func (a Analyzer) getResolvedSenderType(
 		// insie pattern matching context, only tag is needed,
 		// so it's expected not to have wrapped data
 		if sender.Union.Data == nil && isPatternSender {
-			// in pattern matching, return the tag's data type
-			return sender, *tagTypeExpr, false, nil
+			// in pattern matching, return the union type for tag-only patterns
+			return sender, resolvedUnionTypeExpr, false, nil
 		}
 
 		// analyze wrapped-sender and get its resolved type
@@ -811,7 +811,7 @@ func (a Analyzer) getNodeOutportType(
 		}
 	}
 
-	return a.getResolvedPortType(
+	resolvedPort, resolvedType, isArray, err := a.getResolvedPortType(
 		nodeIface.iface.IO.Out,
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
@@ -819,6 +819,11 @@ func (a Analyzer) getNodeOutportType(
 		scope.Relocate(nodeIface.location),
 		false,
 	)
+	if err != nil {
+		return src.PortAddr{}, ts.Expr{}, false, err
+	}
+
+	return resolvedPort, resolvedType, isArray, nil
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(

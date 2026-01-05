@@ -128,13 +128,17 @@ func (a Analyzer) analyzeSender(
 			return &sender, &unionTypeExpr, nil
 		}
 
-		// Sometimes union member has type expr but union sender doesn't wrap another sender
-		// This is allowed in pattern matching contexts (like switch cases), but not in other contexts
+		// we now know that it's a NOT tag-only union sender (member has type)
+
+		// Temporary hack:
+		// If union member has type, union sener MUST wrap another sender
+		// except this is pattern-matching contexct (receiver is switch)
+		// TODO: when #959 and #975 issues will be resolved 
+		// this hack needs to be removed/changed
 		if sender.Union.Data == nil {
 			if isPatternSender {
-				// in pattern matching, the switch runtime unwraps the union
-				// so the type that flows to the receiver is the tag's data type
-				return &sender, memberTypeExpr, nil
+				// in pattern matching, treat tag-only unions as the union type itself
+				return &sender, &unionTypeExpr, nil
 			}
 			// if tag has type-expr and it's not pattern matching, then this union-sender must wrap another sender
 			return nil, nil, &compiler.Error{
