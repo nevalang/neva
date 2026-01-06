@@ -13,10 +13,12 @@ func (s state) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 	if err != nil {
 		return nil, err
 	}
+
 	updIn, err := io.In.Single("upd")
 	if err != nil {
 		return nil, err
 	}
+
 	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
