@@ -8,7 +8,8 @@ def Main(start any) (stop any) {
 	println fmt.Println
 	panic runtime.Panic
 	---
-	:start -> scanln -> println:data
+	:start -> scanln
+	scanln:res -> println:data
 	println:res -> :stop
 	[println:err, scanln:err] -> panic
 }
