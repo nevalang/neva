@@ -17,10 +17,10 @@ def App(start any) (stop int, err error) {
 	read_first_int ReadIntFromStdin?
 	read_second_int ReadIntFromStdin?
 	add Add
-	println fmt.Println
+	println fmt.Println?
 	---
 	:start -> read_first_int -> [add:left, read_second_int -> add:right]
-	add -> :stop
+	add -> println -> :stop
 }
 
 def ReadIntFromStdin(sig any) (res int, err error) {
