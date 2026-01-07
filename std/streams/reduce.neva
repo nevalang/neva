@@ -18,13 +18,5 @@ pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 
 // Accumulate maintains the current state of the reduction.
 // It updates its value with each new input and outputs the final result when last is true.
-def Accumulate<T>(init T, upd T, last bool) (cur T, res T) {
-    state State<T>
-    gate Gate<T>
-    ---
-    :init -> state:init
-    :upd  -> state:upd
-    state -> [:cur, gate:data]
-    :last   -> gate:if
-    gate:res -> :res
-}
+#extern(accumulator)
+def Accumulate<T>(init T, upd T, last bool) (cur T, res T)
