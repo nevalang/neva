@@ -13,7 +13,7 @@ def Main(start any) (stop any) {
 	app:err -> panic
 }
 
-def App(start any) (stop int, err error) {
+def App(start any) (stop any, err error) {
 	read_first_int ReadIntFromStdin?
 	read_second_int ReadIntFromStdin?
 	add Add
