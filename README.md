@@ -22,7 +22,21 @@ Instead of writing step-by-step instructions, you create networks of nodes that 
 
 ## Hello, World!
 
-![Textual and visual representations of the hello world example](assets/hello_world.png.png)
+```neva
+import {
+  fmt
+  runtime
+}
+
+def Main(start any) (stop any) {
+	println fmt.Println
+	panic runtime.Panic
+	---
+	:start -> 'Hello, World!' -> println:data
+	println:res -> :stop
+	println:err -> panic
+}
+```
 
 This code imports fmt and runtime to use Println and Panic components, and defines Main with one input (start) and one output (stop). The two nodes are connected: when the program starts, 'hello world' is sent to println; if printing fails, errors go to panic; after printing, the program ends.
 
