@@ -16,7 +16,7 @@ def Main(start any) (stop any) {
 
 def App(start any) (stop any, err error) {
     print fmt.Print<any>
-    scanln fmt.Scanln
+    scanln fmt.Scanln?
     switch Switch<string>
     upper strings.ToUpper
     lower strings.ToLower

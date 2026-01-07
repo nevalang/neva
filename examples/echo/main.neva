@@ -4,9 +4,11 @@ import {
 }
 
 def Main(start any) (stop any) {
-	fmt.Scanln, fmt.Println, runtime.Panic
+	scanln fmt.Scanln
+	println fmt.Println
+	panic runtime.Panic
 	---
 	:start -> scanln -> println:data
 	println:res -> :stop
-	println:err -> panic
+	[println:err, scanln:err] -> panic
 }

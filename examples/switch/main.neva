@@ -16,7 +16,7 @@ def Main(start any) (stop any) {
 
 def App(start any) (stop any, err error) {
     print fmt.Print
-    scanln fmt.Scanln
+    scanln fmt.Scanln?
     upper strings.ToUpper
     lower strings.ToLower
     println fmt.Println<any>?
