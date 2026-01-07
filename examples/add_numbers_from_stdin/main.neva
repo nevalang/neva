@@ -6,24 +6,21 @@ import {
 
 def Main(start any) (stop any) {
 	app App
-	println fmt.Println
 	panic runtime.Panic
 	---
 	:start -> app
-	[app:res, app:err] -> println:data
-	println:res -> :stop
-	println:err -> panic
+	app:stop -> :stop
+	app:err -> panic
 }
 
-def App(sig any) (res int, err error) {
+def App(start any) (stop int, err error) {
 	read_first_int ReadIntFromStdin?
 	read_second_int ReadIntFromStdin?
 	add Add
+	println fmt.Println
 	---
-	:sig -> read_first_int
-	read_first_int:res -> [add:left, read_second_int]
-	read_second_int:res -> add:right
-	add -> :res
+	:start -> read_first_int -> [add:left, read_second_int -> add:right]
+	add -> :stop
 }
 
 def ReadIntFromStdin(sig any) (res int, err error) {

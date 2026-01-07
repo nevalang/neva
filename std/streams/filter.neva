@@ -1,4 +1,6 @@
-// Filter ...
+// Filter filters a stream based on a predicate.
+// It produces a new stream containing only the elements that satisfy the predicate.
+// Note that the resulting stream will have its elements re-indexed to be continuous.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
     split Split<T>{predicate IPredicate<T>}
     s2l StreamToList
@@ -20,5 +22,6 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
     cond:else -> :else
 }
 
-// IPredicate ...
+// IPredicate represents a logic that determines if a value satisfies a condition.
+// It is used by components like Filter and Split to decide how to process stream elements.
 pub interface IPredicate<T>(T) (bool)
