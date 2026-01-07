@@ -155,11 +155,8 @@ TRUE: 'true';
 FALSE: 'false';
 
 // Operators and Punctuation
-PLUS: '+';
 MINUS: '-';
-STAR: '*';
 SLASH: '/';
-PERCENT: '%';
 EQ: '=';
 LT: '<';
 GT: '>';
@@ -171,29 +168,13 @@ LBRACK: '[';
 RBRACK: ']';
 COMMA: ',';
 COLON: ':';
-SEMI: ';';
 DOT: '.';
 QUEST: '?';
-NOT: '!';
-AND: '&';
-OR: '|';
-CARET: '^';
-TILDE: '~';
 DOLLAR: '$';
 AT: '@';
-UNDERSCORE: '_';
 HASH: '#';
 
 // Compound Operators
-PLUS2: '++';
-MINUS2: '--';
-STAR2: '**';
-EQ2: '==';
-NOT_EQ: '!=';
-GTE: '>=';
-LTE: '<=';
-AND2: '&&';
-OR2: '||';
 DCOLON: '::';
 DOT2: '..';
 ARROW: '->';
