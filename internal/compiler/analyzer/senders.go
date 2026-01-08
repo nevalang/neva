@@ -17,7 +17,7 @@ func (a Analyzer) analyzeSenders(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
-	isPatternSenders bool,
+	isPatternMatchingContext bool,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -31,7 +31,7 @@ func (a Analyzer) analyzeSenders(
 			nodesIfaces,
 			nodesUsage,
 			prevChainLink,
-			isPatternSenders,
+			isPatternMatchingContext,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
