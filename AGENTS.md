@@ -19,6 +19,7 @@ Follow these instructions.
 - **Common patterns** discovered (e.g., typical error causes, debugging approaches).
 - **Architecture insights** gained (e.g., how compiler phases interact).
 - **Gotchas** encountered (e.g., edge cases, non-obvious behaviors).
+- **Proactive Refactoring**: Identify potential refactoring needs. Only if something is clearly "off" (e.g., avoidable indirect recursion, duplicated logic, O(N^2) complexity in chains). This is about fixing clarity/architectural mistakes, not perfectionism, if something is not perfect but is clear "enough" it's ok to keep it as is.
 
 **Balance**: Keep it concise. Every line must earn its place. Remove outdated info. Split into workflows/rules if sections grow large.
 

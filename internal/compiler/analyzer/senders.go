@@ -61,6 +61,8 @@ func (a Analyzer) analyzeSender(
 	prevChainLink []src.ConnectionSender,
 	isPatternSender bool,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
+	// Some top level validation
+
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
 		sender.Range == nil &&
@@ -133,7 +135,7 @@ func (a Analyzer) analyzeSender(
 		// Temporary hack:
 		// If union member has type, union sener MUST wrap another sender
 		// except this is pattern-matching contexct (receiver is switch)
-		// TODO: when #959 and #975 issues will be resolved 
+		// TODO: when #959 and #975 issues will be resolved
 		// this hack needs to be removed/changed
 		if sender.Union.Data == nil {
 			if isPatternSender {
