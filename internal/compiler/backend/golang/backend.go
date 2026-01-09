@@ -22,6 +22,7 @@ import (
 
 type Backend struct {
 	externalRuntimePath string
+	debugValidation     bool
 }
 
 var (
@@ -61,6 +62,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 		FuncCalls:       funcCalls,
 		Trace:           trace,
 		TraceComment:    prog.Comment,
+		DebugValidation: b.debugValidation,
 	}
 
 	var buf bytes.Buffer
@@ -75,6 +77,9 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 
 	if err := b.insertRuntimeFiles(files, nil); err != nil {
 		return err
+	}
+	if b.debugValidation {
+		files["runtime/debug_validation.go"] = []byte(debugValidationGoTemplate)
 	}
 
 	return pkgos.SaveFilesToDir(dst, files)
@@ -536,8 +541,9 @@ func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
 	return handleSpecialChars(s)
 }
 
-func NewBackend(runtimeImportPath string) Backend {
+func NewBackend(runtimeImportPath string, debugValidation bool) Backend {
 	return Backend{
 		externalRuntimePath: runtimeImportPath,
+		debugValidation:     debugValidation,
 	}
 }

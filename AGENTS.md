@@ -58,6 +58,7 @@ The standard library provides components for all programs. Some are implemented 
 
 - **IR**: `neva run --target ir <pkg>`
 - **Trace**: `neva run --emit-trace <pkg>`
+- **Runtime validation**: `neva run --debug-runtime-validation <pkg>` or `neva build --debug-runtime-validation <pkg>` (compiler-only check that prints unconnected senders/receivers to validate runtime wiring; intended for language developers inspecting compiler output)
 
 **Debug the CLI/Compiler**:
 
