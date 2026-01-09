@@ -77,7 +77,7 @@ listLit: LBRACK NEWLINE* listItems? RBRACK;
 listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;
 structLit: LBRACE NEWLINE* structValueFields? RBRACE;
-structValueFields: structValueField (COMMA NEWLINE* structValueField)*;
+structValueFields: structValueField (COMMA NEWLINE* structValueField)* (COMMA NEWLINE*)?;
 structValueField: IDENTIFIER COLON compositeItem NEWLINE*;
 
 // Components

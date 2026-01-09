@@ -930,6 +930,19 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 	}
 }
 
+func TestParser_ParseFile_StructLiteralTrailingComma(t *testing.T) {
+	text := `
+		const user User = { name: 'Ada', }
+	`
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(text))
+	require.Nil(t, err)
+
+	fields := got.Entities["user"].Const.Value.Message.DictOrStruct
+	require.Equal(t, "Ada", *fields["name"].Message.Str)
+}
+
 func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
 	text := []byte(`
 		#extern(v1)
