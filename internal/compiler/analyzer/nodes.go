@@ -15,6 +15,7 @@ type foundInterface struct {
 }
 
 func (a Analyzer) analyzeNodes(
+	parentComponentName string,
 	iface src.Interface, // resolved interface of the component that contains the nodes
 	nodes map[string]src.Node, // nodes to analyze
 	net []src.Connection, // network of the component that contains the nodes
@@ -37,6 +38,7 @@ func (a Analyzer) analyzeNodes(
 		analyzedNode, nodeInterface, err := a.analyzeNode(
 			nodeName,
 			node,
+			parentComponentName,
 			scope,
 			iface,
 			nodes,
@@ -58,12 +60,24 @@ func (a Analyzer) analyzeNodes(
 func (a Analyzer) analyzeNode(
 	name string, // name of the node
 	node src.Node, // node to analyze
+	parentComponentName string,
 	scope src.Scope, // scope of the component that contains the node
 	iface src.Interface, // interface of the component that contains the node
 	nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
 ) (src.Node, foundInterface, *compiler.Error) {
 	parentTypeParams := iface.TypeParams
+
+	if node.EntityRef.Pkg == "" && node.EntityRef.Name == parentComponentName {
+		return src.Node{}, foundInterface{}, &compiler.Error{
+			Message: fmt.Sprintf(
+				"Recursive reference to component %q is not allowed. If you meant the builtin component, explicitly import the builtin package and use builtin.%s.",
+				parentComponentName,
+				parentComponentName,
+			),
+			Meta: &node.Meta,
+		}
+	}
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -218,6 +232,7 @@ func (a Analyzer) analyzeNode(
 		resolvedDep, _, err := a.analyzeNode(
 			uniqueName, // use a unique name that won't be found in the network
 			depNode,
+			parentComponentName,
 			scope,
 			iface,
 			nodes,
