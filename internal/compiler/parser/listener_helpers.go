@@ -1478,6 +1478,13 @@ func (s *treeShapeListener) parseChainedConnExpr(
 		return src.ConnectionReceiver{}, err
 	}
 
+	if parsedConn.Meta.Start.Line == 0 && parsedConn.Meta.Start.Column == 0 {
+		parsedConn.Meta = connMeta
+		if parsedConn.Normal != nil {
+			parsedConn.Normal.Meta = connMeta
+		}
+	}
+
 	return src.ConnectionReceiver{
 		ChainedConnection: &parsedConn,
 		Meta:              connMeta,

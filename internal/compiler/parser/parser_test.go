@@ -162,6 +162,9 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	chainReceiver := chain.Receivers[0].PortAddr
 	require.Equal(t, "out", chainReceiver.Node)
 	require.Equal(t, "bar", chainReceiver.Port)
+
+	require.Greater(t, chain.Meta.Start.Line, 0)
+	require.Greater(t, chain.Meta.Stop.Line, 0)
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
