@@ -1,0 +1,18 @@
+import {
+    fmt
+    os
+    os/dotenv
+    runtime
+}
+
+def Main(start any) (stop any) {
+    load dotenv.Load
+    environ os.Environ
+    println fmt.Println<list<string>>
+    panic runtime.Panic
+    ---
+    :start -> load
+    load:res -> environ -> println
+    println:res -> :stop
+    [load:err, println:err] -> panic
+}
