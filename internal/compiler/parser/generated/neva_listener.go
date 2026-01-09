@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -24,6 +24,9 @@ type nevaListener interface {
 
 	// EnterImportStmt is called when entering the importStmt production.
 	EnterImportStmt(c *ImportStmtContext)
+
+	// EnterImportBlockItem is called when entering the importBlockItem production.
+	EnterImportBlockItem(c *ImportBlockItemContext)
 
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
@@ -291,6 +294,9 @@ type nevaListener interface {
 
 	// ExitImportStmt is called when exiting the importStmt production.
 	ExitImportStmt(c *ImportStmtContext)
+
+	// ExitImportBlockItem is called when exiting the importBlockItem production.
+	ExitImportBlockItem(c *ImportBlockItemContext)
 
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)
