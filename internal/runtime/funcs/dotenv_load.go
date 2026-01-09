@@ -13,10 +13,16 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type dotenvLoad struct{}
+type dotenvLoadFrom struct {
+	override bool
+}
 
-func (dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	filenameIn, err := rio.In.Single("filename")
+type dotenvLoad struct {
+	override bool
+}
+
+func (d dotenvLoadFrom) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	filenameIn, err := rio.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
@@ -43,48 +49,80 @@ func (dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				filename = ".env"
 			}
 
-			values, err := loadDotenvFile(filename)
-			if err != nil {
+			if err := loadDotenvFile(filename, d.override); err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 				continue
 			}
 
-			dict := make(map[string]runtime.Msg, len(values))
-			for key, value := range values {
-				dict[key] = runtime.NewStringMsg(value)
-			}
-
-			if !resOut.Send(ctx, runtime.NewDictMsg(dict)) {
+			if !resOut.Send(ctx, emptyStruct()) {
 				return
 			}
 		}
 	}, nil
 }
 
-func loadDotenvFile(path string) (map[string]string, error) {
-	file, err := os.Open(path)
+func (d dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		return nil, err
+	}
+
+	resOut, err := rio.Out.Single("res")
+	if err != nil {
+		return nil, err
+	}
+
+	errOut, err := rio.Out.Single("err")
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) {
+		for {
+			if _, ok := sigIn.Receive(ctx); !ok {
+				return
+			}
+
+			if err := loadDotenvFile(".env", d.override); err != nil {
+				if !errOut.Send(ctx, errFromErr(err)) {
+					return
+				}
+				continue
+			}
+
+			if !resOut.Send(ctx, emptyStruct()) {
+				return
+			}
+		}
+	}, nil
+}
+
+func loadDotenvFile(path string, override bool) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
 	}
 	defer file.Close()
 
-	values, err := parseDotenv(file)
+	parsedDotenvValues, err := parseDotenv(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	for key, value := range values {
-		if _, exists := os.LookupEnv(key); exists {
-			continue
+	for key, value := range parsedDotenvValues {
+		if !override {
+			if _, exists := os.LookupEnv(key); exists {
+				continue
+			}
 		}
 		if err := os.Setenv(key, value); err != nil {
-			return nil, fmt.Errorf("set %q: %w", key, err)
+			return fmt.Errorf("set %q: %w", key, err)
 		}
 	}
 
-	return values, nil
+	return nil
 }
 
 func parseDotenv(r io.Reader) (map[string]string, error) {
