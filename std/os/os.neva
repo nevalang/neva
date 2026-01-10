@@ -1,10 +1,9 @@
 #extern(args)
 pub def Args(sig any) (data list<string>)
 
-// LoadEnv loads environment variables from a dotenv file.
-//
-// If `filename` is empty, `.env` from the current working directory is used.
-// Already defined environment variables are left untouched. The parsed values
-// are returned as a dictionary.
-#extern(dotenv_load)
-pub def LoadEnv(filename string) (values dict<string>, err error)
+// Environ retrieves the current process environment variables in KEY=VALUE
+// form. It returns a list of strings (not a stream) because the runtime
+// function produces a full list at once. If you need only specific values,
+// filter the returned list in your flow.
+#extern(os_environ)
+pub def Environ(sig any) (res list<string>)

@@ -6,6 +6,7 @@ import (
 )
 
 func (a Analyzer) analyzeComponent(
+	componentName string,
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
@@ -42,6 +43,7 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
+		componentName,
 		resolvedIface,
 		component.Nodes,
 		component.Net,

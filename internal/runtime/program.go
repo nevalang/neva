@@ -237,7 +237,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 		if len(buf) > 0 && i >= len(a.chans) {
 			break
 		}
-		
+
 		for slotIdx, ch := range a.chans {
 			select {
 			default:

@@ -6,6 +6,7 @@ type templateData struct {
 	FuncCalls       []templateFuncCall
 	Trace           bool
 	TraceComment    string
+	DebugValidation bool
 }
 
 type templateFuncCall struct {
@@ -122,9 +123,131 @@ func main() {
         FuncCalls: funcCalls,
     }
     
+    {{- if .DebugValidation }}
+    runtime.DebugValidation(rprog)
+    {{- end }}
+
     if err := runtime.Run(context.Background(), rprog, funcs.NewRegistry()); err != nil {
 		fmt.Fprintln(os.Stderr, "runtime error:", err.Error())
 		os.Exit(1)
+	}
+}
+
+`
+
+var debugValidationGoTemplate = `package runtime
+
+import "fmt"
+
+// DebugValidation verifies that the program graph is fully connected.
+// It is intended for language developers debugging the compiler output.
+func DebugValidation(prog Program) {
+	type info struct {
+		PortSlotAddr
+		FuncRef string
+		Chan    any
+	}
+
+	receivers := map[string]info{}
+	senders := map[string]info{}
+
+	for _, call := range prog.FuncCalls {
+		for _, inport := range call.IO.In.ports {
+			if inport.single != nil {
+				k := fmt.Sprint(inport.single.ch)
+				receivers[k] = info{
+					PortSlotAddr: PortSlotAddr{PortAddr: inport.single.addr},
+					FuncRef:      call.Ref,
+					Chan:         inport.single.ch,
+				}
+			} else if inport.array != nil {
+				for i, ch := range inport.array.chans {
+					k := fmt.Sprint(ch)
+					idx := uint8(i)
+					receivers[k] = info{
+						PortSlotAddr: PortSlotAddr{PortAddr: inport.array.addr, Index: &idx},
+						FuncRef:      call.Ref,
+						Chan:         ch,
+					}
+				}
+			} else {
+				panic("empty func call!")
+			}
+		}
+
+		for _, outport := range call.IO.Out.ports {
+			if outport.single != nil {
+				k := fmt.Sprint(outport.single.ch)
+				senders[k] = info{
+					PortSlotAddr: PortSlotAddr{PortAddr: outport.single.addr},
+					FuncRef:      call.Ref,
+					Chan:         outport.single.ch,
+				}
+			} else if outport.array != nil {
+				for i, ch := range outport.array.slots {
+					k := fmt.Sprint(ch)
+					idx := uint8(i)
+					senders[k] = info{
+						PortSlotAddr: PortSlotAddr{PortAddr: outport.array.addr, Index: &idx},
+						FuncRef:      call.Ref,
+						Chan:         ch,
+					}
+				}
+			} else {
+				panic("empty func call!")
+			}
+		}
+	}
+
+	senders[fmt.Sprint(prog.Start.ch)] = info{
+		PortSlotAddr: PortSlotAddr{PortAddr: PortAddr{Path: "prog", Port: "Start"}},
+		FuncRef:      "Program",
+		Chan:         prog.Start.ch,
+	}
+
+	receivers[fmt.Sprint(prog.Stop.ch)] = info{
+		PortSlotAddr: PortSlotAddr{PortAddr: PortAddr{Path: "prog", Port: "Stop"}},
+		FuncRef:      "Program",
+		Chan:         prog.Stop.ch,
+	}
+
+	if len(senders) != len(receivers) {
+		fmt.Printf(
+			"[DEBUG] ===\nWARNING: len(senders)!=len(receivers), senders=%d, receivers=%d\n===\n\n",
+			len(senders),
+			len(receivers),
+		)
+	}
+
+	formatSlotIndex := func(idx *uint8) string {
+		if idx != nil {
+			return fmt.Sprintf("[%d]", *idx)
+		}
+		return ""
+	}
+
+	for senderChanString, sInfo := range senders {
+		if _, ok := receivers[senderChanString]; !ok {
+			fmt.Printf(
+				"[DEBUG] Unconnected Sender: %v | %v:%v%s -> ???\n",
+				senderChanString,
+				sInfo.PortSlotAddr.Path,
+				sInfo.PortSlotAddr.Port,
+				formatSlotIndex(sInfo.PortSlotAddr.Index),
+			)
+		}
+	}
+
+	for rChStr, rInfo := range receivers {
+		if _, ok := senders[rChStr]; !ok {
+			fmt.Printf(
+				"[DEBUG] Unconnected Receiver: %v | ??? -> %v:%v%s\n",
+				rChStr,
+				rInfo.PortSlotAddr.Path,
+				rInfo.PortSlotAddr.Port,
+				formatSlotIndex(rInfo.PortSlotAddr.Index),
+			)
+		}
 	}
 }
 `

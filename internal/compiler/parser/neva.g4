@@ -17,8 +17,9 @@ compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
 compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importDef* RBRACE;
-importDef: importAlias? importPath (COMMA)? NEWLINE*;
+importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE*;
+importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;
 importPathMod: AT | importMod;
@@ -77,7 +78,7 @@ listLit: LBRACK NEWLINE* listItems? RBRACK;
 listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;
 structLit: LBRACE NEWLINE* structValueFields? RBRACE;
-structValueFields: structValueField (COMMA NEWLINE* structValueField)*;
+structValueFields: structValueField (COMMA NEWLINE* structValueField)* (COMMA NEWLINE*)?;
 structValueField: IDENTIFIER COLON compositeItem NEWLINE*;
 
 // Components

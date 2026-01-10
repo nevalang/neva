@@ -162,6 +162,9 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	chainReceiver := chain.Receivers[0].PortAddr
 	require.Equal(t, "out", chainReceiver.Node)
 	require.Equal(t, "bar", chainReceiver.Port)
+
+	require.Greater(t, chain.Meta.Start.Line, 0)
+	require.Greater(t, chain.Meta.Stop.Line, 0)
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
@@ -680,6 +683,19 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 			tt.check(t, got)
 		})
 	}
+}
+
+func TestParser_ParseFile_StructLiteralTrailingComma(t *testing.T) {
+	text := `
+		const user User = { name: 'Ada', }
+	`
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(text))
+	require.Nil(t, err)
+
+	fields := got.Entities["user"].Const.Value.Message.DictOrStruct
+	require.Equal(t, "Ada", *fields["name"].Message.Str)
 }
 
 func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {

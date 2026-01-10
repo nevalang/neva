@@ -25,6 +25,9 @@ type nevaListener interface {
 	// EnterImportStmt is called when entering the importStmt production.
 	EnterImportStmt(c *ImportStmtContext)
 
+	// EnterImportBlockItem is called when entering the importBlockItem production.
+	EnterImportBlockItem(c *ImportBlockItemContext)
+
 	// EnterImportDef is called when entering the importDef production.
 	EnterImportDef(c *ImportDefContext)
 
@@ -285,6 +288,9 @@ type nevaListener interface {
 
 	// ExitImportStmt is called when exiting the importStmt production.
 	ExitImportStmt(c *ImportStmtContext)
+
+	// ExitImportBlockItem is called when exiting the importBlockItem production.
+	ExitImportBlockItem(c *ImportBlockItemContext)
 
 	// ExitImportDef is called when exiting the importDef production.
 	ExitImportDef(c *ImportDefContext)

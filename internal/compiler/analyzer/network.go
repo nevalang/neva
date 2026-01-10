@@ -6,6 +6,8 @@ package analyzer
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/ast"
@@ -300,17 +302,27 @@ func (a Analyzer) analyzeNetPortsUsage(
 	// 1. every self inport must be used
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
+		allInports := make([]string, 0, len(iface.IO.In))
+		for inportName := range iface.IO.In {
+			allInports = append(allInports, inportName)
+		}
+
 		return &compiler.Error{
-			Message: "Unused inports",
+			Message: unusedPortsMessage("inport", allInports),
 			Meta:    &iface.Meta,
 		}
 	}
 
+	unusedInports := make([]string, 0, len(iface.IO.In))
 	for inportName := range iface.IO.In {
 		if _, ok := inportsUsage.Out[inportName]; !ok { // note that self inports are outports for the network
-			return &compiler.Error{
-				Message: fmt.Sprintf("Unused inport: %v", inportName),
-			}
+			unusedInports = append(unusedInports, inportName)
+		}
+	}
+	if len(unusedInports) > 0 {
+		return &compiler.Error{
+			Message: unusedPortsMessage("inport", unusedInports),
+			Meta:    &iface.Meta,
 		}
 	}
 
@@ -463,6 +475,14 @@ func (a Analyzer) analyzeNetPortsUsage(
 	}
 
 	return nil
+}
+
+func unusedPortsMessage(portType string, ports []string) string {
+	sort.Strings(ports)
+	if len(ports) == 1 {
+		return fmt.Sprintf("Unused %s: %s", portType, ports[0])
+	}
+	return fmt.Sprintf("Unused %ss: %s", portType, strings.Join(ports, ", "))
 }
 
 // getResolvedPortType returns resolved port-addr, type expr and isArray bool.

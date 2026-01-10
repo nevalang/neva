@@ -41,6 +41,10 @@ func newBuildCmd(
 				Name:  "emit-trace",
 				Usage: "Emit trace file",
 			},
+			&cli.BoolFlag{
+				Name:  "debug-runtime-validation",
+				Usage: "Enable compiler runtime port validation (language developers only)",
+			},
 			&cli.StringFlag{
 				Name:  "target",
 				Usage: "Target platform (go, wasm, native, ir)",
@@ -158,7 +162,10 @@ func newBuildCmd(
 				externalRuntimePath = filepath.Join(workdir, externalRuntimePath)
 			}
 
-			golangBackend := golang.NewBackend(externalRuntimePath)
+			golangBackend := golang.NewBackend(
+				externalRuntimePath,
+				cliCtx.Bool("debug-runtime-validation"),
+			)
 
 			switch target {
 			case "go":

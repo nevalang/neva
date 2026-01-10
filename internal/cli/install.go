@@ -82,7 +82,7 @@ func newInstallCmd(
 				&desugarer,
 				analyzer,
 				irgen,
-				golang.NewBackend(""),
+				golang.NewBackend("", false),
 			)
 
 			if _, err := compilerToGo.Compile(cliCtx.Context, compiler.CompilerInput{
