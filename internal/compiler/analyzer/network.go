@@ -116,7 +116,6 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
-		false, // we're not inside switch
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -136,8 +135,10 @@ func (a Analyzer) analyzeNormalConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
-	isPatternMatchingBranch bool,
 ) (*src.NormalConnection, *compiler.Error) {
+	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
+	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
+
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
 		normConn.Senders,
 		scope,
@@ -146,7 +147,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesIfaces,
 		nodesUsage,
 		prevChainLink,
-		isPatternMatchingBranch,
+		isPatternMatchingContext,
 	)
 	if err != nil {
 		return nil, err
@@ -171,6 +172,45 @@ func (a Analyzer) analyzeNormalConnection(
 		Receivers: analyzedReceivers,
 		Meta:      normConn.Meta,
 	}, nil
+}
+
+// hasSwitchCaseReceiver checks if any receiver in the list is connecting to
+// a Switch component's "case" port. This is needed because Switch.case ports
+// expect pattern senders (union tags without wrapped values).
+// This handles both direct port receivers and chained connections where
+// the chain head is a Switch.case port.
+func hasSwitchCaseReceiver(receivers []src.ConnectionReceiver, nodes map[string]src.Node) bool {
+	for _, receiver := range receivers {
+		// Check direct port address receiver
+		if receiver.PortAddr != nil {
+			if isSwitchCasePort(*receiver.PortAddr, nodes) {
+				return true
+			}
+		}
+
+		// Check chained connection - the chain head (sender) acts as the receiver for previous senders
+		if receiver.ChainedConnection != nil &&
+			receiver.ChainedConnection.Normal != nil &&
+			len(receiver.ChainedConnection.Normal.Senders) > 0 {
+			chainHead := receiver.ChainedConnection.Normal.Senders[0]
+			if chainHead.PortAddr != nil {
+				if isSwitchCasePort(*chainHead.PortAddr, nodes) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// isSwitchCasePort checks if a port address refers to a Switch component's case port.
+func isSwitchCasePort(portAddr src.PortAddr, nodes map[string]src.Node) bool {
+	node, ok := nodes[portAddr.Node]
+	if !ok {
+		return false
+	}
+	return node.EntityRef.Name == "Switch" && portAddr.Port == "case"
 }
 
 func (a Analyzer) analyzeArrayBypassConnection(
@@ -472,9 +512,17 @@ func (a Analyzer) getResolvedPortType(
 				}
 			}
 		} else {
+			kind := "outports"
+			if isInput {
+				kind = "inports"
+			}
 			return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf("node '%v' has multiple ports - port name must be specified", portAddr.Node),
-				Meta:    &portAddr.Meta,
+				Message: fmt.Sprintf(
+					"node '%v' has multiple %s - port name must be specified",
+					portAddr.Node,
+					kind,
+				),
+				Meta: &portAddr.Meta,
 			}
 		}
 	}
@@ -635,8 +683,8 @@ func (a Analyzer) getResolvedSenderType(
 		// insie pattern matching context, only tag is needed,
 		// so it's expected not to have wrapped data
 		if sender.Union.Data == nil && isPatternSender {
-			// in pattern matching, return the tag's data type
-			return sender, *tagTypeExpr, false, nil
+			// in pattern matching, return the union type for tag-only patterns
+			return sender, resolvedUnionTypeExpr, false, nil
 		}
 
 		// analyze wrapped-sender and get its resolved type
@@ -831,7 +879,7 @@ func (a Analyzer) getNodeOutportType(
 		}
 	}
 
-	return a.getResolvedPortType(
+	resolvedPort, resolvedType, isArray, err := a.getResolvedPortType(
 		nodeIface.iface.IO.Out,
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
@@ -839,6 +887,11 @@ func (a Analyzer) getNodeOutportType(
 		scope.Relocate(nodeIface.location),
 		false,
 	)
+	if err != nil {
+		return src.PortAddr{}, ts.Expr{}, false, err
+	}
+
+	return resolvedPort, resolvedType, isArray, nil
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(

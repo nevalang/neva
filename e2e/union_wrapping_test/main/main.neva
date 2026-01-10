@@ -4,28 +4,24 @@ import {
     runtime
 }
 
-def Main(start any) (stop any) {
-    h Handler
-    ---
-    :start -> {
-        MaybeInt::Int(42) -> h -> :stop
-    }
-}
-
 type MaybeInt union {
     Int int
     None
 }
 
+def Main(start any) (stop any) {
+    handler Handler
+    ---
+    :start -> { MaybeInt::Int(42) -> handler -> :stop }
+}
+
 // Unwraps the int, prints it and sends further.
 def Handler(data MaybeInt) (res int) {
-    must_println errors.Must<int, int>{
-        fmt.Println<int>
-    }
+    must_println errors.Must<int, int>{fmt.Println<int>}
     panic runtime.Panic
+    switch Switch<MaybeInt>
     ---
-    :data -> switch {
-        MaybeInt::Int -> must_println -> :res
-        _ -> panic
-    }
+    :data -> switch:data
+    MaybeInt::Int -> switch:case[0] -> must_println -> :res
+    switch:else -> panic
 }

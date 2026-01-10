@@ -18,9 +18,11 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"panic": panicker{},
 
 		"switch_router": switchRouter{},
+		"if":            ifRouter{},
 		"match":         matchSelector{},
 		"select":        selector{},
 		"ternary":       ternarySelector{},
+		"race":          race{},
 
 		"eq":   eq{},
 		"ne":   notEq{},
@@ -118,6 +120,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"wait_group": waitGroup{},
 
+		// "state":       state{},
 		"accumulator": accumulator{},
 		"errors_new":  errorsNew{},
 

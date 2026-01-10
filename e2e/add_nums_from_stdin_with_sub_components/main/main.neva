@@ -27,7 +27,7 @@ def App(sig any) (res int, err error) {
 }
 
 def ReadInt(sig any) (res int, err error) {
-	scanln fmt.Scanln
+	scanln fmt.Scanln?
 	atoi strconv.Atoi?
 	---
 	:sig -> scanln -> atoi -> :res

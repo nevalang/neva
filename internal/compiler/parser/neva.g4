@@ -137,16 +137,9 @@ structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
 	| portAddr
-	| deferredConn
-	| switchStmt;
+	| deferredConn;
 multipleReceiverSide:
 	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
-
-// Switch
-switchStmt:
-	SWITCH NEWLINE* LBRACE NEWLINE* normConnDef (NEWLINE+ normConnDef)* 
-	(NEWLINE+ defaultCase)? NEWLINE* RBRACE;
-defaultCase: UNDERSCORE ARROW receiverSide;
 
 /* LEXER */
 
@@ -159,16 +152,12 @@ INTERFACE: 'interface';
 CONST: 'const';
 DEF: 'def';
 IMPORT: 'import';
-SWITCH: 'switch';
 TRUE: 'true';
 FALSE: 'false';
 
 // Operators and Punctuation
-PLUS: '+';
 MINUS: '-';
-STAR: '*';
 SLASH: '/';
-PERCENT: '%';
 EQ: '=';
 LT: '<';
 GT: '>';
@@ -180,29 +169,13 @@ LBRACK: '[';
 RBRACK: ']';
 COMMA: ',';
 COLON: ':';
-SEMI: ';';
 DOT: '.';
 QUEST: '?';
-NOT: '!';
-AND: '&';
-OR: '|';
-CARET: '^';
-TILDE: '~';
 DOLLAR: '$';
 AT: '@';
-UNDERSCORE: '_';
 HASH: '#';
 
 // Compound Operators
-PLUS2: '++';
-MINUS2: '--';
-STAR2: '**';
-EQ2: '==';
-NOT_EQ: '!=';
-GTE: '>=';
-LTE: '<=';
-AND2: '&&';
-OR2: '||';
 DCOLON: '::';
 DOT2: '..';
 ARROW: '->';

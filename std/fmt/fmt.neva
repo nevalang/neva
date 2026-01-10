@@ -4,7 +4,7 @@ pub def Println<T>(data T) (res T, err error)
 
 // Print prints to stdout without newline and then sends message further.
 #extern(print)
-pub def Print<T>(data T) (res T)
+pub def Print<T>(data T) (res T, err error)
 
 // Printf replaces placeholders `$<index>` (0-based) with the corresponding argument
 // and prints to the standard output.
@@ -15,4 +15,4 @@ pub def Printf(tpl string, [args] any) (sig any, err error)
 
 // Scanln scans text read from the standard input and then sends it further.
 #extern(scanln)
-pub def Scanln(sig any) (res string)
+pub def Scanln(sig any) (res string, err error)

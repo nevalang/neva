@@ -5,7 +5,7 @@ pub type float
 pub type string
 pub type dict<T>
 pub type list<T>
-pub type maybe<T> // TODO consider using union
+pub type maybe<T>
 
 pub type error struct {
     text string

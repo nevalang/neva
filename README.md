@@ -29,12 +29,12 @@ import {
 }
 
 def Main(start any) (stop any) {
+	println fmt.Println
 	panic runtime.Panic
-	println fmt.Println<string>
 	---
-	:start -> 'Hello, World!' -> println
-	println:err -> panic
+	:start -> 'Hello, World!' -> println:data
 	println:res -> :stop
+	println:err -> panic
 }
 ```
 
