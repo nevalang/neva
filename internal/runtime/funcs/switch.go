@@ -69,12 +69,17 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				}
 			}
 
-			if u, ok := dataMsg.(runtime.UnionMsg); ok {
-				dataMsg = u.Data()
-			}
-
+			// Switch is a router. When its input is a tagged union message:
+			// - If a case matches, we send the *unboxed* payload (unless the union is tag-only).
+			// - If no case matches, we send the original *boxed* union message to ':else'.
 			if matchIdx != -1 {
-				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
+				sendMsg := dataMsg
+				if u, ok := dataMsg.(runtime.UnionMsg); ok {
+					if u.Data() != nil {
+						sendMsg = u.Data()
+					}
+				}
+				if !caseOut.Send(ctx, uint8(matchIdx), sendMsg) {
 					return
 				}
 				continue

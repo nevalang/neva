@@ -7,6 +7,8 @@ pub type dict<T>
 pub type list<T>
 pub type maybe<T>
 
+type Type any
+
 pub type error struct {
     text string
     child maybe<error>

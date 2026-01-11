@@ -10,16 +10,16 @@ Follow these instructions.
 4. Update this file if changes to process, architecture, or rules.
 5. Examples and parser for `.neva` changes. `go.mod` for Go imports.
 6. Plan -> Review -> Execute -> Review.
+7. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
 
 ## 2. 📈 Self-Improvement Protocol
 
-**After each session** (bug fix, feature, brainstorm), update this file with:
+**After each session** (bug fix, feature, brainstorm), update this file (`AGENTS.md`) with:
 
 - **Language semantics** learned (e.g., how connections work, port behavior).
 - **Common patterns** discovered (e.g., typical error causes, debugging approaches).
 - **Architecture insights** gained (e.g., how compiler phases interact).
 - **Gotchas** encountered (e.g., edge cases, non-obvious behaviors).
-- **Proactive Refactoring**: Identify potential refactoring needs. Only if something is clearly "off" (e.g., avoidable indirect recursion, duplicated logic, O(N^2) complexity in chains). This is about fixing clarity/architectural mistakes, not perfectionism, if something is not perfect but is clear "enough" it's ok to keep it as is.
 
 **Balance**: Keep it concise. Every line must earn its place. Remove outdated info. Split into workflows/rules if sections grow large.
 

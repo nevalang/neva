@@ -10,7 +10,7 @@ pub def Cond<T>(data T, if bool) (then T, else T)
 // Just like `Cond`, it is used for data routing.
 // If you need mapping, use Match or Select instead.
 #extern(switch_router)
-pub def Switch<T>(data T, [case] T) ([case] T, else T)
+pub def Switch<T>(data T, [case] T) ([case] Type, else T)
 
 // Race is like Select but router.
 #extern(race)
