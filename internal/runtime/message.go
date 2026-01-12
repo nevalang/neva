@@ -410,9 +410,16 @@ func Match(msg Msg, pattern Msg) bool {
 		return msg.Equal(pattern)
 	}
 
-	if msgUnion.data != nil && patternUnion.data == nil ||
-		msgUnion.data == nil && patternUnion.data != nil {
-		return msgUnion.tag == patternUnion.tag
+	if msgUnion.tag != patternUnion.tag {
+		return false
+	}
+
+	if patternUnion.data == nil {
+		return true
+	}
+
+	if msgUnion.data == nil {
+		return false
 	}
 
 	return msgUnion.data.Equal(patternUnion.data)

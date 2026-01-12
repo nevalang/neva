@@ -123,11 +123,13 @@ func (s SubtypeChecker) Check(
 
 	switch constrLitType {
 	case UnionLitType:
-		// both must be unions
+		// Both constraint and expression must be unions.
+		// In a type-system where unions are tagged it's impossible to do otherwise.
 		if expr.Lit == nil || expr.Lit.Union == nil {
 			return fmt.Errorf("%w: want union, got %v", ErrUnionArg, expr)
 		}
-		// sub-type union must fit into super-type union
+
+		// if both are unions, sub-type union must fit into super-type union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {
 			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
 		}
