@@ -1,0 +1,20 @@
+import {
+    fmt
+    runtime
+}
+
+type MaybeInt union {
+    Int int
+    None
+}
+
+def Main(start any) (stop any) {
+    switch Switch<MaybeInt>
+    println fmt.Println<int>
+    panic runtime.Panic
+    ---
+    :start -> { MaybeInt::Int(4) -> switch:data }
+    MaybeInt::Int -> switch:case[0] -> println:data
+    [switch:else, println:err] -> panic
+    println:res -> :stop
+}

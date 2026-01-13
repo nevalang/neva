@@ -28,6 +28,11 @@ func (a Analyzer) analyzeNetwork(
 ) ([]src.Connection, *compiler.Error) {
 	nodesUsage := make(map[string]netNodeUsage, len(nodes))
 
+	switchInfo, err := a.collectSwitchAnalysis(net, nodes, nodesIfaces, scope)
+	if err != nil {
+		return nil, err
+	}
+
 	analyzedConnections, err := a.analyzeConnections(
 		net,
 		iface,
@@ -35,6 +40,7 @@ func (a Analyzer) analyzeNetwork(
 		nodesIfaces,
 		nodesUsage,
 		scope,
+		switchInfo,
 	)
 	if err != nil {
 		return nil, err
@@ -63,6 +69,7 @@ func (a Analyzer) analyzeConnections(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	scope src.Scope,
+	switchInfo switchAnalysis,
 ) ([]src.Connection, *compiler.Error) {
 	analyzedConnections := make([]src.Connection, 0, len(net))
 
@@ -75,6 +82,7 @@ func (a Analyzer) analyzeConnections(
 			scope,
 			nodesUsage,
 			nil,
+			switchInfo,
 		)
 		if err != nil {
 			return nil, err
@@ -93,6 +101,7 @@ func (a Analyzer) analyzeConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	switchInfo switchAnalysis,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -102,6 +111,7 @@ func (a Analyzer) analyzeConnection(
 			nodes,
 			nodesIfaces,
 			nodesUsage,
+			switchInfo,
 		); err != nil {
 			return src.Connection{}, err
 		}
@@ -116,6 +126,7 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
+		switchInfo,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -135,6 +146,7 @@ func (a Analyzer) analyzeNormalConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	switchInfo switchAnalysis,
 ) (*src.NormalConnection, *compiler.Error) {
 	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
 	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
@@ -148,6 +160,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesUsage,
 		prevChainLink,
 		isPatternMatchingContext,
+		switchInfo,
 	)
 	if err != nil {
 		return nil, err
@@ -162,6 +175,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesUsage,
 		resolvedSenderTypes,
 		analyzedSenders,
+		switchInfo,
 	)
 	if err != nil {
 		return nil, err
@@ -220,6 +234,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
+	switchInfo switchAnalysis,
 ) *compiler.Error {
 	arrBypassConn := conn.ArrayBypass
 
@@ -229,6 +244,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 		iface,
 		nodes,
 		nodesIfaces,
+		switchInfo,
 	)
 	if err != nil {
 		return compiler.Error{
@@ -574,6 +590,7 @@ func (a Analyzer) getResolvedSenderType(
 	prevChainLink []src.ConnectionSender,
 	nodesUsage map[string]netNodeUsage,
 	isPatternSender bool,
+	switchInfo switchAnalysis,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
 		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
@@ -610,6 +627,7 @@ func (a Analyzer) getResolvedSenderType(
 			prevChainLink,
 			nodesUsage,
 			isPatternSender,
+			switchInfo,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -697,6 +715,7 @@ func (a Analyzer) getResolvedSenderType(
 			nodesUsage,
 			prevChainLink,
 			isPatternSender,
+			switchInfo,
 		)
 		if analyzeWrappedErr != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, analyzeWrappedErr
@@ -723,6 +742,7 @@ func (a Analyzer) getResolvedSenderType(
 		iface,
 		nodes,
 		nodesIfaces,
+		switchInfo,
 	)
 	if err != nil {
 		return src.ConnectionSender{}, ts.Expr{}, false, err
@@ -742,6 +762,7 @@ func (a Analyzer) getPortSenderType(
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
+	switchInfo switchAnalysis,
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
 	if senderSidePortAddr.Node == "out" {
 		return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
@@ -777,7 +798,7 @@ func (a Analyzer) getPortSenderType(
 	}
 
 	return a.getNodeOutportType(
-		senderSidePortAddr, nodes, nodesIfaces, scope,
+		senderSidePortAddr, nodes, nodesIfaces, scope, switchInfo,
 	)
 }
 
@@ -862,6 +883,7 @@ func (a Analyzer) getNodeOutportType(
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
+	switchInfo switchAnalysis,
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
 	node, ok := nodes[portAddr.Node]
 	if !ok {
@@ -889,6 +911,12 @@ func (a Analyzer) getNodeOutportType(
 	)
 	if err != nil {
 		return src.PortAddr{}, ts.Expr{}, false, err
+	}
+
+	if portAddr.Port == "case" && node.EntityRef.Name == "Switch" && portAddr.Idx != nil {
+		if outType, ok := switchInfo.caseOutportType(portAddr.Node, *portAddr.Idx); ok {
+			return resolvedPort, outType, isArray, nil
+		}
 	}
 
 	return resolvedPort, resolvedType, isArray, nil

@@ -18,6 +18,7 @@ func (a Analyzer) analyzeSenders(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 	isPatternMatchingContext bool,
+	switchInfo switchAnalysis,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
@@ -32,6 +33,7 @@ func (a Analyzer) analyzeSenders(
 			nodesUsage,
 			prevChainLink,
 			isPatternMatchingContext,
+			switchInfo,
 		)
 		if err != nil {
 			return nil, nil, compiler.Error{
@@ -60,6 +62,7 @@ func (a Analyzer) analyzeSender(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 	isPatternSender bool,
+	switchInfo switchAnalysis,
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
 	// Some top level validation
 
@@ -163,6 +166,7 @@ func (a Analyzer) analyzeSender(
 			nodesUsage,
 			prevChainLink,
 			isPatternSender,
+			switchInfo,
 		)
 		if analyzeWrappedErr != nil {
 			return nil, nil, analyzeWrappedErr
@@ -201,6 +205,7 @@ func (a Analyzer) analyzeSender(
 		prevChainLink,
 		nodesUsage,
 		isPatternSender,
+		switchInfo,
 	)
 	if err != nil {
 		return nil, nil, compiler.Error{

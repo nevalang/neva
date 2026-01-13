@@ -851,6 +851,8 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 		return c
 	}
 
+	switchOutportTypes := a.collectSwitchOutportTypesForUsage(net, nodes, parentFrame, scope)
+
 	// walk all connections
 	for _, conn := range net {
 		if conn.Normal == nil {
@@ -942,7 +944,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 
 						// collect types from the outer senders
 						for _, outerSender := range outerSenders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender)
+							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender, switchOutportTypes)
 							for _, t := range types {
 								list := c.incoming[inPort]
 								appendUnique(&list, t)
@@ -999,7 +1001,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 					if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
 						// this is a chained connection, look at the senders within the chain
 						for _, chainedSender := range receiver.ChainedConnection.Normal.Senders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, chainedSender)
+							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, chainedSender, switchOutportTypes)
 							for _, t := range types {
 								list := c.incoming[port]
 								appendUnique(&list, t)
@@ -1012,7 +1014,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 
 				if !hasChainedConnection {
 					// regular sender
-					types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender)
+					types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender, switchOutportTypes)
 					for _, t := range types {
 						list := c.incoming[port]
 						appendUnique(&list, t)
@@ -1055,6 +1057,7 @@ func (a Analyzer) getPossibleSenderTypes(
 	parentIface src.Interface,
 	nodes map[string]src.Node,
 	sender src.ConnectionSender,
+	switchOutportTypes map[string]map[uint8]typesystem.Expr,
 ) []typesystem.Expr {
 	// const sender
 	if sender.Const != nil {
@@ -1101,6 +1104,13 @@ func (a Analyzer) getPossibleSenderTypes(
 				}
 			}
 			return nil
+		}
+		if pa.Idx != nil && pa.Port == "case" {
+			if nodeOutports, ok := switchOutportTypes[pa.Node]; ok {
+				if resolved, ok := nodeOutports[*pa.Idx]; ok {
+					return []typesystem.Expr{resolved}
+				}
+			}
 		}
 		// outport of another node
 		other, ok := nodes[pa.Node]

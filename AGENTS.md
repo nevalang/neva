@@ -25,6 +25,13 @@ Follow these instructions.
 
 **Goal**: Build perfect context so future sessions start smarter.
 
+## Session Notes
+
+- **Language semantics**: `Switch` case ports can pattern-match union tags; payload tags unbox to payload types while tag-only cases keep the union type.
+- **Common patterns**: derive `Switch:case[i]` output types by scanning connections that target `Switch:case[i]`.
+- **Architecture insights**: `Switch`-specific inference is handled in analyzer network analysis before per-connection validation.
+- **Gotchas**: union inputs must either cover all tags with cases (no `:else`) or connect `:else` with at least one case; pattern matching with non-union `data` is invalid; chained connections can place `Switch:case` as the chain head.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
