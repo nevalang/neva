@@ -157,7 +157,15 @@ func (a Analyzer) analyzeNormalConnection(
 		return nil, err
 	}
 
-	// Refine Switch output types if applicable (on-demand lookup)
+	// Switch is not usual component and needs special compiler magic.
+	// There are cases (pattern matching with tagged unions) where
+	// compiler must infer correct type for `switch:case[i]` outport.
+	// Neva's type-system is not sound enough to express heterogenous
+	// `case[i]` array prot slots, so this is done as compiler magic.
+	// It's important to do after senders are normalized "normally",
+	// Because in order to infer correct type for switch:case[i] outport,
+	// We should look at the sender of switch:case[i] inport, which means
+	// That senders better be resolved by this time.
 	for i, sender := range analyzedSenders {
 		if sender.PortAddr != nil {
 			if !isSwitchCasePort(*sender.PortAddr, nodes) {

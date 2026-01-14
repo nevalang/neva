@@ -69,7 +69,7 @@ func (a Analyzer) analyzeSender(
 		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
-			Message: "invalid sender",
+			Message: "sender is empty",
 			Meta:    &sender.Meta,
 		}
 	}
