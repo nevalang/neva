@@ -419,6 +419,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 			allParentNodes,
 		)
 	} else {
+		// For overloaded components we need to lookup network in separate run to find how the node is used.
 		nodeConstraints = a.collectUsageDerivedTypeConstraintsForNode(
 			nodeName,
 			resolvedParentIface,
@@ -1048,7 +1049,8 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 	return res
 }
 
-// getPossibleSenderTypes returns a set of possible types produced by a sender without requiring resolved node interfaces.
+// getPossibleSenderTypes is part of the overloading implementation.
+// It returns a set of possible types produced by a sender without requiring resolved node interfaces.
 func (a Analyzer) getPossibleSenderTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
@@ -1093,6 +1095,9 @@ func (a Analyzer) getPossibleSenderTypes(
 
 	// port-addr
 	if sender.PortAddr != nil {
+		// We don't care if it's Switch
+		// Because Switch is not overloaded.
+
 		pa := *sender.PortAddr
 		if pa.Node == "in" {
 			if p, ok := parentIface.IO.In[pa.Port]; ok {
