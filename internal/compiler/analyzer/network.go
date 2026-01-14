@@ -75,6 +75,7 @@ func (a Analyzer) analyzeConnections(
 			scope,
 			nodesUsage,
 			nil,
+			net,
 		)
 		if err != nil {
 			return nil, err
@@ -93,6 +94,7 @@ func (a Analyzer) analyzeConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	net []src.Connection,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -116,6 +118,7 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
+		net,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -135,6 +138,7 @@ func (a Analyzer) analyzeNormalConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	net []src.Connection,
 ) (*src.NormalConnection, *compiler.Error) {
 	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
 	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
@@ -153,6 +157,27 @@ func (a Analyzer) analyzeNormalConnection(
 		return nil, err
 	}
 
+	// Refine Switch output types if applicable (on-demand lookup)
+	for i, sender := range analyzedSenders {
+		if sender.PortAddr != nil {
+			if !isSwitchCasePort(*sender.PortAddr, nodes) {
+				continue
+			}
+			// We found a Switch:case[i] output usage.
+			// We need to find what feeds this switch case to know the type.
+			resolvedType, err := a.getSwitchCaseOutportType(
+				*sender.PortAddr,
+				nodes,
+				scope,
+				net,
+			)
+			if err != nil {
+				return nil, err
+			}
+			resolvedSenderTypes[i] = resolvedType
+		}
+	}
+
 	analyzedReceivers, err := a.analyzeReceivers(
 		normConn.Receivers,
 		scope,
@@ -162,6 +187,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesUsage,
 		resolvedSenderTypes,
 		analyzedSenders,
+		net,
 	)
 	if err != nil {
 		return nil, err
