@@ -79,9 +79,12 @@ flowchart LR
 ## Contributing
 
 1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
-2. Check out the [roadmap](https://github.com/nevalang/neva/milestones?direction=asc&sort=due_date&state=open)
-3. Read our [CoC](./CODE_OF_CONDUCT.md)
-4. Join [discord server](https://discord.gg/dmXbC79UuH) 👈
+2. Read our [CoC](./CODE_OF_CONDUCT.md)
+3. Join [discord server](https://discord.gg/dmXbC79UuH) 👈
+
+<p align="center">
+  <img src="https://contrib.rocks/image?repo=nevalang/neva" />
+</p>
 
 ## Community
 

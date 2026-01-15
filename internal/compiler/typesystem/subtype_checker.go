@@ -12,8 +12,6 @@ var (
 	ErrDiffRefs      = errors.New("subtype instance must have same ref as supertype")
 	ErrArgsCount     = errors.New("subtype instance must have >= args than supertype")
 	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
-	ErrLitArrSize    = errors.New("subtype arr size must be >= supertype")
-	ErrArrDiffType   = errors.New("subtype arr must have same type as supertype")
 	ErrStructLen     = errors.New("subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("subtype struct is missing field of supertype")
