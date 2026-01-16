@@ -18,7 +18,6 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"panic": panicker{},
 
 		"switch_router": switchRouter{},
-		"if":            ifRouter{},
 		"match":         matchSelector{},
 		"select":        selector{},
 		"ternary":       ternarySelector{},
