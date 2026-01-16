@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -15,7 +16,7 @@ func (race) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 		return nil, err
 	}
 
-	casesIn, err := io.In.Array("case")
+	casesArrIn, err := io.In.Array("case")
 	if err != nil {
 		return nil, err
 	}
@@ -25,23 +26,30 @@ func (race) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 		return nil, err
 	}
 
-	if casesIn.Len() != casesOut.Len() {
+	if casesArrIn.Len() != casesOut.Len() {
 		return nil, errors.New("number of 'case' inports must match number of 'case' outports")
 	}
 
 	return func(ctx context.Context) {
+		var (
+			wg      sync.WaitGroup
+			dataMsg runtime.Msg
+			dataOk  bool
+			caseMsg runtime.SelectedMsg
+			caseOk  bool
+		)
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			wg.Go(func() {
+				dataMsg, dataOk = dataIn.Receive(ctx)
+			})
+			wg.Go(func() {
+				caseMsg, caseOk = casesArrIn.Select(ctx)
+			})
+			wg.Wait()
+			if !dataOk || !caseOk {
 				return
 			}
-
-			caseMsg, ok := casesIn.Select(ctx)
-			if !ok {
-				return
-			}
-
-			if !casesOut.Send(ctx, caseMsg.SlotIdx, msg) {
+			if !casesOut.Send(ctx, caseMsg.SlotIdx, dataMsg) {
 				return
 			}
 		}

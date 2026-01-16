@@ -140,3 +140,42 @@ func (Analyzer) isSwitchCaseReceiver(receiver src.ConnectionReceiver, nodeName s
 		receiver.PortAddr.Idx != nil &&
 		*receiver.PortAddr.Idx == *idx
 }
+
+// hasSwitchCaseReceiver checks if any receiver in the list is connecting to
+// a Switch component's "case" port. This is needed because Switch.case ports
+// expect pattern senders (union tags without wrapped values).
+// This handles both direct port receivers and chained connections where
+// the chain head is a Switch.case port.
+func hasSwitchCaseReceiver(receivers []src.ConnectionReceiver, nodes map[string]src.Node) bool {
+	for _, receiver := range receivers {
+		// Check direct port address receiver
+		if receiver.PortAddr != nil {
+			if isSwitchCasePort(*receiver.PortAddr, nodes) {
+				return true
+			}
+		}
+
+		// Check chained connection - the chain head (sender) acts as the receiver for previous senders
+		if receiver.ChainedConnection != nil &&
+			receiver.ChainedConnection.Normal != nil &&
+			len(receiver.ChainedConnection.Normal.Senders) > 0 {
+			chainHead := receiver.ChainedConnection.Normal.Senders[0]
+			if chainHead.PortAddr != nil {
+				if isSwitchCasePort(*chainHead.PortAddr, nodes) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// isSwitchCasePort checks if a port address refers to a Switch component's case port.
+func isSwitchCasePort(portAddr src.PortAddr, nodes map[string]src.Node) bool {
+	node, ok := nodes[portAddr.Node]
+	if !ok {
+		return false
+	}
+	return node.EntityRef.Name == "Switch" && portAddr.Port == "case"
+}
