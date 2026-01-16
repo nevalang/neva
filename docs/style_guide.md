@@ -36,6 +36,11 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - **Nodes**: `lower_snake_case`
 - **Ports**: `lowercase`
 
+### Node Instantiation
+
+- Prefer giving a node the same name as the component used to instantiate it (e.g. `println fmt.Println`).
+- When wrapping a component in a higher-order component, mention both to retain clarity (e.g. `for_println For{fmt.Println}`).
+
 ## Interfaces
 
 - Use outports to separate data flows, not for destructuring.
@@ -51,3 +56,4 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 
 - Omit port names when possible. It enables renaming of ports without updating the networks.
 - Use `?` for to propogate errors except custom error handling is needed.
+- Prefer chaining connections inline when possible (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and easier to scan.

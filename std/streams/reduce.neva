@@ -1,0 +1,22 @@
+// --- Reduce ---
+
+// IReducer is a dependency for Reduce.
+pub interface IReducer<T, Y>(left T, right T) (res Y)
+
+// Reduce applies a reduction component to a stream of messages, accumulating the result.
+// It takes an initial value and a stream of data, and produces a single result.
+pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
+    reducer IReducer<T, Y>
+    acc Accumulate<Y>
+    ---
+    :init -> acc:init
+    :data -> [.data -> reducer:right, .last -> acc:last]
+    acc:cur -> reducer:left
+    reducer -> acc:upd
+    acc:res -> :res
+}
+
+// Accumulate maintains the current state of the reduction.
+// It updates its value with each new input and outputs the final result when last is true.
+#extern(accumulator)
+def Accumulate<T>(init T, upd T, last bool) (cur T, res T)

@@ -3,9 +3,9 @@ package irgen
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
 )
 
@@ -206,8 +206,10 @@ func (g Generator) processNode(
 					continue
 				}
 
-				// if sub-node has DI arg, we check if it's interface
-				kind, err := scope.GetEntityKind(existing.EntityRef)
+			// if sub-node has DI arg, we check if it's interface
+			// we must relocate scope to the component's location because existing.EntityRef
+			// is a local reference (Pkg="") that needs to be resolved in the component's package
+			kind, err := scope.Relocate(location).GetEntityKind(existing.EntityRef)
 				if err != nil {
 					panic(err)
 				}

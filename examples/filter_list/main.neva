@@ -8,7 +8,7 @@ const numbers list<int> = [2, 4, 6, 8, 10]
 
 def Main(start any) (stop any) {
     list_to_stream ListToStream<int>
-    filter_even Filter<int>{predicate IsEven}
+    filter_even streams.Filter<int>{predicate IsEven}
     for_print For<int>{fmt.Println<int>}
     wait streams.Wait
     panic runtime.Panic

@@ -12,8 +12,6 @@ var (
 	ErrDiffRefs      = errors.New("subtype instance must have same ref as supertype")
 	ErrArgsCount     = errors.New("subtype instance must have >= args than supertype")
 	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
-	ErrLitArrSize    = errors.New("subtype arr size must be >= supertype")
-	ErrArrDiffType   = errors.New("subtype arr must have same type as supertype")
 	ErrStructLen     = errors.New("subtype struct must contain >= fields than supertype")
 	ErrStructField   = errors.New("subtype struct field must be subtype of corresponding supertype field")
 	ErrStructNoField = errors.New("subtype struct is missing field of supertype")
@@ -123,11 +121,13 @@ func (s SubtypeChecker) Check(
 
 	switch constrLitType {
 	case UnionLitType:
-		// both must be unions
+		// Both constraint and expression must be unions.
+		// In a type-system where unions are tagged it's impossible to do otherwise.
 		if expr.Lit == nil || expr.Lit.Union == nil {
 			return fmt.Errorf("%w: want union, got %v", ErrUnionArg, expr)
 		}
-		// sub-type union must fit into super-type union
+
+		// if both are unions, sub-type union must fit into super-type union
 		if len(expr.Lit.Union) > len(constr.Lit.Union) {
 			return fmt.Errorf("%w: got %d, want %d", ErrUnionsLen, len(expr.Lit.Union), len(constr.Lit.Union))
 		}

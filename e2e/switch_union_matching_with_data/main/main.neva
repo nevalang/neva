@@ -1,0 +1,25 @@
+import {
+    fmt
+    runtime
+}
+
+type IntOrString union {
+    Int int
+    String string
+}
+
+def Main(start any) (stop any) {
+    switch Switch<IntOrString>
+    add Add
+    println fmt.Println<int>
+    panic runtime.Panic
+    ---
+    :start -> [
+        { IntOrString::Int(42) -> switch:data },
+        10 -> add:left
+    ]
+    IntOrString::Int -> switch:case[0] -> add:right
+    add -> println
+    [switch:else, println:err] -> panic
+    println:res -> :stop
+}

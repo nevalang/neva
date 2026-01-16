@@ -1,6 +1,9 @@
-pub def ClassifyInt(data int) (neg any, pos any) {
-    (:data >= 0) -> switch {
-        true -> :pos
-        _ -> :neg
-    }
+pub def ClassifyInt(data int) (res bool) {
+    ge Ge
+    ---
+    :data -> [
+        ge:left,
+        0 -> ge:right
+    ]
+    ge -> :res
 }

@@ -15,7 +15,6 @@ var (
 	ErrIncompatArg        = errors.New("argument is not subtype of the parameter's contraint")
 	ErrUnresolvedArg      = errors.New("can't resolve argument")
 	ErrConstr             = errors.New("can't resolve constraint")
-	ErrArrType            = errors.New("could not resolve array type")
 	ErrUnionUnresolvedEl  = errors.New("can't resolve union element")
 	ErrRecFieldUnresolved = errors.New("can't resolve struct field")
 	ErrInvalidDef         = errors.New("invalid definition")
@@ -164,7 +163,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // Then it updates scope by adding params of ref type with resolved args as values to allow substitution later.
 // Then it checks whether base type of current ref type is native type to terminate with nil err and resolved expr.
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
-// For lit exprs logic is the this: for array resolveExpr it's type,
+// For lit exprs logic is the this:
 // for struct and union apply recursion for it's every field/element.
 func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved

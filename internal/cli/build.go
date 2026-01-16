@@ -120,16 +120,10 @@ func newBuildCmd(
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
 
-			mainPkgPath, err := mainPkgPathFromArgs(cliCtx)
+			mainPkgPath, err := mainPkgPathFromArgs(cliCtx, workdir)
 			if err != nil {
 				return err
 			}
-
-			// Resolve mainPkgPath relative to workdir if it's not absolute
-			if !filepath.IsAbs(mainPkgPath) {
-				mainPkgPath = filepath.Join(workdir, mainPkgPath)
-			}
-			mainPkgPath = filepath.Clean(mainPkgPath)
 
 			outputDirPath := workdir
 			if cliCtx.IsSet("output") {
@@ -238,9 +232,26 @@ func newBuildCmd(
 	}
 }
 
-func mainPkgPathFromArgs(cliCtx *cli.Context) (string, error) {
+func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 	if cliCtx.NArg() == 0 {
 		return "", errors.New("path to main package is required")
 	}
-	return cliCtx.Args().First(), nil
+	raw := cliCtx.Args().First()
+	
+	// Resolve path relative to workdir if not absolute
+	abs := raw
+	if !filepath.IsAbs(abs) {
+		abs = filepath.Join(workdir, raw)
+	}
+	abs = filepath.Clean(abs)
+	
+	// Check if path exists and is a .neva file - if so, use its directory
+	info, err := os.Stat(abs)
+	if err == nil && !info.IsDir() {
+		if filepath.Ext(abs) == ".neva" {
+			abs = filepath.Dir(abs)
+		}
+	}
+	
+	return abs, nil
 }

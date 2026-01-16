@@ -28,8 +28,6 @@ func Test_UpperThanManifest(t *testing.T) {
 
 // Test that CLI will go from down to up and find module's manifest
 func Test_DownToManifest(t *testing.T) {
-	t.Skip() // FIXME https://github.com/nevalang/neva/issues/571
-
 	// go one level down (and go back after test is finished)
 	wd, err := os.Getwd()
 	require.NoError(t, err)
