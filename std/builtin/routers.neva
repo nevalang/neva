@@ -4,7 +4,7 @@ pub def If<T>(data bool) (then any, else any) {
     ---
     :data -> [
         switch:data,
-        true -> switch:case[0] -> :then,
+        true -> switch:case[0] -> :then
     ]
     switch:else -> :else
 }
