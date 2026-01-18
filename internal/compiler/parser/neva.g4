@@ -108,7 +108,6 @@ singleSenderSide:
 	portAddr
 	| senderConstRef
 	| primitiveConstLit
-	| rangeExpr
 	| structSelectors
 	| unionSender;
 
@@ -119,8 +118,6 @@ senderConstRef: DOLLAR entityRef;
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: LBRACE NEWLINE* connDef NEWLINE* RBRACE;
-rangeExpr: rangeMember DOT2 rangeMember;
-rangeMember: (MINUS)? INT;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -204,7 +201,6 @@ LTE: '<=';
 AND2: '&&';
 OR2: '||';
 DCOLON: '::';
-DOT2: '..';
 ARROW: '->';
 FAT_ARROW: '=>';
 DASH3: '---';

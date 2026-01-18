@@ -470,18 +470,6 @@ func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
 // ExitDeferredConn is called when production deferredConn is exited.
 func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
 
-// EnterRangeExpr is called when production rangeExpr is entered.
-func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
-
-// ExitRangeExpr is called when production rangeExpr is exited.
-func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}
-
-// EnterRangeMember is called when production rangeMember is entered.
-func (s *BasenevaListener) EnterRangeMember(ctx *RangeMemberContext) {}
-
-// ExitRangeMember is called when production rangeMember is exited.
-func (s *BasenevaListener) ExitRangeMember(ctx *RangeMemberContext) {}
-
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 

@@ -45,8 +45,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"list_to_stream":       listToStream{},
 		"stream_to_list":       streamToList{},
 
-		"stream_int_range":    rangeIntV1{},
-		"stream_int_range_v2": rangeIntV2{},
+		"stream_int_range": rangeIntV1{},
 
 		"stream_zip":      streamZip{},
 		"stream_zip_many": streamZipMany{},

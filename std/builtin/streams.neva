@@ -133,12 +133,3 @@ def First<T>(data stream<T>) (then stream<T>, else stream<T>) {
     cond:then -> :then
     cond:else -> :else
 }
-
-// --- Range ---
-
-// Range sends stream of integers starting and ending with given `from` and `to`.
-// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
-// It emits stream only after all 3 inports receive messages.
-// Signal inport is required because Range is used in range expressions.
-#extern(stream_int_range_v2)
-pub def Range(from int, to int, sig any) (res stream<int>)

@@ -5,10 +5,15 @@ import { time, fmt, runtime, streams }
 def Main(start any) (stop any) {
     Map<int, string>{Handler}
     For<string>{fmt.Println}
+    range streams.Range
     streams.Wait
     runtime.Panic
     ---
-    :start -> 1..5 -> map -> for
+    :start -> [
+        1 -> range:from,
+        5 -> range:to
+    ]
+    range -> map -> for
     for:res -> wait -> :stop
     for:err -> panic
 }

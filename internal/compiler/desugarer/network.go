@@ -431,8 +431,6 @@ func (d *Desugarer) desugarChainedConnection(
 	// it's only possible to find receiver port before desugaring of chained connection
 	var chainHeadPort string
 	switch {
-	case chainHead.Range != nil:
-		chainHeadPort = "sig" // Range has sig inport
 	case chainHead.Const != nil:
 		chainHeadPort = "sig" // NewV2 has sig inport
 	case len(chainHead.StructSelector) != 0:
@@ -825,21 +823,7 @@ func (d *Desugarer) desugarSingleSender(
 			insert:  desugaredInsert,
 		}, nil
 	}
-
-	result, err := d.desugarRangeSender(
-		*sender.Range,
-		normConn,
-		nodesToInsert,
-		constsToInsert,
-	)
-	if err != nil {
-		return desugarSenderResult{}, err
-	}
-
-	return desugarSenderResult{
-		replace: src.Connection{Normal: &result.replace},
-		insert:  result.insert,
-	}, nil
+	return desugarSenderResult{}, fmt.Errorf("unexpected sender type: %v", sender.Meta.Location)
 }
 
 func (d *Desugarer) getFirstInportName(
@@ -1073,148 +1057,6 @@ func (d *Desugarer) desugarFanOut(
 }
 
 // Add a new function to handle range senders
-type handleRangeSenderResult struct {
-	replace src.NormalConnection
-	insert  []src.Connection
-}
-
-// desugarRangeSender desugars `from..to -> XXX` part.
-// It does not create connection to range:sig,
-// it's done in chained connection desugaring.
-func (d *Desugarer) desugarRangeSender(
-	rangeExpr src.Range,
-	normConn src.NormalConnection,
-	nodesToInsert map[string]src.Node,
-	constsToInsert map[string]src.Const,
-) (handleRangeSenderResult, error) {
-	locOnlyMeta := core.Meta{Location: rangeExpr.Meta.Location}
-
-	d.rangeCounter++
-
-	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
-	fromConstName := fmt.Sprintf("__range%d_from__", d.rangeCounter)
-	toConstName := fmt.Sprintf("__range%d_to__", d.rangeCounter)
-
-	constsToInsert[fromConstName] = src.Const{
-		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
-		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.From))}},
-		Meta:     locOnlyMeta,
-	}
-	constsToInsert[toConstName] = src.Const{
-		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
-		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.To))}},
-		Meta:     locOnlyMeta,
-	}
-
-	nodesToInsert[rangeNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "Range",
-			Meta: locOnlyMeta,
-		},
-		Meta: locOnlyMeta,
-	}
-	nodesToInsert[fromConstName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "New",
-			Meta: locOnlyMeta,
-		},
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: fromConstName,
-		},
-		Meta: locOnlyMeta,
-	}
-	nodesToInsert[toConstName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "New",
-			Meta: locOnlyMeta,
-		},
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: toConstName,
-		},
-		Meta: locOnlyMeta,
-	}
-
-	replace := src.NormalConnection{
-		Senders: []src.ConnectionSender{
-			{
-				PortAddr: &src.PortAddr{
-					Node: rangeNodeName,
-					Port: "res",
-					Meta: locOnlyMeta,
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		Receivers: normConn.Receivers,
-		Meta:      locOnlyMeta,
-	}
-
-	insert := []src.Connection{
-		// $from -> range:from
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: fromConstName,
-							Port: "res",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: rangeNodeName,
-							Port: "from",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		},
-		// $to -> range:to
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: toConstName,
-							Port: "res",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: rangeNodeName,
-							Port: "to",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		},
-	}
-
-	return handleRangeSenderResult{
-		insert:  insert,
-		replace: replace,
-	}, nil
-}
-
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
 func (d *Desugarer) desugarFanIn(

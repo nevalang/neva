@@ -7,10 +7,15 @@ import {
 def Main(start any) (stop any) {
     Map<int, any>{FizzBuzz}
     For{fmt.Println}
+    range streams.Range
     streams.Wait
     panic runtime.Panic
     ---
-    :start -> 1..101 -> map -> for
+    :start -> [
+        1 -> range:from,
+        101 -> range:to
+    ]
+    range -> map -> for
     for:res -> wait -> :stop
     for:err -> panic
 }

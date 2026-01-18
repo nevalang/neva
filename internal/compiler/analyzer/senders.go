@@ -63,18 +63,10 @@ func (a Analyzer) analyzeSender(
 ) (*src.ConnectionSender, *ts.Expr, *compiler.Error) {
 	if sender.PortAddr == nil &&
 		sender.Const == nil &&
-		sender.Range == nil &&
 		sender.Union == nil &&
 		len(sender.StructSelector) == 0 {
 		return nil, nil, &compiler.Error{
 			Message: "invalid sender",
-			Meta:    &sender.Meta,
-		}
-	}
-
-	if sender.Range != nil && len(prevChainLink) == 0 {
-		return nil, nil, &compiler.Error{
-			Message: "range expression cannot be used in non-chained connection",
 			Meta:    &sender.Meta,
 		}
 	}
@@ -263,7 +255,7 @@ func (a Analyzer) getChainHeadInputType(
 		return resolvedType, nil
 	}
 
-	if chainHead.Range != nil || chainHead.Const != nil {
+	if chainHead.Const != nil {
 		return ts.Expr{
 			Inst: &ts.InstExpr{
 				Ref: core.EntityRef{Name: "any"}, // :sig

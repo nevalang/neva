@@ -6,10 +6,15 @@ import {
 
 def Main(start any) (stop any) {
 	print For<int>{Next2Lines}
-        wait streams.Wait
+	range streams.Range
+	wait streams.Wait
 	panic runtime.Panic
 	---
-	:start -> 99..-1 -> print
+	:start -> [
+		99 -> range:from,
+		-1 -> range:to
+	]
+	range -> print
 	print:res -> wait -> :stop
 	print:err -> panic
 }

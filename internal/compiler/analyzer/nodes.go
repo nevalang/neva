@@ -1100,17 +1100,6 @@ func (a Analyzer) getPossibleSenderTypes(
 			}
 		}
 	}
-	// range sender: stream<int>
-	if sender.Range != nil {
-		return []typesystem.Expr{
-			{
-				Inst: &typesystem.InstExpr{
-					Ref:  core.EntityRef{Name: "stream"},
-					Args: []typesystem.Expr{{Inst: &typesystem.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
-				},
-			},
-		}
-	}
 	// union sender produces the union type itself
 	if sender.Union != nil {
 		if entity, _, err := scope.GetType(sender.Union.EntityRef); err == nil {

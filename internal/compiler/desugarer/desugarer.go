@@ -19,7 +19,6 @@ type Desugarer struct {
 	virtualTriggersCount  uint64
 	fanOutCounter         uint64
 	fanInCounter          uint64
-	rangeCounter          uint64
 }
 
 func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
@@ -222,7 +221,6 @@ func (d *Desugarer) desugarEntity(
 // 	d.virtualTriggersCount = 0
 // 	d.fanOutCounter = 0
 // 	d.fanInCounter = 0
-// 	d.rangeCounter = 0
 // }
 
 func New() Desugarer {

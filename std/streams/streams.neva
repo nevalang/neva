@@ -10,6 +10,14 @@ pub def Wait(data stream<any>) (sig any) {
     }
 }
 
+// --- Range ---
+
+// Range sends stream of integers starting and ending with given `from` and `to`.
+// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
+// It emits stream only after both inports receive messages.
+#extern(stream_int_range)
+pub def Range(from int, to int) (res stream<int>)
+
 // === Zip ===
 
 pub type ZipResult<T, R> struct {

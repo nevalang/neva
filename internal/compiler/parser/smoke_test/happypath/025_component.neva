@@ -1,3 +1,5 @@
+import { streams }
+
 def Doer() () {}
 
 pub def Doer() () {}
@@ -226,67 +228,147 @@ def Main() () {
     :baz -> :bax
 }
 
-// Test range expression
-def RangeTest1() () {
-    1..10 -> :out
+// Test range component
+def RangeTest1(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to
+    ]
+    range -> :out
 }
 
-// Test multiple range expressions
-def RangeTest2() () {
-    1..5 -> :out1
-    10..20 -> :out2
+// Test multiple range components
+def RangeTest2(start any) (out1 stream<int>, out2 stream<int>) {
+    range1 streams.Range
+    range2 streams.Range
+    ---
+    :start -> [
+        1 -> range1:from,
+        5 -> range1:to,
+        10 -> range2:from,
+        20 -> range2:to
+    ]
+    range1 -> :out1
+
+    range2 -> :out2
 }
 
-// Test range expression with negative numbers
-def RangeTest3() () {
-    -5..5 -> :out
+// Test range component with negative numbers
+def RangeTest3(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        -5 -> range:from,
+        5 -> range:to
+    ]
+    range -> :out
 }
 
-// Test range expression mixed with other connections
-def RangeTest4() (out1 stream<int>, out2 any, out3 stream<int>) {
-    1..10 -> :out1
+// Test range component mixed with other connections
+def RangeTest4(start any, in any) (out1 stream<int>, out2 any, out3 stream<int>) {
+    range1 streams.Range
+    range2 streams.Range
+    ---
+    :start -> [
+        1 -> range1:from,
+        10 -> range1:to,
+        20 -> range2:from,
+        30 -> range2:to
+    ]
+    range1 -> :out1
     :in -> :out2
-    20..30 -> :out3
+    range2 -> :out3
 }
 
-// Test range expression with struct selectors
-def RangeTest5() (out stream<int>) {
-    1..10 -> .data -> :out
+// Test range component with struct selectors
+def RangeTest5(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to
+    ]
+    range -> .data -> :out
 }
 
-// Test range expression with array index
-def RangeTest6() (out stream<int>) {
-    1..10 -> arr[0]
+// Test range component with array index
+def RangeTest6(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to
+    ]
+    range -> arr[0]
     arr[0] -> :out
 }
 
-// Test range expression with deferred connection
-def RangeTest7() (out stream<int>) {
-    1..10 -> { process -> :out }
+// Test range component with deferred connection
+def RangeTest7(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to
+    ]
+    range -> { process -> :out }
 }
 
-// Test range expression with multiple receivers
-def RangeTest8() (out1 stream<int>, out2 stream<int>) {
-    1..10 -> [:out1, :out2]
+// Test range component with multiple receivers
+def RangeTest8(start any) (out1 stream<int>, out2 stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to
+    ]
+    range -> [:out1, :out2]
 }
 
-// Test range expression inside deferred connection
-def RangeTest9() (out stream<int>) {
-    :start -> { 1..10 -> process -> :out }
+// Test range component inside deferred connection
+def RangeTest9(start any) (out stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        10 -> range:to,
+        { range -> process -> :out }
+    ]
 }
 
-// Test range expression inside fan-in
-def RangeTest10() (out stream<int>) {
+// Test range component inside fan-in
+def RangeTest10(start any) (out stream<int>) {
+    range1 streams.Range
+    range2 streams.Range
+    range3 streams.Range
+    ---
+    :start -> [
+        1 -> range1:from,
+        5 -> range1:to,
+        6 -> range2:from,
+        10 -> range2:to,
+        11 -> range3:from,
+        15 -> range3:to
+    ]
+
     [
-        1..5,
-        6..10,
-        11..15
+        range1,
+        range2,
+        range3
     ] -> fanIn -> :out
 }
 
-// Test range expression with fan-out
-def RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
-    1..30 -> [
+// Test range component with fan-out
+def RangeTest11(start any) (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+    range streams.Range
+    ---
+    :start -> [
+        1 -> range:from,
+        30 -> range:to
+    ]
+    range -> [
         :out1,
         :out2,
         :out3
@@ -294,21 +376,37 @@ def RangeTest11() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
 }
 
 // Test complex scenario combining multiple features
-def RangeTest12() (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
-    [1..10, :input] -> fanIn -> [
+def RangeTest12(start any, input any) (out1 stream<int>, out2 stream<int>, out3 stream<int>) {
+    range1 streams.Range
+    range2 streams.Range
+    ---
+    :start -> [
+        1 -> range1:from,
+        10 -> range1:to,
+        21 -> range2:from,
+        30 -> range2:to
+    ]
+
+    [range1, :input] -> fanIn -> [
         :out1,
         { process2 -> :out2 },
-        21..30 -> process3 -> :out3
+        range2 -> process3 -> :out3
     ]
 }
 
-// Test nested deferred connections with range expressions
-def RangeTest14() (out stream<int>) {
-    :start -> {
-        1..5 -> {
-            6..10 -> {
-                11..15 -> process
-            }
-        }
-    }
+// Test nested deferred connections with range components
+def RangeTest14(start any) (out stream<int>) {
+    range1 streams.Range
+    range2 streams.Range
+    range3 streams.Range
+    ---
+    :start -> [
+        1 -> range1:from,
+        5 -> range1:to,
+        6 -> range2:from,
+        10 -> range2:to,
+        11 -> range3:from,
+        15 -> range3:to,
+        { range1 -> { range2 -> { range3 -> process } } }
+    ]
 }

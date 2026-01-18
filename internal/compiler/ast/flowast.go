@@ -308,7 +308,6 @@ type Switch struct {
 type ConnectionSender struct {
 	PortAddr *PortAddr `json:"portAddr,omitempty"`
 	Const    *Const    `json:"const,omitempty"`
-	Range    *Range    `json:"range,omitempty"`
 
 	StructSelector []string     `json:"selector,omitempty"`
 	Union          *UnionSender `json:"union,omitempty"`
@@ -338,23 +337,11 @@ func (s ConnectionSender) String() string {
 	switch {
 	case s.Const != nil:
 		result = s.Const.Value.String()
-	case s.Range != nil:
-		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
 	}
 
 	return result + selectorsString
-}
-
-type Range struct {
-	From int64     `json:"from"`
-	To   int64     `json:"to"`
-	Meta core.Meta `json:"meta,omitempty"`
-}
-
-func (r Range) String() string {
-	return fmt.Sprintf("%v..%v", r.From, r.To)
 }
 
 type PortAddr struct {

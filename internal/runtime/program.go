@@ -230,14 +230,10 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	i := 0                                        // full circles counter
 	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
-	for {
+	for len(buf) == 0 || i < len(a.chans) {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
 		// if we do len(ss) iterations, that's ok, because we will go back and check
-		if len(buf) > 0 && i >= len(a.chans) {
-			break
-		}
-
 		for slotIdx, ch := range a.chans {
 			select {
 			default:
