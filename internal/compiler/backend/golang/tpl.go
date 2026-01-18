@@ -361,20 +361,19 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 
 	// Parse output message
 	var out {{.Name}}Output
-	if res == nil {
+	if !res.IsValid() {
 		return out, nil // Should not happen for valid flow
 	}
-	
+
 	{{- if eq (len .OutFields) 1}}
 	{{- $field := index .OutFields 0}}
 	out.{{$field.Name}} = {{getGoFromMsg "res" $field.Type}}
 	{{- else}}
 	// We expect a StructMsg as output
-	outStruct, ok := res.(runtime.StructMsg)
-	if !ok {
+	if !res.IsStruct() {
 		return out, fmt.Errorf("expected StructMsg, got %v", res)
 	}
-
+	outStruct := res.Struct()
 	for name, msg := range outStruct.Map() {
 		switch name {
 		{{- range .OutFields}}

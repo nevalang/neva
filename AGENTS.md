@@ -43,6 +43,7 @@ The runtime is a library embedded into every compiled program.
 
 - **FuncRunner**: Executes "native components" (runtime functions).
 - **Connector**: Manages message passing.
+- **Message representation**: `runtime.Msg` is a tagged-union struct; construct with `New*Msg` helpers (use `NewUnionMsgNoData` for tag-only unions).
 - **Extensibility**:
   - **Native Functions**: `internal/runtime/funcs`.
   - **Func Registry**: `internal/runtime/funcs/registry.go`.
