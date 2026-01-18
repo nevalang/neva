@@ -3,6 +3,7 @@ package runtime
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -18,223 +19,255 @@ func (o OrderedMsg) String() string {
 	return fmt.Sprint(o.Msg)
 }
 
-type Msg interface {
-	Bool() bool
-	Int() int64
-	Float() float64
-	Str() string
-	List() []Msg
-	Dict() map[string]Msg
-	Struct() StructMsg
-	Union() UnionMsg
+type MsgKind uint8
 
-	Equal(Msg) bool
+const (
+	MsgKindInvalid MsgKind = iota
+	MsgKindBool
+	MsgKindInt
+	MsgKindFloat
+	MsgKindString
+	MsgKindList
+	MsgKindDict
+	MsgKindStruct
+	MsgKindUnion
+)
+
+// Msg is the runtime representation of a Neva message.
+// It is a tagged union optimized for minimal allocations in hot paths.
+type Msg struct {
+	kind MsgKind
+	bits uint64
+	str  string
+	val  any
 }
 
-// Internal
-
-type internalMsg struct{}
-
-func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
-func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
-func (internalMsg) Int() int64     { panic("unexpected Int method call on internal message type") }
-func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
-func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
-func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
-func (internalMsg) Dict() map[string]Msg {
-	panic("unexpected Dict method call on internal message type")
+func (msg Msg) Kind() MsgKind {
+	return msg.kind
 }
-func (internalMsg) Struct() StructMsg {
-	panic("unexpected Struct method call on internal message type")
+
+func (msg Msg) IsValid() bool {
+	return msg.kind != MsgKindInvalid
 }
-func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
-func (internalMsg) Equal(other Msg) bool {
-	panic("unexpected Equal method call on internal message type")
+
+func (msg Msg) IsBool() bool {
+	return msg.kind == MsgKindBool
+}
+
+func (msg Msg) IsInt() bool {
+	return msg.kind == MsgKindInt
+}
+
+func (msg Msg) IsFloat() bool {
+	return msg.kind == MsgKindFloat
+}
+
+func (msg Msg) IsString() bool {
+	return msg.kind == MsgKindString
+}
+
+func (msg Msg) IsList() bool {
+	return msg.kind == MsgKindList
+}
+
+func (msg Msg) IsDict() bool {
+	return msg.kind == MsgKindDict
+}
+
+func (msg Msg) IsStruct() bool {
+	return msg.kind == MsgKindStruct
+}
+
+func (msg Msg) IsUnion() bool {
+	return msg.kind == MsgKindUnion
+}
+
+func (msg Msg) Bool() bool {
+	msg.mustKind(MsgKindBool, "Bool")
+	return msg.bits == 1
+}
+
+func (msg Msg) Int() int64 {
+	msg.mustKind(MsgKindInt, "Int")
+	return int64(msg.bits)
+}
+
+func (msg Msg) Float() float64 {
+	msg.mustKind(MsgKindFloat, "Float")
+	return math.Float64frombits(msg.bits)
+}
+
+func (msg Msg) Str() string {
+	msg.mustKind(MsgKindString, "Str")
+	return msg.str
+}
+
+func (msg Msg) List() []Msg {
+	msg.mustKind(MsgKindList, "List")
+	return msg.val.([]Msg)
+}
+
+func (msg Msg) Dict() map[string]Msg {
+	msg.mustKind(MsgKindDict, "Dict")
+	return msg.val.(map[string]Msg)
+}
+
+func (msg Msg) Struct() StructMsg {
+	msg.mustKind(MsgKindStruct, "Struct")
+	return msg.val.(StructMsg)
+}
+
+func (msg Msg) Union() UnionMsg {
+	msg.mustKind(MsgKindUnion, "Union")
+	return msg.val.(UnionMsg)
+}
+
+func (msg Msg) String() string {
+	switch msg.kind {
+	case MsgKindInvalid:
+		return "<nil>"
+	case MsgKindBool:
+		return strconv.FormatBool(msg.Bool())
+	case MsgKindInt:
+		return strconv.FormatInt(msg.Int(), 10)
+	case MsgKindFloat:
+		return strconv.FormatFloat(msg.Float(), 'g', -1, 64)
+	case MsgKindString:
+		return msg.Str()
+	case MsgKindList, MsgKindDict, MsgKindStruct:
+		b, err := msg.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+		return string(b)
+	case MsgKindUnion:
+		return msg.Union().String()
+	default:
+		return "<unknown>"
+	}
+}
+
+func (msg Msg) MarshalJSON() ([]byte, error) {
+	switch msg.kind {
+	case MsgKindInvalid:
+		return []byte("null"), nil
+	case MsgKindBool:
+		return []byte(strconv.FormatBool(msg.Bool())), nil
+	case MsgKindInt:
+		return []byte(strconv.FormatInt(msg.Int(), 10)), nil
+	case MsgKindFloat:
+		return []byte(strconv.FormatFloat(msg.Float(), 'g', -1, 64)), nil
+	case MsgKindString:
+		return json.Marshal(msg.Str())
+	case MsgKindList:
+		return json.Marshal(msg.List())
+	case MsgKindDict:
+		return marshalMapWithSpaces(msg.Dict())
+	case MsgKindStruct:
+		return msg.Struct().MarshalJSON()
+	case MsgKindUnion:
+		return msg.Union().MarshalJSON()
+	default:
+		return []byte("null"), nil
+	}
+}
+
+func (msg Msg) Equal(other Msg) bool {
+	if msg.kind != other.kind {
+		return false
+	}
+	switch msg.kind {
+	case MsgKindInvalid:
+		return true
+	case MsgKindBool, MsgKindInt:
+		return msg.bits == other.bits
+	case MsgKindFloat:
+		return msg.Float() == other.Float()
+	case MsgKindString:
+		return msg.str == other.str
+	case MsgKindList:
+		return equalMsgSlices(msg.List(), other.List())
+	case MsgKindDict:
+		return equalMsgMaps(msg.Dict(), other.Dict())
+	case MsgKindStruct:
+		return msg.Struct().Equal(other.Struct())
+	case MsgKindUnion:
+		return msg.Union().Equal(other.Union())
+	default:
+		return false
+	}
+}
+
+func (msg Msg) mustKind(kind MsgKind, method string) {
+	if msg.kind != kind {
+		panic(fmt.Sprintf("unexpected %s call on %s message", method, msg.kind))
+	}
+}
+
+func (kind MsgKind) String() string {
+	switch kind {
+	case MsgKindInvalid:
+		return "invalid"
+	case MsgKindBool:
+		return "bool"
+	case MsgKindInt:
+		return "int"
+	case MsgKindFloat:
+		return "float"
+	case MsgKindString:
+		return "string"
+	case MsgKindList:
+		return "list"
+	case MsgKindDict:
+		return "dict"
+	case MsgKindStruct:
+		return "struct"
+	case MsgKindUnion:
+		return "union"
+	default:
+		return "unknown"
+	}
 }
 
 // Bool
 
-type BoolMsg struct {
-	internalMsg
-	v bool
-}
-
-func (msg BoolMsg) Bool() bool                   { return msg.v }
-func (msg BoolMsg) String() string               { return strconv.FormatBool(msg.v) }
-func (msg BoolMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg BoolMsg) Equal(other Msg) bool {
-	otherBool, ok := other.(BoolMsg)
-	return ok && msg.v == otherBool.v
-}
-
-func NewBoolMsg(b bool) BoolMsg {
-	return BoolMsg{
-		internalMsg: internalMsg{},
-		v:           b,
+func NewBoolMsg(b bool) Msg {
+	var bits uint64
+	if b {
+		bits = 1
 	}
+	return Msg{kind: MsgKindBool, bits: bits}
 }
 
 // Int
 
-type IntMsg struct {
-	internalMsg
-	v int64
-}
-
-func (msg IntMsg) Int() int64                   { return msg.v }
-func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
-func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg IntMsg) Equal(other Msg) bool {
-	otherInt, ok := other.(IntMsg)
-	return ok && msg.v == otherInt.v
-}
-
-func NewIntMsg(n int64) IntMsg {
-	return IntMsg{
-		internalMsg: internalMsg{},
-		v:           n,
-	}
+func NewIntMsg(n int64) Msg {
+	return Msg{kind: MsgKindInt, bits: uint64(n)}
 }
 
 // Float
 
-type FloatMsg struct {
-	internalMsg
-	v float64
-}
-
-func (msg FloatMsg) Float() float64               { return msg.v }
-func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
-func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg FloatMsg) Equal(other Msg) bool {
-	otherFloat, ok := other.(FloatMsg)
-	return ok && msg.v == otherFloat.v
-}
-
-func NewFloatMsg(n float64) FloatMsg {
-	return FloatMsg{
-		internalMsg: internalMsg{},
-		v:           n,
-	}
+func NewFloatMsg(n float64) Msg {
+	return Msg{kind: MsgKindFloat, bits: math.Float64bits(n)}
 }
 
 // --- STRING ---
-type StringMsg struct {
-	internalMsg
-	v string
-}
-
-func (msg StringMsg) Str() string { return msg.v }
-
-func (msg StringMsg) String() string { return msg.v }
-
-func (msg StringMsg) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msg.String())
-}
-
-func (msg StringMsg) Equal(other Msg) bool {
-	otherString, ok := other.(StringMsg)
-	return ok && msg.v == otherString.v
-}
-
-func NewStringMsg(s string) StringMsg {
-	return StringMsg{
-		internalMsg: internalMsg{},
-		v:           s,
-	}
+func NewStringMsg(s string) Msg {
+	return Msg{kind: MsgKindString, str: s}
 }
 
 // --- LIST ---
-type ListMsg struct {
-	internalMsg
-	v []Msg
-}
-
-func (msg ListMsg) List() []Msg { return msg.v }
-func (msg ListMsg) String() string {
-	bb, err := msg.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-	return string(bb)
-}
-func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
-func (msg ListMsg) Equal(other Msg) bool {
-	otherList, ok := other.(ListMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.v) != len(otherList.v) {
-		return false
-	}
-	for i, v := range msg.v {
-		if !v.Equal(otherList.v[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-func NewListMsg(v []Msg) ListMsg {
-	return ListMsg{
-		internalMsg: internalMsg{},
-		v:           v,
-	}
+func NewListMsg(v []Msg) Msg {
+	return Msg{kind: MsgKindList, val: v}
 }
 
 // --- DICT ---
-type DictMsg struct {
-	internalMsg
-	v map[string]Msg
-}
-
-func (msg DictMsg) Dict() map[string]Msg { return msg.v }
-func (msg DictMsg) MarshalJSON() ([]byte, error) {
-	jsonData, err := json.Marshal(msg.v)
-	if err != nil {
-		panic(err)
-	}
-
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
-}
-func (msg DictMsg) String() string {
-	b, err := msg.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-func (msg DictMsg) Equal(other Msg) bool {
-	otherDict, ok := other.(DictMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.v) != len(otherDict.v) {
-		return false
-	}
-	for k, v := range msg.v {
-		otherV, ok := otherDict.v[k]
-		if !ok || !v.Equal(otherV) {
-			return false
-		}
-	}
-	return true
-}
-
-func NewDictMsg(d map[string]Msg) DictMsg {
-	return DictMsg{
-		internalMsg: internalMsg{},
-		v:           d,
-	}
+func NewDictMsg(d map[string]Msg) Msg {
+	return Msg{kind: MsgKindDict, val: d}
 }
 
 // --- STRUCT ---
 type StructMsg struct {
-	internalMsg
 	fields []StructField
 }
 
@@ -256,25 +289,23 @@ func (msg StructMsg) get(name string) (Msg, bool) {
 			return msg.fields[i].value, true
 		}
 	}
-	return nil, false
+	return Msg{}, false
+}
+
+func (msg StructMsg) Fields() []StructField {
+	return msg.fields
+}
+
+func (msg StructMsg) Map() map[string]Msg {
+	result := make(map[string]Msg, len(msg.fields))
+	for i := range msg.fields {
+		result[msg.fields[i].name] = msg.fields[i].value
+	}
+	return result
 }
 
 func (msg StructMsg) MarshalJSON() ([]byte, error) {
-	m := make(map[string]Msg, len(msg.fields))
-	for i := range msg.fields {
-		m[msg.fields[i].name] = msg.fields[i].value
-	}
-
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		panic(err)
-	}
-
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
+	return marshalMapWithSpaces(msg.Map())
 }
 
 func (msg StructMsg) String() string {
@@ -288,16 +319,12 @@ func (msg StructMsg) String() string {
 // Equal implements strict equality for StructMsg messages.
 // It returns false if the lengths of the names and fields are different.
 // It returns false if any of the fields are not equal.
-func (msg StructMsg) Equal(other Msg) bool {
-	otherStruct, ok := other.(StructMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.fields) != len(otherStruct.fields) {
+func (msg StructMsg) Equal(other StructMsg) bool {
+	if len(msg.fields) != len(other.fields) {
 		return false
 	}
 	for i := range msg.fields {
-		otherField, ok := otherStruct.get(msg.fields[i].name)
+		otherField, ok := other.get(msg.fields[i].name)
 		if !ok {
 			return false
 		}
@@ -308,15 +335,18 @@ func (msg StructMsg) Equal(other Msg) bool {
 	return true
 }
 
+func (msg StructMsg) Msg() Msg {
+	return Msg{kind: MsgKindStruct, val: msg}
+}
+
 func newStructMsg(fields []StructField) StructMsg {
 	if len(fields) == 0 {
-		return StructMsg{internalMsg: internalMsg{}, fields: nil}
+		return StructMsg{fields: nil}
 	}
 	copied := make([]StructField, len(fields))
 	copy(copied, fields)
 	return StructMsg{
-		internalMsg: internalMsg{},
-		fields:      copied,
+		fields: copied,
 	}
 }
 
@@ -333,13 +363,15 @@ func NewStructField(name string, value Msg) StructField {
 
 // newstruct builds a struct message from a slice of structfield.
 // underlying struct representation remains unchanged for now.
-func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
+func NewStructMsg(fields []StructField) Msg { return newStructMsg(fields).Msg() }
+
+func NewStructValue(fields []StructField) StructMsg { return newStructMsg(fields) }
 
 // --- UNION ---
 type UnionMsg struct {
-	internalMsg
-	tag  string
-	data Msg
+	tag     string
+	data    Msg
+	hasData bool
 }
 
 func (msg UnionMsg) Union() UnionMsg {
@@ -350,15 +382,33 @@ func (msg UnionMsg) Tag() string {
 	return msg.tag
 }
 
+func (msg UnionMsg) HasData() bool {
+	return msg.hasData
+}
+
 func (msg UnionMsg) Data() Msg {
+	if !msg.hasData {
+		return Msg{}
+	}
 	return msg.data
 }
 
 func (msg UnionMsg) String() string {
-	if msg.data == nil {
+	if !msg.hasData {
 		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
 	}
 	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
+}
+
+func (msg UnionMsg) MarshalJSON() ([]byte, error) {
+	if !msg.hasData {
+		return []byte(fmt.Sprintf(`{ "tag": %q }`, msg.tag)), nil
+	}
+	payload, err := json.Marshal(msg.data)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(fmt.Sprintf(`{ "tag": %q, "data": %s }`, msg.tag, payload)), nil
 }
 
 // Equal implements strict equality for UnionMsg messages.
@@ -366,54 +416,106 @@ func (msg UnionMsg) String() string {
 // It returns false if tags are different.
 // It returns false if data is different.
 // Tags are compared as Go strings and data is compared recursevely using Equal method.
-func (msg UnionMsg) Equal(other Msg) bool {
-	otherUnion, ok := other.(UnionMsg)
-	if !ok {
+func (msg UnionMsg) Equal(other UnionMsg) bool {
+	if msg.hasData != other.hasData {
 		return false
 	}
-
-	if msg.data != nil && otherUnion.data == nil {
-		return false
-	} else if msg.data == nil && otherUnion.data != nil {
+	if msg.tag != other.tag {
 		return false
 	}
-
-	if msg.tag != otherUnion.tag {
-		return false
-	}
-
-	if msg.data == nil {
+	if !msg.hasData {
 		return true
 	}
-
-	return msg.data.Equal(otherUnion.data)
+	return msg.data.Equal(other.data)
 }
 
-func NewUnionMsg(tag string, data Msg) UnionMsg {
+func (msg UnionMsg) Msg() Msg {
+	return Msg{kind: MsgKindUnion, val: msg}
+}
+
+func newUnionMsg(tag string, data Msg) UnionMsg {
 	return UnionMsg{
-		internalMsg: internalMsg{},
-		tag:         tag,
-		data:        data,
+		tag:     tag,
+		data:    data,
+		hasData: data.IsValid(),
 	}
+}
+
+func NewUnionMsg(tag string, data Msg) Msg {
+	return newUnionMsg(tag, data).Msg()
+}
+
+func NewUnionMsgNoData(tag string) Msg {
+	return UnionMsg{tag: tag}.Msg()
+}
+
+func NewUnionValue(tag string, data Msg) UnionMsg {
+	return newUnionMsg(tag, data)
+}
+
+func NewUnionValueNoData(tag string) UnionMsg {
+	return UnionMsg{tag: tag}
 }
 
 // --- OPERATIONS ---
 
 func Match(msg Msg, pattern Msg) bool {
-	msgUnion, ok := msg.(UnionMsg)
-	if !ok {
+	if !msg.IsUnion() || !pattern.IsUnion() {
 		return msg.Equal(pattern)
 	}
 
-	patternUnion, ok := pattern.(UnionMsg)
-	if !ok {
-		return msg.Equal(pattern)
+	msgUnion := msg.Union()
+	patternUnion := pattern.Union()
+
+	if msgUnion.tag != patternUnion.tag {
+		return false
 	}
 
-	if msgUnion.data != nil && patternUnion.data == nil ||
-		msgUnion.data == nil && patternUnion.data != nil {
-		return msgUnion.tag == patternUnion.tag
+	if msgUnion.hasData != patternUnion.hasData {
+		return true
+	}
+
+	if !msgUnion.hasData {
+		return true
 	}
 
 	return msgUnion.data.Equal(patternUnion.data)
+}
+
+func equalMsgSlices(left []Msg, right []Msg) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if !left[i].Equal(right[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func equalMsgMaps(left map[string]Msg, right map[string]Msg) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for k, v := range left {
+		other, ok := right[k]
+		if !ok || !v.Equal(other) {
+			return false
+		}
+	}
+	return true
+}
+
+func marshalMapWithSpaces(m map[string]Msg) ([]byte, error) {
+	jsonData, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonString := string(jsonData)
+	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
+	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+
+	return []byte(jsonString), nil
 }

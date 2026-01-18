@@ -26,7 +26,7 @@ func (fanIn) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 				return
 			}
 
-			if !resOut.Send(ctx, dataMsg) {
+			if !resOut.Send(ctx, dataMsg.Msg) {
 				return
 			}
 		}

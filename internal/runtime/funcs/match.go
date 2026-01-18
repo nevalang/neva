@@ -75,8 +75,13 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				}
 			}
 
-			if u, ok := resMsg.(runtime.UnionMsg); ok {
-				resMsg = u.Data()
+			if resMsg.IsUnion() {
+				unionMsg := resMsg.Union()
+				if unionMsg.HasData() {
+					resMsg = unionMsg.Data()
+				} else {
+					resMsg = runtime.Msg{}
+				}
 			}
 
 			if !resOut.Send(ctx, resMsg) {

@@ -79,7 +79,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__10/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__10_out_data_0_to_split_in_data, __fan_out__10_out_data_1_to_builder_in_metaText})),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "fan_in",
@@ -91,7 +91,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "fan_in_pkg/out", Port: "res"}, interceptor, fan_in_pkg_out_res_to_builder_in_pkg), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "panic",
@@ -101,7 +101,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "lock",
@@ -114,7 +114,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"data": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "lock_empty_pkg/out", Port: "data"}, interceptor, lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "list_at",
@@ -128,7 +128,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/out", Port: "res"}, interceptor, at_name_1_out_res_to_fan_in_name_in_data_1), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "fan_in",
@@ -140,7 +140,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "fan_in_name/out", Port: "res"}, interceptor, fan_in_name_out_res_to_builder_in_name), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "fan_out",
@@ -152,7 +152,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__11/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__11_out_data_0_to_len_in_data, __fan_out__11_out_data_1_to_cond_in_data})),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "new",
@@ -176,7 +176,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/out", Port: "res"}, interceptor, at_name_2_out_res_to_fan_in_name_in_data_0), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "list_len",
@@ -188,7 +188,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "len/out", Port: "res"}, interceptor, len_out_res_to_eq_in_left), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "fan_out",
@@ -200,7 +200,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__12/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__12_out_data_0_to_at_pkg_2_in_data, __fan_out__12_out_data_1_to_at_name_2_in_data})),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "new",
@@ -224,7 +224,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "builder/out", Port: "res"}, interceptor, builder_out_res_to_out_res), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "panic",
@@ -234,7 +234,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "strings_split",
@@ -247,7 +247,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "split/out", Port: "res"}, interceptor, split_out_res_to___fan_out__11_in_data), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "fan_out",
@@ -259,7 +259,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__13/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__13_out_data_0_to_lock_empty_pkg_in_sig, __fan_out__13_out_data_1_to_at_name_1_in_data})),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "new",
@@ -292,7 +292,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "eq/out", Port: "res"}, interceptor, eq_out_res_to_cond_in_if), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "cond",
@@ -306,7 +306,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"then": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "then"}, interceptor, cond_out_then_to___fan_out__12_in_data), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "list_at",
@@ -320,7 +320,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_pkg_2/out", Port: "res"}, interceptor, at_pkg_2_out_res_to_fan_in_pkg_in_data_0), nil),
 				}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "panic",
@@ -330,7 +330,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
-			Config: nil,
+			Config: runtime.Msg{},
 		},
 		{
 			Ref: "new",
@@ -369,7 +369,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 
 	// Parse output message
 	var out ParseEntityRefOutput
-	if res == nil {
+	if !res.IsValid() {
 		return out, nil // Should not happen for valid flow
 	}
 	out.Res = res
