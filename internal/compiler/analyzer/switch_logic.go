@@ -18,14 +18,8 @@ func (a Analyzer) getSwitchCaseOutportType(
 	scope src.Scope,
 	net []src.Connection,
 ) (*ts.Expr, *compiler.Error) {
-	nodeName := switchPort.Node
-	idx := switchPort.Idx
-	if idx == nil {
-		panic("switch case port must have index")
-	}
-
 	// 1. Get Switch Node to check if T is Union
-	node, ok := nodes[nodeName]
+	node, ok := nodes[switchPort.Node]
 	if !ok {
 		panic("switch node not found")
 	}
@@ -49,7 +43,12 @@ func (a Analyzer) getSwitchCaseOutportType(
 
 	// 2. Scan net to find the input connection to this Switch case
 	// We are looking for a connection where Receiver is switchPort (case[idx])
-	inputSender, ferr := a.findSenderForSwitchCaseInput(net, nodeName, idx, switchPort)
+	inputSender, ferr := a.findSenderForSwitchCaseInput(
+		net,
+		switchPort.Node,
+		switchPort.Idx,
+		switchPort,
+	)
 	if ferr != nil {
 		return nil, ferr
 	}

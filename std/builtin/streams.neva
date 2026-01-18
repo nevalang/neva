@@ -1,5 +1,3 @@
-
-
 // --- For ---
 
 // `For` applies a handler to each item in a stream to produce side-effects.

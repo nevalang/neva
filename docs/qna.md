@@ -18,7 +18,7 @@ This could lead to deadlock/panic if the parent component doesn't use specific a
 
 This is crucial for "routing" cases where data needs to be sent to specific handlers based on conditions.
 
-## Why is outport usage optional while inport usage is required?
+## Why outport usage is optional while inport usage is required?
 
 Inports are requirements to trigger computation. Outports are optional results. It's possible to implicitly discard unwanted data, but it's not possible to implicitly provide default values for ports not knowing the specifics of the usecase.
 
@@ -34,15 +34,17 @@ Separate int and float types provide better handling of large numbers, improved 
 
 Builtin package entities are frequently used or used internally by the compiler.
 
-## Why is `Const` implemented like an infinite loop?
+## Why `New` is implemented like an infinite loop?
 
 Const nodes are implemented as infinite loops that constantly send messages. This covers all use cases but requires locks for controlled constant message sending. Alternative designs like "trigger" semantics or changing to single-send behavior have been considered, but they introduce other complexities or limitations.
 
-## Why have `stream` builtin?
+<!-- ## Why have `stream` builtin?
 
-Streams solve the problem of iterating over collections in dataflow, providing a way to know when a collection ends, crucial for implementing patterns like `map/filter/reduce`.
+TODO upd
 
-## Why are Neva's streams different from classical FBP?
+Streams solve the problem of iterating over collections in dataflow, providing a way to know when a collection ends, crucial for implementing patterns like `map/filter/reduce`. -->
+
+## Why Neva's streams are different from classical FBP?
 
 Neva supports infinite nesting for streams, but nested streams aren't used to represent structured data due to the existence of `struct`, `list`, and `dict`.
 
@@ -95,3 +97,7 @@ While `class` is familiar and components are similar to classes as blueprints, i
 ## Why operators and reducers have `left` and `right` naming for ports?
 
 Operators should follow same pattern for simplicity of desugarer and usage by user and they also should be able to be used as reducers by `Reduce`. It means we need to choose between `left/right` which is convenient for operators and `acc/el` for reduce. To keep syntax minimal, we align on `left/right`.
+
+## Why does Neva have overloading, and why can’t users define it?
+
+Neva uses overloading internally to keep the standard library conceptually small without forcing users to deal with tagged unions, explicit type arguments, or name explosions for every concrete type. This improves day-to-day DX in an operator-less, component-only language. However, exposing overloading to users would introduce mental-model complexity: it makes APIs harder to reason about as systems grow. By keeping overloading limited to the `builtin` package, Neva captures the ergonomic benefits where they matter most while preserving a simple, predictable model for user code.
