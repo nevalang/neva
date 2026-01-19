@@ -143,6 +143,92 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 			},
 		},
+		// node1:out -> :err; node2:out -> :err (implicit fan-in from err-guard)
+		{
+			name: "implicit_fan_in_to_outport",
+			net: []src.Connection{
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{PortAddr: &src.PortAddr{Node: "node1", Port: "out"}},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "out", Port: "err"},
+							},
+						},
+					},
+				},
+				{
+					Normal: &src.NormalConnection{
+						Senders: []src.ConnectionSender{
+							{PortAddr: &src.PortAddr{Node: "node2", Port: "out"}},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "out", Port: "err"},
+							},
+						},
+					},
+				},
+			},
+			nodes: map[string]src.Node{
+				"node1": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node1"}},
+				"node2": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node2"}},
+			},
+			expectedResult: handleNetworkResult{
+				desugaredConnections: []src.Connection{
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
+								},
+							},
+							Receivers: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "node2", Port: "out"},
+								},
+							},
+							Receivers: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
+								},
+							},
+						},
+					},
+					{
+						Normal: &src.NormalConnection{
+							Senders: []src.ConnectionSender{
+								{
+									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
+								},
+							},
+							Receivers: []src.ConnectionReceiver{
+								{
+									PortAddr: &src.PortAddr{Node: "out", Port: "err"},
+								},
+							},
+						},
+					},
+				},
+				constsToInsert: map[string]src.Const{},
+				nodesToInsert: map[string]src.Node{
+					"__fan_in__1": {
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "FanIn"},
+					},
+				},
+			},
+		},
 		// node1:foo -> node2:bar -> node3:baz
 		{
 			name: "chained",
