@@ -20,7 +20,41 @@ _"logic of getting type for union sender partially duplicates logic of validatin
 
 In the primary connection analysis flow, the `Union` block in `getResolvedSenderType` is mathematically unreachable because `analyzeSender` handles the union and returns early. It is only called recursively by `getResolvedSenderType` itself when resolving predecessors of struct selectors.
 
-### 3. Indirect Recursion loop
+### 3. Connection Analysis Is Not Local (Switch Coupling)
+
+The current implementation passes the full `net` into `analyzeConnection`, so the claim that it is "connection-local" is inaccurate. In practice, connection analysis implicitly relies on switch-aware logic that is spread across the analyzer:
+
+- **Node analysis**: Overload resolution depends on knowing the resolved type of `switch:case[i]` outports when the receiver is an overloaded node (e.g., `add`), so switch output typing bleeds into node analysis.
+- **Connection analysis (normal path)**: `hasSwitchCaseReceiver` is used to compute `isPatternMatchingContext`, which later affects union sender handling (e.g., the `sender.Union.Data == nil` case). The result is also threaded into `getResolvedSenderType`, even though it appears unused per the existing refactor note.
+- **Connection analysis (network loop)**: The `for i, sender := range analyzedSenders { ... }` loop inside `analyzeNormalConnection` contains additional switch-dependent validation and typing logic.
+
+This makes connection analysis effectively network-scoped rather than local, and the switch-specific behavior interferes with overload resolution and type checking. It also means any refactor must preserve a delicate set of interactions across these phases.
+
+Minimal dependency sketch (current flow, with functions):
+
+```
+nodes.go
+  getInterfaceAndOverloadingIndexForNode
+  getNodeOverloadVersionAndIndex
+    ^                               |
+    | needs switch:case[i] typing   | requires resolved iface(s)
+    | for overloaded receivers      v
+network.go
+  analyzeConnection
+  analyzeNormalConnection
+    |
+    | calls to resolve types
+    v
+senders.go
+  analyzeSender <--> getResolvedSenderType (network.go)
+    ^                               |
+    | hasSwitchCaseReceiver /       | relies on node ifaces
+    | isPatternMatchingContext      v
+nodes.go
+  deriveNodeConstraintsFromNetwork
+```
+
+### 4. Indirect Recursion loop
 
 There is a complex loop between `analyzeSender` and `getResolvedSenderType`:
 
@@ -28,7 +62,7 @@ There is a complex loop between `analyzeSender` and `getResolvedSenderType`:
 - `getResolvedSenderType` calls `analyzeSender` (to resolve wrapped union data).
 - `analyzeSender` calls itself (recursive union data analysis).
 
-### 4. Computational Inefficiency in Chains
+### 5. Computational Inefficiency in Chains
 
 When analyzing struct selector chains (e.g., `node:port -> .field1 -> .field2`), the `getResolvedSenderType` function re-resolves the entire preceding chain for every link. For a chain of length $N$, this leads to $O(N^2)$ type resolutions because previous results are not cached or passed through.
 
@@ -101,4 +135,4 @@ A good end state is a two-pass approach:
 1. **Node candidate pass**: validate instantiation and build candidate overload set.
 2. **Network constraint pass**: resolve overloads using full wiring constraints, then validate network strictly using the chosen overloads.
 
-This preserves existing behavior but makes the dependency graph explicit and removes the need for a partial network scan during node analysis. It should also make the overload subsystem easier to test in isolation.*** End Patch"}}
+This preserves existing behavior but makes the dependency graph explicit and removes the need for a partial network scan during node analysis. It should also make the overload subsystem easier to test in isolation.

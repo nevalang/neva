@@ -4,13 +4,14 @@ Follow these instructions.
 
 ## 1. 🤖 Operating Protocol
 
-1. Use `context7` MCP server.
+1. Use `context7` MCP server when available.
 2. Run `golangci-lint` and `go test`. Fix warnings.
 3. If uncertainty > 10%, ask user.
 4. Update this file if changes to process, architecture, or rules.
 5. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
 6. Plan -> Review -> Execute -> Review.
 7. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
+8. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 
 ## 2. 📈 Self-Improvement Protocol
 
