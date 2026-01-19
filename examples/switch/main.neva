@@ -1,6 +1,5 @@
 import {
     fmt
-    errors
     runtime
     strings
 }
@@ -14,21 +13,20 @@ def Main(start any) (stop any) {
     app:stop -> :stop
 }
 
-def App(start any) (stop any, err error) {
+def App(start any) (stop any, err any) {
     print fmt.Print?
     scanln fmt.Scanln?
     upper strings.ToUpper
     lower strings.ToLower
     println fmt.Println<any>?
     switch Switch<string>
-    err_new errors.New
     ---
     :start -> [
         'Enter the name: ' -> print -> scanln -> switch:data,
         'Alice' -> switch:case[0] -> upper,
         'Bob' -> switch:case[1] -> lower
     ]
-    switch:else -> '...' -> err_new -> :err
+    switch:else -> :err
     [upper, lower] -> println
     println -> :stop
 }
