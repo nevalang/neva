@@ -295,14 +295,7 @@ type ConnectionReceiver struct {
 	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
 	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
 	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
-	Switch             *Switch     `json:"switch,omitempty"`
 	Meta               core.Meta   `json:"meta,omitempty"`
-}
-
-type Switch struct {
-	Cases   []NormalConnection   `json:"cases,omitempty"`   // TODO rename to CaseBranches
-	Default []ConnectionReceiver `json:"default,omitempty"` // TODO rename to DefaultBranch
-	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
 type ConnectionSender struct {
@@ -312,7 +305,7 @@ type ConnectionSender struct {
 
 	StructSelector []string     `json:"selector,omitempty"`
 	Union          *UnionSender `json:"union,omitempty"`
-	Meta           core.Meta    `json:"meta,omitempty"`
+	Meta           core.Meta    `json:"meta"`
 }
 
 // UnionSender represents union in connection sender.

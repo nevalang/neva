@@ -51,5 +51,6 @@
     "[One Dark Pro Flat]": {
       "comments": "#7f848e82"
     }
-  }
+  },
+  "diffEditor.hideUnchangedRegions.enabled": false
 }

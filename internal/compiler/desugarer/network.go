@@ -27,6 +27,11 @@ func (d *Desugarer) desugarNetwork(
 	constsToInsert := map[string]src.Const{}
 	nodesPortsUsed := newNodePortsMap()
 
+	// Implicit fan-in is generally forbidden by analyzer, but err-guard (`?`)
+	// desugaring can introduce it by wiring multiple errors to `:err`.
+	// Merge those into a single multi-sender connection so FanIn is inserted.
+	net = d.mergeImplicitFanIn(net)
+
 	desugaredConnections, err := d.desugarConnections(
 		iface,
 		net,
@@ -46,6 +51,92 @@ func (d *Desugarer) desugarNetwork(
 		constsToInsert:       constsToInsert,
 		nodesToInsert:        nodesToInsert,
 	}, nil
+}
+
+// mergeImplicitFanIn merges multiple connections targeting the same outport receiver.
+// Implicit fan-in is normally rejected by analyzer; currently `?` is the only
+// desugaring that can create it (multiple `err` senders to `:err`).
+// By merging into a single multi-sender connection, we reuse explicit fan-in
+// desugaring to insert FanIn nodes.
+func (d *Desugarer) mergeImplicitFanIn(
+	net []src.Connection,
+) []src.Connection {
+	type receiverKey struct {
+		node   string
+		port   string
+		hasIdx bool
+		idx    uint8
+	}
+	type group struct {
+		receiver src.ConnectionReceiver
+		senders  []src.ConnectionSender
+		meta     core.Meta
+	}
+
+	groups := map[receiverKey]group{}
+	order := make([]receiverKey, 0, len(net))
+	positions := map[receiverKey]int{}
+	kept := make([]src.Connection, 0, len(net))
+
+	for _, conn := range net {
+		if conn.ArrayBypass != nil || conn.Normal == nil {
+			kept = append(kept, conn)
+			continue
+		}
+
+		norm := conn.Normal
+		if len(norm.Receivers) != 1 {
+			kept = append(kept, conn)
+			continue
+		}
+
+		receiver := norm.Receivers[0]
+		if receiver.PortAddr == nil || receiver.ChainedConnection != nil {
+			kept = append(kept, conn)
+			continue
+		}
+
+		if receiver.PortAddr.Node != "out" {
+			kept = append(kept, conn)
+			continue
+		}
+
+		key := receiverKey{
+			node: receiver.PortAddr.Node,
+			port: receiver.PortAddr.Port,
+		}
+		if receiver.PortAddr.Idx != nil {
+			key.hasIdx = true
+			key.idx = *receiver.PortAddr.Idx
+		}
+
+		current, ok := groups[key]
+		if !ok {
+			current = group{
+				receiver: receiver,
+				meta:     core.Meta{Location: receiver.PortAddr.Meta.Location},
+			}
+			order = append(order, key)
+			positions[key] = len(kept)
+			kept = append(kept, src.Connection{})
+		}
+		current.senders = append(current.senders, norm.Senders...)
+		groups[key] = current
+	}
+
+	for _, key := range order {
+		g := groups[key]
+		kept[positions[key]] = src.Connection{
+			Normal: &src.NormalConnection{
+				Senders:   g.senders,
+				Receivers: []src.ConnectionReceiver{g.receiver},
+				Meta:      g.meta,
+			},
+			Meta: g.meta,
+		}
+	}
+
+	return kept
 }
 
 func (d *Desugarer) desugarConnections(
@@ -281,118 +372,6 @@ func (d *Desugarer) desugarSingleReceiver(
 		}
 
 		return desugarReceiverResult(result), nil
-	}
-
-	if receiver.Switch != nil {
-		d.switchCounter++
-		switchNodeName := fmt.Sprintf("__switch__%d", d.switchCounter)
-
-		nodesToInsert[switchNodeName] = src.Node{
-			EntityRef: core.EntityRef{
-				Pkg:  "builtin",
-				Name: "Switch",
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		}
-
-		// Connect original sender to switch:data
-		replace := src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: normConn.Senders,
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: switchNodeName,
-							Port: "data",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-			Meta: locOnlyMeta,
-		}
-
-		insert := []src.Connection{}
-
-		// For each case in the switch
-		for i, switchCaseBranchConn := range receiver.Switch.Cases {
-			// Connect case-sender to switch:case[i]
-			insert = append(insert, src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: switchCaseBranchConn.Senders,
-					Receivers: []src.ConnectionReceiver{
-						{
-							PortAddr: &src.PortAddr{
-								Node: switchNodeName,
-								Port: "case",
-								Idx:  compiler.Pointer(uint8(i)),
-								Meta: locOnlyMeta,
-							},
-							Meta: locOnlyMeta,
-						},
-					},
-				},
-				Meta: locOnlyMeta,
-			})
-
-			// Connect switch:case[i] to case receiver
-			insert = append(insert, src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: []src.ConnectionSender{
-						{
-							PortAddr: &src.PortAddr{
-								Node: switchNodeName,
-								Port: "case",
-								Idx:  compiler.Pointer(uint8(i)),
-								Meta: locOnlyMeta,
-							},
-							Meta: locOnlyMeta,
-						},
-					},
-					Receivers: switchCaseBranchConn.Receivers,
-					Meta:      locOnlyMeta,
-				},
-				Meta: locOnlyMeta,
-			})
-		}
-
-		// Connect switch:default to its receiver
-		insert = append(insert, src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: switchNodeName,
-							Port: "else",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: receiver.Switch.Default,
-				Meta:      locOnlyMeta,
-			},
-		})
-
-		desugaredInsert, err := d.desugarConnections(
-			iface,
-			insert,
-			nodePortsUsed,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarReceiverResult{}, err
-		}
-
-		return desugarReceiverResult{
-			replace: replace,
-			insert:  desugaredInsert,
-		}, nil
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
