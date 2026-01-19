@@ -56,6 +56,15 @@ func (d *Desugarer) desugarComponent(
 	// merge real nodes with virtual ones created by network handler
 	maps.Copy(desugaredNodes, desugarNetResult.nodesToInsert)
 
+	desugaredNetwork, err = d.insertErrFanInIfNeeded(
+		desugaredNetwork,
+		desugaredNodes,
+		component.Meta,
+	)
+	if err != nil {
+		return handleComponentResult{}, err
+	}
+
 	// create and connect Del nodes to handle unused outports
 	unusedOutports := d.findUnusedOutports(
 		component,
