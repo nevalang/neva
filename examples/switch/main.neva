@@ -13,6 +13,7 @@ def Main(start any) (stop any) {
     app:stop -> :stop
 }
 
+// We keep :err as any to forward the unmatched string to Panic.
 def App(start any) (stop any, err any) {
     print fmt.Print?
     scanln fmt.Scanln?
