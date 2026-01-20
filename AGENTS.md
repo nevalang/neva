@@ -8,10 +8,25 @@ Follow these instructions.
 2. Run `golangci-lint` and `go test`. Fix warnings.
 3. If uncertainty > 10%, ask user.
 4. Update this file if changes to process, architecture, or rules.
-5. Examples and parser for `.neva` changes. `go.mod` for Go imports.
+5. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
 6. Plan -> Review -> Execute -> Review.
+7. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
+8. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 
-## 2. ⚡ Core Concepts
+## 2. 📈 Self-Improvement Protocol
+
+**After each session** (bug fix, feature, brainstorm), update this file (`AGENTS.md`) with:
+
+- **Language semantics** learned (e.g., how connections work, port behavior).
+- **Common patterns** discovered (e.g., typical error causes, debugging approaches).
+- **Architecture insights** gained (e.g., how compiler phases interact).
+- **Gotchas** encountered (e.g., edge cases, non-obvious behaviors).
+
+**Balance**: Keep it concise. Every line must earn its place. Remove outdated info. Split into workflows/rules if sections grow large.
+
+**Goal**: Build perfect context so future sessions start smarter.
+
+## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
 - **Implicit Parallelism**: Every node runs in parallel.
@@ -27,7 +42,7 @@ Follow these instructions.
   - **Package**: Directory with `*.neva` files.
   - **Component**: The building block.
 
-## 3. 🧠 Architecture
+## 4. 🧠 Architecture
 
 ### Compiler (`internal/compiler/`)
 
@@ -52,7 +67,7 @@ The runtime is a library embedded into every compiled program.
 
 The standard library provides components for all programs. Some are implemented in Neva, some use runtime functions written in Go via `#extern`.
 
-## 4. 🛠️ Debugging Tips
+## 5. 🛠️ Debugging Tips
 
 **Debug Compiler Output**:
 
@@ -65,7 +80,7 @@ The standard library provides components for all programs. Some are implemented 
 - **Logs**: Use `fmt.Printf`, remove before finishing.
 - **Tests**: `go test ./...`
 
-## 5. 🗺️ Key Locations
+## 6. 🗺️ Key Locations
 
 - `cmd/neva/`: CLI Entry point.
 - `internal/cli/`: CLI implementation.
@@ -74,7 +89,7 @@ The standard library provides components for all programs. Some are implemented 
 - `examples/`: Example programs.
 - `pkg/`: Shared utilities.
 
-## 6. 🎨 Coding Standards
+## 7. 🎨 Coding Standards
 
 - **Go Idioms**:
   - Use `any` instead of `interface{}`.

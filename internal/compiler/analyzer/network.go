@@ -75,6 +75,7 @@ func (a Analyzer) analyzeConnections(
 			scope,
 			nodesUsage,
 			nil,
+			net,
 		)
 		if err != nil {
 			return nil, err
@@ -93,6 +94,7 @@ func (a Analyzer) analyzeConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
+	net []src.Connection,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -116,7 +118,7 @@ func (a Analyzer) analyzeConnection(
 		scope,
 		nodesUsage,
 		prevChainLink,
-		false, // we're not inside switch
+		net,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -136,8 +138,11 @@ func (a Analyzer) analyzeNormalConnection(
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
-	isPatternMatchingBranch bool,
+	net []src.Connection,
 ) (*src.NormalConnection, *compiler.Error) {
+	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
+	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
+
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
 		normConn.Senders,
 		scope,
@@ -146,10 +151,39 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesIfaces,
 		nodesUsage,
 		prevChainLink,
-		isPatternMatchingBranch,
+		isPatternMatchingContext,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Switch is not usual component and needs special compiler magic.
+	// There are cases (pattern matching with tagged unions) where
+	// compiler must infer correct type for `switch:case[i]` outport.
+	// Neva's type-system is not sound enough to express heterogenous
+	// `case[i]` array prot slots, so this is done as compiler magic.
+	// It's important to do after senders are normalized "normally",
+	// Because in order to infer correct type for switch:case[i] outport,
+	// We should look at the sender of switch:case[i] inport, which means
+	// That senders better be resolved by this time.
+	for i, sender := range analyzedSenders {
+		if sender.PortAddr != nil {
+			if !isSwitchCasePort(*sender.PortAddr, nodes) {
+				continue
+			}
+			// We found a Switch:case[i] output usage.
+			// We need to find what feeds this switch case to know the type.
+			resolvedType, err := a.getSwitchCaseOutportType(
+				*sender.PortAddr,
+				nodes,
+				scope,
+				net,
+			)
+			if err != nil {
+				return nil, err
+			}
+			resolvedSenderTypes[i] = resolvedType
+		}
 	}
 
 	analyzedReceivers, err := a.analyzeReceivers(
@@ -161,6 +195,7 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesUsage,
 		resolvedSenderTypes,
 		analyzedSenders,
+		net,
 	)
 	if err != nil {
 		return nil, err
@@ -472,9 +507,17 @@ func (a Analyzer) getResolvedPortType(
 				}
 			}
 		} else {
+			kind := "outports"
+			if isInput {
+				kind = "inports"
+			}
 			return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf("node '%v' has multiple ports - port name must be specified", portAddr.Node),
-				Meta:    &portAddr.Meta,
+				Message: fmt.Sprintf(
+					"node '%v' has multiple %s - port name must be specified",
+					portAddr.Node,
+					kind,
+				),
+				Meta: &portAddr.Meta,
 			}
 		}
 	}
@@ -622,8 +665,8 @@ func (a Analyzer) getResolvedSenderType(
 		// insie pattern matching context, only tag is needed,
 		// so it's expected not to have wrapped data
 		if sender.Union.Data == nil && isPatternSender {
-			// in pattern matching, return the tag's data type
-			return sender, *tagTypeExpr, false, nil
+			// in pattern matching, return the union type for tag-only patterns
+			return sender, resolvedUnionTypeExpr, false, nil
 		}
 
 		// analyze wrapped-sender and get its resolved type
@@ -818,7 +861,7 @@ func (a Analyzer) getNodeOutportType(
 		}
 	}
 
-	return a.getResolvedPortType(
+	resolvedPort, resolvedType, isArray, err := a.getResolvedPortType(
 		nodeIface.iface.IO.Out,
 		nodeIface.iface.TypeParams.Params,
 		portAddr,
@@ -826,6 +869,11 @@ func (a Analyzer) getNodeOutportType(
 		scope.Relocate(nodeIface.location),
 		false,
 	)
+	if err != nil {
+		return src.PortAddr{}, ts.Expr{}, false, err
+	}
+
+	return resolvedPort, resolvedType, isArray, nil
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(

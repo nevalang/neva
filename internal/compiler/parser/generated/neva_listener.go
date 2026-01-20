@@ -265,12 +265,6 @@ type nevaListener interface {
 	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
 	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
 
-	// EnterSwitchStmt is called when entering the switchStmt production.
-	EnterSwitchStmt(c *SwitchStmtContext)
-
-	// EnterDefaultCase is called when entering the defaultCase production.
-	EnterDefaultCase(c *DefaultCaseContext)
-
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
 
@@ -528,10 +522,4 @@ type nevaListener interface {
 
 	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
 	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)
-
-	// ExitSwitchStmt is called when exiting the switchStmt production.
-	ExitSwitchStmt(c *SwitchStmtContext)
-
-	// ExitDefaultCase is called when exiting the defaultCase production.
-	ExitDefaultCase(c *DefaultCaseContext)
 }

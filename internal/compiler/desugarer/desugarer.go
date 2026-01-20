@@ -12,7 +12,6 @@ import (
 // Desugarer is NOT thread safe and must be used in single thread
 type Desugarer struct {
 	virtualSelectorsCount uint64
-	switchCounter         uint64
 	virtualLocksCounter   uint64
 	virtualEmittersCount  uint64
 	virtualConstCount     uint64
@@ -214,7 +213,6 @@ func (d *Desugarer) desugarEntity(
 // Do NOT use this method until issue is fixed
 // func (d *Desugarer) resetCounters() {
 // 	d.virtualSelectorsCount = 0
-// 	d.switchCounter = 0
 // 	d.virtualLocksCounter = 0
 // 	d.virtualEmittersCount = 0
 // 	d.virtualConstCount = 0

@@ -1,17 +1,19 @@
 import {
     fmt
+    errors
+
     @:src/utils
 }
 
 def Main(start any) (stop any) {
-    classify utils.ClassifyInt
-    println1 fmt.Println
-    println2 fmt.Println
-    panic runtime.Panic
+    ternary Ternary<string>
+    classify_int utils.ClassifyInt
+    must_println errors.Must<any, any>{fmt.Println<string>}
     ---
-    :start -> -42 -> classify
-    classify:pos -> 'positive :)' -> println1
-    classify:neg -> 'negative :(' -> println2
-    [println1:res, println2:res] -> :stop
-    [println1:err, println2:err] -> panic
+    :start -> [
+        -42 -> classify_int -> ternary:if,
+        'positive :)' -> ternary:then,
+        'negative :(' -> ternary:else
+    ]
+    ternary -> must_println -> :stop
 }
