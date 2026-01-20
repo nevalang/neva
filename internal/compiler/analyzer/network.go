@@ -582,19 +582,6 @@ func (a Analyzer) getResolvedSenderType(
 		}, resolvedExpr, false, nil
 	}
 
-	if sender.Range != nil {
-		// range sends stream<int> from its :data outport
-		rangeType := ts.Expr{
-			Inst: &ts.InstExpr{
-				Ref: core.EntityRef{Name: "stream"},
-				Args: []ts.Expr{{
-					Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
-				}},
-			},
-		}
-		return sender, rangeType, false, nil
-	}
-
 	if len(sender.StructSelector) > 0 {
 		_, chainLinkType, _, err := a.getResolvedSenderType(
 			prevChainLink[0],

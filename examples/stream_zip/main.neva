@@ -4,11 +4,16 @@ const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
 	ListToStream<string>, streams.Zip<int, string>
-        For{fmt.Println}, streams.Wait, runtime.Panic
+	range streams.Range
+	For{fmt.Println}, streams.Wait, runtime.Panic
 	---
-        :start -> 0..10 -> zip:left
-        $strings -> listToStream -> zip:right
-        zip:res -> for
+	:start -> [
+		0 -> range:from,
+		10 -> range:to,
+		$strings -> listToStream -> zip:right
+	]
+	range -> zip:left
+	zip:res -> for
 	for:res -> wait -> :stop
 	for:err -> panic
 }

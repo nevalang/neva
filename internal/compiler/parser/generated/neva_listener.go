@@ -232,12 +232,6 @@ type nevaListener interface {
 	// EnterDeferredConn is called when entering the deferredConn production.
 	EnterDeferredConn(c *DeferredConnContext)
 
-	// EnterRangeExpr is called when entering the rangeExpr production.
-	EnterRangeExpr(c *RangeExprContext)
-
-	// EnterRangeMember is called when entering the rangeMember production.
-	EnterRangeMember(c *RangeMemberContext)
-
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
@@ -495,12 +489,6 @@ type nevaListener interface {
 
 	// ExitDeferredConn is called when exiting the deferredConn production.
 	ExitDeferredConn(c *DeferredConnContext)
-
-	// ExitRangeExpr is called when exiting the rangeExpr production.
-	ExitRangeExpr(c *RangeExprContext)
-
-	// ExitRangeMember is called when exiting the rangeMember production.
-	ExitRangeMember(c *RangeMemberContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

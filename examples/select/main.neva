@@ -10,10 +10,15 @@ import {
 def Main(start any) (stop any) {
     map streams.Map<int, string>{Mapper}
     for For<string>{fmt.Println}
+    range streams.Range
     wait streams.Wait
     panic runtime.Panic
     ---
-    :start -> 1..5 -> map -> for
+    :start -> [
+        1 -> range:from,
+        5 -> range:to
+    ]
+    range -> map -> for
     for:res -> wait -> :stop
     for:err -> panic
 }

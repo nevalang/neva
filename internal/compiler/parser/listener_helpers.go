@@ -1533,14 +1533,12 @@ func (s *treeShapeListener) parseSingleSender(
 	portSender := senderSide.PortAddr()
 	constRefSender := senderSide.SenderConstRef()
 	primitiveConstLitSender := senderSide.PrimitiveConstLit()
-	rangeExprSender := senderSide.RangeExpr()
 
 	unionSender := senderSide.UnionSender()
 
 	if portSender == nil &&
 		constRefSender == nil &&
 		primitiveConstLitSender == nil &&
-		rangeExprSender == nil &&
 		structSelectors == nil &&
 		unionSender == nil {
 		return src.ConnectionSender{}, &compiler.Error{
@@ -1624,80 +1622,6 @@ func (s *treeShapeListener) parseSingleSender(
 		constant = &parsedPrimitiveConstLiteralSender
 	}
 
-	var rangeExpr *src.Range
-	if rangeExprSender != nil {
-		rangeMeta := &core.Meta{
-			Text: rangeExprSender.GetText(),
-			Start: core.Position{
-				Line:   rangeExprSender.GetStart().GetLine(),
-				Column: rangeExprSender.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   rangeExprSender.GetStop().GetLine(),
-				Column: rangeExprSender.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		}
-
-		members := rangeExprSender.AllRangeMember()
-		if len(members) != 2 {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: "Range expression must have exactly two members",
-				Meta:    rangeMeta,
-			}
-		}
-
-		fromCtx := members[0]
-		fromText := fromCtx.GetText()
-
-		from, err := strconv.ParseInt(fromText, 10, 64)
-		if err != nil {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid range 'from' value: %v", err),
-				Meta: &core.Meta{
-					Text: rangeExprSender.GetText(),
-					Start: core.Position{
-						Line:   rangeExprSender.GetStart().GetLine(),
-						Column: rangeExprSender.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   rangeExprSender.GetStop().GetLine(),
-						Column: rangeExprSender.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
-
-		toCtx := members[1]
-		toText := toCtx.GetText()
-
-		to, err := strconv.ParseInt(toText, 10, 64)
-		if err != nil {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid range 'to' value: %v", err),
-				Meta: &core.Meta{
-					Text: rangeExprSender.GetText(),
-					Start: core.Position{
-						Line:   rangeExprSender.GetStart().GetLine(),
-						Column: rangeExprSender.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   rangeExprSender.GetStop().GetLine(),
-						Column: rangeExprSender.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
-
-		rangeExpr = &src.Range{
-			From: from,
-			To:   to,
-			Meta: *rangeMeta,
-		}
-	}
-
 	var senderSelectors []string
 	if structSelectors != nil {
 		for _, id := range structSelectors.AllIDENTIFIER() {
@@ -1708,7 +1632,6 @@ func (s *treeShapeListener) parseSingleSender(
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
-		Range:          rangeExpr,
 		StructSelector: senderSelectors,
 		Union:          unionSenderData,
 		Meta: core.Meta{

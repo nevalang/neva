@@ -7,9 +7,15 @@ import {
 def Main(start any) (stop any) {
 	print2lines For<int>{Print2Lines}
 	wait streams.Wait
+	range streams.Range
+	wait streams.Wait
 	panic runtime.Panic
 	---
-	:start -> 99..-1 -> print2lines
+	:start -> [
+		99 -> range:from,
+		-1 -> range:to
+	]
+	range -> print2lines
 	print2lines:res -> wait -> :stop
 	print2lines:err -> panic
 }

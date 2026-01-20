@@ -4,7 +4,7 @@ Follow these instructions.
 
 ## 1. 🤖 Operating Protocol
 
-1. Use `context7` MCP server when available.
+1. Use `context7` MCP server (when available) to fetch libraries API documentation.
 2. Run `golangci-lint` and `go test`. Fix warnings.
 3. If uncertainty > 10%, ask user.
 4. Update this file if changes to process, architecture, or rules.
