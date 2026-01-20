@@ -9,10 +9,10 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		0 -> range:from,
-		10 -> range:to
+		10 -> range:to,
+		$strings -> listToStream -> zip:right
 	]
 	range -> zip:left
-	$strings -> listToStream -> zip:right
 	zip:res -> for
 	for:res -> wait -> :stop
 	for:err -> panic

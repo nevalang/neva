@@ -4,20 +4,16 @@ type ProductResult streams.ProductResult<int, int>
 
 def Main(start any) (stop any) {
 	streams.Product<int, int>
-	rangeFirst streams.Range
-	rangeSecond streams.Range
+	range streams.Range
 	For<ProductResult>{fmt.Println<ProductResult>}
 	streams.Wait
 	runtime.Panic
 	---
 	:start -> [
-		0 -> rangeFirst:from,
-		4 -> rangeFirst:to,
-		0 -> rangeSecond:from,
-		4 -> rangeSecond:to
+		0 -> range:from,
+		4 -> range:to
 	]
-	rangeFirst -> product:first
-	rangeSecond -> product:second
+	range -> [product:first, product:second]
 	product -> for
 	for:res -> wait -> :stop
 	for:err -> panic
