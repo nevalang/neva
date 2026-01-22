@@ -61,27 +61,16 @@ pub def Struct<T struct {}> () (res T)
 // Field is used to access fields of structures.
 // You prefer dot notation `-> .<field> ->` instead.
 // Dot notation is a syntax sugar for Field.
-// Fiels is unsafe in terms of types just like UnionWrap V1 and V2
-// and reasons are exactly the same - type-system is not sound enough
+// Field is unsafe in terms of types because the type system is not sound enough
 // to express "each struct with at least these fields".
 #extern(field)
 pub def Field<T>(data struct {}) (res T)
 
-// UnionWrap is used to create union literals.
-// It expects that it used with #bind directive,
-// that refers to a string constant with the tag name.
-// It has one inport "data" where you need to send data to be wrapped.
-// It has one outport "res" where you will receive wrapped data from.
-// Warning: UnionWrap is not type-safe and should not be used manually if possible.
-#extern(union_wrap_v1)
-pub def UnionWrapV1<T any, Y union{}>(data T) (res Y)
-
-// UnionWrapV2 is like UnionWrapV1, but it has an extra inport "sig"
-// It's main purpose is to support union literals in chained connections.
-// Similarly to UnionWrapV1 it's unsafe in terms of types
-// and thus should not be used manually if possible.
-#extern(union_wrap_v2)
-pub def UnionWrapV2<T any, Y union{}>(data T, sig any) (res Y)
+// Union wraps data into a union tag.
+// `tag` must be a union literal constant identifying the member.
+// `data` must be compatible with the member's type.
+#extern(union)
+pub def Union<T Type>(data Type, tag T) (res T)
 
 // Get retrieves a value from a dictionary using the provided key.
 // It has two inports: 'dict' for the dictionary and 'key' for the lookup key.
@@ -143,4 +132,3 @@ type EnrichResult<T, Y> struct {
 
 // IEnrichHandler is an interface for enrich handlers.
 interface IEnrichHandler<T, Y>(data T) (res Y, err error)
-
