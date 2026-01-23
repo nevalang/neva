@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -213,12 +213,6 @@ type nevaListener interface {
 
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
-
-	// EnterUnionSender is called when entering the unionSender production.
-	EnterUnionSender(c *UnionSenderContext)
-
-	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
-	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -471,12 +465,6 @@ type nevaListener interface {
 
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)
-
-	// ExitUnionSender is called when exiting the unionSender production.
-	ExitUnionSender(c *UnionSenderContext)
-
-	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
-	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)

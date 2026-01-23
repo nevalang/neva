@@ -69,7 +69,7 @@ pub def Field<T>(data struct {}) (res T)
 // Union wraps data into a union tag.
 // `tag` must be a union literal constant identifying the member.
 // `data` must be compatible with the member's type.
-#extern(union)
+#extern(union_wrap)
 pub def Union<T Type>(data Type, tag T) (res T)
 
 // Get retrieves a value from a dictionary using the provided key.

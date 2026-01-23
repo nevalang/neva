@@ -107,12 +107,8 @@ arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;
 singleSenderSide:
 	portAddr
 	| senderConstRef
-	| primitiveConstLit
-	| structSelectors
-	| unionSender;
-
-unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
-primitiveConstLit: bool | (MINUS)? INT | (MINUS)? FLOAT | STRING;
+	| constLit
+	| structSelectors;
 senderConstRef: DOLLAR entityRef;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
