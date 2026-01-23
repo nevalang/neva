@@ -1,0 +1,9 @@
+def Main(start any) (stop any) {
+	union_node Union<int>
+	---
+	:start -> [
+		1 -> union_node:tag,
+		2 -> union_node:data
+	]
+	union_node -> :stop
+}
