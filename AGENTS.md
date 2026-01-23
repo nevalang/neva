@@ -26,6 +26,13 @@ Follow these instructions.
 
 **Goal**: Build perfect context so future sessions start smarter.
 
+### Session Notes (2026-01-23)
+
+- **Language semantics**: Chained connections nest; receiver type constraints must use the sender from the same chain link (not the outer sender).
+- **Common patterns**: Overload/generic resolution relies on `deriveNodeConstraintsFromNetwork`; nested chains need explicit sender-to-receiver pairing to avoid union/any leakage.
+- **Architecture insights**: Switch case output type inference is used in analyzer (before desugaring) for both overload resolution and network type checks.
+- **Gotchas**: Portless outports require explicit port names when multiple outports exist; generic std nodes like `fmt.Println` need explicit type args if type inference is unavailable.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

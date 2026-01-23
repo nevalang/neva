@@ -22,7 +22,7 @@ def Main(start any) (stop any) {
 
 // Unwraps the int, prints it and sends further.
 def Unbox(data MaybeInt) (res int) {
-    println fmt.Println
+    println fmt.Println<int>
     panic runtime.Panic
     switch Switch<MaybeInt>
     ---
@@ -30,6 +30,6 @@ def Unbox(data MaybeInt) (res int) {
         switch:data,
         MaybeInt::Int -> switch:case[0] -> println
     ]
-    println -> :res
+    println:res -> :res
     [switch:else, println:err] -> panic
 }
