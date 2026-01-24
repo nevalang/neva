@@ -19,6 +19,7 @@ func (a Analyzer) analyzeReceivers(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
+	unionTags map[string]unionTagInfo,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	analyzedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSide))
 
@@ -33,6 +34,7 @@ func (a Analyzer) analyzeReceivers(
 			resolvedSenderTypes,
 			analyzedSenders,
 			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -54,6 +56,7 @@ func (a Analyzer) analyzeReceiver(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
+	unionTags map[string]unionTagInfo,
 ) (*src.ConnectionReceiver, *compiler.Error) {
 	switch {
 	case receiver.PortAddr != nil:
@@ -85,6 +88,7 @@ func (a Analyzer) analyzeReceiver(
 			resolvedSenderTypes,
 			analyzedSenders,
 			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -102,6 +106,7 @@ func (a Analyzer) analyzeReceiver(
 			nodesUsage,
 			nil,
 			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -189,6 +194,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
+	unionTags map[string]unionTagInfo,
 ) (src.Connection, *compiler.Error) {
 	if chainedConn.Normal == nil {
 		return src.Connection{}, &compiler.Error{
@@ -237,6 +243,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		nodesUsage,
 		analyzedSenders,
 		net,
+		unionTags,
 	)
 	if err != nil {
 		return src.Connection{}, err
