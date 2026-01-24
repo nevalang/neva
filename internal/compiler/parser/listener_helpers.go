@@ -709,119 +709,59 @@ func (s *treeShapeListener) parseSinglePortAddr(
 	}, nil
 }
 
-func (s *treeShapeListener) parsePrimitiveConstLiteral(
-	lit generated.IPrimitiveConstLitContext,
+func (s *treeShapeListener) parseConstSenderLiteral(
+	lit generated.IConstLitContext,
 ) (src.Const, *compiler.Error) {
+	meta := core.Meta{
+		Text: lit.GetText(),
+		Start: core.Position{
+			Line:   lit.GetStart().GetLine(),
+			Column: lit.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   lit.GetStop().GetLine(),
+			Column: lit.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	parsedMsg, err := s.parseMessage(lit)
+	if err != nil {
+		return src.Const{}, err
+	}
+
 	parsedConst := src.Const{
 		Value: src.ConstValue{
-			Message: &src.MsgLiteral{},
+			Message: &parsedMsg,
 		},
-		Meta: core.Meta{
-			Text: lit.GetText(),
-			Start: core.Position{
-				Line:   lit.GetStart().GetLine(),
-				Column: lit.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   lit.GetStop().GetLine(),
-				Column: lit.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		},
+		Meta: meta,
 	}
 
 	switch {
 	case lit.Bool_() != nil:
-		boolVal := lit.Bool_().GetText()
-		if boolVal != "true" && boolVal != "false" {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid boolean value %v", boolVal),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "bool"},
 		}
-		parsedConst.Value.Message.Bool = compiler.Pointer(boolVal == "true")
 	case lit.INT() != nil:
-		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
-		if err != nil {
-			return src.Const{}, &compiler.Error{
-				Message: err.Error(),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "int"},
 		}
-		if lit.MINUS() != nil {
-			parsedInt = -parsedInt
-		}
-		parsedConst.Value.Message.Int = compiler.Pointer(int(parsedInt))
 	case lit.FLOAT() != nil:
-		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
-		if err != nil {
-			return src.Const{}, &compiler.Error{
-				Message: err.Error(),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "float"},
 		}
-		if lit.MINUS() != nil {
-			parsedFloat = -parsedFloat
-		}
-		parsedConst.Value.Message.Float = &parsedFloat
 	case lit.STRING() != nil:
-		parsedConst.Value.Message.Str = compiler.Pointer(
-			strings.Trim(
-				strings.ReplaceAll(
-					lit.STRING().GetText(),
-					"\\n",
-					"\n",
-				),
-				"'",
-			),
-		)
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "string"},
 		}
-	default:
-		panic("unknown const: " + lit.GetText())
+	case lit.UnionLit() != nil:
+		parsedUnionRef, err := s.parseEntityRef(lit.UnionLit().EntityRef())
+		if err != nil {
+			return src.Const{}, err
+		}
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
+			Ref: parsedUnionRef,
+		}
 	}
 
 	return parsedConst, nil
@@ -1532,15 +1472,12 @@ func (s *treeShapeListener) parseSingleSender(
 	structSelectors := senderSide.StructSelectors()
 	portSender := senderSide.PortAddr()
 	constRefSender := senderSide.SenderConstRef()
-	primitiveConstLitSender := senderSide.PrimitiveConstLit()
-
-	unionSender := senderSide.UnionSender()
+	constLitSender := senderSide.ConstLit()
 
 	if portSender == nil &&
 		constRefSender == nil &&
-		primitiveConstLitSender == nil &&
-		structSelectors == nil &&
-		unionSender == nil {
+		constLitSender == nil &&
+		structSelectors == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
@@ -1580,46 +1517,12 @@ func (s *treeShapeListener) parseSingleSender(
 		}
 	}
 
-	var unionSenderData *src.UnionSender
-	if unionSender != nil {
-		parsedUnionRef, err := s.parseEntityRef(unionSender.EntityRef())
+	if constLitSender != nil {
+		parsedConstSender, err := s.parseConstSenderLiteral(constLitSender)
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-
-		unionSenderData = &src.UnionSender{
-			EntityRef: parsedUnionRef,
-			Tag:       unionSender.IDENTIFIER().GetText(),
-			Meta: core.Meta{
-				Text: unionSender.GetText(),
-				Start: core.Position{
-					Line:   unionSender.GetStart().GetLine(),
-					Column: unionSender.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   unionSender.GetStop().GetLine(),
-					Column: unionSender.GetStop().GetColumn(),
-				},
-				Location: s.loc,
-			},
-		}
-
-		// If there's a wrapped value
-		if unionSender.SingleSenderSide() != nil {
-			wrappedSender, err := s.parseSingleSender(unionSender.SingleSenderSide())
-			if err != nil {
-				return src.ConnectionSender{}, err
-			}
-			unionSenderData.Data = &wrappedSender
-		}
-	}
-
-	if primitiveConstLitSender != nil {
-		parsedPrimitiveConstLiteralSender, err := s.parsePrimitiveConstLiteral(primitiveConstLitSender)
-		if err != nil {
-			return src.ConnectionSender{}, err
-		}
-		constant = &parsedPrimitiveConstLiteralSender
+		constant = &parsedConstSender
 	}
 
 	var senderSelectors []string
@@ -1633,7 +1536,6 @@ func (s *treeShapeListener) parseSingleSender(
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
 		StructSelector: senderSelectors,
-		Union:          unionSenderData,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{
