@@ -682,15 +682,26 @@ func TestDesugarNetwork(t *testing.T) {
 			},
 		},
 		{
-			name: "union_sender_tag_only",
+			name: "union_literal_sender_tag_only",
 			net: []src.Connection{
 				{
 					Normal: &src.NormalConnection{
 						Senders: []src.ConnectionSender{
 							{
-								Union: &src.UnionSender{
-									EntityRef: core.EntityRef{Name: "Input"},
-									Tag:       "Int",
+								Const: &src.Const{
+									TypeExpr: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "Input"},
+										},
+									},
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{
+											Union: &src.UnionLiteral{
+												EntityRef: core.EntityRef{Name: "Input"},
+												Tag:       "Int",
+											},
+										},
+									},
 								},
 							},
 						},
@@ -733,12 +744,17 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 						},
 						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__union_const__1",
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
 				constsToInsert: map[string]src.Const{
-					"__union_const__1": {
+					"__const__1": {
+						TypeExpr: ts.Expr{
+							Inst: &ts.InstExpr{
+								Ref: core.EntityRef{Name: "Input"},
+							},
+						},
 						Value: src.ConstValue{
 							Message: &src.MsgLiteral{
 								Union: &src.UnionLiteral{
@@ -752,24 +768,28 @@ func TestDesugarNetwork(t *testing.T) {
 			},
 		},
 		{
-			name: "union_sender_with_value",
+			name: "union_literal_sender_with_value",
 			net: []src.Connection{
 				{
 					Normal: &src.NormalConnection{
 						Senders: []src.ConnectionSender{
 							{
-								Union: &src.UnionSender{
-									EntityRef: core.EntityRef{Name: "Input"},
-									Tag:       "Int",
-									Data: &src.ConnectionSender{
-										Const: &src.Const{
-											TypeExpr: ts.Expr{
-												Inst: &ts.InstExpr{
-													Ref: core.EntityRef{Name: "int"},
+								Const: &src.Const{
+									TypeExpr: ts.Expr{
+										Inst: &ts.InstExpr{
+											Ref: core.EntityRef{Name: "Input"},
+										},
+									},
+									Value: src.ConstValue{
+										Message: &src.MsgLiteral{
+											Union: &src.UnionLiteral{
+												EntityRef: core.EntityRef{Name: "Input"},
+												Tag:       "Int",
+												Data: &src.ConstValue{
+													Message: &src.MsgLiteral{
+														Int: compiler.Pointer(42),
+													},
 												},
-											},
-											Value: src.ConstValue{
-												Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
 											},
 										},
 									},
@@ -791,29 +811,13 @@ func TestDesugarNetwork(t *testing.T) {
 						Normal: &src.NormalConnection{
 							Senders: []src.ConnectionSender{{
 								PortAddr: &src.PortAddr{
-									Node: "__union__1",
+									Node: "__new__1",
 									Port: "res",
 								},
 							}},
 							Receivers: []src.ConnectionReceiver{
 								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
 							},
-						},
-					},
-					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{{
-								PortAddr: &src.PortAddr{
-									Node: "__new__1",
-									Port: "res",
-								},
-							}},
-							Receivers: []src.ConnectionReceiver{{
-								PortAddr: &src.PortAddr{
-									Node: "__union__1",
-									Port: "data",
-								},
-							}},
 						},
 					},
 				},
@@ -826,40 +830,34 @@ func TestDesugarNetwork(t *testing.T) {
 						TypeArgs: src.TypeArgs{
 							{
 								Inst: &ts.InstExpr{
-									Ref: core.EntityRef{Name: "int"},
+									Ref: core.EntityRef{Name: "Input"},
 								},
 							},
 						},
 						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__const__2",
-						},
-					},
-					"__union__1": {
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__union_tag__1",
-						},
-						EntityRef: core.EntityRef{
-							Pkg:  "builtin",
-							Name: "UnionWrapV1",
+							compiler.BindDirective: "__const__1",
 						},
 					},
 				},
 				constsToInsert: map[string]src.Const{
-					"__union_tag__1": {
-						Value: src.ConstValue{
-							Message: &src.MsgLiteral{
-								Str: compiler.Pointer("Int"),
-							},
-						},
-					},
-					"__const__2": {
+					"__const__1": {
 						TypeExpr: ts.Expr{
 							Inst: &ts.InstExpr{
-								Ref: core.EntityRef{Name: "int"},
+								Ref: core.EntityRef{Name: "Input"},
 							},
 						},
 						Value: src.ConstValue{
-							Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+							Message: &src.MsgLiteral{
+								Union: &src.UnionLiteral{
+									EntityRef: core.EntityRef{Name: "Input"},
+									Tag:       "Int",
+									Data: &src.ConstValue{
+										Message: &src.MsgLiteral{
+											Int: compiler.Pointer(42),
+										},
+									},
+								},
+							},
 						},
 					},
 				},
