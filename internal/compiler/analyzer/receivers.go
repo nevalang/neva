@@ -19,7 +19,7 @@ func (a Analyzer) analyzeReceivers(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
-	unionTags map[string]unionTagInfo,
+	unionTags map[string]unionActiveTagInfo,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	analyzedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSide))
 
@@ -56,7 +56,7 @@ func (a Analyzer) analyzeReceiver(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
-	unionTags map[string]unionTagInfo,
+	unionTags map[string]unionActiveTagInfo,
 ) (*src.ConnectionReceiver, *compiler.Error) {
 	switch {
 	case receiver.PortAddr != nil:
@@ -69,6 +69,7 @@ func (a Analyzer) analyzeReceiver(
 			nodesUsage,
 			resolvedSenderTypes,
 			analyzedSenders,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -131,6 +132,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
+	unionTags map[string]unionActiveTagInfo,
 ) *compiler.Error {
 	resolvedPortAddr, typeExpr, isArrPort, err := a.getReceiverPortType(
 		portAddr,
@@ -159,6 +161,8 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}
 	}
 
+	// Validate all outer senders that feed the chain head (fan-in into the chain start).
+	// Example: [a, b] -> x -> y  => both a and b must be compatible with x's inport.
 	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
 			return &compiler.Error{
@@ -168,6 +172,19 @@ func (a Analyzer) analyzePortAddrReceiver(
 				),
 				Meta: &portAddr.Meta,
 			}
+		}
+	}
+
+	// Union:data is a special receiver: validate payload types against the active tag.
+	if isUnionDataReceiver(portAddr, unionTags) {
+		if err := a.validateUnionDataReceiverPort(
+			portAddr,
+			analyzedSenders,
+			resolvedSenderTypes,
+			unionTags,
+			scope,
+		); err != nil {
+			return err
 		}
 	}
 
@@ -194,7 +211,7 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
 	net []src.Connection,
-	unionTags map[string]unionTagInfo,
+	unionTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
 	if chainedConn.Normal == nil {
 		return src.Connection{}, &compiler.Error{
@@ -210,10 +227,10 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
-	chainHead := chainedConn.Normal.Senders[0]
+	chainHeadSender := chainedConn.Normal.Senders[0]
 
 	chainHeadType, err := a.getChainHeadInputType(
-		chainHead,
+		chainHeadSender,
 		nodes,
 		nodesIfaces,
 		scope,
@@ -227,10 +244,24 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 			return src.Connection{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Incompatible types: %v -> %v: %v",
-					analyzedSenders[i], chainHead, err.Error(),
+					analyzedSenders[i], chainHeadSender, err.Error(),
 				),
 				Meta: &chainedConn.Meta,
 			}
+		}
+	}
+
+	// Chain head is a receiver for the outer senders; recursive analysis treats it as sender,
+	// so we must validate Union:data here to avoid skipping the receiver-side check.
+	if chainHeadSender.PortAddr != nil && isUnionDataReceiver(*chainHeadSender.PortAddr, unionTags) {
+		if err := a.validateUnionDataReceiverPort(
+			*chainHeadSender.PortAddr,
+			analyzedSenders,
+			resolvedSenderTypes,
+			unionTags,
+			scope,
+		); err != nil {
+			return src.Connection{}, err
 		}
 	}
 
@@ -249,8 +280,8 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		return src.Connection{}, err
 	}
 
-	if chainHead.PortAddr != nil {
-		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHead.PortAddr); err != nil {
+	if chainHeadSender.PortAddr != nil {
+		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHeadSender.PortAddr); err != nil {
 			return src.Connection{}, &compiler.Error{
 				Message: err.Error(),
 				Meta:    &chainedConn.Meta,
@@ -259,6 +290,18 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	}
 
 	return analyzedChainedConn, nil
+}
+
+// isUnionDataReceiver reports whether a port address targets Union:data with a known active tag.
+func isUnionDataReceiver(
+	portAddr src.PortAddr,
+	unionActiveTags map[string]unionActiveTagInfo,
+) bool {
+	if portAddr.Port != "data" {
+		return false
+	}
+	_, ok := unionActiveTags[portAddr.Node]
+	return ok
 }
 
 // getReceiverPortType returns resolved port-addr, type expr and isArray bool.

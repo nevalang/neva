@@ -101,9 +101,10 @@ The standard library provides components for all programs. Some are implemented 
 ## 7. 🎨 Coding Standards
 
 - **Go Idioms**:
+  - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
-  - Test case names: lower_snake_case
+  - Test case names: `lower_snake_case`
   - KISS: simpler code > complex abstractions
   - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
     - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).
