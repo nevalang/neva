@@ -5,6 +5,7 @@ import (
 
 	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
@@ -54,14 +55,13 @@ func (a Analyzer) getSwitchCaseOutportType(
 	}
 
 	// 3. Extract the Tag from the Input Sender
-	if inputSender.Union == nil {
+	tag, tagErr := a.getUnionTagFromSender(*inputSender, scope)
+	if tagErr != nil {
 		return nil, &compiler.Error{
 			Message: "Switch case input must be a Union pattern when T passed to Switch<T> is a union",
 			Meta:    &inputSender.Meta,
 		}
 	}
-
-	tag := inputSender.Union.Tag
 
 	// 4. Lookup Tag in T (Union)
 	memberType, ok := resolvedT.Lit.Union[tag]
@@ -82,6 +82,61 @@ func (a Analyzer) getSwitchCaseOutportType(
 	return memberType, nil
 }
 
+func (a Analyzer) getUnionTagFromSender(
+	sender src.ConnectionSender,
+	scope src.Scope,
+) (string, *compiler.Error) {
+	if sender.Const == nil {
+		return "", &compiler.Error{
+			Message: "sender is not a union constant",
+			Meta:    &sender.Meta,
+		}
+	}
+
+	if sender.Const.Value.Message != nil && sender.Const.Value.Message.Union != nil {
+		return sender.Const.Value.Message.Union.Tag, nil
+	}
+
+	if sender.Const.Value.Ref != nil {
+		unionLiteral, err := a.resolveUnionConstRef(*sender.Const.Value.Ref, scope)
+		if err != nil {
+			return "", err
+		}
+		return unionLiteral.Tag, nil
+	}
+
+	return "", &compiler.Error{
+		Message: "sender is not a union constant",
+		Meta:    &sender.Meta,
+	}
+}
+
+func (a Analyzer) resolveUnionConstRef(
+	ref core.EntityRef,
+	scope src.Scope,
+) (*src.UnionLiteral, *compiler.Error) {
+	constant, loc, err := scope.GetConst(ref)
+	if err != nil {
+		return nil, &compiler.Error{
+			Message: err.Error(),
+			Meta:    &ref.Meta,
+		}
+	}
+
+	if constant.Value.Ref != nil {
+		return a.resolveUnionConstRef(*constant.Value.Ref, scope.Relocate(loc))
+	}
+
+	if constant.Value.Message == nil || constant.Value.Message.Union == nil {
+		return nil, &compiler.Error{
+			Message: "sender is not a union constant",
+			Meta:    &ref.Meta,
+		}
+	}
+
+	return constant.Value.Message.Union, nil
+}
+
 func (a Analyzer) findSenderForSwitchCaseInput(
 	net []src.Connection,
 	nodeName string,
@@ -89,32 +144,12 @@ func (a Analyzer) findSenderForSwitchCaseInput(
 	switchPort src.PortAddr,
 ) (*src.ConnectionSender, *compiler.Error) {
 	for _, conn := range net {
-		if conn.Normal == nil {
-			continue
+		sender, err := a.findSenderForSwitchCaseInputInConn(&conn, nodeName, idx)
+		if err != nil {
+			return nil, err
 		}
-
-		for _, receiver := range conn.Normal.Receivers {
-			// Receiver is `... -> switch:case[i]`
-			if a.isSwitchCaseReceiver(receiver, nodeName, idx) {
-				// If T is union then we expect case
-				if len(conn.Normal.Senders) != 1 {
-					return nil, &compiler.Error{
-						Message: "switch case connection must have exactly one sender when its union tag",
-						Meta:    &conn.Meta,
-					}
-				}
-				return &conn.Normal.Senders[0], nil
-			}
-
-			// Check chained connection
-			// ... -> switch:case[i] -> ...
-			if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
-				chainHead := receiver.ChainedConnection.Normal.Senders[0]
-				if a.isSwitchCaseSender(chainHead, nodeName, idx) {
-					// Found the connection! (Switch case is head of chain)
-					return &conn.Normal.Senders[0], nil
-				}
-			}
+		if sender != nil {
+			return sender, nil
 		}
 	}
 
@@ -122,6 +157,83 @@ func (a Analyzer) findSenderForSwitchCaseInput(
 		Message: "sender for switch case inport not found",
 		Meta:    &switchPort.Meta,
 	}
+}
+
+func (a Analyzer) findSenderForSwitchCaseInputInConn(
+	conn *src.Connection,
+	nodeName string,
+	idx *uint8,
+) (*src.ConnectionSender, *compiler.Error) {
+	if conn.Normal == nil {
+		return nil, nil
+	}
+
+	return a.findSenderForSwitchCaseInportInConn(*conn.Normal, nodeName, idx)
+}
+
+func (a Analyzer) findSenderForSwitchCaseInportInConn(
+	normConn src.NormalConnection,
+	nodeName string,
+	idx *uint8,
+) (*src.ConnectionSender, *compiler.Error) {
+	for _, receiver := range normConn.Receivers {
+		// Receiver is `... -> switch:case[i]`
+		if a.isSwitchCaseReceiver(receiver, nodeName, idx) {
+			if len(normConn.Senders) != 1 {
+				return nil, &compiler.Error{
+					Message: "switch case connection must have exactly one sender when its union tag",
+					Meta:    &normConn.Meta,
+				}
+			}
+			return &normConn.Senders[0], nil
+		}
+
+		// Check chained connection
+		// ... -> switch:case[i] -> ...
+		if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
+			if len(receiver.ChainedConnection.Normal.Senders) > 0 {
+				chainHead := receiver.ChainedConnection.Normal.Senders[0]
+				if a.isSwitchCaseSender(chainHead, nodeName, idx) {
+					if len(normConn.Senders) != 1 {
+						return nil, &compiler.Error{
+							Message: "switch case connection must have exactly one sender when its union tag",
+							Meta:    &normConn.Meta,
+						}
+					}
+					// Found the connection! (Switch case is head of chain)
+					return &normConn.Senders[0], nil
+				}
+			}
+
+			sender, err := a.findSenderForSwitchCaseInportInConn(
+				*receiver.ChainedConnection.Normal,
+				nodeName,
+				idx,
+			)
+			if err != nil {
+				return nil, err
+			}
+			if sender != nil {
+				return sender, nil
+			}
+		}
+
+		if receiver.DeferredConnection != nil && receiver.DeferredConnection.Normal != nil {
+			sender, err := a.findSenderForSwitchCaseInportInConn(
+				*receiver.DeferredConnection.Normal,
+				nodeName,
+				idx,
+			)
+			if err != nil {
+				return nil, err
+			}
+			if sender != nil {
+				return sender, nil
+			}
+		}
+	}
+
+	return nil, nil
 }
 
 func (Analyzer) isSwitchCaseSender(sender src.ConnectionSender, nodeName string, idx *uint8) bool {
@@ -155,14 +267,22 @@ func hasSwitchCaseReceiver(receivers []src.ConnectionReceiver, nodes map[string]
 		}
 
 		// Check chained connection - the chain head (sender) acts as the receiver for previous senders
-		if receiver.ChainedConnection != nil &&
-			receiver.ChainedConnection.Normal != nil &&
-			len(receiver.ChainedConnection.Normal.Senders) > 0 {
-			chainHead := receiver.ChainedConnection.Normal.Senders[0]
-			if chainHead.PortAddr != nil {
-				if isSwitchCasePort(*chainHead.PortAddr, nodes) {
+		if receiver.ChainedConnection != nil {
+			chainHeadSender := receiver.ChainedConnection.Normal.Senders[0]
+			if chainHeadSender.PortAddr != nil {
+				if isSwitchCasePort(*chainHeadSender.PortAddr, nodes) {
 					return true
 				}
+			}
+
+			if hasSwitchCaseReceiver(receiver.ChainedConnection.Normal.Receivers, nodes) {
+				return true
+			}
+		}
+
+		if receiver.DeferredConnection != nil {
+			if hasSwitchCaseReceiver(receiver.DeferredConnection.Normal.Receivers, nodes) {
+				return true
 			}
 		}
 	}
