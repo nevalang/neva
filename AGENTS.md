@@ -30,6 +30,7 @@ Follow these instructions.
 
 - **Language semantics**: Chained connections nest; receiver type constraints must use the sender from the same chain link (not the outer sender).
 - **Language semantics**: Network senders now parse any `constLit`; only primitives/union literals get a type expr without additional analyzer inference.
+- **Language semantics**: Union tag/type compatibility relies on structural union checks via normal sender/receiver subtype validation.
 - **Common patterns**: Overload/generic resolution relies on `deriveNodeConstraintsFromNetwork`; nested chains need explicit sender-to-receiver pairing to avoid union/any leakage.
 - **Architecture insights**: Switch case output type inference is used in analyzer (before desugaring) for both overload resolution and network type checks.
 - **Architecture insights**: Union node tag/data validation is driven by `buildUnionTagInfos` + `validateUnionDataReceivers` to keep Union<T> wiring consistent.
