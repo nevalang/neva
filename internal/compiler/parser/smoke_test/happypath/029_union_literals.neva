@@ -10,5 +10,11 @@ const c_true U = U::B(true)
 const c_false U = U::B(false)
 
 def C1() (stop any) {
-    [U::A, U::I(1)] -> :stop
+    pass Pass<U>
+    ---
+    [U::A, U::I(1)] -> pass
+    $c_int -> pass
+    pass -> :stop
+    pass:res -> :stop
+    $c_tag -> :stop
 }

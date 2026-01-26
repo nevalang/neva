@@ -563,6 +563,19 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 			},
 		},
 		{
+			name: "const ref to union const",
+			text: `
+				type U union { A }
+				const c0 U = U::A
+				const c1 U = c0
+			`,
+			check: func(t *testing.T, got src.File) {
+				ref := got.Entities["c1"].Const.Value.Ref
+				require.NotNil(t, ref)
+				require.Equal(t, "c0", ref.Name)
+			},
+		},
+		{
 			name: "sender const tag-only",
 			text: `
 				type U union { Empty }
@@ -779,6 +792,42 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 			tt.check(t, net)
 		})
 	}
+}
+
+func TestParser_ParseFile_ConnectionSendersConstRefAndPortAddr(t *testing.T) {
+	text := `
+		type U union { A }
+		const c0 U = U::A
+		def C1() (out any) {
+			a Pass<any>
+			---
+			$c0 -> a
+			a -> :out
+			a:res -> :out
+		}
+	`
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(text))
+	require.Nil(t, err)
+
+	net := got.Entities["C1"].Component[0].Net
+	require.Len(t, net, 3)
+
+	constSender := net[0].Normal.Senders[0].Const
+	require.NotNil(t, constSender)
+	require.NotNil(t, constSender.Value.Ref)
+	require.Equal(t, "c0", constSender.Value.Ref.Name)
+
+	implicitPortSender := net[1].Normal.Senders[0].PortAddr
+	require.NotNil(t, implicitPortSender)
+	require.Equal(t, "a", implicitPortSender.Node)
+	require.Equal(t, "", implicitPortSender.Port)
+
+	explicitPortSender := net[2].Normal.Senders[0].PortAddr
+	require.NotNil(t, explicitPortSender)
+	require.Equal(t, "a", explicitPortSender.Node)
+	require.Equal(t, "res", explicitPortSender.Port)
 }
 
 func TestParser_ParseFile_StructLiteralTrailingComma(t *testing.T) {

@@ -220,9 +220,10 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		}
 	}
 
+	// Chain head fan-in is intentionally disallowed to keep semantics simple.
 	if len(chainedConn.Normal.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
-			Message: "multiple senders are only allowed at the start of a connection",
+			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
 			Meta:    &chainedConn.Normal.Meta,
 		}
 	}

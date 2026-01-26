@@ -800,6 +800,8 @@ func (a Analyzer) getConstSenderType(
 	}, resolvedExpr, nil
 }
 
+// validateLiteralSender allows only primitive literals and union literals for now.
+// Complex literals (list/dict/struct) are rejected for simplicity; use const refs instead.
 func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 	if resolvedExpr.Inst != nil {
 		switch resolvedExpr.Inst.Ref.String() {
