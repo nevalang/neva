@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -433,18 +433,6 @@ func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {
 
 // ExitSingleSenderSide is called when production singleSenderSide is exited.
 func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
-
-// EnterUnionSender is called when production unionSender is entered.
-func (s *BasenevaListener) EnterUnionSender(ctx *UnionSenderContext) {}
-
-// ExitUnionSender is called when production unionSender is exited.
-func (s *BasenevaListener) ExitUnionSender(ctx *UnionSenderContext) {}
-
-// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
-func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
-// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
-func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}

@@ -303,19 +303,7 @@ type ConnectionSender struct {
 	Const    *Const    `json:"const,omitempty"`
 
 	StructSelector []string     `json:"selector,omitempty"`
-	Union          *UnionSender `json:"union,omitempty"`
 	Meta           core.Meta    `json:"meta"`
-}
-
-// UnionSender represents union in connection sender.
-// It's not same thing as UnionLiteral.
-// UnionLiteral is used to represent union in const value.
-// The difference is that UnionSender uses ConnectionSender instead of ConstValue.
-type UnionSender struct {
-	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
-	Tag       string            `json:"tag,omitempty"`
-	Data      *ConnectionSender `json:"data,omitempty"`
-	Meta      core.Meta         `json:"meta,omitempty"`
 }
 
 func (s ConnectionSender) String() string {

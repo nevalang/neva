@@ -14,9 +14,9 @@ type Day union {
 }
 
 def Main(start any) (stop any) {
-    print_day PrintDay
-    ---
-    :start -> { Day::Friday -> print_day -> :stop }
+	print_day PrintDay
+	---
+	:start -> Day::Friday -> print_day -> :stop
 }
 
 def PrintDay(day Day) (sig any) {

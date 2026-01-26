@@ -1,0 +1,13 @@
+type MaybeInt union {
+	Int int
+}
+
+def Main(start any) (stop any) {
+	union_node Union<MaybeInt>
+	---
+	:start -> [
+		MaybeInt::Int -> union_node:tag,
+		'nope' -> union_node:data
+	]
+	union_node -> :stop
+}

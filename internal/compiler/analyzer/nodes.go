@@ -186,6 +186,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// default any
+	// TODO: Remove this! See github issue about implicit any in nodes.
 	if len(resolvedNodeArgs) == 0 && len(nodeIface.TypeParams.Params) == 1 {
 		resolvedNodeArgs = []typesystem.Expr{
 			{
@@ -206,6 +207,16 @@ func (a Analyzer) analyzeNode(
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message: fmt.Sprintf("%s: %s", node.EntityRef.Name, err.Error()),
 			Meta:    &node.Meta,
+		}
+	}
+
+	if a.isUnionNode(node) {
+		firstResolvedNodeArg := resolvedNodeArgs[0]
+		if firstResolvedNodeArg.Lit == nil || firstResolvedNodeArg.Lit.Union == nil {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Message: "Union<T> expects union type argument",
+				Meta:    &node.Meta,
+			}
 		}
 	}
 
@@ -986,40 +997,19 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 		}
 		checkChainedConnections(conn.Normal.Senders, conn.Normal.Receivers)
 
-		// check if our node is a receiver in this connection
-		recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
-		for _, rpa := range recvPortAddrs {
-			if rpa.Node != nodeName {
+		// Check if our node is a receiver in this connection.
+		recvPairs := a.collectReceiverSenderPairs(conn.Normal.Receivers, conn.Normal.Senders)
+		for _, pair := range recvPairs {
+			if pair.portAddr.Node != nodeName {
 				continue
 			}
-			port := a.resolvePortName(nodeName, nodes, scope, true, rpa.Port)
-			// derive produced types from all senders
-			for _, sender := range conn.Normal.Senders {
-				// check if any receiver is a chained connection that contains our node
-				hasChainedConnection := false
-				for _, receiver := range conn.Normal.Receivers {
-					if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
-						// this is a chained connection, look at the senders within the chain
-						for _, chainedSender := range receiver.ChainedConnection.Normal.Senders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, chainedSender, net)
-							for _, t := range types {
-								list := c.incoming[port]
-								appendUnique(&list, t)
-								c.incoming[port] = list
-							}
-						}
-						hasChainedConnection = true
-					}
-				}
-
-				if !hasChainedConnection {
-					// regular sender
-					types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender, net)
-					for _, t := range types {
-						list := c.incoming[port]
-						appendUnique(&list, t)
-						c.incoming[port] = list
-					}
+			port := a.resolvePortName(nodeName, nodes, scope, true, pair.portAddr.Port)
+			for _, sender := range pair.senders {
+				types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender, net)
+				for _, t := range types {
+					list := c.incoming[port]
+					appendUnique(&list, t)
+					c.incoming[port] = list
 				}
 			}
 		}
@@ -1028,7 +1018,17 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	return c
 }
 
-// flattenReceiversPortAddrs extracts all direct receiver port addresses from potentially nested receivers.
+// flattenReceiversPortAddrs extracts all receiver port addresses from nested receiver trees,
+// ignoring which sender feeds each receiver. It is useful for coarse "who can receive" scans.
+//
+// Examples:
+//   :a -> b -> :c
+//     => returns [:c] (not paired with b)
+//
+//   :x -> [y, z]
+//     => returns [y, z]
+//
+// Note: use collectReceiverSenderPairs when sender/receiver pairing matters.
 func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) []src.PortAddr {
 	var res []src.PortAddr
 	var visit func(recs []src.ConnectionReceiver)
@@ -1048,6 +1048,52 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 	}
 	visit(receivers)
 	return res
+}
+
+type receiverSenderPair struct {
+	portAddr src.PortAddr
+	senders  []src.ConnectionSender
+}
+
+// collectReceiverSenderPairs maps each receiver port to the senders that feed it.
+// It preserves sender/receiver pairing across chained and deferred connections.
+//
+// Examples:
+//
+//	:a -> b -> :c
+//	  => pairs: (:c <- b), and b's inport gets (:a <- in) via recursion
+//
+//	:start -> U::A -> switch:case[0]
+//	  => pairs: (switch:case[0] <- U::A)
+//
+//	:x -> { :y -> :z }
+//	  => pairs: (:z <- :y) for the deferred connection
+func (a Analyzer) collectReceiverSenderPairs(
+	receivers []src.ConnectionReceiver,
+	senders []src.ConnectionSender,
+) []receiverSenderPair {
+	var pairs []receiverSenderPair
+	// Inline recursion keeps the accumulator local and avoids extra allocations/signatures.
+	var visit func(recs []src.ConnectionReceiver, snd []src.ConnectionSender)
+	visit = func(recs []src.ConnectionReceiver, snd []src.ConnectionSender) {
+		for _, r := range recs {
+			if r.PortAddr != nil {
+				pairs = append(pairs, receiverSenderPair{
+					portAddr: *r.PortAddr,
+					senders:  snd,
+				})
+				continue
+			}
+			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
+				visit(r.ChainedConnection.Normal.Receivers, r.ChainedConnection.Normal.Senders)
+			}
+			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
+				visit(r.DeferredConnection.Normal.Receivers, r.DeferredConnection.Normal.Senders)
+			}
+		}
+	}
+	visit(receivers, senders)
+	return pairs
 }
 
 // getPossibleSenderTypes is needed to derive node constraints from the network.
@@ -1074,14 +1120,6 @@ func (a Analyzer) getPossibleSenderTypes(
 		} else if sender.Const.TypeExpr.Inst != nil || sender.Const.TypeExpr.Lit != nil {
 			// for literal constants, resolve the type expression directly
 			if t, err := a.resolver.ResolveExpr(sender.Const.TypeExpr, scope); err == nil {
-				return []typesystem.Expr{t}
-			}
-		}
-	}
-	// union sender produces the union type itself
-	if sender.Union != nil {
-		if entity, _, err := scope.GetType(sender.Union.EntityRef); err == nil {
-			if t, e := a.analyzeTypeExpr(*entity.BodyExpr, scope); e == nil {
 				return []typesystem.Expr{t}
 			}
 		}

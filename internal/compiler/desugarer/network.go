@@ -768,40 +768,6 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	if sender.Union != nil {
-		result, err := d.desugarUnionSender(
-			*sender.Union,
-			normConn,
-			iface,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
-		}
-
-		// recursively desugar union inserts to eliminate raw const/literal senders
-		desugaredInsert, derr := d.desugarConnections(
-			iface,
-			result.insert,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if derr != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar union inserts: %w", derr)
-		}
-
-		return desugarSenderResult{
-			replace: result.replace,
-			insert:  desugaredInsert,
-		}, nil
-	}
 	return desugarSenderResult{}, fmt.Errorf("unexpected sender type: %v", sender.Meta.Location)
 }
 

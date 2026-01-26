@@ -28,6 +28,14 @@ func (a Analyzer) analyzeNetwork(
 ) ([]src.Connection, *compiler.Error) {
 	nodesUsage := make(map[string]netNodeUsage, len(nodes))
 
+	// Read `Union:tag` wiring to bind each `Union<T>` node to a concrete tag.
+	// Example: `Union<MyU>`; `MyU::Int -> union:tag`; `42 -> union:data`
+	// We bind `tag=Int` so `union:data` must be compatible with int later.
+	unionActiveTags, err := a.buildUnionActiveTagBindings(net, nodes, scope)
+	if err != nil {
+		return nil, err
+	}
+
 	analyzedConnections, err := a.analyzeConnections(
 		net,
 		iface,
@@ -35,6 +43,7 @@ func (a Analyzer) analyzeNetwork(
 		nodesIfaces,
 		nodesUsage,
 		scope,
+		unionActiveTags,
 	)
 	if err != nil {
 		return nil, err
@@ -63,6 +72,7 @@ func (a Analyzer) analyzeConnections(
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 	scope src.Scope,
+	unionActiveTags map[string]unionActiveTagInfo,
 ) ([]src.Connection, *compiler.Error) {
 	analyzedConnections := make([]src.Connection, 0, len(net))
 
@@ -76,6 +86,7 @@ func (a Analyzer) analyzeConnections(
 			nodesUsage,
 			nil,
 			net,
+			unionActiveTags,
 		)
 		if err != nil {
 			return nil, err
@@ -95,6 +106,7 @@ func (a Analyzer) analyzeConnection(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
+	unionActiveTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
 	if conn.ArrayBypass != nil {
 		if err := a.analyzeArrayBypassConnection(
@@ -119,6 +131,7 @@ func (a Analyzer) analyzeConnection(
 		nodesUsage,
 		prevChainLink,
 		net,
+		unionActiveTags,
 	)
 	if err != nil {
 		return src.Connection{}, err
@@ -139,6 +152,7 @@ func (a Analyzer) analyzeNormalConnection(
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
+	unionActiveTags map[string]unionActiveTagInfo,
 ) (*src.NormalConnection, *compiler.Error) {
 	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
 	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
@@ -157,33 +171,18 @@ func (a Analyzer) analyzeNormalConnection(
 		return nil, err
 	}
 
-	// Switch is not usual component and needs special compiler magic.
-	// There are cases (pattern matching with tagged unions) where
-	// compiler must infer correct type for `switch:case[i]` outport.
-	// Neva's type-system is not sound enough to express heterogenous
-	// `case[i]` array prot slots, so this is done as compiler magic.
-	// It's important to do after senders are normalized "normally",
-	// Because in order to infer correct type for switch:case[i] outport,
-	// We should look at the sender of switch:case[i] inport, which means
-	// That senders better be resolved by this time.
-	for i, sender := range analyzedSenders {
-		if sender.PortAddr != nil {
-			if !isSwitchCasePort(*sender.PortAddr, nodes) {
-				continue
-			}
-			// We found a Switch:case[i] output usage.
-			// We need to find what feeds this switch case to know the type.
-			resolvedType, err := a.getSwitchCaseOutportType(
-				*sender.PortAddr,
-				nodes,
-				scope,
-				net,
-			)
-			if err != nil {
-				return nil, err
-			}
-			resolvedSenderTypes[i] = resolvedType
-		}
+	// Switch needs special typing: for union pattern matching, each case output may
+	// have a different payload type, which the type system can't express directly.
+	// We infer it from the wired case tag and must do this after senders are resolved.
+	analyzedSenders, resolvedSenderTypes, err = a.patchSwitchSenders(
+		analyzedSenders,
+		resolvedSenderTypes,
+		nodes,
+		scope,
+		net,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	analyzedReceivers, err := a.analyzeReceivers(
@@ -196,6 +195,7 @@ func (a Analyzer) analyzeNormalConnection(
 		resolvedSenderTypes,
 		analyzedSenders,
 		net,
+		unionActiveTags,
 	)
 	if err != nil {
 		return nil, err
@@ -206,6 +206,41 @@ func (a Analyzer) analyzeNormalConnection(
 		Receivers: analyzedReceivers,
 		Meta:      normConn.Meta,
 	}, nil
+}
+
+// patchSwitchSenders patches sender types for Switch:case[i] outports.
+// Switch is special: with union pattern matching, each case output may have a
+// different payload type, which the type system can't express directly, so we
+// infer it from the wired case tag.
+func (a Analyzer) patchSwitchSenders(
+	analyzedSenders []src.ConnectionSender,
+	resolvedSenderTypes []*ts.Expr,
+	nodes map[string]src.Node,
+	scope src.Scope,
+	net []src.Connection,
+) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
+	// Must run after sender normalization so switch:case[i] senders are resolved.
+	for i, sender := range analyzedSenders {
+		if sender.PortAddr == nil {
+			continue
+		}
+		if !isSwitchCasePort(*sender.PortAddr, nodes) {
+			continue
+		}
+		// We found a Switch:case[i] output usage; infer its concrete type.
+		resolvedType, err := a.getSwitchCaseOutportType(
+			*sender.PortAddr,
+			nodes,
+			scope,
+			net,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		resolvedSenderTypes[i] = resolvedType
+	}
+
+	return analyzedSenders, resolvedSenderTypes, nil
 }
 
 func (a Analyzer) analyzeArrayBypassConnection(
@@ -491,35 +526,11 @@ func (a Analyzer) getResolvedPortType(
 	isInput bool,
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
 	if portAddr.Port == "" {
-		if len(ports) == 1 || (!isInput && len(ports) == 2 && node.ErrGuard) {
-			// for output ports with error guard, skip the 'err' port and select the first non-error port
-			if !isInput && node.ErrGuard {
-				for name := range ports {
-					if name != "err" {
-						portAddr.Port = name
-						break
-					}
-				}
-			} else {
-				for name := range ports {
-					portAddr.Port = name
-					break
-				}
-			}
-		} else {
-			kind := "outports"
-			if isInput {
-				kind = "inports"
-			}
-			return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf(
-					"node '%v' has multiple %s - port name must be specified",
-					portAddr.Node,
-					kind,
-				),
-				Meta: &portAddr.Meta,
-			}
+		resolvedPortAddr, err := a.resolveUnnamedPort(ports, portAddr, node, isInput)
+		if err != nil {
+			return src.PortAddr{}, ts.Expr{}, false, err
 		}
+		portAddr = resolvedPortAddr
 	}
 
 	port, ok := ports[portAddr.Port]
@@ -533,12 +544,68 @@ func (a Analyzer) getResolvedPortType(
 		}
 	}
 
-	// we don't resolve node's args assuming they resolved already
+	resolvedPortType, err := a.resolvePortTypeWithFrame(
+		port,
+		nodeIfaceParams,
+		node.TypeArgs,
+		scope,
+	)
+	if err != nil {
+		return src.PortAddr{}, ts.Expr{}, false, err
+	}
 
-	// create frame `nodeParam:resolvedArg` to get resolved port type
+	return portAddr, resolvedPortType, port.IsArray, nil
+}
+
+func (a Analyzer) resolveUnnamedPort(
+	ports map[string]src.Port,
+	portAddr src.PortAddr,
+	node src.Node,
+	isInput bool,
+) (src.PortAddr, *compiler.Error) {
+	allowUnnamed := len(ports) == 1 || (!isInput && len(ports) == 2 && node.ErrGuard)
+	if !allowUnnamed {
+		kind := "outports"
+		if isInput {
+			kind = "inports"
+		}
+		return src.PortAddr{}, &compiler.Error{
+			Message: fmt.Sprintf(
+				"node '%v' has multiple %s - port name must be specified",
+				portAddr.Node,
+				kind,
+			),
+			Meta: &portAddr.Meta,
+		}
+	}
+
+	// for output ports with error guard, skip the 'err' port and select the first non-error port
+	if !isInput && node.ErrGuard {
+		for name := range ports {
+			if name != "err" {
+				portAddr.Port = name
+				break
+			}
+		}
+	} else {
+		for name := range ports {
+			portAddr.Port = name
+			break
+		}
+	}
+	return portAddr, nil
+}
+
+func (a Analyzer) resolvePortTypeWithFrame(
+	port src.Port,
+	nodeIfaceParams []ts.Param,
+	resolvedNodeArgs []ts.Expr,
+	scope src.Scope,
+) (ts.Expr, *compiler.Error) {
+	// we don't resolve node's args assuming they resolved already
 	frame := make(map[string]ts.Def, len(nodeIfaceParams))
 	for i, param := range nodeIfaceParams {
-		arg := node.TypeArgs[i]
+		arg := resolvedNodeArgs[i]
 		frame[param.Name] = ts.Def{
 			BodyExpr: &arg,
 			Meta:     arg.Meta,
@@ -551,13 +618,13 @@ func (a Analyzer) getResolvedPortType(
 		scope,
 	)
 	if err != nil {
-		return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
+		return ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
 			Meta:    &port.Meta,
 		}
 	}
 
-	return portAddr, resolvedPortType, port.IsArray, nil
+	return resolvedPortType, nil
 }
 
 func (a Analyzer) getResolvedSenderType(
@@ -609,93 +676,6 @@ func (a Analyzer) getResolvedSenderType(
 		}
 
 		return sender, lastFieldType, false, nil
-	}
-
-	// logic of getting type for union sender partially duplicates logic of validating it
-	// so we have to duplicate some code from "analyzeSender", but it should be possible to refactor
-	if sender.Union != nil {
-		unionTypeEntity, _, err := scope.GetType(sender.Union.EntityRef)
-		if err != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf("failed to resolve union type: %v", err),
-				Meta:    &sender.Meta,
-			}
-		}
-
-		resolvedUnionTypeExpr, typeExprErr := a.analyzeTypeExpr(*unionTypeEntity.BodyExpr, scope)
-		if typeExprErr != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf("failed to resolve union type: %v", typeExprErr),
-				Meta:    &sender.Meta,
-			}
-		}
-
-		tagTypeExpr, ok := resolvedUnionTypeExpr.Lit.Union[sender.Union.Tag]
-		if !ok {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf(
-					"tag %q not found in union %v",
-					sender.Union.Tag,
-					sender.Union.EntityRef,
-				),
-				Meta: &sender.Meta,
-			}
-		}
-
-		// if it's a tag-only union member, we just return type of the union itself
-		// not the type of the tag, because tag doesn't have a type, only name
-		if tagTypeExpr == nil {
-			return sender, resolvedUnionTypeExpr, false, nil
-		}
-
-		// we know that tagTypeExpr != nil so we expect sender.Union.Data to be != nil too,
-		// because we are referring to union member that has type, so sender must wrap some data,
-		// except we are inside pattern matching context, then we only need tag
-		if sender.Union.Data == nil && !isPatternSender {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Message: fmt.Sprintf(
-					"tag %q requires a wrapped value of type %v",
-					sender.Union.Tag,
-					tagTypeExpr,
-				),
-				Meta: &sender.Meta,
-			}
-		}
-
-		// insie pattern matching context, only tag is needed,
-		// so it's expected not to have wrapped data
-		if sender.Union.Data == nil && isPatternSender {
-			// in pattern matching, return the union type for tag-only patterns
-			return sender, resolvedUnionTypeExpr, false, nil
-		}
-
-		// analyze wrapped-sender and get its resolved type
-		resolvedWrappedSender, _, analyzeWrappedErr := a.analyzeSender(
-			*sender.Union.Data,
-			scope,
-			iface,
-			nodes,
-			nodesIfaces,
-			nodesUsage,
-			prevChainLink,
-			isPatternSender,
-		)
-		if analyzeWrappedErr != nil {
-			return src.ConnectionSender{}, ts.Expr{}, false, analyzeWrappedErr
-		}
-
-		// outside of the pattern matching context
-		// type of the union sender with wrapped data must be type of the union itself
-		// not the type of the wrapped sender
-		return src.ConnectionSender{
-			Union: &src.UnionSender{
-				EntityRef: sender.Union.EntityRef,
-				Tag:       sender.Union.Tag,
-				// but type of the wrapped sender must also be resolved
-				Data: resolvedWrappedSender,
-			},
-			Meta: sender.Meta,
-		}, resolvedUnionTypeExpr, false, nil
 	}
 
 	// handle port-address sender
@@ -820,6 +800,8 @@ func (a Analyzer) getConstSenderType(
 	}, resolvedExpr, nil
 }
 
+// validateLiteralSender allows only primitive literals and union literals for now.
+// Complex literals (list/dict/struct) are rejected for simplicity; use const refs instead.
 func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 	if resolvedExpr.Inst != nil {
 		switch resolvedExpr.Inst.Ref.String() {

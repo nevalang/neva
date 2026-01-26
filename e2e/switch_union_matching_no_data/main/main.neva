@@ -10,11 +10,13 @@ type MyEnum union {
 
 def Main(start any) (stop any) {
     switch Switch<MyEnum>
-    println fmt.Println<MyEnum>
-    panic runtime.Panic
-    ---
-    :start -> { MyEnum::A -> switch:data }
-    MyEnum::A -> switch:case[0] -> println:data
+	println fmt.Println<MyEnum>
+	panic runtime.Panic
+	---
+	:start -> [
+        MyEnum::A -> switch:data,
+	    MyEnum::A -> switch:case[0] -> println:data
+    ]
     [switch:else, println:err] -> panic
     println:res -> :stop
 }

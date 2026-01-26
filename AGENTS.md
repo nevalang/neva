@@ -26,6 +26,23 @@ Follow these instructions.
 
 **Goal**: Build perfect context so future sessions start smarter.
 
+### Session Notes (2026-01-23)
+
+- **Language semantics**: Chained connections nest; receiver type constraints must use the sender from the same chain link (not the outer sender).
+- **Language semantics**: Network senders now parse any `constLit`; only primitives/union literals get a type expr without additional analyzer inference.
+- **Language semantics**: Union tag/type compatibility relies on structural union checks via normal sender/receiver subtype validation.
+- **Common patterns**: Overload/generic resolution relies on `deriveNodeConstraintsFromNetwork`; nested chains need explicit sender-to-receiver pairing to avoid union/any leakage.
+- **Architecture insights**: Switch case output type inference is used in analyzer (before desugaring) for both overload resolution and network type checks.
+- **Architecture insights**: Union node tag/data validation is driven by `buildUnionTagInfos` + `validateUnionDataReceivers` to keep Union<T> wiring consistent.
+- **Gotchas**: Portless outports require explicit port names when multiple outports exist; generic std nodes like `fmt.Println` need explicit type args if type inference is unavailable.
+
+### Session Notes (2026-01-26)
+
+- **Language semantics**: Union:tag currently assumes a single sender; fan-in is explicitly rejected to keep wiring semantics unambiguous.
+- **Common patterns**: Avoid extra union-type equivalence checks at tag-binding time; rely on standard subtype validation for compatibility.
+- **Gotchas**: In sender position, `[...]` is parsed as fan-in (multiple senders), so list literals should not be used as senders without explicit disambiguation.
+- **Gotchas**: Literal senders are limited to primitives/union literals; list/dict/struct literals are rejected for now (use const refs).
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
@@ -92,9 +109,10 @@ The standard library provides components for all programs. Some are implemented 
 ## 7. 🎨 Coding Standards
 
 - **Go Idioms**:
+  - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
-  - Test case names: lower_snake_case
+  - Test case names: `lower_snake_case`
   - KISS: simpler code > complex abstractions
   - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
     - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).

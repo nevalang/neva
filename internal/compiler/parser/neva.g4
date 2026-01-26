@@ -100,19 +100,15 @@ nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef: senderSide ARROW receiverSide;
-senderSide: singleSenderSide | multipleSenderSide;
+senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
 	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
 arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;
 singleSenderSide:
 	portAddr
 	| senderConstRef
-	| primitiveConstLit
-	| structSelectors
-	| unionSender;
-
-unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
-primitiveConstLit: bool | (MINUS)? INT | (MINUS)? FLOAT | STRING;
+	| constLit
+	| structSelectors;
 senderConstRef: DOLLAR entityRef;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;

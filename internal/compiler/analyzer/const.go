@@ -42,13 +42,6 @@ func (a Analyzer) analyzeConst(
 		}.Wrap(err)
 	}
 
-	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
-		return src.Const{}, &compiler.Error{
-			Message: "Constant cannot have type union",
-			Meta:    &constant.Meta,
-		}
-	}
-
 	var typeExprStrRepr string
 	if inst := resolvedType.Inst; inst != nil {
 		typeExprStrRepr = inst.Ref.String()
