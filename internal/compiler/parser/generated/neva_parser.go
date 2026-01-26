@@ -463,8 +463,8 @@ func nevaParserInit() {
 		125, 1, 0, 0, 0, 854, 852, 1, 0, 0, 0, 855, 858, 3, 128, 64, 0, 856, 858,
 		3, 134, 67, 0, 857, 855, 1, 0, 0, 0, 857, 856, 1, 0, 0, 0, 858, 127, 1,
 		0, 0, 0, 859, 860, 3, 130, 65, 0, 860, 861, 5, 30, 0, 0, 861, 862, 3, 140,
-		70, 0, 862, 129, 1, 0, 0, 0, 863, 866, 3, 136, 68, 0, 864, 866, 3, 132,
-		66, 0, 865, 863, 1, 0, 0, 0, 865, 864, 1, 0, 0, 0, 866, 131, 1, 0, 0, 0,
+		70, 0, 862, 129, 1, 0, 0, 0, 863, 866, 3, 132, 66, 0, 864, 866, 3, 136,
+		68, 0, 865, 863, 1, 0, 0, 0, 865, 864, 1, 0, 0, 0, 866, 131, 1, 0, 0, 0,
 		867, 871, 5, 20, 0, 0, 868, 870, 5, 38, 0, 0, 869, 868, 1, 0, 0, 0, 870,
 		873, 1, 0, 0, 0, 871, 869, 1, 0, 0, 0, 871, 872, 1, 0, 0, 0, 872, 874,
 		1, 0, 0, 0, 873, 871, 1, 0, 0, 0, 874, 891, 3, 136, 68, 0, 875, 879, 5,
@@ -12175,8 +12175,8 @@ type ISenderSideContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	SingleSenderSide() ISingleSenderSideContext
 	MultipleSenderSide() IMultipleSenderSideContext
+	SingleSenderSide() ISingleSenderSideContext
 
 	// IsSenderSideContext differentiates from other interfaces.
 	IsSenderSideContext()
@@ -12214,22 +12214,6 @@ func NewSenderSideContext(parser antlr.Parser, parent antlr.ParserRuleContext, i
 
 func (s *SenderSideContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *SenderSideContext) SingleSenderSide() ISingleSenderSideContext {
-	var t antlr.RuleContext
-	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(ISingleSenderSideContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
-		}
-	}
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(ISingleSenderSideContext)
-}
-
 func (s *SenderSideContext) MultipleSenderSide() IMultipleSenderSideContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
@@ -12244,6 +12228,22 @@ func (s *SenderSideContext) MultipleSenderSide() IMultipleSenderSideContext {
 	}
 
 	return t.(IMultipleSenderSideContext)
+}
+
+func (s *SenderSideContext) SingleSenderSide() ISingleSenderSideContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(ISingleSenderSideContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(ISingleSenderSideContext)
 }
 
 func (s *SenderSideContext) GetRuleContext() antlr.RuleContext {
@@ -12280,14 +12280,14 @@ func (p *nevaParser) SenderSide() (localctx ISenderSideContext) {
 		p.EnterOuterAlt(localctx, 1)
 		{
 			p.SetState(863)
-			p.SingleSenderSide()
+			p.MultipleSenderSide()
 		}
 
 	case 2:
 		p.EnterOuterAlt(localctx, 2)
 		{
 			p.SetState(864)
-			p.MultipleSenderSide()
+			p.SingleSenderSide()
 		}
 
 	case antlr.ATNInvalidAltNumber:

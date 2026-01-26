@@ -100,7 +100,7 @@ nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef: senderSide ARROW receiverSide;
-senderSide: singleSenderSide | multipleSenderSide;
+senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
 	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
 arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;

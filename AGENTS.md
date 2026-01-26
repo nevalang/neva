@@ -40,6 +40,7 @@ Follow these instructions.
 
 - **Language semantics**: Union:tag currently assumes a single sender; fan-in is explicitly rejected to keep wiring semantics unambiguous.
 - **Common patterns**: Avoid extra union-type equivalence checks at tag-binding time; rely on standard subtype validation for compatibility.
+- **Gotchas**: In sender position, `[...]` is parsed as fan-in (multiple senders), so list literals should not be used as senders without explicit disambiguation.
 
 ## 3. ⚡ Core Concepts
 
