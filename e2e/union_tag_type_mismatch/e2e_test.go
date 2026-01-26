@@ -9,6 +9,5 @@ import (
 
 func Test(t *testing.T) {
 	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
-	require.Contains(t, stderr, "Union tag type")
-	require.Contains(t, stderr, "does not match Union<T> type")
+	require.Contains(t, stderr, "tag \"Str\" not found in union")
 }

@@ -76,7 +76,7 @@ func (a Analyzer) buildUnionActiveTagBindings(
 		if !ok {
 			return nil, &compiler.Error{
 				Message: fmt.Sprintf(
-					"tag %q not found in union %v",
+					"tag %q not found in %v",
 					unionLiteral.Tag,
 					resolvedUnionTypeArg,
 				),
