@@ -1,24 +1,26 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    sub1 SubComponent
-    sub2 SubComponent
-    ---
-    :start -> 'Hi, Neva!' -> sub1:data
-    sub1:stop-> :stop
-    :start -> '1' -> sub2
+	sub1 SubComponent
+	sub2 SubComponent
+	---
+	:start -> [
+		'Hi, Neva!' -> sub1,
+		'1' -> sub2
+	]
+	sub1 -> :stop
 }
 
 // Here we are panicking inside the sub-component instead of propagating the error.
 // If we wouldn't to it, the file would compile and therefore the test would fail.
 def SubComponent(data string) (stop any) {
-    println fmt.Println
-    panic runtime.Panic
-    ---
-    :data -> println:data
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println
+	panic runtime.Panic
+	---
+	:data -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
