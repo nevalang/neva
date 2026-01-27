@@ -47,6 +47,7 @@ Follow these instructions.
 
 - **Language semantics**: Literal senders must be in a chain triggered by a signal (e.g. `:start -> true -> ...`).
 - **Language semantics**: Fan-out (`-> [...]`) can contain chained connections, but the chain head is the sender before the fan-out (e.g. `:start -> [foo, bar -> baz]`).
+- **Language semantics**: `std/core.New<T>` now requires a `sig` inport; explicit uses must be triggered (e.g. `:start -> new:sig`).
 - **Common patterns**: Stdlib Switch setups should seed case values via `:start` to avoid autonomous constant senders.
 - **Architecture insights**: `analyzeSender` rejects const senders when `prevChainLink` is empty (analyzer enforces the rule).
 - **Gotchas**: Stdlib modules can fail compilation after analyzer rule changes; update `std/*` constants accordingly.
