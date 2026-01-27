@@ -28,9 +28,9 @@ pub def Lift<T, Y>(data T) (res Y, err error) {
     ---
     :data -> [
         handler -> :res,
-        false -> s:data
+        false -> s:data,
+        true -> s:case[0]
     ]
-    true -> s:case[0]
     s:case[0] -> '' -> new -> :err
     s:else -> del
 }
