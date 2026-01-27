@@ -8,10 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, err := e2e.RunExpectingError(t, "run", "main")
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		out+err,
+		stderr,
 		"Constants must be triggered by a signal (e.g. :start -> 42 -> ...)",
 	)
 }

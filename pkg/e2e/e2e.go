@@ -2,107 +2,162 @@ package e2e
 
 import (
 	"bytes"
-	"io"
+	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
-
-	"path/filepath"
-	"runtime"
 
 	"github.com/stretchr/testify/require"
 )
 
-type outputMode int
+// Option configures Run behavior.
+type Option func(*config)
 
-const (
-	captureStdoutOnly outputMode = iota
-	captureCombinedOutput
-)
-
-// Run executes the neva command with the given arguments.
-// It asserts success (exit code 0) and returns captured stdout.
-// Stderr is passed through to os.Stderr for visibility on failure.
-func Run(t *testing.T, args ...string) string {
-	t.Helper()
-	return runWithMode(t, "", captureStdoutOnly, args...)
+type config struct {
+	stdin        string
+	expectedCode int
+	wd           string
 }
 
-// RunWithStdin executes the neva command with the given arguments and stdin input.
-// It asserts success (exit code 0) and returns captured stdout.
-// Stderr is passed through to os.Stderr for visibility on failure.
-func RunWithStdin(t *testing.T, stdin string, args ...string) string {
-	t.Helper()
-	return runWithMode(t, stdin, captureStdoutOnly, args...)
+// WithStdin sets stdin input for the command.
+func WithStdin(stdin string) Option {
+	return func(c *config) {
+		c.stdin = stdin
+	}
 }
 
-// RunCombined executes the neva command and captures both stdout and stderr (combined),
-// asserting a zero exit code. Combined output is returned as a string.
-func RunCombined(t *testing.T, args ...string) string {
-	t.Helper()
-	return runWithMode(t, "", captureCombinedOutput, args...)
+// WithCode sets the expected exit code (default is 0).
+func WithCode(code int) Option {
+	return func(c *config) {
+		c.expectedCode = code
+	}
 }
 
-// RunWithStdinCombined is similar to RunCombined but also lets callers pass stdin.
-func RunWithStdinCombined(t *testing.T, stdin string, args ...string) string {
-	t.Helper()
-	return runWithMode(t, stdin, captureCombinedOutput, args...)
+// WithDir sets the working directory for the command execution.
+func WithDir(wd string) Option {
+	return func(c *config) {
+		c.wd = wd
+	}
 }
 
-// RunExpectingError executes the neva command and asserts it fails with the expected exit code (default 1).
-// It returns stdout and stderr captured as strings.
-func RunExpectingError(t *testing.T, args ...string) (string, string) {
+// Run executes the neva command with the given arguments and options.
+// It returns captured stdout and stderr separately.
+// The working directory is os.Getwd() (relies on go test running each package with cwd at that package).
+// Most tests can ignore stderr: `out, _ := e2e.Run(...)`
+// Tests that need stderr (e.g., panic cases) can use: `out, stderr := e2e.Run(...)` and combine if needed.
+func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	t.Helper()
 
-	cmd := buildGoRunCmd(t, args...)
-
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	require.Error(t, err, "neva execution succeeded but should have failed")
-	require.NotEqual(t, 0, cmd.ProcessState.ExitCode(), "exit code should not be 0")
-
-	return stdout.String(), stderr.String()
-}
-
-func runWithMode(t *testing.T, stdin string, mode outputMode, args ...string) string {
-	t.Helper()
-
-	cmd := buildGoRunCmd(t, args...)
-	if stdin != "" {
-		cmd.Stdin = strings.NewReader(stdin)
+	cfg := &config{
+		expectedCode: 0,
+	}
+	for _, opt := range opts {
+		opt(cfg)
 	}
 
-	var stdout bytes.Buffer
+	repoRoot := FindRepoRoot(t)
+	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
 
-	switch mode {
-	case captureCombinedOutput:
-		writer := io.MultiWriter(&stdout, os.Stderr)
-		cmd.Stdout = writer
-		cmd.Stderr = writer
-	default:
-		cmd.Stdout = &stdout
-		cmd.Stderr = os.Stderr
+	// Build the CLI binary from repo root; run it from wd.
+	binPath := buildNevaBinary(t, repoRoot, mainPath)
+
+	cmdArgs := append([]string{binPath}, args...)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+
+	// Resolve the working directory from which the CLI should be executed.
+	// This intentionally differs from the directory used to build the CLI,
+	// which must stay at repo root so Go modules resolve correctly.
+	wd := cfg.wd
+	var err error
+	if wd == "" {
+		wd, err = os.Getwd()
+		require.NoError(t, err, "failed to get working directory")
+	}
+	cmd.Dir = wd
+
+	if cfg.stdin != "" {
+		cmd.Stdin = strings.NewReader(cfg.stdin)
 	}
 
-	err := cmd.Run()
-	require.NoError(t, err, "neva execution failed. Stdout/Stderr: %s", stdout.String())
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
 
-	return stdout.String()
+	// Always capture stdout and stderr separately
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
+	err = cmd.Run()
+	actualCode := getExitCode(err)
+
+	// Always show both stdout and stderr in error messages
+	outputMsg := fmt.Sprintf("stdout: %q\nstderr: %q", stdoutBuf.String(), stderrBuf.String())
+	require.Equal(t, cfg.expectedCode, actualCode,
+		"neva execution exit code mismatch. %s", outputMsg)
+
+	return stdoutBuf.String(), stderrBuf.String()
 }
 
-func buildGoRunCmd(t *testing.T, args ...string) *exec.Cmd {
-	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
+// FindRepoRoot finds the repository root using go env GOMOD.
+func FindRepoRoot(t *testing.T) string {
+	t.Helper()
 
-	root := filepath.Join(filepath.Dir(filename), "..", "..")
-	main := filepath.Join(root, "cmd", "neva", "main.go")
-	cmdArgs := append([]string{"run", main}, args...)
+	cmd := exec.Command("go", "env", "GOMOD")
+	output, err := cmd.Output()
+	require.NoError(t, err, "failed to run 'go env GOMOD'")
 
-	return exec.Command("go", cmdArgs...)
+	gomodPath := strings.TrimSpace(string(output))
+	require.NotEmpty(t, gomodPath, "GOMOD path is empty")
+
+	repoRoot := filepath.Dir(gomodPath)
+	require.NotEmpty(t, repoRoot, "repo root is empty")
+
+	return repoRoot
+}
+
+// getExitCode extracts the exit code from an error.
+// Returns 0 if err is nil, otherwise extracts from *exec.ExitError.
+func getExitCode(err error) int {
+	if err == nil {
+		return 0
+	}
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return exitErr.ExitCode()
+	}
+
+	// If it's not an ExitError, we can't determine the exit code
+	// This shouldn't happen in normal operation, but return a non-zero
+	// to indicate failure
+	return 1
+}
+
+// buildNevaBinary builds the neva CLI from the repo root to ensure module
+// resolution works regardless of where tests execute the resulting binary.
+// It returns the path to the built binary.
+func buildNevaBinary(t *testing.T, repoRoot, mainPath string) string {
+	t.Helper()
+
+	binPath := filepath.Join(t.TempDir(), "neva")
+	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
+	buildCmd.Dir = repoRoot
+
+	var buildStdoutBuf bytes.Buffer
+	var buildStderrBuf bytes.Buffer
+	buildCmd.Stdout = &buildStdoutBuf
+	buildCmd.Stderr = &buildStderrBuf
+
+	err := buildCmd.Run()
+	require.NoError(
+		t,
+		err,
+		"failed to build neva CLI. stdout: %q stderr: %q",
+		buildStdoutBuf.String(),
+		buildStderrBuf.String(),
+	)
+
+	return binPath
 }

@@ -295,47 +295,15 @@ type ConnectionReceiver struct {
 	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
 	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
 	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
-	Switch             *Switch     `json:"switch,omitempty"`
 	Meta               core.Meta   `json:"meta,omitempty"`
-}
-
-type Switch struct {
-	Cases   []NormalConnection   `json:"cases,omitempty"`   // TODO rename to CaseBranches
-	Default []ConnectionReceiver `json:"default,omitempty"` // TODO rename to DefaultBranch
-	Meta    core.Meta            `json:"meta,omitempty"`
 }
 
 type ConnectionSender struct {
 	PortAddr *PortAddr `json:"portAddr,omitempty"`
 	Const    *Const    `json:"const,omitempty"`
-	Range    *Range    `json:"range,omitempty"`
 
-	Ternary        *Ternary     `json:"ternary,omitempty"`
 	StructSelector []string     `json:"selector,omitempty"`
-	Union          *UnionSender `json:"union,omitempty"`
-	Meta           core.Meta    `json:"meta,omitempty"`
-}
-
-// UnionSender represents union in connection sender.
-// It's not same thing as UnionLiteral.
-// UnionLiteral is used to represent union in const value.
-// The difference is that UnionSender uses ConnectionSender instead of ConstValue.
-type UnionSender struct {
-	EntityRef core.EntityRef    `json:"entityRef,omitempty"`
-	Tag       string            `json:"tag,omitempty"`
-	Data      *ConnectionSender `json:"data,omitempty"`
-	Meta      core.Meta         `json:"meta,omitempty"`
-}
-
-type Ternary struct {
-	Condition ConnectionSender `json:"condition,omitempty"`
-	Left      ConnectionSender `json:"left,omitempty"`
-	Right     ConnectionSender `json:"right,omitempty"`
-	Meta      core.Meta        `json:"meta,omitempty"`
-}
-
-func (t Ternary) String() string {
-	return fmt.Sprintf("(%v ? %v : %v)", t.Condition, t.Left, t.Right)
+	Meta           core.Meta    `json:"meta"`
 }
 
 func (s ConnectionSender) String() string {
@@ -350,26 +318,11 @@ func (s ConnectionSender) String() string {
 	switch {
 	case s.Const != nil:
 		result = s.Const.Value.String()
-	case s.Range != nil:
-		result = s.Range.String()
 	case s.PortAddr != nil:
 		result = s.PortAddr.String()
-
-	case s.Ternary != nil:
-		result = s.Ternary.String()
 	}
 
 	return result + selectorsString
-}
-
-type Range struct {
-	From int64     `json:"from"`
-	To   int64     `json:"to"`
-	Meta core.Meta `json:"meta,omitempty"`
-}
-
-func (r Range) String() string {
-	return fmt.Sprintf("%v..%v", r.From, r.To)
 }
 
 type PortAddr struct {

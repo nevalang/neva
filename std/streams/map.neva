@@ -1,0 +1,19 @@
+// IMapHandler is a dependency for Map.
+pub interface IMapHandler<T, Y>(T) (Y)
+
+// Map maps one stream onto another.
+// Just like For, it does not block the stream. As soon as one item processed,
+// it sends an item downstream and processes the next one.
+// It's can receive next message before previous one is processed,
+// so it must never be used with side-effects.
+pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
+    handler IMapHandler<T, Y>
+    wrap Struct<stream<Y>>
+    ---
+    :data -> [
+        .idx -> wrap:idx,
+        .last -> wrap:last,
+        .data -> handler -> wrap:data
+    ]
+    wrap -> :res
+}

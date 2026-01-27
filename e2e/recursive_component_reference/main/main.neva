@@ -1,0 +1,13 @@
+def Main(start any) (stop any) {
+    printer Printer
+    ---
+    :start -> printer:data
+    printer:sig -> :stop
+}
+
+def Printer(data any) (sig any) {
+    printer Printer
+    ---
+    :data -> printer:data
+    printer:sig -> :sig
+}

@@ -4,7 +4,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    lshift LShift
+    lshift BitLsh
     println fmt.Println
     panic runtime.Panic
     ---

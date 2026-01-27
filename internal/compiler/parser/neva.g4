@@ -17,8 +17,9 @@ compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
 compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importDef* RBRACE;
-importDef: importAlias? importPath (COMMA)? NEWLINE*;
+importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE*;
+importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;
 importPathMod: AT | importMod;
@@ -77,7 +78,7 @@ listLit: LBRACK NEWLINE* listItems? RBRACK;
 listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;
 structLit: LBRACE NEWLINE* structValueFields? RBRACE;
-structValueFields: structValueField (COMMA NEWLINE* structValueField)*;
+structValueFields: structValueField (COMMA NEWLINE* structValueField)* (COMMA NEWLINE*)?;
 structValueField: IDENTIFIER COLON compositeItem NEWLINE*;
 
 // Components
@@ -99,30 +100,20 @@ nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
 normConnDef: senderSide ARROW receiverSide;
-senderSide: singleSenderSide | multipleSenderSide;
+senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
 	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
 arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;
 singleSenderSide:
 	portAddr
 	| senderConstRef
-	| primitiveConstLit
-	| rangeExpr
-	| structSelectors
-	| ternaryExpr
-	| unionSender;
-
-unionSender: entityRef DCOLON IDENTIFIER (LPAREN singleSenderSide RPAREN)?;
-primitiveConstLit: bool | (MINUS)? INT | (MINUS)? FLOAT | STRING;
+	| constLit
+	| structSelectors;
 senderConstRef: DOLLAR entityRef;
-
-ternaryExpr: LPAREN singleSenderSide QUEST singleSenderSide COLON singleSenderSide RPAREN;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
 deferredConn: LBRACE NEWLINE* connDef NEWLINE* RBRACE;
-rangeExpr: rangeMember DOT2 rangeMember;
-rangeMember: (MINUS)? INT;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -139,16 +130,9 @@ structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
 	| portAddr
-	| deferredConn
-	| switchStmt;
+	| deferredConn;
 multipleReceiverSide:
 	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
-
-// Switch
-switchStmt:
-	SWITCH NEWLINE* LBRACE NEWLINE* normConnDef (NEWLINE+ normConnDef)* 
-	(NEWLINE+ defaultCase)? NEWLINE* RBRACE;
-defaultCase: UNDERSCORE ARROW receiverSide;
 
 /* LEXER */
 
@@ -161,16 +145,12 @@ INTERFACE: 'interface';
 CONST: 'const';
 DEF: 'def';
 IMPORT: 'import';
-SWITCH: 'switch';
 TRUE: 'true';
 FALSE: 'false';
 
 // Operators and Punctuation
-PLUS: '+';
 MINUS: '-';
-STAR: '*';
 SLASH: '/';
-PERCENT: '%';
 EQ: '=';
 LT: '<';
 GT: '>';
@@ -182,31 +162,14 @@ LBRACK: '[';
 RBRACK: ']';
 COMMA: ',';
 COLON: ':';
-SEMI: ';';
 DOT: '.';
 QUEST: '?';
-NOT: '!';
-AND: '&';
-OR: '|';
-CARET: '^';
-TILDE: '~';
 DOLLAR: '$';
 AT: '@';
-UNDERSCORE: '_';
 HASH: '#';
 
 // Compound Operators
-PLUS2: '++';
-MINUS2: '--';
-STAR2: '**';
-EQ2: '==';
-NOT_EQ: '!=';
-GTE: '>=';
-LTE: '<=';
-AND2: '&&';
-OR2: '||';
 DCOLON: '::';
-DOT2: '..';
 ARROW: '->';
 FAT_ARROW: '=>';
 DASH3: '---';

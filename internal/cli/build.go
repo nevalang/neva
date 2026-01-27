@@ -41,6 +41,10 @@ func newBuildCmd(
 				Name:  "emit-trace",
 				Usage: "Emit trace file",
 			},
+			&cli.BoolFlag{
+				Name:  "debug-runtime-validation",
+				Usage: "Enable compiler runtime port validation (language developers only)",
+			},
 			&cli.StringFlag{
 				Name:  "target",
 				Usage: "Target platform (go, wasm, native, ir)",
@@ -81,7 +85,7 @@ func newBuildCmd(
 			switch target {
 			case "go", "wasm", "ir", "native":
 			default:
-				return fmt.Errorf("Unknown target %s", target)
+				return fmt.Errorf("unknown target %s", target)
 			}
 
 			targetOS := cliCtx.String("target-os")
@@ -116,7 +120,7 @@ func newBuildCmd(
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
 
-			mainPkgPath, err := mainPkgPathFromArgs(cliCtx)
+			mainPkgPath, err := mainPkgPathFromArgs(cliCtx, workdir)
 			if err != nil {
 				return err
 			}
@@ -158,7 +162,10 @@ func newBuildCmd(
 				externalRuntimePath = filepath.Join(workdir, externalRuntimePath)
 			}
 
-			golangBackend := golang.NewBackend(externalRuntimePath)
+			golangBackend := golang.NewBackend(
+				externalRuntimePath,
+				cliCtx.Bool("debug-runtime-validation"),
+			)
 
 			switch target {
 			case "go":
@@ -225,9 +232,26 @@ func newBuildCmd(
 	}
 }
 
-func mainPkgPathFromArgs(cliCtx *cli.Context) (string, error) {
+func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 	if cliCtx.NArg() == 0 {
 		return "", errors.New("path to main package is required")
 	}
-	return cliCtx.Args().First(), nil
+	raw := cliCtx.Args().First()
+	
+	// Resolve path relative to workdir if not absolute
+	abs := raw
+	if !filepath.IsAbs(abs) {
+		abs = filepath.Join(workdir, raw)
+	}
+	abs = filepath.Clean(abs)
+	
+	// Check if path exists and is a .neva file - if so, use its directory
+	info, err := os.Stat(abs)
+	if err == nil && !info.IsDir() {
+		if filepath.Ext(abs) == ".neva" {
+			abs = filepath.Dir(abs)
+		}
+	}
+	
+	return abs, nil
 }

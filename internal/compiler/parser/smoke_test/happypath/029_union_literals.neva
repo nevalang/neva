@@ -1,0 +1,20 @@
+type U union { A, I int, F float, S string, B bool }
+
+const c_tag U = U::A
+const c_int U = U::I(1)
+const c_neg_int U = U::I(-1)
+const c_float U = U::F(1.5)
+const c_neg_float U = U::F(-2.0)
+const c_str U = U::S('hi')
+const c_true U = U::B(true)
+const c_false U = U::B(false)
+
+def C1() (stop any) {
+    pass Pass<U>
+    ---
+    [U::A, U::I(1)] -> pass
+    $c_int -> pass
+    pass -> :stop
+    pass:res -> :stop
+    $c_tag -> :stop
+}

@@ -1,0 +1,32 @@
+// Package dotenv loads environment variables from dotenv files into the
+// current process environment.
+
+// LoadFrom loads environment variables from the provided dotenv file path.
+// The input port "data" is the filename to load from. It does not override
+// existing environment variables. The output port "res" sends a signal when
+// loading completes. If you want to load from the default ".env" in the
+// working directory, use Load instead.
+#extern(dotenv_load_from)
+pub def LoadFrom(data string) (res any, err error)
+
+// Load loads environment variables from ".env" in the working directory.
+// It does not override existing environment variables. The output port "res"
+// sends a signal when loading completes. If you need to load a specific path,
+// use LoadFrom instead.
+#extern(dotenv_load)
+pub def Load(sig any) (res any, err error)
+
+// LoadFromOverride loads environment variables from the provided dotenv file
+// path and overrides existing environment variables. The input port "data" is
+// the filename to load from. The output port "res" sends a signal when loading
+// completes. If you want to override using the default ".env" path, use
+// LoadOverride instead.
+#extern(dotenv_load_from_override)
+pub def LoadFromOverride(data string) (res any, err error)
+
+// LoadOverride loads environment variables from ".env" in the working
+// directory and overrides existing environment variables. The output port
+// "res" sends a signal when loading completes. If you need to override values
+// from a specific path, use LoadFromOverride instead.
+#extern(dotenv_load_override)
+pub def LoadOverride(sig any) (res any, err error)

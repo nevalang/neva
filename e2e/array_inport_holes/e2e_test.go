@@ -8,11 +8,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, err := e2e.RunExpectingError(t, "run", "main")
-	require.Equal(t, "", out) // Expecting error usually means empty stdout for compiler errors, but let's check. Original code ignored stdout.
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		string(out)+err, // The original test checked combined output. e2e.RunExpectingError returns stdout and stderr separately.
+		stderr,
 		"main/main.neva:4:1: array inport 'printf:args' is used incorrectly: slot 1 is missing\n",
 	)
 }

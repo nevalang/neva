@@ -200,9 +200,9 @@ func (s Scope) GetNodeIOByPortAddr(
 	}
 
 	if len(entity.Component) == 1 {
-		return entity.Component[0].Interface.IO, nil
+		return entity.Component[0].IO, nil
 	} else if len(entity.Component) > 1 {
-		return entity.Component[*node.OverloadIndex].Interface.IO, nil
+		return entity.Component[*node.OverloadIndex].IO, nil
 	}
 
 	return IO{}, errors.New("component not found")

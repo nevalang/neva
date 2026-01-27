@@ -27,6 +27,11 @@ func (d *Desugarer) desugarNetwork(
 	constsToInsert := map[string]src.Const{}
 	nodesPortsUsed := newNodePortsMap()
 
+	// Implicit fan-in is generally forbidden by analyzer, but err-guard (`?`)
+	// desugaring can introduce it by wiring multiple errors to `:err`.
+	// Merge those into a single multi-sender connection so FanIn is inserted.
+	net = d.mergeImplicitFanIn(net)
+
 	desugaredConnections, err := d.desugarConnections(
 		iface,
 		net,
@@ -46,6 +51,92 @@ func (d *Desugarer) desugarNetwork(
 		constsToInsert:       constsToInsert,
 		nodesToInsert:        nodesToInsert,
 	}, nil
+}
+
+// mergeImplicitFanIn merges multiple connections targeting the same outport receiver.
+// Implicit fan-in is normally rejected by analyzer; currently `?` is the only
+// desugaring that can create it (multiple `err` senders to `:err`).
+// By merging into a single multi-sender connection, we reuse explicit fan-in
+// desugaring to insert FanIn nodes.
+func (d *Desugarer) mergeImplicitFanIn(
+	net []src.Connection,
+) []src.Connection {
+	type receiverKey struct {
+		node   string
+		port   string
+		hasIdx bool
+		idx    uint8
+	}
+	type group struct {
+		receiver src.ConnectionReceiver
+		senders  []src.ConnectionSender
+		meta     core.Meta
+	}
+
+	groups := map[receiverKey]group{}
+	order := make([]receiverKey, 0, len(net))
+	positions := map[receiverKey]int{}
+	kept := make([]src.Connection, 0, len(net))
+
+	for _, conn := range net {
+		if conn.ArrayBypass != nil || conn.Normal == nil {
+			kept = append(kept, conn)
+			continue
+		}
+
+		norm := conn.Normal
+		if len(norm.Receivers) != 1 {
+			kept = append(kept, conn)
+			continue
+		}
+
+		receiver := norm.Receivers[0]
+		if receiver.PortAddr == nil || receiver.ChainedConnection != nil {
+			kept = append(kept, conn)
+			continue
+		}
+
+		if receiver.PortAddr.Node != "out" {
+			kept = append(kept, conn)
+			continue
+		}
+
+		key := receiverKey{
+			node: receiver.PortAddr.Node,
+			port: receiver.PortAddr.Port,
+		}
+		if receiver.PortAddr.Idx != nil {
+			key.hasIdx = true
+			key.idx = *receiver.PortAddr.Idx
+		}
+
+		current, ok := groups[key]
+		if !ok {
+			current = group{
+				receiver: receiver,
+				meta:     core.Meta{Location: receiver.PortAddr.Meta.Location},
+			}
+			order = append(order, key)
+			positions[key] = len(kept)
+			kept = append(kept, src.Connection{})
+		}
+		current.senders = append(current.senders, norm.Senders...)
+		groups[key] = current
+	}
+
+	for _, key := range order {
+		g := groups[key]
+		kept[positions[key]] = src.Connection{
+			Normal: &src.NormalConnection{
+				Senders:   g.senders,
+				Receivers: []src.ConnectionReceiver{g.receiver},
+				Meta:      g.meta,
+			},
+			Meta: g.meta,
+		}
+	}
+
+	return kept
 }
 
 func (d *Desugarer) desugarConnections(
@@ -283,118 +374,6 @@ func (d *Desugarer) desugarSingleReceiver(
 		return desugarReceiverResult(result), nil
 	}
 
-	if receiver.Switch != nil {
-		d.switchCounter++
-		switchNodeName := fmt.Sprintf("__switch__%d", d.switchCounter)
-
-		nodesToInsert[switchNodeName] = src.Node{
-			EntityRef: core.EntityRef{
-				Pkg:  "builtin",
-				Name: "Switch",
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		}
-
-		// Connect original sender to switch:data
-		replace := src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: normConn.Senders,
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: switchNodeName,
-							Port: "data",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-			Meta: locOnlyMeta,
-		}
-
-		insert := []src.Connection{}
-
-		// For each case in the switch
-		for i, switchCaseBranchConn := range receiver.Switch.Cases {
-			// Connect case-sender to switch:case[i]
-			insert = append(insert, src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: switchCaseBranchConn.Senders,
-					Receivers: []src.ConnectionReceiver{
-						{
-							PortAddr: &src.PortAddr{
-								Node: switchNodeName,
-								Port: "case",
-								Idx:  compiler.Pointer(uint8(i)),
-								Meta: locOnlyMeta,
-							},
-							Meta: locOnlyMeta,
-						},
-					},
-				},
-				Meta: locOnlyMeta,
-			})
-
-			// Connect switch:case[i] to case receiver
-			insert = append(insert, src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: []src.ConnectionSender{
-						{
-							PortAddr: &src.PortAddr{
-								Node: switchNodeName,
-								Port: "case",
-								Idx:  compiler.Pointer(uint8(i)),
-								Meta: locOnlyMeta,
-							},
-							Meta: locOnlyMeta,
-						},
-					},
-					Receivers: switchCaseBranchConn.Receivers,
-					Meta:      locOnlyMeta,
-				},
-				Meta: locOnlyMeta,
-			})
-		}
-
-		// Connect switch:default to its receiver
-		insert = append(insert, src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: switchNodeName,
-							Port: "else",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: receiver.Switch.Default,
-				Meta:      locOnlyMeta,
-			},
-		})
-
-		desugaredInsert, err := d.desugarConnections(
-			iface,
-			insert,
-			nodePortsUsed,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarReceiverResult{}, err
-		}
-
-		return desugarReceiverResult{
-			replace: replace,
-			insert:  desugaredInsert,
-		}, nil
-	}
-
 	desugarChainResult, err := d.desugarChainedConnection(
 		iface,
 		receiver,
@@ -431,8 +410,6 @@ func (d *Desugarer) desugarChainedConnection(
 	// it's only possible to find receiver port before desugaring of chained connection
 	var chainHeadPort string
 	switch {
-	case chainHead.Range != nil:
-		chainHeadPort = "sig" // Range has sig inport
 	case chainHead.Const != nil:
 		chainHeadPort = "sig" // New has sig inport
 	case len(chainHead.StructSelector) != 0:
@@ -791,73 +768,7 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	if sender.Union != nil {
-		result, err := d.desugarUnionSender(
-			*sender.Union,
-			normConn,
-			iface,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar union sender: %w", err)
-		}
-
-		// recursively desugar union inserts to eliminate raw const/literal senders
-		desugaredInsert, derr := d.desugarConnections(
-			iface,
-			result.insert,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if derr != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar union inserts: %w", derr)
-		}
-
-		return desugarSenderResult{
-			replace: result.replace,
-			insert:  desugaredInsert,
-		}, nil
-	}
-
-	if sender.Ternary != nil {
-		result, err := d.desugarTernarySender(
-			iface,
-			*sender.Ternary,
-			normConn,
-			nodesToInsert,
-			constsToInsert,
-			usedNodeOutports,
-			scope,
-			nodes,
-		)
-		if err != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar ternary sender: %w", err)
-		}
-
-		return desugarSenderResult(result), nil
-	}
-
-	result, err := d.desugarRangeSender(
-		*sender.Range,
-		normConn,
-		nodesToInsert,
-		constsToInsert,
-	)
-	if err != nil {
-		return desugarSenderResult{}, err
-	}
-
-	return desugarSenderResult{
-		replace: src.Connection{Normal: &result.replace},
-		insert:  result.insert,
-	}, nil
+	return desugarSenderResult{}, fmt.Errorf("unexpected sender type: %v", sender.Meta.Location)
 }
 
 func (d *Desugarer) getFirstInportName(
@@ -1091,148 +1002,6 @@ func (d *Desugarer) desugarFanOut(
 }
 
 // Add a new function to handle range senders
-type handleRangeSenderResult struct {
-	replace src.NormalConnection
-	insert  []src.Connection
-}
-
-// desugarRangeSender desugars `from..to -> XXX` part.
-// It does not create connection to range:sig,
-// it's done in chained connection desugaring.
-func (d *Desugarer) desugarRangeSender(
-	rangeExpr src.Range,
-	normConn src.NormalConnection,
-	nodesToInsert map[string]src.Node,
-	constsToInsert map[string]src.Const,
-) (handleRangeSenderResult, error) {
-	locOnlyMeta := core.Meta{Location: rangeExpr.Meta.Location}
-
-	d.rangeCounter++
-
-	rangeNodeName := fmt.Sprintf("__range%d__", d.rangeCounter)
-	fromConstName := fmt.Sprintf("__range%d_from__", d.rangeCounter)
-	toConstName := fmt.Sprintf("__range%d_to__", d.rangeCounter)
-
-	constsToInsert[fromConstName] = src.Const{
-		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
-		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.From))}},
-		Meta:     locOnlyMeta,
-	}
-	constsToInsert[toConstName] = src.Const{
-		TypeExpr: ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Pkg: "builtin", Name: "int"}}},
-		Value:    src.ConstValue{Message: &src.MsgLiteral{Int: compiler.Pointer(int(rangeExpr.To))}},
-		Meta:     locOnlyMeta,
-	}
-
-	nodesToInsert[rangeNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "Range",
-			Meta: locOnlyMeta,
-		},
-		Meta: locOnlyMeta,
-	}
-	nodesToInsert[fromConstName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "New",
-			Meta: locOnlyMeta,
-		},
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: fromConstName,
-		},
-		Meta: locOnlyMeta,
-	}
-	nodesToInsert[toConstName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "New",
-			Meta: locOnlyMeta,
-		},
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: toConstName,
-		},
-		Meta: locOnlyMeta,
-	}
-
-	replace := src.NormalConnection{
-		Senders: []src.ConnectionSender{
-			{
-				PortAddr: &src.PortAddr{
-					Node: rangeNodeName,
-					Port: "res",
-					Meta: locOnlyMeta,
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		Receivers: normConn.Receivers,
-		Meta:      locOnlyMeta,
-	}
-
-	insert := []src.Connection{
-		// $from -> range:from
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: fromConstName,
-							Port: "res",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: rangeNodeName,
-							Port: "from",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		},
-		// $to -> range:to
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: toConstName,
-							Port: "res",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: rangeNodeName,
-							Port: "to",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		},
-	}
-
-	return handleRangeSenderResult{
-		insert:  insert,
-		replace: replace,
-	}, nil
-}
-
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
 func (d *Desugarer) desugarFanIn(
@@ -1315,135 +1084,4 @@ func (d *Desugarer) desugarFanIn(
 	}
 
 	return desugaredConnections, nil
-}
-
-type handleTernarySenderResult struct {
-	replace src.Connection
-	insert  []src.Connection
-}
-
-// (cond ? left : right) -> XXX;
-// =>
-// 1) cond -> ternary:if;
-// 2) left -> ternary:then;
-// 3) right -> ternary:else;
-// 4) ternary:res -> XXX;
-func (d *Desugarer) desugarTernarySender(
-	iface src.Interface,
-	ternary src.Ternary,
-	normConn src.NormalConnection,
-	nodesToInsert map[string]src.Node,
-	constsToInsert map[string]src.Const,
-	usedNodeOutports nodeOutportsUsed,
-	scope Scope,
-	nodes map[string]src.Node,
-) (handleTernarySenderResult, error) {
-	locOnlyMeta := core.Meta{Location: ternary.Meta.Location}
-
-	d.ternaryCounter++
-	ternaryNodeName := fmt.Sprintf("__ternary__%d", d.ternaryCounter)
-
-	nodesToInsert[ternaryNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "Ternary",
-			Meta: locOnlyMeta,
-		},
-		Meta: locOnlyMeta,
-	}
-
-	sugaredInsert := []src.Connection{
-		// 1) cond -> ternary:if
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{ternary.Condition},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: ternaryNodeName,
-							Port: "if",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-			Meta: locOnlyMeta,
-		},
-		// 2) left -> ternary:then
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{ternary.Left},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: ternaryNodeName,
-							Port: "then",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		// right -> ternary:else
-		{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{ternary.Right},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: ternaryNodeName,
-							Port: "else",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
-		},
-	}
-
-	desugaredInsert := make([]src.Connection, 0, len(sugaredInsert))
-	for _, conn := range sugaredInsert {
-		desugarConnRes, err := d.desugarConnection(
-			iface,
-			conn,
-			usedNodeOutports,
-			scope,
-			nodes,
-			nodesToInsert,
-			constsToInsert,
-		)
-		if err != nil {
-			return handleTernarySenderResult{}, err
-		}
-		desugaredInsert = append(desugaredInsert, *desugarConnRes.replace)
-		desugaredInsert = append(desugaredInsert, desugarConnRes.insert...)
-	}
-
-	// 4) ternary:res -> XXX;
-	sugaredReplace := src.Connection{
-		Normal: &src.NormalConnection{
-			Senders: []src.ConnectionSender{
-				{
-					PortAddr: &src.PortAddr{
-						Node: ternaryNodeName,
-						Port: "res",
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-			Receivers: normConn.Receivers,
-			Meta:      locOnlyMeta,
-		},
-	}
-
-	return handleTernarySenderResult{
-		replace: sugaredReplace,
-		insert:  desugaredInsert,
-	}, nil
 }

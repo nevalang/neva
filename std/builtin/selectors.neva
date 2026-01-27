@@ -10,7 +10,6 @@ pub def Ternary<T>(if bool, then T, else T) (res T)
 #extern(match)
 pub def Match<T>(data T, [if] T, [then] T, else T) (res T)
 
-// TODO default case
 // Select allows to select message based on a trigger.
 // It is useful when it's important where input signal came from.
 // If it's important what the signal is, use `Match` or `Switch` instead.

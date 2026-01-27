@@ -1,7 +1,12 @@
 import { streams }
 
 def Main(start any) (stop any) {
+    range streams.Range
     wait streams.Wait
     ---
-    :start -> 1..1000 -> wait -> :stop
+    :start -> [
+        1 -> range:from,
+        1000 -> range:to
+    ]
+    range -> wait -> :stop
 }

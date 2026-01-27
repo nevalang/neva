@@ -125,23 +125,11 @@ func (g Generator) processSender(
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
-	// union senders should have been desugared by this point
-	if sender.Union != nil {
-		panic(fmt.Sprintf(
-			"INTERNAL ERROR: union sender %v::%v was not desugared (location: %v)",
-			sender.Union.EntityRef,
-			sender.Union.Tag,
-			sender.Meta.Location,
-		))
-	}
-
 	// other special senders should also have been desugared
 	if sender.PortAddr == nil {
 		panic(fmt.Sprintf(
-			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, ternary=%v, location: %v)",
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, location: %v)",
 			sender.Const != nil,
-			sender.Range != nil,
-			sender.Ternary != nil,
 			sender.Meta.Location,
 		))
 	}
@@ -174,7 +162,7 @@ func (g Generator) processSender(
 			version = versions[*depNode.OverloadIndex]
 		}
 
-		for outport := range version.Interface.IO.Out {
+		for outport := range version.IO.Out {
 			sender.PortAddr.Port = outport
 			break
 		}
@@ -239,7 +227,7 @@ func (g Generator) processReceiver(
 			version = versions[*diArgNode.OverloadIndex]
 		}
 
-		for inport := range version.Interface.IO.In {
+		for inport := range version.IO.In {
 			receiver.PortAddr.Port = inport
 			break
 		}

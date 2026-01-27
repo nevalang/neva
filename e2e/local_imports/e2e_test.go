@@ -9,7 +9,7 @@ import (
 
 // Check that math example with multiplying numbers by using port bridge works as expected.
 func TestMathMultiplyNumbers(t *testing.T) {
-	out := e2e.Run(t, "run", "main")
+	out, _ := e2e.Run(t, []string{"run", "main"})
 	require.Equal(
 		t,
 		"42\n42\n",

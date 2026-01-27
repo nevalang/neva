@@ -20,6 +20,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"match":         matchSelector{},
 		"select":        selector{},
 		"ternary":       ternarySelector{},
+		"race":          race{},
 
 		"eq":   eq{},
 		"ne":   notEq{},
@@ -44,8 +45,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"list_to_stream":       listToStream{},
 		"stream_to_list":       streamToList{},
 
-		"stream_int_range":    rangeIntV1{},
-		"stream_int_range_v2": rangeIntV2{},
+		"stream_int_range": rangeInt{},
 
 		"stream_zip":      streamZip{},
 		"stream_zip_many": streamZipMany{},
@@ -98,12 +98,16 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"strings_to_upper":    stringsToUpper{},
 		"strings_to_lower":    stringsToLower{},
 
-		"scanln":      scanln{},
-		"args":        args{},
-		"dotenv_load": dotenvLoad{},
-		"println":     println{},
-		"printf":      printf{},
-		"print":       print{},
+		"scanln":                    scanln{},
+		"args":                      args{},
+		"os_environ":                osEnviron{},
+		"dotenv_load":               dotenvLoad{},
+		"dotenv_load_from":          dotenvLoadFrom{},
+		"dotenv_load_override":      dotenvLoad{override: true},
+		"dotenv_load_from_override": dotenvLoadFrom{override: true},
+		"println":                   println{},
+		"printf":                    printf{},
+		"print":                     print{},
 
 		"read_all":     fileReadAll{},
 		"write_all":    writeAll{},
@@ -113,10 +117,10 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"wait_group": waitGroup{},
 
+		// "state":       state{},
 		"accumulator": accumulator{},
 		"errors_new":  errorsNew{},
 
-		"union_wrap_v1": unionWrapV1{},
-		"union_wrap_v2": unionWrapV2{},
+		"union_wrap": unionWrapper{},
 	}
 }

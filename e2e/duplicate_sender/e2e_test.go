@@ -12,10 +12,10 @@ func Test(t *testing.T) {
 	// The error "port 'in:start' is used twice" is a compiler error.
 	// Compiler doesn't read stdin. The stdin was likely ignored or copy-pasted.
 	// I will use RunExpectingError.
-	out, err := e2e.RunExpectingError(t, "run", "main")
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		out+err,
+		stderr,
 		"main/main.neva:12:1: port 'in:start' is used twice\n",
 	)
 }

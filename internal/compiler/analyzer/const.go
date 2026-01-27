@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
+	ErrConstSeveralValues = errors.New("constant cannot have several values at once")
 )
 
 func (a Analyzer) analyzeConst(
@@ -40,13 +40,6 @@ func (a Analyzer) analyzeConst(
 			Message: "Cannot resolve constant type",
 			Meta:    &constant.Meta,
 		}.Wrap(err)
-	}
-
-	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
-		return src.Const{}, &compiler.Error{
-			Message: "Constant cannot have type union",
-			Meta:    &constant.Meta,
-		}
 	}
 
 	var typeExprStrRepr string

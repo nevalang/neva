@@ -14,9 +14,11 @@ def Main(start any) (stop any) {
 	panic runtime.Panic
 	---
 	:start -> [
-		0..10 -> zip:left,
-		$strings -> list_to_stream -> zip:right
+		0 -> range:from,
+		10 -> range:to,
+		$strings -> listToStream -> zip:right
 	]
+	range -> zip:left
 	zip:res -> for_println
 	for_println:res -> wait -> :stop
 	for_println:err -> panic

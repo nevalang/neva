@@ -6,8 +6,13 @@ import {
 
 def Main(start any) (stop any) {
     For{Handler}, streams.Wait, runtime.Panic
+    range streams.Range
     ---
-    :start -> 1..5 -> for
+    :start -> [
+        1 -> range:from,
+        5 -> range:to
+    ]
+    range -> for
     for:res -> wait -> :stop
     for:err -> panic
 }

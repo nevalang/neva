@@ -2,10 +2,10 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,18 +16,14 @@ func TestBuildIRMermaid(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and mermaid format
-	cmd = exec.Command("neva", "build", "-target=ir", "-target-ir-format=mermaid", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=mermaid", "src"})
 
 	// verify mermaid file exists
 	mdBytes, err := os.ReadFile("ir.md")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	// Check for basic Mermaid syntax and content
 	mdContent := string(mdBytes)
@@ -42,22 +38,17 @@ func TestBuildIRThreeJS(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and threejs format
-	cmd = exec.Command("neva", "build", "-target=ir", "-target-ir-format=threejs", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=threejs", "src"})
 
 	// verify threejs file exists
 	htmlBytes, err := os.ReadFile("ir.threejs.html")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	// Check for basic HTML/ThreeJS content
 	htmlContent := string(htmlBytes)
 	require.True(t, strings.Contains(htmlContent, "<!DOCTYPE html>"), "File should be HTML")
 	require.True(t, strings.Contains(htmlContent, "import * as THREE"), "File should import Three.js")
 }
-

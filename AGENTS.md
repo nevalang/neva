@@ -4,14 +4,46 @@ Follow these instructions.
 
 ## 1. 🤖 Operating Protocol
 
-1. Use `context7` MCP server.
+1. Use `context7` MCP server (when available) to fetch libraries API documentation.
 2. Run `golangci-lint` and `go test`. Fix warnings.
 3. If uncertainty > 10%, ask user.
 4. Update this file if changes to process, architecture, or rules.
-5. Examples and parser for `.neva` changes. `go.mod` for Go imports.
+5. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
 6. Plan -> Review -> Execute -> Review.
+7. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
+8. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 
-## 2. ⚡ Core Concepts
+## 2. 📈 Self-Improvement Protocol
+
+**After each session** (bug fix, feature, brainstorm), update this file (`AGENTS.md`) with:
+
+- **Language semantics** learned (e.g., how connections work, port behavior).
+- **Common patterns** discovered (e.g., typical error causes, debugging approaches).
+- **Architecture insights** gained (e.g., how compiler phases interact).
+- **Gotchas** encountered (e.g., edge cases, non-obvious behaviors).
+
+**Balance**: Keep it concise. Every line must earn its place. Remove outdated info. Split into workflows/rules if sections grow large.
+
+**Goal**: Build perfect context so future sessions start smarter.
+
+### Session Notes (2026-01-23)
+
+- **Language semantics**: Chained connections nest; receiver type constraints must use the sender from the same chain link (not the outer sender).
+- **Language semantics**: Network senders now parse any `constLit`; only primitives/union literals get a type expr without additional analyzer inference.
+- **Language semantics**: Union tag/type compatibility relies on structural union checks via normal sender/receiver subtype validation.
+- **Common patterns**: Overload/generic resolution relies on `deriveNodeConstraintsFromNetwork`; nested chains need explicit sender-to-receiver pairing to avoid union/any leakage.
+- **Architecture insights**: Switch case output type inference is used in analyzer (before desugaring) for both overload resolution and network type checks.
+- **Architecture insights**: Union node tag/data validation is driven by `buildUnionTagInfos` + `validateUnionDataReceivers` to keep Union<T> wiring consistent.
+- **Gotchas**: Portless outports require explicit port names when multiple outports exist; generic std nodes like `fmt.Println` need explicit type args if type inference is unavailable.
+
+### Session Notes (2026-01-26)
+
+- **Language semantics**: Union:tag currently assumes a single sender; fan-in is explicitly rejected to keep wiring semantics unambiguous.
+- **Common patterns**: Avoid extra union-type equivalence checks at tag-binding time; rely on standard subtype validation for compatibility.
+- **Gotchas**: In sender position, `[...]` is parsed as fan-in (multiple senders), so list literals should not be used as senders without explicit disambiguation.
+- **Gotchas**: Literal senders are limited to primitives/union literals; list/dict/struct literals are rejected for now (use const refs).
+
+## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
 - **Implicit Parallelism**: Every node runs in parallel.
@@ -27,7 +59,7 @@ Follow these instructions.
   - **Package**: Directory with `*.neva` files.
   - **Component**: The building block.
 
-## 3. 🧠 Architecture
+## 4. 🧠 Architecture
 
 ### Compiler (`internal/compiler/`)
 
@@ -52,19 +84,20 @@ The runtime is a library embedded into every compiled program.
 
 The standard library provides components for all programs. Some are implemented in Neva, some use runtime functions written in Go via `#extern`.
 
-## 4. 🛠️ Debugging Tips
+## 5. 🛠️ Debugging Tips
 
 **Debug Compiler Output**:
 
 - **IR**: `neva run --target ir <pkg>`
 - **Trace**: `neva run --emit-trace <pkg>`
+- **Runtime validation**: `neva run --debug-runtime-validation <pkg>` or `neva build --debug-runtime-validation <pkg>` (compiler-only check that prints unconnected senders/receivers to validate runtime wiring; intended for language developers inspecting compiler output)
 
 **Debug the CLI/Compiler**:
 
 - **Logs**: Use `fmt.Printf`, remove before finishing.
 - **Tests**: `go test ./...`
 
-## 5. 🗺️ Key Locations
+## 6. 🗺️ Key Locations
 
 - `cmd/neva/`: CLI Entry point.
 - `internal/cli/`: CLI implementation.
@@ -73,12 +106,13 @@ The standard library provides components for all programs. Some are implemented 
 - `examples/`: Example programs.
 - `pkg/`: Shared utilities.
 
-## 6. 🎨 Coding Standards
+## 7. 🎨 Coding Standards
 
 - **Go Idioms**:
+  - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
-  - Test case names: lower_snake_case
+  - Test case names: `lower_snake_case`
   - KISS: simpler code > complex abstractions
   - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
     - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).

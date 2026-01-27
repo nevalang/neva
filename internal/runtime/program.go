@@ -234,7 +234,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
 		// if we do len(ss) iterations, that's ok, because we will go back and check
-		if len(buf) > 0 && i >= len(a.chans) {
+		if len(buf) > 0 && i >= len(a.chans) { //nolint:staticcheck // keep explicit break to match original loop structure
 			break
 		}
 
@@ -270,7 +270,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	}
 
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].OrderedMsg.index < buf[j].OrderedMsg.index
+		return buf[i].index < buf[j].index
 	})
 
 	return buf, true

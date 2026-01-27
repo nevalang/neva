@@ -37,6 +37,10 @@ func newRunCmd(
 				Usage: "Write real-time trace to a file",
 			},
 			&cli.BoolFlag{
+				Name:  "debug-runtime-validation",
+				Usage: "Enable compiler runtime port validation (language developers only)",
+			},
+			&cli.BoolFlag{
 				Name:  "emit-ir",
 				Usage: "Emit intermediate representation before running",
 			},
@@ -82,7 +86,7 @@ func newRunCmd(
 				}
 			}()
 
-			mainPkg, err := mainPkgPathFromArgs(cliCtx)
+			mainPkg, err := mainPkgPathFromArgs(cliCtx, workdir)
 			if err != nil {
 				return err
 			}
@@ -122,7 +126,7 @@ func newRunCmd(
 					analyzer,
 					irgen,
 					native.NewBackend(
-						golang.NewBackend(""),
+						golang.NewBackend("", cliCtx.Bool("debug-runtime-validation")),
 					),
 				)
 

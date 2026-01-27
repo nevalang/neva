@@ -71,10 +71,20 @@ Nevalang adheres to the following key principles:
 2. **Unsafe but efficient runtime**: Runtime assumes program correctness for speed and flexibility.
 3. **Compiler directives**: Powerful but unsafe tools for advanced users and language developers.
 4. **Visual programming ready**: Language design considers future visual programming tools.
+5. **Guiding diagnostics**: Compiler errors explain what broke, where it surfaced, and why the dataflow failed. Each message points to the failed assumption, the expected alternative, and how to proceed, offering structured clues without exposing compiler internals.
 
 ## Internal Implementation Q&A
 
 Here you'll find explanations for specific implementation choices.
+
+### Why Go?
+
+It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allows to reuse its state of the art standart library and increase performance for free by just updating the underlaying compiler.
+
+### Why Neva is not self hosted?
+
+- Runtime will never be written in Neva itself because of the overhead of dataflow runtime on to of Go's runtime. Neva programs should be as fast as possible.
+- Compiler will be someday rewritten in Neva but language needs to mature.
 
 ### Why structures are not represented as Go structures?
 
@@ -99,10 +109,6 @@ $u.pet -> foo.bar
 ```
 
 What will `foo.bar` actually receive? This design makes impossible to actually send structures around and allows to operate on non-structured data only.
-
-### Why Go?
-
-It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allows to reuse its state of the art standart library and increase performance for free by just updating the underlaying compiler.
 
 ### Why compiler operates on multi-module graph (build) and not just turns everything into one big module?
 
@@ -157,7 +163,7 @@ However, to implement this we need to be able to parse literals inside `irgen`. 
 
 Of course, it's possible to hide actual parser implementation behind some kind of interface defined by irgen but that would make code more complicated. Besides, the very idea of having parser inside code-generator sounds bad. Parsing references is the acceptable compromise on the other hand.
 
-### Why Analyzer knows about stdlib? Isn't it bad design?
+### Why Analyzer knows about stdlib?
 
 At first there was a try to implement analyzer in a way that it only knows about the core of the language.
 
@@ -185,19 +191,3 @@ We don't have sugar for `maybe<T>` and `list<T>` so why would we have this for u
 However it's not `struct` where we _technically_ have to have some "literal" syntax. It's possible in theory to have just `union<T1, T2, ... Tn>` like e.g. in Python but would require _type-system_ known about `union` name and handle this reference expressions very differently. In fact this will only make design more complicated because we _pretend_ like it's regular type instantiation consisting of reference and arguments but in fact it's not.
 
 Lastly it's just common to have `|` syntax for unions.
-
-### Why type system supports arrays?
-
-Because type-system is public package that can be used by others to implement languages (or something else constraint-based).
-
-Since there's no arrays at the syntax and internal representation levels then there's no performance overhead. Also having arrays in type system is not the most complicated thing so removing them won't save us much.
-
-### Why isn't Nevalang self-hosted?
-
-- Runtime will never be written in Nevalang itself because of the overhead of FBP runtime on to of Go's runtime. Go provides exactly that level of control we needed to implement FBP runtime for Nevalang.
-- Compiler will be someday rewritten in Nevalang itself but we need several years of active usage of the language before that
-
-There's 2 reasons why we don't rewrite compiler in Nevalang right now:
-
-1. Language is incredibly unstable. Stdlib and even the core is massively changing these days. Compiler will be even more unstable and hard to maintain if we do that, until Nevalang is more or less stable.
-2. Languages that are mostly used for writing compilers are eventually better suited for that purpose. While it's good to be able to write compiler in Nevalang without much effort, it's not the goal to create a language for compilers. Writing compilers is a good thing but it's not very popular task for programmers. Actually it's incredibly rare to write compilers at work. We want Nevalang to be good language for many programmers.

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,9 +26,7 @@ func TestGoPkgMode_EndToEnd(t *testing.T) {
 	})
 
 	// create neva module
-	cmd := exec.Command("neva", "new", ".")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	e2e.Run(t, []string{"new", "."})
 
 	// add exported PrintHello(sig int) (res string) that prints "Hello from Neva!" and panics on error
 	nevaSrc := `import {
@@ -49,14 +48,12 @@ pub def PrintHello(sig int) (res string) {
 	_ = os.Mkdir("gen", 0o755)
 	goModInit := exec.Command("go", "mod", "init", "example.com/tmpgen")
 	goModInit.Dir = "gen"
-	out, err = goModInit.CombinedOutput()
+	out, err := goModInit.CombinedOutput()
 	require.NoError(t, err, string(out))
 
 	// neva build with pkg mode into "gen/hello"
 	outDir := filepath.Join("gen", "hello")
-	cmd = exec.Command("neva", "build", "--target=go", "--target-go-mode=pkg", "--output="+outDir, "src")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	e2e.Run(t, []string{"build", "--target=go", "--target-go-mode=pkg", "--output=" + outDir, "src"})
 
 	// No need for go mod edit -replace or go get if runtime is self-contained and imports are correct!
 
@@ -76,7 +73,7 @@ func main(){
     fmt.Printf("%v", out.Res)
 }`
 	require.NoError(t, os.WriteFile(filepath.Join("gen", "main.go"), []byte(runner), 0o644))
-	
+
 	// Just go run .
 	run := exec.Command("go", "run", ".")
 	run.Dir = "gen"

@@ -15,6 +15,7 @@ type foundInterface struct {
 }
 
 func (a Analyzer) analyzeNodes(
+	parentComponentName string,
 	iface src.Interface, // resolved interface of the component that contains the nodes
 	nodes map[string]src.Node, // nodes to analyze
 	net []src.Connection, // network of the component that contains the nodes
@@ -37,6 +38,7 @@ func (a Analyzer) analyzeNodes(
 		analyzedNode, nodeInterface, err := a.analyzeNode(
 			nodeName,
 			node,
+			parentComponentName,
 			scope,
 			iface,
 			nodes,
@@ -58,12 +60,24 @@ func (a Analyzer) analyzeNodes(
 func (a Analyzer) analyzeNode(
 	name string, // name of the node
 	node src.Node, // node to analyze
+	parentComponentName string,
 	scope src.Scope, // scope of the component that contains the node
 	iface src.Interface, // interface of the component that contains the node
 	nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
 ) (src.Node, foundInterface, *compiler.Error) {
 	parentTypeParams := iface.TypeParams
+
+	if node.EntityRef.Pkg == "" && node.EntityRef.Name == parentComponentName {
+		return src.Node{}, foundInterface{}, &compiler.Error{
+			Message: fmt.Sprintf(
+				"Recursive reference to component %q is not allowed. If you meant the builtin component, explicitly import the builtin package and use builtin.%s.",
+				parentComponentName,
+				parentComponentName,
+			),
+			Meta: &node.Meta,
+		}
+	}
 
 	nodeEntity, location, err := scope.Entity(node.EntityRef)
 	if err != nil {
@@ -172,6 +186,7 @@ func (a Analyzer) analyzeNode(
 	}
 
 	// default any
+	// TODO: Remove this! See github issue about implicit any in nodes.
 	if len(resolvedNodeArgs) == 0 && len(nodeIface.TypeParams.Params) == 1 {
 		resolvedNodeArgs = []typesystem.Expr{
 			{
@@ -195,6 +210,16 @@ func (a Analyzer) analyzeNode(
 		}
 	}
 
+	if a.isUnionNode(node) {
+		firstResolvedNodeArg := resolvedNodeArgs[0]
+		if firstResolvedNodeArg.Lit == nil || firstResolvedNodeArg.Lit.Union == nil {
+			return src.Node{}, foundInterface{}, &compiler.Error{
+				Message: "Union<T> expects union type argument",
+				Meta:    &node.Meta,
+			}
+		}
+	}
+
 	if node.DIArgs == nil {
 		return src.Node{
 				Directives:    node.Directives,
@@ -212,12 +237,13 @@ func (a Analyzer) analyzeNode(
 	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
 	for depName, depNode := range node.DIArgs {
 		// di arguments are not regular nodes in the network, so we generate a unique name
-		// that won't be found in the network. this will cause the overloading logic to skip
+		// that won't be found in the network. This will cause the overloading logic to skip
 		// network-based checks.
 		uniqueName := "__di_" + name + "_" + depName
 		resolvedDep, _, err := a.analyzeNode(
 			uniqueName, // use a unique name that won't be found in the network
 			depNode,
+			parentComponentName,
 			scope,
 			iface,
 			nodes,
@@ -400,12 +426,12 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 		// for di arguments, we need to get type constraints from the parent component's dependency declaration
 		nodeConstraints = a.collectDITypeConstraintsFromParent(
 			nodeName,
-			resolvedParentIface,
 			scope,
 			allParentNodes,
 		)
 	} else {
-		nodeConstraints = a.collectUsageDerivedTypeConstraintsForNode(
+		// For overloaded components we need to lookup network in separate run to find how the node is used.
+		nodeConstraints = a.deriveNodeConstraintsFromNetwork(
 			nodeName,
 			resolvedParentIface,
 			scope,
@@ -486,7 +512,6 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 // from the parent component's dependency declaration.
 func (a Analyzer) collectDITypeConstraintsFromParent(
 	nodeName string, // the unique name of the DI argument (e.g., "__di_reduce_reducer")
-	resolvedParentIface src.Interface,
 	scope src.Scope,
 	allParentNodes map[string]src.Node,
 ) nodeUsageConstraints {
@@ -540,6 +565,10 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 		return emptyConstraints()
 	}
 
+	// we need to look up dependencies in the parent component's scope
+	// because the nodes in parentComponent refer to entities in that scope
+	parentScope := scope.Relocate(parentComponent.Interface.Meta.Location)
+
 	// find the dependency declaration in the parent component's nodes
 	var depNode src.Node
 	var hasDep bool
@@ -547,7 +576,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	if depName == "" {
 		// for anonymous dependencies, find the first interface node
 		for _, node := range parentComponent.Nodes {
-			entity, _, err := scope.Entity(node.EntityRef)
+			entity, _, err := parentScope.Entity(node.EntityRef)
 			if err == nil && entity.Kind == src.InterfaceEntity {
 				depNode = node
 				hasDep = true
@@ -563,7 +592,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	}
 
 	// get the dependency interface
-	depEntity, _, err := scope.Entity(depNode.EntityRef)
+	depEntity, _, err := parentScope.Entity(depNode.EntityRef)
 	if err != nil {
 		return emptyConstraints()
 	}
@@ -576,7 +605,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 	// we need to create a frame from the parent's type arguments
 	// the parent component's original interface has the type parameters
 	parentTypeFrame := make(map[string]typesystem.Def)
-	for i, param := range parentComponent.Interface.TypeParams.Params {
+	for i, param := range parentComponent.TypeParams.Params {
 		if i < len(parentNode.TypeArgs) {
 			parentTypeFrame[param.Name] = typesystem.Def{
 				BodyExpr: &parentNode.TypeArgs[i],
@@ -609,7 +638,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 		constraints.outgoing[portName] = []typesystem.Expr{resolvedType}
 	}
 
-	// resolve empty port names to actual port names if there's only one such port
+	// extract the dependency name from the unique node name
 	// this handles cases where the interface has unnamed ports but the component has named ports
 	if len(constraints.incoming) == 1 {
 		for portName, types := range constraints.incoming {
@@ -652,9 +681,9 @@ func isCandidateCompatibleWithAllNodeRefs(
 	for _, nodeRef := range nodeRefs {
 		var ports map[string]src.Port
 		if !nodeRef.isOutgoing {
-			ports = component.Interface.IO.In
+			ports = component.IO.In
 		} else {
-			ports = component.Interface.IO.Out
+			ports = component.IO.Out
 		}
 
 		// handle empty port names by resolving to the actual port name
@@ -776,29 +805,6 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Normal.Receivers)...)
 			}
 		}
-
-		// Check switch cases
-		if receiver.Switch != nil {
-			// Check each case in the switch
-			for _, caseConn := range receiver.Switch.Cases {
-				for _, sender := range caseConn.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
-				}
-
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, caseConn.Receivers)...)
-			}
-
-			// Check default case
-			if receiver.Switch.Default != nil {
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.Switch.Default)...)
-			}
-		}
 	}
 
 	return nodeRefs
@@ -824,9 +830,10 @@ func emptyConstraints() nodeUsageConstraints {
 	}
 }
 
-// collectUsageDerivedTypeConstraintsForNode inspects the network and extracts type constraints for the given node.
-// it only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
-func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
+// deriveNodeConstraintsFromNetwork inspects the network and extracts type constraints for the given node.
+// It only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
+// It is needed only to select correct version of the overloaded component.
+func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	nodeName string,
 	resolvedParentIface src.Interface,
 	scope src.Scope,
@@ -948,7 +955,7 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 
 						// collect types from the outer senders
 						for _, outerSender := range outerSenders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender)
+							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender, net)
 							for _, t := range types {
 								list := c.incoming[inPort]
 								appendUnique(&list, t)
@@ -990,40 +997,19 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 		}
 		checkChainedConnections(conn.Normal.Senders, conn.Normal.Receivers)
 
-		// check if our node is a receiver in this connection
-		recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
-		for _, rpa := range recvPortAddrs {
-			if rpa.Node != nodeName {
+		// Check if our node is a receiver in this connection.
+		recvPairs := a.collectReceiverSenderPairs(conn.Normal.Receivers, conn.Normal.Senders)
+		for _, pair := range recvPairs {
+			if pair.portAddr.Node != nodeName {
 				continue
 			}
-			port := a.resolvePortName(nodeName, nodes, scope, true, rpa.Port)
-			// derive produced types from all senders
-			for _, sender := range conn.Normal.Senders {
-				// check if any receiver is a chained connection that contains our node
-				hasChainedConnection := false
-				for _, receiver := range conn.Normal.Receivers {
-					if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
-						// this is a chained connection, look at the senders within the chain
-						for _, chainedSender := range receiver.ChainedConnection.Normal.Senders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, chainedSender)
-							for _, t := range types {
-								list := c.incoming[port]
-								appendUnique(&list, t)
-								c.incoming[port] = list
-							}
-						}
-						hasChainedConnection = true
-					}
-				}
-
-				if !hasChainedConnection {
-					// regular sender
-					types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender)
-					for _, t := range types {
-						list := c.incoming[port]
-						appendUnique(&list, t)
-						c.incoming[port] = list
-					}
+			port := a.resolvePortName(nodeName, nodes, scope, true, pair.portAddr.Port)
+			for _, sender := range pair.senders {
+				types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender, net)
+				for _, t := range types {
+					list := c.incoming[port]
+					appendUnique(&list, t)
+					c.incoming[port] = list
 				}
 			}
 		}
@@ -1032,7 +1018,17 @@ func (a Analyzer) collectUsageDerivedTypeConstraintsForNode(
 	return c
 }
 
-// flattenReceiversPortAddrs extracts all direct receiver port addresses from potentially nested receivers.
+// flattenReceiversPortAddrs extracts all receiver port addresses from nested receiver trees,
+// ignoring which sender feeds each receiver. It is useful for coarse "who can receive" scans.
+//
+// Examples:
+//   :a -> b -> :c
+//     => returns [:c] (not paired with b)
+//
+//   :x -> [y, z]
+//     => returns [y, z]
+//
+// Note: use collectReceiverSenderPairs when sender/receiver pairing matters.
 func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) []src.PortAddr {
 	var res []src.PortAddr
 	var visit func(recs []src.ConnectionReceiver)
@@ -1048,28 +1044,71 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
 				visit(r.DeferredConnection.Normal.Receivers)
 			}
-			if r.Switch != nil {
-				for _, cse := range r.Switch.Cases {
-					visit(cse.Receivers)
-				}
-				if r.Switch.Default != nil {
-					visit(r.Switch.Default)
-				}
-			}
 		}
 	}
 	visit(receivers)
 	return res
 }
 
-// getPossibleSenderTypes returns a set of possible types produced by a sender without requiring resolved node interfaces.
+type receiverSenderPair struct {
+	portAddr src.PortAddr
+	senders  []src.ConnectionSender
+}
+
+// collectReceiverSenderPairs maps each receiver port to the senders that feed it.
+// It preserves sender/receiver pairing across chained and deferred connections.
+//
+// Examples:
+//
+//	:a -> b -> :c
+//	  => pairs: (:c <- b), and b's inport gets (:a <- in) via recursion
+//
+//	:start -> U::A -> switch:case[0]
+//	  => pairs: (switch:case[0] <- U::A)
+//
+//	:x -> { :y -> :z }
+//	  => pairs: (:z <- :y) for the deferred connection
+func (a Analyzer) collectReceiverSenderPairs(
+	receivers []src.ConnectionReceiver,
+	senders []src.ConnectionSender,
+) []receiverSenderPair {
+	var pairs []receiverSenderPair
+	// Inline recursion keeps the accumulator local and avoids extra allocations/signatures.
+	var visit func(recs []src.ConnectionReceiver, snd []src.ConnectionSender)
+	visit = func(recs []src.ConnectionReceiver, snd []src.ConnectionSender) {
+		for _, r := range recs {
+			if r.PortAddr != nil {
+				pairs = append(pairs, receiverSenderPair{
+					portAddr: *r.PortAddr,
+					senders:  snd,
+				})
+				continue
+			}
+			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
+				visit(r.ChainedConnection.Normal.Receivers, r.ChainedConnection.Normal.Senders)
+			}
+			if r.DeferredConnection != nil && r.DeferredConnection.Normal != nil {
+				visit(r.DeferredConnection.Normal.Receivers, r.DeferredConnection.Normal.Senders)
+			}
+		}
+	}
+	visit(receivers, senders)
+	return pairs
+}
+
+// getPossibleSenderTypes is needed to derive node constraints from the network.
+// It's part of the overloading implementation.
+// It returns a set of possible types produced by a given sender without requiring resolved node interfaces.
 func (a Analyzer) getPossibleSenderTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
 	parentIface src.Interface,
 	nodes map[string]src.Node,
 	sender src.ConnectionSender,
+	net []src.Connection,
 ) []typesystem.Expr {
+	// FIXME: looks like we ignore errors here (and in some lower-level functions we call)
+
 	// const sender
 	if sender.Const != nil {
 		// for type constraint collection, we need to get the resolved type without validation
@@ -1085,51 +1124,46 @@ func (a Analyzer) getPossibleSenderTypes(
 			}
 		}
 	}
-	// range sender: stream<int>
-	if sender.Range != nil {
-		return []typesystem.Expr{
-			{
-				Inst: &typesystem.InstExpr{
-					Ref:  core.EntityRef{Name: "stream"},
-					Args: []typesystem.Expr{{Inst: &typesystem.InstExpr{Ref: core.EntityRef{Name: "int"}}}},
-				},
-			},
-		}
-	}
-	// union sender produces the union type itself
-	if sender.Union != nil {
-		if entity, _, err := scope.GetType(sender.Union.EntityRef); err == nil {
-			if t, e := a.analyzeTypeExpr(*entity.BodyExpr, scope); e == nil {
-				return []typesystem.Expr{t}
-			}
-		}
-	}
 
-	// ternary: approximate with left branch
-	if sender.Ternary != nil {
-		lefts := a.getPossibleSenderTypes(scope, parentFrame, parentIface, nodes, sender.Ternary.Left)
-		if len(lefts) > 0 {
-			return []typesystem.Expr{lefts[0]}
-		}
-	}
 	// port-addr
 	if sender.PortAddr != nil {
-		pa := *sender.PortAddr
-		if pa.Node == "in" {
-			if p, ok := parentIface.IO.In[pa.Port]; ok {
+		// Switch:case[i] array outport slot is a special case because of possible pattern matching.
+		// When T in Switch<T> is (resolves to) union, and corresponding union member has type expression body,
+		// It means there is an unboxing process happening, so the output type of the Switch must be type of that member,
+		// And not the type of the union itself (not T). This is kind of "ad-hoc type inference" that we must handle
+		// In several different places here in analyzer, and this is one of them.
+		// Please note that even though the Switch itself is NOT overloaded, it's required to cover Switch:case[i] here
+		// Because it might be connected to a node that needs overloading resolution.
+		// Example: `switch:case[0] -> add:left`. Without type inference (this compiler magic) output type could be union and not int,
+		// Which means compiler won't be able to resolve overloading for `Add` and will throw an error that no overloading is found.
+		if isSwitchCasePort(*sender.PortAddr, nodes) {
+			typeExpr, err := a.getSwitchCaseOutportType(*sender.PortAddr, nodes, scope, net)
+			if err != nil {
+				panic(err)
+			}
+			return []typesystem.Expr{*typeExpr}
+		}
+
+		// If sender is input port of the current component, possible sender type can be resolved from component interface (plus frame).
+		portAddr := *sender.PortAddr
+		if portAddr.Node == "in" {
+			if p, ok := parentIface.IO.In[portAddr.Port]; ok {
 				if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
 					return []typesystem.Expr{resolved}
 				}
 			}
 			return nil
 		}
-		// outport of another node
-		other, ok := nodes[pa.Node]
+
+		// Sender is an outport of another (sub) node
+		other, ok := nodes[portAddr.Node]
 		if !ok {
 			return nil
 		}
-		return a.getPossibleNodePortTypes(scope, parentFrame, other, false, pa.Port)
+
+		return a.getPossibleNodePortTypes(scope, parentFrame, other, false, portAddr.Port)
 	}
+
 	return nil
 }
 
@@ -1235,7 +1269,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 			return false
 		}
 		for _, t := range types {
-			if err := a.resolver.IsSubtypeOf(t, candType, scope); err != nil {
+			if a.resolver.IsSubtypeOf(t, candType, scope) != nil {
 				return false
 			}
 		}
@@ -1294,8 +1328,8 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 
 		// check if this component's interface matches the resolved type
 		// for native components, we need to check the input port type
-		if len(component.Interface.IO.In) == 1 {
-			for _, port := range component.Interface.IO.In {
+		if len(component.IO.In) == 1 {
+			for _, port := range component.IO.In {
 				// resolve the port type
 				portType, err := a.resolver.ResolveExpr(port.TypeExpr, scope)
 				if err != nil {
