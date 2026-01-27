@@ -22,9 +22,11 @@ def PrintAsNum(data bool) (res any, err error) {
 	ternary Ternary<int>
 	println fmt.Println<int>
 	---
-	:data -> ternary:if
-	1 -> ternary:then
-	0 -> ternary:else
+	:data -> [
+		ternary:if,
+		1 -> ternary:then,
+		0 -> ternary:else
+	]
 	ternary -> println
 	println:res -> :res
 	println:err -> :err

@@ -8,6 +8,7 @@ const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
 	list_to_stream ListToStream<string>
+	range streams.Range
 	zip streams.Zip<int, string>
 	for_println For{fmt.Println}
 	wait streams.Wait
@@ -16,7 +17,7 @@ def Main(start any) (stop any) {
 	:start -> [
 		0 -> range:from,
 		10 -> range:to,
-		$strings -> listToStream -> zip:right
+		$strings -> list_to_stream -> zip:right
 	]
 	range -> zip:left
 	zip:res -> for_println
