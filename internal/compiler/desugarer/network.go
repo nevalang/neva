@@ -411,7 +411,7 @@ func (d *Desugarer) desugarChainedConnection(
 	var chainHeadPort string
 	switch {
 	case chainHead.Const != nil:
-		chainHeadPort = "sig" // NewV2 has sig inport
+		chainHeadPort = "sig" // New has sig inport
 	case len(chainHead.StructSelector) != 0:
 		chainHeadPort = "data"
 	case chainHead.PortAddr != nil:
@@ -442,7 +442,7 @@ func (d *Desugarer) desugarChainedConnection(
 			nodesToInsert[triggerNodeName] = src.Node{
 				EntityRef: core.EntityRef{
 					Pkg:  "builtin",
-					Name: "NewV2",
+					Name: "New",
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{constTypeExpr},
@@ -459,7 +459,7 @@ func (d *Desugarer) desugarChainedConnection(
 			nodesToInsert[triggerNodeName] = src.Node{
 				EntityRef: core.EntityRef{
 					Pkg:  "builtin",
-					Name: "NewV2",
+					Name: "New",
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},

@@ -70,6 +70,13 @@ func (a Analyzer) analyzeSender(
 		}
 	}
 
+	if sender.Const != nil && len(prevChainLink) == 0 {
+		return nil, nil, &compiler.Error{
+			Message: "Constants must be triggered by a signal (e.g. :start -> 42 -> ...)",
+			Meta:    &sender.Meta,
+		}
+	}
+
 	if len(sender.StructSelector) > 0 && len(prevChainLink) == 0 {
 		return nil, nil, &compiler.Error{
 			Message: "struct selectors cannot be used in non-chained connection",

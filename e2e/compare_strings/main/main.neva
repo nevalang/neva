@@ -13,9 +13,11 @@ def Main(start any) (stop any) {
         'Z' -> gt:left,
         'A' -> gt:right
     ]
-    gt:res -> ternary:if
-    'Actual is greater' -> ternary:then
-    'Actual is lower' -> ternary:else
+    gt:res -> [
+        ternary:if,
+        'Actual is greater' -> ternary:then,
+        'Actual is lower' -> ternary:else
+    ]
     ternary -> println:data
     println:res -> :stop
     println:err -> panic

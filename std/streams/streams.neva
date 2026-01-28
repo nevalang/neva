@@ -9,8 +9,10 @@ pub def Wait(data stream<any>) (sig any) {
     del Del
     s Switch<bool>
     ---
-    :data -> .last -> s:data
-    true -> s:case[0]
+    :data -> [
+        .last -> s:data,
+        true -> s:case[0]
+    ]
     s:case[0] -> :sig
     s:else -> del
 }

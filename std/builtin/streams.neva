@@ -39,8 +39,10 @@ def First<T>(data stream<T>) (then stream<T>, else stream<T>) {
     pass Pass<stream<T>>
     ---
     :data -> [cond:data, pass]
-    pass -> .idx -> eq:left
-    0 -> eq:right
+    pass -> [
+        .idx -> eq:left,
+        0 -> eq:right
+    ]
     eq -> cond:if
     cond:then -> :then
     cond:else -> :else

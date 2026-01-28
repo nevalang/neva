@@ -43,6 +43,16 @@ Follow these instructions.
 - **Gotchas**: In sender position, `[...]` is parsed as fan-in (multiple senders), so list literals should not be used as senders without explicit disambiguation.
 - **Gotchas**: Literal senders are limited to primitives/union literals; list/dict/struct literals are rejected for now (use const refs).
 
+### Session Notes (2026-01-27)
+
+- **Language semantics**: Literal senders must be in a chain triggered by a signal (e.g. `:start -> true -> ...`).
+- **Language semantics**: Fan-out (`-> [...]`) can contain chained connections, but the chain head is the sender before the fan-out (e.g. `:start -> [foo, bar -> baz]`).
+- **Language semantics**: `std/core.New<T>` now requires a `sig` inport; explicit uses must be triggered (e.g. `:start -> new:sig`).
+- **Common patterns**: Stdlib Switch setups should seed case values via `:start` to avoid autonomous constant senders.
+- **Architecture insights**: `analyzeSender` rejects const senders when `prevChainLink` is empty (analyzer enforces the rule).
+- **Gotchas**: Stdlib modules can fail compilation after analyzer rule changes; update `std/*` constants accordingly.
+- **Gotchas**: `Select` waits for all `then` array inputs on each `if`; if any `then` slot is only sent conditionally it can deadlock.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

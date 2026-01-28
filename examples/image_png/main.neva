@@ -6,6 +6,7 @@ def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	:x -> pb:x
 	:y -> pb:y
 	:c -> pb:color
+
 	pb -> :pixel
 }
 
@@ -22,9 +23,11 @@ def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 def NewStream(p image.Pixel) (s stream<image.Pixel>) {
 	sb Struct<stream<image.Pixel>>
 	---
-	0 -> sb:idx
-	:p -> sb:data
-	true -> sb:last
+	:p -> [
+		sb:data,
+		0 -> sb:idx,
+		true -> sb:last
+	]
 	sb -> :s
 }
 

@@ -560,7 +560,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				nodesToInsert: map[string]src.Node{
 					"__newv2__1": {
-						EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
 						TypeArgs: src.TypeArgs{
 							{
 								Inst: &ts.InstExpr{
@@ -654,7 +654,7 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				nodesToInsert: map[string]src.Node{
 					"__newv2__1": {
-						EntityRef: core.EntityRef{Pkg: "builtin", Name: "NewV2"},
+						EntityRef: core.EntityRef{Pkg: "builtin", Name: "New"},
 						TypeArgs: src.TypeArgs{
 							{
 								Inst: &ts.InstExpr{

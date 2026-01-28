@@ -1,19 +1,26 @@
-import { streams, fmt, runtime }
+import {
+	fmt
+	runtime
+	streams
+}
 
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-	ListToStream<string>, streams.Zip<int, string>
+	list_to_stream ListToStream<string>
 	range streams.Range
-	For{fmt.Println}, streams.Wait, runtime.Panic
+	zip streams.Zip<int, string>
+	for_println For{fmt.Println}
+	wait streams.Wait
+	panic runtime.Panic
 	---
 	:start -> [
 		0 -> range:from,
 		10 -> range:to,
-		$strings -> listToStream -> zip:right
+		$strings -> list_to_stream -> zip:right
 	]
 	range -> zip:left
-	zip:res -> for
-	for:res -> wait -> :stop
-	for:err -> panic
+	zip:res -> for_println
+	for_println:res -> wait -> :stop
+	for_println:err -> panic
 }
