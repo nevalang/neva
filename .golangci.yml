@@ -1,8 +1,69 @@
 version: "2"
 run:
   concurrency: 4
-  tests: false
+  tests: true
+  timeout: 5m
 linters:
+  enable:
+    - asciicheck # Non-ASCII identifiers (e.g., func Καλημέρα()).
+    - bidichk # Bidi control chars in source (e.g., hidden RTL in comment).
+    - bodyclose # Ensure HTTP response bodies are closed (e.g., defer resp.Body.Close()).
+    - copyloopvar # Unnecessary loop var copy (e.g., tt := tt).
+    - dogsled # Too many blank identifiers (e.g., a, _, _, _, := f()).
+    - durationcheck # Suspicious duration math (e.g., time.Second * time.Minute).
+    - errcheck # Missing error checks (e.g., _ = f()).
+    - errorlint # Error wrapping/formatting (e.g., fmt.Errorf("%w", err)).
+    - exhaustive # Non-exhaustive switches on enums (e.g., switch myEnum { ... }).
+    - gocritic # Bug-prone patterns (e.g., append assigned to new slice).
+    - gocyclo # High cyclomatic complexity (e.g., long if/else chains).
+    - gosec # Security issues (e.g., exec.Command on tainted input).
+    - govet # Vet analyzers (e.g., fieldalignment).
+    - ineffassign # Assigned then unused (e.g., x = 1; x = 2; use x).
+    - lll # Long lines (e.g., 200+ char string/struct tag).
+    - misspell # Misspellings (e.g., "concider").
+    - nakedret # Naked returns in large funcs (e.g., return without values).
+    - nilerr # Returning nil error after err != nil check.
+    - nilnesserr # err != nil but returning different nil error value.
+    - nilnil # Returning (nil, nil) for (val, err).
+    - nolintlint # Stale/unknown //nolint (e.g., //nolint:golint).
+    - prealloc # Suggest slice prealloc (e.g., make([]T, 0, n)).
+    - predeclared # Shadowing predeclared names (e.g., var len = 3).
+    - revive # Style/semantic rules (e.g., error strings lowercase).
+    - staticcheck # Advanced correctness checks (e.g., unused results).
+    - thelper # Missing t.Helper() in test helpers.
+    - tparallel # Tests missing t.Parallel() where appropriate.
+    - unconvert # Redundant conversions (e.g., int64(v) when v already int64).
+    - unparam # Unused params/always-nil results.
+    - unused # Unused symbols (e.g., unused func/var).
+    - wastedassign # Wasted assignments (e.g., x = 1 before immediate overwrite).
+    - whitespace # Superfluous blank lines (e.g., extra newline at end of block).
+  settings:
+    errcheck:
+      check-blank: true
+      check-type-assertions: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+    gocyclo:
+      min-complexity: 20
+    govet:
+      enable:
+        - fieldalignment
+    lll:
+      line-length: 140
+      tab-width: 1
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-keys-type
+        - name: error-strings
+        - name: errorf
+        - name: if-return
+        - name: increment-decrement
+        - name: range
+        - name: superfluous-else
+        - name: time-naming
+        - name: unnecessary-stmt
   exclusions:
     generated: lax
     presets:

@@ -40,7 +40,7 @@ func (h Handler) Handle(glspCtx *glsp.Context) (response any, validMethod bool, 
 	return h.Handler.Handle(glspCtx)
 }
 
-//nolint:lll,funlen
+//nolint:funlen
 func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.Indexer) *Handler {
 	h := &Handler{
 		Handler: &protocol.Handler{},

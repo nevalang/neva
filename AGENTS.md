@@ -51,7 +51,14 @@ Follow these instructions.
 - **Common patterns**: Stdlib Switch setups should seed case values via `:start` to avoid autonomous constant senders.
 - **Architecture insights**: `analyzeSender` rejects const senders when `prevChainLink` is empty (analyzer enforces the rule).
 - **Gotchas**: Stdlib modules can fail compilation after analyzer rule changes; update `std/*` constants accordingly.
+
+### Session Notes (2026-01-28)
+
+- **Common patterns**: Enabling `govet`'s `fieldalignment` in golangci-lint surfaces many existing struct-order warnings; plan for a staged rollout (only-new-issues) or bulk field reordering.
+- **Common patterns**: `betteralign` is best run as a separate make target with `-fix` since it cannot integrate into golangci-lint.
 - **Gotchas**: `Select` waits for all `then` array inputs on each `if`; if any `then` slot is only sent conditionally it can deadlock.
+- **Common patterns**: golangci-lint v2.5.0 no longer exposes `gosimple`, `stylecheck`, or `tenv` as standalone linters; rely on `staticcheck` instead.
+- **Gotchas**: `nolintlint` flags stale `//nolint:golint`; replace with a real doc comment or an active linter name.
 
 ## 3. ⚡ Core Concepts
 
