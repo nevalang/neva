@@ -28,15 +28,21 @@ def FizzBuzz(data int) (res any) {
     
     ---
     
-    :data -> [mod15, select:then[3]]
+    :data -> [
+        mod15,
+        select:then[3],
+        'FizzBuzz' -> select:then[0],
+        'Fizz' -> select:then[1],
+        'Buzz' -> select:then[2]
+    ]
 
-    mod15:then -> [select:if[0], 'FizzBuzz' -> select:then[0]]
+    mod15:then -> select:if[0]
     mod15:else -> mod3
     
-    mod3:then -> [select:if[1], 'Fizz' -> select:then[1]]
+    mod3:then -> select:if[1]
     mod3:else -> mod5
 
-    mod5:then -> [select:if[2], 'Buzz' -> select:then[2]]
+    mod5:then -> select:if[2]
     mod5:else -> select:if[3]
 
     select -> :res

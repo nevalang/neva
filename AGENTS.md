@@ -51,6 +51,7 @@ Follow these instructions.
 - **Common patterns**: Stdlib Switch setups should seed case values via `:start` to avoid autonomous constant senders.
 - **Architecture insights**: `analyzeSender` rejects const senders when `prevChainLink` is empty (analyzer enforces the rule).
 - **Gotchas**: Stdlib modules can fail compilation after analyzer rule changes; update `std/*` constants accordingly.
+- **Gotchas**: `Select` waits for all `then` array inputs on each `if`; if any `then` slot is only sent conditionally it can deadlock.
 
 ## 3. ⚡ Core Concepts
 
