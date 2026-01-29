@@ -392,13 +392,13 @@ type PortSlotAddr struct {
 }
 
 type ArrayOutport struct {
-	addr        PortAddr
 	interceptor Interceptor
+	addr        PortAddr
 	slots       []chan<- OrderedMsg
 }
 
 func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- OrderedMsg) *ArrayOutport {
-	return &ArrayOutport{addr: addr, slots: slots, interceptor: interceptor}
+	return &ArrayOutport{interceptor: interceptor, addr: addr, slots: slots}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {

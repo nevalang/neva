@@ -101,6 +101,7 @@ linters:
           - dupword # tests may repeat words
           - err113 # tests may use inline errors
           - funlen # tests may be long
+          - gochecknoglobals # tests may use package-level fixtures
           - lll # tests may be long
           - varnamelen # tests may use short vars
         path: _test\.go # apply to test files

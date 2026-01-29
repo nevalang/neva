@@ -68,8 +68,8 @@ func (d *Desugarer) desugarStructSelectors(
 	}
 }
 
-var (
-	pathConstTypeExpr = ts.Expr{
+func pathConstTypeExpr() ts.Expr {
+	return ts.Expr{
 		Inst: &ts.InstExpr{
 			Ref: core.EntityRef{Pkg: "builtin", Name: "list"},
 			Args: []ts.Expr{
@@ -81,7 +81,7 @@ var (
 			},
 		},
 	}
-)
+}
 
 func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.StructSelector))
@@ -99,7 +99,7 @@ func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const
 	}
 
 	return src.Const{
-		TypeExpr: pathConstTypeExpr,
+		TypeExpr: pathConstTypeExpr(),
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{
 				List: result,

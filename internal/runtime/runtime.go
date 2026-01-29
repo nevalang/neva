@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 )
 
+//nolint:gochecknoglobals // global monotonic counter shared by all runtime outports.
 var counter atomic.Uint64
 
 type cancelFuncKey struct{}

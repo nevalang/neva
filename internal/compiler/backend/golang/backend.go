@@ -389,7 +389,9 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcOutports[addr.Port] = fmt.Sprintf(
-				"runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, []chan<- runtime.OrderedMsg{%s}))",
+				"runtime.NewOutport(nil, runtime.NewArrayOutport("+
+					"runtime.PortAddr{Path: %q, Port: %q}, "+
+					"interceptor, []chan<- runtime.OrderedMsg{%s}))",
 				addr.Path,
 				addr.Port,
 				strings.Join(chans, ", "),

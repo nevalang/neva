@@ -805,9 +805,11 @@ func (d *Desugarer) getFirstOutportName(
 	return "", errors.New("first outport not found")
 }
 
-var newComponentRef = core.EntityRef{
-	Pkg:  "builtin",
-	Name: "New",
+func newComponentRef() core.EntityRef {
+	return core.EntityRef{
+		Pkg:  "builtin",
+		Name: "New",
+	}
 }
 
 func (d *Desugarer) handleLiteralSender(
@@ -831,8 +833,8 @@ func (d *Desugarer) handleLiteralSender(
 			compiler.BindDirective: constName,
 		},
 		EntityRef: core.EntityRef{
-			Pkg:  newComponentRef.Pkg,
-			Name: newComponentRef.Name,
+			Pkg:  newComponentRef().Pkg,
+			Name: newComponentRef().Name,
 			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{constant.TypeExpr},
@@ -871,8 +873,8 @@ func (d *Desugarer) handleConstRefSender(
 			compiler.BindDirective: ref.String(),
 		},
 		EntityRef: core.EntityRef{
-			Pkg:  newComponentRef.Pkg,
-			Name: newComponentRef.Name,
+			Pkg:  newComponentRef().Pkg,
+			Name: newComponentRef().Name,
 			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{constTypeExpr},

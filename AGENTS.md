@@ -77,6 +77,8 @@ Follow these instructions.
 - **Common patterns**: `govet` fieldalignment can be satisfied by moving pointer-heavy fields before strings to reduce pointer bytes and GC scan range.
 - **Common patterns**: `depguard` can enforce stdlib-only boundaries with separate rules for `internal/runtime/*.go` and `internal/runtime/funcs/**` when funcs may import `internal/runtime`.
 - **Gotchas**: `gochecknoglobals` will flag template strings, expected outputs in tests, and shared helpers; plan exclusions or refactors before enabling widely.
+- **Common patterns**: To satisfy `gochecknoglobals`, switch static template vars to `const`, and move shared values into helper funcs; use per-program counters instead of package globals.
+- **Common patterns**: If performance trumps `gochecknoglobals`, allow a scoped global counter with `//nolint:gochecknoglobals` rather than threading it through every outport.
 
 ## 3. ⚡ Core Concepts
 
