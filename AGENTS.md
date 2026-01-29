@@ -59,6 +59,13 @@ Follow these instructions.
 - **Gotchas**: `Select` waits for all `then` array inputs on each `if`; if any `then` slot is only sent conditionally it can deadlock.
 - **Common patterns**: golangci-lint v2.5.0 no longer exposes `gosimple`, `stylecheck`, or `tenv` as standalone linters; rely on `staticcheck` instead.
 - **Gotchas**: `nolintlint` flags stale `//nolint:golint`; replace with a real doc comment or an active linter name.
+- **Common patterns**: `gosec` G115 still flags checked conversions; use a guard plus `// #nosec G115` on the cast line.
+- **Common patterns**: `gosec` G306 expects 0600 perms; for readable artifacts, keep 0644 and add `// #nosec G306` with rationale.
+- **Architecture insights**: Runtime cancellation now flows via a typed context key helper to avoid raw string keys.
+- **Common patterns**: `gocritic`'s commentedOutCode flags comments that resemble code; remove them instead of paraphrasing.
+- **Common patterns**: `golangci-lint` thelper prefers `t.Helper()` inside helper constructors used in tests.
+- **Common patterns**: `govet` fieldalignment warnings can be suppressed with `//nolint:govet` on struct or inline struct literal lines when reordering is too invasive.
+- **Common patterns**: `gocyclo` can be temporarily suppressed with `//nolint:gocyclo` and a short rationale, but consider later refactor.
 
 ## 3. ⚡ Core Concepts
 

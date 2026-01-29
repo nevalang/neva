@@ -15,7 +15,7 @@ func (g Generator) processNetwork(
 	scope *src.Scope,
 	nodeCtx nodeContext,
 	result *ir.Program,
-) (map[string]portsUsage, error) {
+) map[string]portsUsage {
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
@@ -42,7 +42,7 @@ func (g Generator) processNetwork(
 		)
 	}
 
-	return nodesPortsUsage, nil
+	return nodesPortsUsage
 }
 
 func (Generator) processArrayBypassConnection(
@@ -142,8 +142,8 @@ func (g Generator) processSender(
 		}
 	}
 
-	// if sender node is dependency from DI and if port we are reffering to is an empty string
-	// we need to find depedency component and use its outport name
+	// if sender node is dependency from DI and if port we are referring to is an empty string
+	// we need to find dependency component and use its outport name
 	// this is techically desugaring at irgen level but it's impossible to desugare before
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
@@ -207,9 +207,9 @@ func (g Generator) processReceiver(
 
 	// if receiver node DI
 	diArgNode, isDI := nodeCtx.node.DIArgs[receiver.PortAddr.Node]
-	// and if port we are reffering to is an empty string
+	// and if port we are referring to is an empty string
 	if isDI && receiver.PortAddr.Port == "" {
-		// we need to find depedency component and use its inport name
+		// we need to find dependency component and use its inport name
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
 

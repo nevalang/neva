@@ -17,6 +17,7 @@ const (
 	watchDebounce       = 200 * time.Millisecond
 )
 
+//nolint:gocyclo // Control flow handles multiple run and watch edge cases.
 func watchAndRun(ctx context.Context, moduleRoot string, run func(context.Context) error) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {

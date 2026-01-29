@@ -18,6 +18,7 @@ func NewScope(build Build, location core.Location) Scope {
 }
 
 // Scope is entity reference resolver
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Scope struct {
 	loc   core.Location
 	build Build

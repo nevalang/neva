@@ -1,5 +1,6 @@
 package golang
 
+//nolint:govet // fieldalignment: template grouping.
 type templateData struct {
 	CompilerVersion string
 	ChanVarNames    []string
@@ -9,6 +10,7 @@ type templateData struct {
 	DebugValidation bool
 }
 
+//nolint:govet // fieldalignment: template grouping.
 type templateFuncCall struct {
 	Ref    string
 	Config string
@@ -20,6 +22,7 @@ type templateIO struct {
 	Out map[string]string
 }
 
+//nolint:govet // fieldalignment: template grouping.
 type libraryTemplateData struct {
 	CompilerVersion   string
 	Exports           []exportTemplateData
@@ -27,6 +30,7 @@ type libraryTemplateData struct {
 	PackageName       string
 }
 
+//nolint:govet // fieldalignment: template grouping.
 type exportTemplateData struct {
 	Name          string
 	InFields      []fieldTemplateData

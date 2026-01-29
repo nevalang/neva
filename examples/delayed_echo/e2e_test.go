@@ -25,26 +25,8 @@ func Test(t *testing.T) {
 	// First line must be Hello
 	require.Equal(t, "Hello", lines[0], out)
 
-	// Create set of expected remaining values
-	expected := map[string]bool{
-		"World": false,
-		"1":     false,
-		"2":     false,
-		"3":     false,
-		"4":     false,
-		"5":     false,
-		"6":     false,
-	}
-
 	// Check remaining lines contain all expected values
-	// Note: previous test had 6 items in expected map but asserted 7 lines.
-	// Output is Hello + World + 5 numbers (1,2,3,4,5).
-	// But `delayed_echo` probably outputs 1,2,3,4,5 and World.
-	// Previous map had: World, 1, 2, 3, 4, 5. Total 6 items.
-	// Hello is separate.
-	// Let's copy exact expected map from previous code.
-
-	expected = map[string]bool{
+	expected := map[string]bool{
 		"World": false,
 		"1":     false,
 		"2":     false,

@@ -93,25 +93,25 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		return nil
 	}
 	h.WorkspaceSymbol = func(context *glsp.Context, params *protocol.WorkspaceSymbolParams) ([]protocol.SymbolInformation, error) {
-		return nil, nil
+		return []protocol.SymbolInformation{}, nil
 	}
 	h.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (any, error) {
-		return nil, nil
+		return map[string]any{}, nil
 	}
 	h.WorkspaceWillCreateFiles = func(context *glsp.Context, params *protocol.CreateFilesParams) (*protocol.WorkspaceEdit, error) {
-		return nil, nil
+		return &protocol.WorkspaceEdit{}, nil
 	}
 	h.WorkspaceDidCreateFiles = func(context *glsp.Context, params *protocol.CreateFilesParams) error {
 		return nil
 	}
 	h.WorkspaceWillRenameFiles = func(context *glsp.Context, params *protocol.RenameFilesParams) (*protocol.WorkspaceEdit, error) {
-		return nil, nil
+		return &protocol.WorkspaceEdit{}, nil
 	}
 	h.WorkspaceDidRenameFiles = func(context *glsp.Context, params *protocol.RenameFilesParams) error {
 		return nil
 	}
 	h.WorkspaceWillDeleteFiles = func(context *glsp.Context, params *protocol.DeleteFilesParams) (*protocol.WorkspaceEdit, error) {
-		return nil, nil
+		return &protocol.WorkspaceEdit{}, nil
 	}
 	h.WorkspaceDidDeleteFiles = func(context *glsp.Context, params *protocol.DeleteFilesParams) error {
 		return nil
@@ -128,7 +128,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		return nil
 	}
 	h.TextDocumentWillSaveWaitUntil = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) {
-		return nil, nil
+		return []protocol.TextEdit{}, nil
 	}
 	h.TextDocumentDidSave = s.TextDocumentDidSave
 	h.TextDocumentDidClose = func(context *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {

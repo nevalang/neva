@@ -7,7 +7,7 @@ import (
 )
 
 func Test_GraphReduction(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name     string
 		input    map[PortAddr]PortAddr
 		expected map[PortAddr]PortAddr
