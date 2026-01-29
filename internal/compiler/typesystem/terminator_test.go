@@ -12,7 +12,7 @@ import (
 func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name    string
 		trace   ts.Trace
 		scope   TestScope
@@ -66,7 +66,6 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	terminator := ts.Terminator{}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := terminator.ShouldTerminate(tt.trace, tt.scope)

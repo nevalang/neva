@@ -9,6 +9,22 @@ import (
 
 var counter atomic.Uint64
 
+type cancelFuncKey struct{}
+
+func contextWithCancelFunc(ctx context.Context, cancel context.CancelFunc) context.Context {
+	return context.WithValue(ctx, cancelFuncKey{}, cancel)
+}
+
+// CancelFuncFromContext returns the cancel function stored by Call, if present.
+func CancelFuncFromContext(ctx context.Context) (context.CancelFunc, bool) {
+	v := ctx.Value(cancelFuncKey{})
+	if v == nil {
+		return nil, false
+	}
+	cancel, ok := v.(context.CancelFunc)
+	return cancel, ok
+}
+
 type FuncCreator interface {
 	Create(IO, Msg) (func(context.Context), error)
 }
@@ -39,7 +55,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 
 	go func() {
 		// runFuncs blocks until context is cancelled (by the stop port or by panic)
-		runFuncs(context.WithValue(ctx, "cancel", cancel)) //nolint:staticcheck // SA1029
+		runFuncs(contextWithCancelFunc(ctx, cancel))
 		close(funcsFinished)
 	}()
 

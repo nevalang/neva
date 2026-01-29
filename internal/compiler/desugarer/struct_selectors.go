@@ -19,10 +19,7 @@ func (d *Desugarer) desugarStructSelectors(
 	normConn src.NormalConnection, // sender here is selector (this is chained connection)
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (
-	desugarStructSelectorsResult,
-	error,
-) {
+) desugarStructSelectorsResult {
 	locOnlyMeta := core.Meta{
 		Location: normConn.Senders[0].Meta.Location, // FIXME for some reason norm-conn sometimes doesn't have meta
 	}
@@ -68,7 +65,7 @@ func (d *Desugarer) desugarStructSelectors(
 
 	return desugarStructSelectorsResult{
 		replace: replace,
-	}, nil
+	}
 }
 
 var (

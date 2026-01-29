@@ -10,7 +10,7 @@ import (
 )
 
 func TestDesugarer_desugarModule(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name    string
 		mod     src.Module
 		want    src.Module
@@ -38,7 +38,6 @@ func TestDesugarer_desugarModule(t *testing.T) {
 	d := Desugarer{}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			modRef := core.ModuleRef{Path: "@"}
 			build := src.Build{
@@ -55,7 +54,7 @@ func TestDesugarer_desugarModule(t *testing.T) {
 }
 
 func TestDesugarer_desugarFile(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name    string
 		file    src.File
 		want    src.File
@@ -77,7 +76,6 @@ func TestDesugarer_desugarFile(t *testing.T) {
 	d := Desugarer{}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := d.desugarFile(tt.file, src.Scope{})
 			require.Equal(t, err != nil, tt.wantErr)

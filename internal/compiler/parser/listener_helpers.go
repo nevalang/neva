@@ -13,7 +13,7 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
-func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string, *compiler.Error) {
+func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
 
@@ -47,7 +47,7 @@ func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.I
 			},
 			Location: s.loc,
 		},
-	}, alias, nil
+	}, alias
 }
 
 func (s *treeShapeListener) parseTypeParams(
@@ -683,14 +683,13 @@ func (s *treeShapeListener) parsePortAddr(
 
 	idxUint8 := uint8(idxUint)
 
-	return src.PortAddr{
-		Idx:  &idxUint8,
-		Node: nodeName,
-		Port: expr.ArrPortAddr().PortAddrPort().GetText(),
-		Meta: meta,
-	}, nil
-
-}
+		return src.PortAddr{
+			Idx:  &idxUint8,
+			Node: nodeName,
+			Port: expr.ArrPortAddr().PortAddrPort().GetText(),
+			Meta: meta,
+		}, nil
+	}
 
 func (s *treeShapeListener) parseSinglePortAddr(
 	fallbackNode string,
@@ -767,6 +766,7 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 	return parsedConst, nil
 }
 
+//nolint:gocyclo // Parsing literals requires many grammar branches.
 func (s *treeShapeListener) parseMessage(
 	constVal generated.IConstLitContext,
 ) (src.MsgLiteral, *compiler.Error) {
@@ -912,12 +912,11 @@ func (s *treeShapeListener) parseMessage(
 				constant.Value.Ref = &parsedRef
 			} else {
 				parsedConstValue, err := s.parseMessage(item.ConstLit())
-				if err != nil {
-					return src.MsgLiteral{}, err
+					if err != nil {
+						return src.MsgLiteral{}, err
+					}
+					constant.Value.Message = &parsedConstValue
 				}
-				constant.Value.Message = &parsedConstValue
-
-			}
 			msg.List = append(msg.List, constant.Value)
 		}
 	case constVal.StructLit() != nil:

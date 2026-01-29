@@ -168,7 +168,7 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name  string
 		text  string
 		check func(t *testing.T, net []src.Connection)
@@ -182,6 +182,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
 				require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
@@ -201,6 +202,7 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
 				require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
@@ -337,7 +339,7 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name  string
 		text  string
 		check func(t *testing.T, got src.File)
@@ -351,6 +353,7 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				unionType := got.Entities["Input"].Type.BodyExpr.Lit.Union
 				require.NotNil(t, unionType)
 
@@ -371,6 +374,7 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 				type Result union { Ok int, Err string }
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				unionType := got.Entities["Result"].Type.BodyExpr.Lit.Union
 				require.NotNil(t, unionType)
 
@@ -398,7 +402,7 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name  string
 		text  string
 		check func(t *testing.T, got src.File)
@@ -409,6 +413,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c0 Input = Input::Int(42)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c0"].Const.Value.Message.Union
 				require.Equal(t, "", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -422,6 +427,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c1 pkg.Input = pkg.Input::None
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c1"].Const.Value.Message.Union
 				require.Equal(t, "pkg", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -435,6 +441,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c2 pkg.Input = pkg.Input::Int(100)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c2"].Const.Value.Message.Union
 				require.Equal(t, "pkg", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -446,6 +453,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 			name: "nested union const value",
 			text: "const c3 Input = Input::Nested(Input::Int(7))",
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c3"].Const.Value.Message.Union
 				require.Equal(t, "", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -465,6 +473,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c4 U = U::Empty
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c4"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Empty", union.Tag)
@@ -478,6 +487,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c5 U = U::Int(42)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c5"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -491,6 +501,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c6 U = U::Int(-7)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c6"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -504,6 +515,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c7 U = U::Float(1.5)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c7"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Float", union.Tag)
@@ -517,6 +529,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c8 U = U::Float(-2.25)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c8"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Float", union.Tag)
@@ -530,6 +543,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c9 U = U::Str('hello')
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c9"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Str", union.Tag)
@@ -543,6 +557,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c10 U = U::Flag(true)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c10"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Flag", union.Tag)
@@ -556,6 +571,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c11 U = U::Flag(false)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c11"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Flag", union.Tag)
@@ -570,6 +586,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c1 U = c0
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				ref := got.Entities["c1"].Const.Value.Ref
 				require.NotNil(t, ref)
 				require.Equal(t, "c0", ref.Name)
@@ -582,6 +599,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c12 U = U::Empty
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c12"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Empty", union.Tag)
@@ -595,6 +613,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c13 U = U::Int(5)
 			`,
 			check: func(t *testing.T, got src.File) {
+			    t.Helper()
 				union := got.Entities["c13"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -614,7 +633,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 }
 
 func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name  string
 		text  string
 		check func(t *testing.T, net []src.Connection)
@@ -628,6 +647,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.NotNil(t, senderUnion)
@@ -645,6 +665,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -661,6 +682,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -677,6 +699,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -693,6 +716,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -709,6 +733,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -725,6 +750,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -741,6 +767,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -757,6 +784,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				chain := conn.Receivers[0].ChainedConnection.Normal
 				senderUnion := chain.Senders[0].Const.Value.Message.Union
@@ -773,6 +801,7 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
+			    t.Helper()
 				conn := net[0].Normal
 				chain := conn.Receivers[0].ChainedConnection.Normal
 				senderUnion := chain.Senders[0].Const.Value.Message.Union
@@ -865,14 +894,14 @@ func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
 
 	// check extern directives preserved and inputs match
 	require.Equal(t, "v1", entity.Component[0].Directives[compiler.ExternDirective])
-	require.Equal(t, "int", entity.Component[0].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
-	require.Equal(t, "int", entity.Component[0].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "int", entity.Component[0].IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "int", entity.Component[0].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
 	require.Equal(t, "v2", entity.Component[1].Directives[compiler.ExternDirective])
-	require.Equal(t, "float", entity.Component[1].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
-	require.Equal(t, "float", entity.Component[1].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "float", entity.Component[1].IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "float", entity.Component[1].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
 	require.Equal(t, "v3", entity.Component[2].Directives[compiler.ExternDirective])
-	require.Equal(t, "string", entity.Component[2].Interface.IO.In["left"].TypeExpr.Inst.Ref.Name)
-	require.Equal(t, "string", entity.Component[2].Interface.IO.In["right"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "string", entity.Component[2].IO.In["left"].TypeExpr.Inst.Ref.Name)
+	require.Equal(t, "string", entity.Component[2].IO.In["right"].TypeExpr.Inst.Ref.Name)
 }

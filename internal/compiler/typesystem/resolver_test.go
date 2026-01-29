@@ -1,3 +1,4 @@
+//nolint:gocritic // keep commented-out test logic for future reference.
 package typesystem_test
 
 import (
@@ -11,13 +12,13 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
-var errTest = errors.New("Oops!")
+var errTest = errors.New("oops")
 
 // TODO fix commented tests (do not remove them)
 func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
-	type testcase struct {
+	type testcase struct { //nolint:govet // fieldalignment: test case layout.
 		expr  ts.Expr
 		scope TestScope
 
@@ -634,7 +635,6 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	}
 
 	for name, tt := range tests {
-		name := name
 		tc := tt()
 
 		t.Run(name, func(t *testing.T) {

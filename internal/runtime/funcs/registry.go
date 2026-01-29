@@ -105,9 +105,9 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"dotenv_load_from":          dotenvLoadFrom{},
 		"dotenv_load_override":      dotenvLoad{override: true},
 		"dotenv_load_from_override": dotenvLoadFrom{override: true},
-		"println":                   println{},
+		"println":                   printlnFunc{},
 		"printf":                    printf{},
-		"print":                     print{},
+		"print":                     printFunc{},
 
 		"read_all":     fileReadAll{},
 		"write_all":    writeAll{},

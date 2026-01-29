@@ -14,6 +14,7 @@ type Program struct {
 	FuncCalls []FuncCall
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type FuncCall struct {
 	Ref    string
 	IO     IO
@@ -75,6 +76,7 @@ func NewInport(
 	}
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type SingleInport struct {
 	ch          <-chan OrderedMsg
 	addr        PortAddr
@@ -152,7 +154,7 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	case <-ctx.Done():
 		return nil, false
 	case v := <-a.chans[idx]:
-		index := uint8(idx)
+		index := Uint8Index(idx)
 		msg := a.interceptor.Received(
 			PortSlotAddr{
 				PortAddr: PortAddr{
@@ -184,7 +186,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 			case <-ctx.Done():
 				success = false
 			case received := <-a.chans[idx]:
-				index := uint8(idx)
+				index := Uint8Index(idx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -245,7 +247,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				index := uint8(slotIdx)
+				index := Uint8Index(slotIdx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -342,6 +344,7 @@ func NewOutport(
 	return Outport{single, array}
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type SingleOutport struct {
 	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 	interceptor Interceptor
@@ -386,6 +389,7 @@ type Interceptor interface {
 	Received(PortSlotAddr, Msg) Msg
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type PortSlotAddr struct {
 	PortAddr
 	Index *uint8 // nil means single port
@@ -436,7 +440,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			case <-ctx.Done():
 				success = false
 			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
-				i := uint8(idx)
+				i := Uint8Index(idx)
 				slotAddr := PortSlotAddr{
 					PortAddr: a.addr,
 					Index:    &i,

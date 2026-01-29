@@ -321,6 +321,7 @@ func newStructMsg(fields []StructField) StructMsg {
 }
 
 // structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type StructField struct {
 	name  string
 	value Msg
@@ -336,6 +337,7 @@ func NewStructField(name string, value Msg) StructField {
 func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
 
 // --- UNION ---
+//nolint:govet // fieldalignment: keep semantic grouping.
 type UnionMsg struct {
 	internalMsg
 	tag  string
@@ -356,9 +358,21 @@ func (msg UnionMsg) Data() Msg {
 
 func (msg UnionMsg) String() string {
 	if msg.data == nil {
-		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
+		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
 	}
-	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
+	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+}
+
+// Uint8Index validates idx and returns it as uint8 or panics.
+func Uint8Index(idx int) uint8 {
+	if idx < 0 {
+		panic(fmt.Sprintf("runtime: negative index %d", idx))
+	}
+	if idx > int(^uint8(0)) {
+		panic(fmt.Sprintf("runtime: index %d overflows uint8", idx))
+	}
+	// #nosec G115 -- bounds checked above
+	return uint8(idx)
 }
 
 // Equal implements strict equality for UnionMsg messages.

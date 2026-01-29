@@ -67,6 +67,12 @@ Follow these instructions.
 - **Common patterns**: `govet` fieldalignment warnings can be suppressed with `//nolint:govet` on struct or inline struct literal lines when reordering is too invasive.
 - **Common patterns**: `gocyclo` can be temporarily suppressed with `//nolint:gocyclo` and a short rationale, but consider later refactor.
 
+### Session Notes (2026-01-29)
+
+- **Common patterns**: `copyloopvar` flags redundant loop-var shadowing (`name := name`) in Go 1.22; remove the copy unless needed for older versions.
+- **Gotchas**: Runtime now panics on invalid array/case indices (negative or uint8 overflow) to surface compiler bugs early.
+- **Common patterns**: Resolve union elements in deterministic key order to avoid nondeterministic error paths in tests.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
