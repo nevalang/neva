@@ -154,9 +154,6 @@ func (a Analyzer) analyzeNormalConnection(
 	net []src.Connection,
 	unionActiveTags map[string]unionActiveTagInfo,
 ) (*src.NormalConnection, *compiler.Error) {
-	// Check if any receiver is a Switch.case port - if so, senders are pattern senders
-	isPatternMatchingContext := hasSwitchCaseReceiver(normConn.Receivers, nodes)
-
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
 		normConn.Senders,
 		scope,
@@ -165,7 +162,6 @@ func (a Analyzer) analyzeNormalConnection(
 		nodesIfaces,
 		nodesUsage,
 		prevChainLink,
-		isPatternMatchingContext,
 	)
 	if err != nil {
 		return nil, err
@@ -322,6 +318,7 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	return nil
 }
 
+//nolint:gocyclo // Network port usage covers multiple connection kinds.
 func (a Analyzer) analyzeNetPortsUsage(
 	iface src.Interface, // resolved interface of the component that contains the network
 	nodesIfaces map[string]foundInterface, // resolved interfaces of the nodes in the network
@@ -634,8 +631,6 @@ func (a Analyzer) getResolvedSenderType(
 	nodesIfaces map[string]foundInterface,
 	scope src.Scope,
 	prevChainLink []src.ConnectionSender,
-	nodesUsage map[string]netNodeUsage,
-	isPatternSender bool,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
 		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
@@ -657,8 +652,6 @@ func (a Analyzer) getResolvedSenderType(
 			nodesIfaces,
 			scope,
 			prevChainLink,
-			nodesUsage,
-			isPatternSender,
 		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err

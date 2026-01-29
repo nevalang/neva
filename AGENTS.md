@@ -72,6 +72,7 @@ Follow these instructions.
 - **Common patterns**: `copyloopvar` flags redundant loop-var shadowing (`name := name`) in Go 1.22; remove the copy unless needed for older versions.
 - **Gotchas**: Runtime now panics on invalid array/case indices (negative or uint8 overflow) to surface compiler bugs early.
 - **Common patterns**: Resolve union elements in deterministic key order to avoid nondeterministic error paths in tests.
+- **Common patterns**: `golangci-lint` config uses a strict allowlist with targeted test/go:generate exclusions; tune `tparallel`/`gocyclo` per package if flakiness or complexity hotspots appear.
 
 ## 3. ⚡ Core Concepts
 
