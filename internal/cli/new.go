@@ -72,6 +72,7 @@ def Main(start any) (stop any) {
 
 func createNevaMod(path string) error {
 	// Create neva.yml file
+	// #nosec G306 -- project file is intended to be readable
 	if err := os.WriteFile(
 		filepath.Join(path, "neva.yml"),
 		fmt.Appendf(nil, "neva: %s", pkg.Version),
@@ -87,15 +88,12 @@ func createNevaMod(path string) error {
 	}
 
 	// Create main.neva file
-	if err := os.WriteFile(
+	// #nosec G306 -- new files are intended to be readable
+	return os.WriteFile(
 		filepath.Join(srcPath, "main.neva"),
 		[]byte(mainNevaContent),
-		0o644, // new files should be writable by the owner and readable by others
-	); err != nil {
-		return err
-	}
-
-	return nil
+		0o644,
+	)
 }
 
 func scaffoldFromTemplate(path string, template string) error {

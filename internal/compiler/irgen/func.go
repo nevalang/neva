@@ -8,7 +8,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
-func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {
+func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component) {
 	var version src.Component
 	if len(versions) == 1 {
 		version = versions[0]
@@ -18,15 +18,16 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 
 	externArg, hasExtern := version.Directives[compiler.ExternDirective]
 	if !hasExtern {
-		return "", version, nil
+		return "", version
 	}
 
-	return externArg, version, nil
+	return externArg, version
 }
 
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	bindArg, hasBind := node.Directives[compiler.BindDirective]
 	if !hasBind {
+		//nolint:nilnil // nil config is expected when no bind directive is present
 		return nil, nil
 	}
 

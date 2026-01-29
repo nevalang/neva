@@ -12,6 +12,7 @@ import (
 type Generator struct{}
 
 type (
+	//nolint:govet // fieldalignment: keep semantic grouping.
 	nodeContext struct {
 		path       []string
 		node       src.Node
@@ -23,6 +24,7 @@ type (
 		out map[relPortAddr]struct{}
 	}
 
+	//nolint:govet // fieldalignment: keep semantic grouping.
 	relPortAddr struct {
 		Port string
 		Idx  *uint8
@@ -135,10 +137,7 @@ func (g Generator) processNode(
 	inportAddrs := g.insertAndReturnInports(nodeCtx)   // for inports we only use parent context because all inports are used
 	outportAddrs := g.insertAndReturnOutports(nodeCtx) //  for outports we use both parent context and component's interface
 
-	runtimeFuncRef, version, err := g.getFuncRef(components, nodeCtx.node)
-	if err != nil {
-		panic(err)
-	}
+	runtimeFuncRef, version := g.getFuncRef(components, nodeCtx.node)
 
 	if runtimeFuncRef != "" {
 		cfgMsg, err := getConfigMsg(nodeCtx.node, scope)
@@ -159,15 +158,12 @@ func (g Generator) processNode(
 	// We use network as a source of true about how subnodes ports instead subnodes interface definitions.
 	// We cannot rely on them because there's no information about how many array slots are used (in case of array ports).
 	// On the other hand, we believe network has everything we need because program' correctness is verified by analyzer.
-	subnodesPortsUsage, err := g.processNetwork(
+	subnodesPortsUsage := g.processNetwork(
 		version.Net,
 		&scope,
 		nodeCtx,
 		result,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	for subnodeName, subnode := range version.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[subnodeName]

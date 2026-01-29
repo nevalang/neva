@@ -27,6 +27,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	return tmpl.Execute(w, data)
 }
 
+//nolint:govet // fieldalignment: data mirrors JSON layout.
 type nodeData struct {
 	X     int                 `json:"x"`
 	Y     int                 `json:"y"`
@@ -60,6 +61,7 @@ type outgoingConn struct {
 	portOffset float64
 }
 
+//nolint:gocyclo // Data prep enumerates many node/conn cases.
 func prepareData(prog *ir.Program) (templateData, error) {
 	nodes := make(map[string]nodeData)
 	pathMap := make(map[string]string) // Maps a port's path to the unified node name
@@ -355,8 +357,8 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	}
 
 	return templateData{
-		NodesJSON:       template.JS(nodesJSON),
-		ConnectionsJSON: template.JS(connsJSON),
+		NodesJSON:       template.JS(nodesJSON), // #nosec G203 -- JSON is generated from compiler data
+		ConnectionsJSON: template.JS(connsJSON), // #nosec G203 -- JSON is generated from compiler data
 	}, nil
 }
 

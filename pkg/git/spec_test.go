@@ -44,7 +44,6 @@ func TestParseRepoSpec(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -76,7 +75,6 @@ func TestParseRepoSpecErrors(t *testing.T) {
 	t.Parallel()
 
 	for _, input := range []string{"", "@rev", "   "} {
-		input := input
 		t.Run(input, func(t *testing.T) {
 			t.Parallel()
 			if _, err := ParseRepoSpec(input); err == nil {

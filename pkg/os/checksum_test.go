@@ -9,7 +9,7 @@ import (
 )
 
 func TestComputeChecksumForFS(t *testing.T) {
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name        string
 		setup       func(t *testing.T) fs.FS
 		want        string
@@ -19,6 +19,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "empty_fs",
 			setup: func(t *testing.T) fs.FS {
+			    t.Helper()
 				return fstest.MapFS{}
 			},
 			want: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // SHA-256 of empty input
@@ -26,6 +27,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "single_file",
 			setup: func(t *testing.T) fs.FS {
+			    t.Helper()
 				return fstest.MapFS{
 					"test.txt": {
 						Data: []byte("hello, world"),
@@ -37,6 +39,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "multiple_files",
 			setup: func(t *testing.T) fs.FS {
+			    t.Helper()
 				return fstest.MapFS{
 					"dir1/file1.txt": {
 						Data: []byte("file1"),
@@ -51,6 +54,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "nested_directories",
 			setup: func(t *testing.T) fs.FS {
+			    t.Helper()
 				return fstest.MapFS{
 					"a/b/c/file1.txt": {
 						Data: []byte("nested"),
@@ -65,6 +69,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "error_reading_file",
 			setup: func(t *testing.T) fs.FS {
+			    t.Helper()
 				return &failingFS{
 					MapFS: fstest.MapFS{
 						"test.txt": {

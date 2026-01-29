@@ -6,10 +6,12 @@ import (
 )
 
 // Program is a graph where ports are vertexes and connections are edges.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Program struct {
 	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"` // Hide from default marshaling
 	Funcs       []FuncCall            `json:"funcs,omitempty" yaml:"funcs,omitempty"`
-	Comment     string                `json:"comment,omitempty" yaml:"comment,omitempty"` // Comment is an arbitrary string that backends may use.
+	// Comment is an arbitrary string that backends may use.
+	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Program
@@ -21,6 +23,7 @@ func (p Program) MarshalJSON() ([]byte, error) {
 		connections[from.String()] = to.String()
 	}
 
+	//nolint:govet // fieldalignment: anonymous marshalling struct.
 	return json.Marshal(struct {
 		programAlias
 		Connections map[string]string `json:"connections,omitempty"`
@@ -45,6 +48,7 @@ func (p Program) MarshalYAML() (any, error) {
 		})
 	}
 
+	//nolint:govet // fieldalignment: anonymous marshalling struct.
 	return struct {
 		Connections []serializedConnection `yaml:"connections,omitempty"`
 		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
@@ -80,6 +84,7 @@ func (p PortAddr) MarshalYAML() (any, error) {
 }
 
 // FuncCall describes call of a runtime function.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type FuncCall struct {
 	Ref string   `json:"ref,omitempty" yaml:"ref,omitempty"` // Reference to the function in registry.
 	IO  FuncIO   `json:"io" yaml:"io"`                       // Input/output ports of the function.
@@ -93,6 +98,7 @@ type FuncIO struct {
 }
 
 // Message is a data that can be sent and received.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Message struct {
 	Type         MsgType            `json:"type" yaml:"type"`
 	Bool         bool               `json:"bool,omitempty" yaml:"bool,omitempty"`
@@ -104,6 +110,7 @@ type Message struct {
 	Union        UnionMessage       `json:"union,omitempty" yaml:"union,omitempty"`
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type UnionMessage struct {
 	Tag  string   `json:"tag" yaml:"tag"`
 	Data *Message `json:"data,omitempty" yaml:"data,omitempty"`

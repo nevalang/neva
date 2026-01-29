@@ -8,6 +8,7 @@ import (
 )
 
 func Test_joinNodePath(t *testing.T) {
+	//nolint:govet // fieldalignment: test helper struct.
 	type args struct {
 		nodePath []string
 		nodeName string

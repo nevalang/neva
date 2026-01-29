@@ -2,6 +2,6 @@ package internal
 
 import "embed"
 
-//nolint:golint
+// Efs embeds the runtime files.
 //go:embed runtime
 var Efs embed.FS

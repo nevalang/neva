@@ -15,6 +15,7 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
+//nolint:govet // fieldalignment: preserve layout for readability.
 type Server struct {
 	workspacePath string
 	name, version string
@@ -94,12 +95,12 @@ func (s *Server) createDiagnostics(
 
 		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      uint32(compilerErr.Meta.Start.Line),
-				Character: uint32(compilerErr.Meta.Start.Column),
+				Line:      toUint32(compilerErr.Meta.Start.Line),
+				Character: toUint32(compilerErr.Meta.Start.Column),
 			},
 			End: protocol.Position{
-				Line:      uint32(compilerErr.Meta.Stop.Line),
-				Character: uint32(compilerErr.Meta.Stop.Column),
+				Line:      toUint32(compilerErr.Meta.Stop.Line),
+				Character: toUint32(compilerErr.Meta.Stop.Column),
 			},
 		}
 
@@ -120,4 +121,15 @@ func (s *Server) createDiagnostics(
 			},
 		},
 	}
+}
+
+func toUint32(value int) uint32 {
+	if value < 0 {
+		return 0
+	}
+	if uint64(value) > uint64(^uint32(0)) {
+		return ^uint32(0)
+	}
+	// #nosec G115 -- bounds checked above
+	return uint32(value)
 }

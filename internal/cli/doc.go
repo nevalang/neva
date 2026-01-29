@@ -72,12 +72,14 @@ func newDocCmd() *cli.Command {
 	}
 }
 
+//nolint:govet // fieldalignment: small helper struct.
 type docMatch struct {
 	file    string
 	line    int
 	context []docContextLine
 }
 
+//nolint:govet // fieldalignment: small helper struct.
 type docContextLine struct {
 	line int
 	text string

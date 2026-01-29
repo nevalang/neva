@@ -15,7 +15,9 @@ func Test_UpperThanManifest(t *testing.T) {
 	// go one level up (and go back after test is finished)
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(wd)
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(wd))
+	})
 	require.NoError(t, os.Chdir(".."))
 
 	out, _ := e2e.Run(t, []string{"run", "run_cli_not_from_module_root/foo/bar"})
@@ -31,7 +33,9 @@ func Test_DownToManifest(t *testing.T) {
 	// go one level down (and go back after test is finished)
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(wd)
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(wd))
+	})
 	require.NoError(t, os.Chdir("foo"))
 
 	out, _ := e2e.Run(t, []string{"run", "bar"})

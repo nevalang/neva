@@ -42,10 +42,11 @@ pub def PrintHello(sig int) (res string) {
     println:res -> :res
     println:err -> panic
 }`
+	// #nosec G306 -- test fixture file
 	require.NoError(t, os.WriteFile("src/hello.neva", []byte(nevaSrc), 0o644))
 
 	// go mod init in "gen" dir BEFORE build to let compiler detect module path
-	_ = os.Mkdir("gen", 0o755)
+	require.NoError(t, os.Mkdir("gen", 0o755))
 	goModInit := exec.Command("go", "mod", "init", "example.com/tmpgen")
 	goModInit.Dir = "gen"
 	out, err := goModInit.CombinedOutput()
@@ -72,6 +73,7 @@ func main(){
     }
     fmt.Printf("%v", out.Res)
 }`
+	// #nosec G306 -- test fixture file
 	require.NoError(t, os.WriteFile(filepath.Join("gen", "main.go"), []byte(runner), 0o644))
 
 	// Just go run .

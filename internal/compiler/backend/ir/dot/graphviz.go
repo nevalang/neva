@@ -63,6 +63,7 @@ func (p Port) Format() string {
 	return fmt.Sprintf("%q:%q", path, portStr)
 }
 
+//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type Node struct {
 	Name  string
 	Extra string
@@ -87,6 +88,7 @@ type Edge struct {
 	Recv Port
 }
 
+//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type Cluster struct {
 	Index    int
 	Prefix   string
@@ -140,6 +142,7 @@ func (c *Cluster) Label() string {
 	return c.Prefix[i+1:]
 }
 
+//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type ClusterBuilder struct {
 	Main  *Cluster
 	Edges []Edge
@@ -184,8 +187,5 @@ func (b *ClusterBuilder) Build(w io.Writer) error {
 	if b.once.Do(b.initTemplates); b.err != nil {
 		return b.err
 	}
-	if err := b.tmpl.ExecuteTemplate(w, "graph.dot.tmpl", b); err != nil {
-		return err
-	}
-	return nil
+	return b.tmpl.ExecuteTemplate(w, "graph.dot.tmpl", b)
 }

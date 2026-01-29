@@ -21,6 +21,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/parser"
 )
 
+//nolint:gocyclo // CLI flag setup is dense; refactor later without behavior changes.
 func newBuildCmd(
 	workdir string,
 	bldr builder.Builder,

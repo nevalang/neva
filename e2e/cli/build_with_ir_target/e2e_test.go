@@ -31,7 +31,7 @@ func TestBuildIRDefault(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -65,7 +65,7 @@ func TestBuildIRYAML(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -121,7 +121,7 @@ func TestBuildIRWithInterfaceWithImports(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`

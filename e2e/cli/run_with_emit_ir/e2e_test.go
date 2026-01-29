@@ -32,7 +32,7 @@ func TestEmitDefault(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -67,7 +67,7 @@ func TestEmitYAML(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`

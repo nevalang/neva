@@ -11,6 +11,7 @@ import (
 
 // Build represents all the information in source code, that must be compiled.
 // User usually don't interacts with this abstraction, but it's important for compiler.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Build struct {
 	EntryModRef core.ModuleRef            `json:"entryModRef,omitempty"`
 	Modules     map[core.ModuleRef]Module `json:"modules,omitempty"`
@@ -36,6 +37,7 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 	return entity, filename, nil
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type ModuleManifest struct {
 	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
 	Deps            map[string]core.ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
@@ -88,6 +90,7 @@ type Import struct {
 	Meta    core.Meta `json:"meta,omitempty"`
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Entity struct {
 	IsPublic  bool        `json:"exported,omitempty"`
 	Kind      EntityKind  `json:"kind,omitempty"`
@@ -122,6 +125,7 @@ const (
 )
 
 // Component is unit of computation.
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Component struct {
 	Interface  `json:"interface,omitempty"`
 	Directives map[Directive]string `json:"directives,omitempty"`
@@ -141,6 +145,7 @@ type Interface struct {
 }
 
 // TODO should we use it to typesystem package?
+//nolint:govet // fieldalignment: keep semantic grouping.
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
 	Meta   core.Meta  `json:"meta,omitempty"`
@@ -168,6 +173,7 @@ func (t TypeParams) String() string {
 	return s + ">"
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Node struct {
 	Directives    map[Directive]string `json:"directives,omitempty"`
 	EntityRef     core.EntityRef       `json:"entityRef,omitempty"`
@@ -215,6 +221,7 @@ func (c ConstValue) String() string {
 	return c.Message.String()
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type MsgLiteral struct {
 	Bool         *bool                 `json:"bool,omitempty"`
 	Int          *int                  `json:"int,omitempty"`
@@ -268,6 +275,7 @@ type IO struct {
 	Meta core.Meta       `json:"meta,omitempty"`
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Port struct {
 	TypeExpr ts.Expr   `json:"typeExpr,omitempty"`
 	IsArray  bool      `json:"isArray,omitempty"`
@@ -280,6 +288,7 @@ type Connection struct {
 	Meta        core.Meta              `json:"meta,omitempty"`
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type NormalConnection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
@@ -298,6 +307,7 @@ type ConnectionReceiver struct {
 	Meta               core.Meta   `json:"meta,omitempty"`
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type ConnectionSender struct {
 	PortAddr *PortAddr `json:"portAddr,omitempty"`
 	Const    *Const    `json:"const,omitempty"`
@@ -361,7 +371,11 @@ type InteropableComponent struct {
 // that have exactly one inport and one outport (valid for go interop).
 // components that don't meet this criteria are silently ignored.
 func (pkg Package) GetInteropableComponents() []InteropableComponent {
-	var result []InteropableComponent
+	totalEntities := 0
+	for file := range pkg {
+		totalEntities += len(pkg[file].Entities)
+	}
+	result := make([]InteropableComponent, 0, totalEntities)
 
 	for res := range pkg.Entities() {
 		if !res.Entity.IsPublic {
