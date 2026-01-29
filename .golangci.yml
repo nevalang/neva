@@ -11,11 +11,14 @@ linters:
     - copyloopvar # Unnecessary loop var copy (e.g., tt := tt).
     - dogsled # Too many blank identifiers (e.g., a, _, _, _, := f()).
     - durationcheck # Suspicious duration math (e.g., time.Second * time.Minute).
+    - depguard # Guard import boundaries per package.
     - errcheck # Missing error checks (e.g., _ = f()).
     - errorlint # Error wrapping/formatting (e.g., fmt.Errorf("%w", err)).
     - exhaustive # Non-exhaustive switches on enums (e.g., switch myEnum { ... }).
     - gocritic # Bug-prone patterns (e.g., append assigned to new slice).
     - gocyclo # High cyclomatic complexity (e.g., long if/else chains).
+    - gochecknoglobals # Disallow global variables.
+    - gochecknoinits # Disallow init() functions.
     - gosec # Security issues (e.g., exec.Command on tainted input).
     - govet # Vet analyzers (e.g., fieldalignment).
     - ineffassign # Assigned then unused (e.g., x = 1; x = 2; use x).
@@ -49,6 +52,21 @@ linters:
     govet:
       enable: # additional vet checks
         - fieldalignment # report struct padding inefficiencies
+    depguard:
+      rules:
+        runtime:
+          list-mode: strict
+          files:
+            - "**/internal/runtime/*.go"
+          allow:
+            - $gostd
+        runtime_funcs:
+          list-mode: strict
+          files:
+            - "**/internal/runtime/funcs/**/*.go"
+          allow:
+            - $gostd
+            - github.com/nevalang/neva/internal/runtime
     lll:
       line-length: 140 # max line length
       tab-width: 1 # tab width for length calc

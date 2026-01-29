@@ -321,10 +321,9 @@ func newStructMsg(fields []StructField) StructMsg {
 }
 
 // structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
-//nolint:govet // fieldalignment: keep semantic grouping.
 type StructField struct {
-	name  string
 	value Msg
+	name  string
 }
 
 // newstructfield constructs a structfield with provided name and value.
@@ -337,11 +336,10 @@ func NewStructField(name string, value Msg) StructField {
 func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
 
 // --- UNION ---
-//nolint:govet // fieldalignment: keep semantic grouping.
 type UnionMsg struct {
 	internalMsg
-	tag  string
 	data Msg
+	tag  string
 }
 
 func (msg UnionMsg) Union() UnionMsg {

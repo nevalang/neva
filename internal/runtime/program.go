@@ -14,11 +14,10 @@ type Program struct {
 	FuncCalls []FuncCall
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type FuncCall struct {
-	Ref    string
-	IO     IO
 	Config Msg
+	IO     IO
+	Ref    string
 }
 
 type IO struct {
@@ -76,11 +75,10 @@ func NewInport(
 	}
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type SingleInport struct {
+	interceptor Interceptor
 	ch          <-chan OrderedMsg
 	addr        PortAddr
-	interceptor Interceptor
 }
 
 func NewSingleInport(
@@ -88,7 +86,7 @@ func NewSingleInport(
 	addr PortAddr,
 	interceptor Interceptor,
 ) *SingleInport {
-	return &SingleInport{ch, addr, interceptor}
+	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
 }
 
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
@@ -344,11 +342,10 @@ func NewOutport(
 	return Outport{single, array}
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type SingleOutport struct {
-	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 	interceptor Interceptor
 	ch          chan<- OrderedMsg
+	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 }
 
 func NewSingleOutport(
@@ -389,10 +386,9 @@ type Interceptor interface {
 	Received(PortSlotAddr, Msg) Msg
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type PortSlotAddr struct {
-	PortAddr
 	Index *uint8 // nil means single port
+	PortAddr
 }
 
 type ArrayOutport struct {

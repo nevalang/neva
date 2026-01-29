@@ -73,6 +73,10 @@ Follow these instructions.
 - **Gotchas**: Runtime now panics on invalid array/case indices (negative or uint8 overflow) to surface compiler bugs early.
 - **Common patterns**: Resolve union elements in deterministic key order to avoid nondeterministic error paths in tests.
 - **Common patterns**: `golangci-lint` config uses a strict allowlist with targeted test/go:generate exclusions; tune `tparallel`/`gocyclo` per package if flakiness or complexity hotspots appear.
+- **Common patterns**: Consider opt-in linters like `depguard`, `gofumpt`, `goimports`, `gochecknoglobals`, `gochecknoinits`, `wrapcheck`, and `forbidigo` based on team appetite; add them gradually to avoid noisy rollouts.
+- **Common patterns**: `govet` fieldalignment can be satisfied by moving pointer-heavy fields before strings to reduce pointer bytes and GC scan range.
+- **Common patterns**: `depguard` can enforce stdlib-only boundaries with separate rules for `internal/runtime/*.go` and `internal/runtime/funcs/**` when funcs may import `internal/runtime`.
+- **Gotchas**: `gochecknoglobals` will flag template strings, expected outputs in tests, and shared helpers; plan exclusions or refactors before enabling widely.
 
 ## 3. ⚡ Core Concepts
 
