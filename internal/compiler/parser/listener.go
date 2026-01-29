@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
+//nolint:govet // fieldalignment: listener fields grouped.
 type treeShapeListener struct {
 	*generated.BasenevaListener
 	loc   core.Location
@@ -18,10 +19,7 @@ func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	imp, alias, err := s.parseImport(actx)
-	if err != nil {
-		panic(err)
-	}
+	imp, alias := s.parseImport(actx)
 	s.state.Imports[alias] = imp
 }
 

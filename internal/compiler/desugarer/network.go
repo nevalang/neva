@@ -10,6 +10,9 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
+const maxUint8 = int(^uint8(0))
+
+//nolint:govet // fieldalignment: keep semantic grouping.
 type handleNetworkResult struct {
 	desugaredConnections []src.Connection
 	constsToInsert       map[string]src.Const
@@ -67,6 +70,7 @@ func (d *Desugarer) mergeImplicitFanIn(
 		hasIdx bool
 		idx    uint8
 	}
+	//nolint:govet // fieldalignment: local helper layout.
 	type group struct {
 		receiver src.ConnectionReceiver
 		senders  []src.ConnectionSender
@@ -695,14 +699,11 @@ func (d *Desugarer) desugarSingleSender(
 	}
 
 	if len(sender.StructSelector) != 0 {
-		result, err := d.desugarStructSelectors(
+		result := d.desugarStructSelectors(
 			normConn,
 			nodesToInsert,
 			constsToInsert,
 		)
-		if err != nil {
-			return desugarSenderResult{}, fmt.Errorf("desugar struct selectors: %w", err)
-		}
 
 		// connection that replaces original one might need desugaring itself
 		replacedConnDesugarRes, err := d.desugarConnection(
@@ -745,10 +746,7 @@ func (d *Desugarer) desugarSingleSender(
 				Meta:      sender.Meta,
 			}
 		} else if sender.Const.Value.Message != nil {
-			portAddr, err := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
-			if err != nil {
-				return desugarSenderResult{}, err
-			}
+			portAddr := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
 
 			normConn = src.NormalConnection{
 				Senders: []src.ConnectionSender{
@@ -807,16 +805,18 @@ func (d *Desugarer) getFirstOutportName(
 	return "", errors.New("first outport not found")
 }
 
-var newComponentRef = core.EntityRef{
-	Pkg:  "builtin",
-	Name: "New",
+func newComponentRef() core.EntityRef {
+	return core.EntityRef{
+		Pkg:  "builtin",
+		Name: "New",
+	}
 }
 
 func (d *Desugarer) handleLiteralSender(
 	constant src.Const,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-) (src.PortAddr, error) {
+) src.PortAddr {
 	d.virtualConstCount++
 	constName := fmt.Sprintf("__const__%d", d.virtualConstCount)
 
@@ -833,8 +833,8 @@ func (d *Desugarer) handleLiteralSender(
 			compiler.BindDirective: constName,
 		},
 		EntityRef: core.EntityRef{
-			Pkg:  newComponentRef.Pkg,
-			Name: newComponentRef.Name,
+			Pkg:  newComponentRef().Pkg,
+			Name: newComponentRef().Name,
 			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{constant.TypeExpr},
@@ -849,7 +849,7 @@ func (d *Desugarer) handleLiteralSender(
 		Port: "res",
 	}
 
-	return emitterNodeOutportAddr, nil
+	return emitterNodeOutportAddr
 }
 
 func (d *Desugarer) handleConstRefSender(
@@ -873,8 +873,8 @@ func (d *Desugarer) handleConstRefSender(
 			compiler.BindDirective: ref.String(),
 		},
 		EntityRef: core.EntityRef{
-			Pkg:  newComponentRef.Pkg,
-			Name: newComponentRef.Name,
+			Pkg:  newComponentRef().Pkg,
+			Name: newComponentRef().Name,
 			Meta: locOnlyMeta,
 		},
 		TypeArgs: []ts.Expr{constTypeExpr},
@@ -953,6 +953,9 @@ func (d *Desugarer) desugarFanOut(
 
 	insert := make([]src.Connection, 0, len(normConn.Receivers))
 	for i, receiver := range normConn.Receivers {
+		if i > maxUint8 {
+			return desugarFanOutResult{}, fmt.Errorf("fan-out index %d overflows uint8", i)
+		}
 		conn := src.Connection{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{
@@ -960,7 +963,7 @@ func (d *Desugarer) desugarFanOut(
 						PortAddr: &src.PortAddr{
 							Node: nodeName,
 							Port: "data",
-							Idx:  compiler.Pointer(uint8(i)),
+							Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
 							Meta: locOnlyMeta,
 						},
 						Meta: locOnlyMeta,
@@ -1030,6 +1033,9 @@ func (d *Desugarer) desugarFanIn(
 	// 2. connect each sender of this connection with fan-in node
 	desugaredFanIn := make([]src.Connection, 0, len(normConn.Senders))
 	for i, originalSender := range normConn.Senders {
+		if i > maxUint8 {
+			return nil, fmt.Errorf("fan-in index %d overflows uint8", i)
+		}
 		desugaredFanIn = append(desugaredFanIn, src.Connection{
 			Normal: &src.NormalConnection{
 				Senders: []src.ConnectionSender{originalSender},
@@ -1038,7 +1044,7 @@ func (d *Desugarer) desugarFanIn(
 						PortAddr: &src.PortAddr{
 							Node: fanInNodeName,
 							Port: "data",
-							Idx:  compiler.Pointer(uint8(i)),
+							Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
 							Meta: locOnlyMeta,
 						},
 						Meta: locOnlyMeta,

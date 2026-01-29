@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrDiffKinds     = errors.New("subtype and supertype must both be either literals or instances") //nolint:lll
+	ErrDiffKinds     = errors.New("subtype and supertype must both be either literals or instances")
 	ErrDiffRefs      = errors.New("subtype instance must have same ref as supertype")
 	ErrArgsCount     = errors.New("subtype instance must have >= args than supertype")
 	ErrArgNotSubtype = errors.New("subtype arg must be subtype of corresponding supertype arg")
@@ -33,6 +33,7 @@ type TerminatorParams struct {
 
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
+//nolint:gocyclo // Subtype checking has many structural cases.
 func (s SubtypeChecker) Check(
 	expr,
 	constr Expr,
@@ -62,7 +63,7 @@ func (s SubtypeChecker) Check(
 			params.Scope,
 		)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTerminator, err)
+			return fmt.Errorf("%w: %w", ErrTerminator, err)
 		}
 
 		isSuperTypeRecursive, err := s.terminator.ShouldTerminate(
@@ -70,7 +71,7 @@ func (s SubtypeChecker) Check(
 			params.Scope,
 		)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTerminator, err)
+			return fmt.Errorf("%w: %w", ErrTerminator, err)
 		}
 
 		if isSubTypeRecursive && isSuperTypeRecursive { // e.g. t1 and t2 (with t1=list<t1> and t2=list<t2>)
@@ -98,12 +99,14 @@ func (s SubtypeChecker) Check(
 				newConstr,
 				newTParams,
 			); err != nil {
-				return fmt.Errorf(
-					"%w: %v: got %v, want %v",
+				return errors.Join(
 					ErrArgNotSubtype,
-					err,
-					expr.Inst.Args[i].String(),
-					constr.Inst.Args[i].String(),
+					fmt.Errorf(
+						"got %v, want %v: %w",
+						expr.Inst.Args[i].String(),
+						constr.Inst.Args[i].String(),
+						err,
+					),
 				)
 			}
 		}
@@ -120,6 +123,8 @@ func (s SubtypeChecker) Check(
 	}
 
 	switch constrLitType {
+	case EmptyLitType:
+		return fmt.Errorf("%w: empty literal", ErrDiffLitTypes)
 	case UnionLitType:
 		// Both constraint and expression must be unions.
 		// In a type-system where unions are tagged it's impossible to do otherwise.
@@ -149,7 +154,10 @@ func (s SubtypeChecker) Check(
 			}
 			// both have types, check compatibility
 			if err := s.Check(*exprTagType, *constrTagType, params); err != nil {
-				return fmt.Errorf("%w: for tag %s: %v", ErrUnions, tag, err)
+				return errors.Join(
+					ErrUnions,
+					fmt.Errorf("for tag %s: %w", tag, err),
+				)
 			}
 		}
 		return nil
@@ -182,7 +190,10 @@ func (s SubtypeChecker) Check(
 					return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 				}
 				if err := s.Check(exprField, constrField, newParams); err != nil {
-					return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
+					return errors.Join(
+						ErrStructField,
+						fmt.Errorf("field '%s': %w", constrFieldName, err),
+					)
 				}
 			}
 			break
@@ -193,7 +204,10 @@ func (s SubtypeChecker) Check(
 				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 			}
 			if err := s.Check(exprField, constrField, params); err != nil {
-				return fmt.Errorf("%w: field '%s': %v", ErrStructField, constrFieldName, err)
+				return errors.Join(
+					ErrStructField,
+					fmt.Errorf("field '%s': %w", constrFieldName, err),
+				)
 			}
 		}
 	}

@@ -16,6 +16,7 @@ import (
 // Option configures Run behavior.
 type Option func(*config)
 
+//nolint:govet // fieldalignment: simple options struct.
 type config struct {
 	stdin        string
 	expectedCode int
@@ -65,6 +66,7 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	binPath := buildNevaBinary(t, repoRoot, mainPath)
 
 	cmdArgs := append([]string{binPath}, args...)
+	// #nosec G204 -- test helper executes commands constructed from test inputs
 	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 
 	// Resolve the working directory from which the CLI should be executed.
@@ -104,6 +106,7 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 func FindRepoRoot(t *testing.T) string {
 	t.Helper()
 
+	// #nosec G204 -- command arguments are constant
 	cmd := exec.Command("go", "env", "GOMOD")
 	output, err := cmd.Output()
 	require.NoError(t, err, "failed to run 'go env GOMOD'")

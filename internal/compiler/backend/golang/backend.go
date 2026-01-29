@@ -85,8 +85,9 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 	return pkgos.SaveFilesToDir(dst, files)
 }
 
+//nolint:gocyclo // Export emission spans multiple steps; refactor later.
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
-	var exportList []exportTemplateData
+	exportList := make([]exportTemplateData, 0, len(exports))
 
 	for _, export := range exports {
 		prog := export.Program
@@ -98,14 +99,8 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		}
 
 		// Map fields
-		inFields, err := b.mapFields(export.Component.IO.In)
-		if err != nil {
-			return err
-		}
-		outFields, err := b.mapFields(export.Component.IO.Out)
-		if err != nil {
-			return err
-		}
+		inFields := b.mapFields(export.Component.IO.In)
+		outFields := b.mapFields(export.Component.IO.Out)
 
 		// Look up start/stop chans
 		var inPortName string
@@ -242,7 +237,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 	return pkgos.SaveFilesToDir(dst, files)
 }
 
-func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, error) {
+func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 	fields := make([]fieldTemplateData, 0, len(ports))
 	for name, port := range ports {
 		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
@@ -279,7 +274,7 @@ func (b Backend) mapFields(ports map[string]ast.Port) ([]fieldTemplateData, erro
 	sort.Slice(fields, func(i, j int) bool {
 		return fields[i].Name < fields[j].Name
 	})
-	return fields, nil
+	return fields
 }
 
 // Title capitalizes the first letter of the string.
@@ -297,7 +292,7 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct {
+	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
 		idx uint8
 		ch  string
 	}
@@ -394,7 +389,9 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcOutports[addr.Port] = fmt.Sprintf(
-				"runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, []chan<- runtime.OrderedMsg{%s}))",
+				"runtime.NewOutport(nil, runtime.NewArrayOutport("+
+					"runtime.PortAddr{Path: %q, Port: %q}, "+
+					"interceptor, []chan<- runtime.OrderedMsg{%s}))",
 				addr.Path,
 				addr.Port,
 				strings.Join(chans, ", "),
@@ -459,7 +456,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`"%s": %s`, k, el))
+			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`%q: %s`, k, el))
 		}
 		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
@@ -477,7 +474,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 }
 
 func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[string]string) error {
-	if err := fs.WalkDir(
+	return fs.WalkDir(
 		internal.Efs,
 		"runtime",
 		func(path string, dirEntry fs.DirEntry, err error) error {
@@ -505,11 +502,7 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[st
 			files[path] = bb
 			return nil
 		},
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 func (b Backend) buildPortChanMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {

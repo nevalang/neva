@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Error struct {
 	Message string
 	Meta    *core.Meta

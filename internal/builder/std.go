@@ -70,6 +70,7 @@ func ensureStdlib() (string, error) {
 			return fmt.Errorf("create directory for %s: %w", targetPath, err)
 		}
 
+		// #nosec G306 -- stdlib files are intended to be readable
 		return os.WriteFile(targetPath, data, 0644)
 	})
 
@@ -101,5 +102,6 @@ func readChecksum(stdlibPath string) (string, error) {
 // writeChecksum writes the checksum to the .checksum file
 func writeChecksum(stdlibPath, checksum string) error {
 	checksumPath := filepath.Join(stdlibPath, ".checksum")
+	// #nosec G306 -- checksum is a non-sensitive build artifact
 	return os.WriteFile(checksumPath, []byte(checksum), 0644)
 }

@@ -46,6 +46,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 		fileName += ".exe"
 	}
 
+	// #nosec G204 -- command args are constructed internally from known values
 	cmd := exec.Command(
 		"go",
 		"build",

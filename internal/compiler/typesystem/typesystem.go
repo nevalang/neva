@@ -9,6 +9,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type Def struct {
 	// Body can refer to these. Must be replaced with arguments while resolving
 	Params []Param `json:"params,omitempty"`
@@ -47,6 +48,7 @@ type Expr struct {
 }
 
 // String formats expression in a TS manner
+//nolint:gocyclo // String formatting covers multiple expression shapes.
 func (expr Expr) String() string {
 	if expr.Inst == nil && expr.Lit == nil {
 		return "empty"
@@ -54,8 +56,11 @@ func (expr Expr) String() string {
 
 	var str string
 
-	switch expr.Lit.Type() {
-	case UnionLitType:
+	if expr.Lit != nil {
+		switch expr.Lit.Type() {
+		case EmptyLitType:
+			return "empty"
+		case UnionLitType:
 		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
 		count := 0
 		str += "union {"
@@ -89,8 +94,8 @@ func (expr Expr) String() string {
 			str += " "
 		}
 		str += "}"
-		return str
-	case StructLitType:
+			return str
+		case StructLitType:
 		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
 		str += "{"
 		count := 0
@@ -110,7 +115,8 @@ func (expr Expr) String() string {
 			}
 			count++
 		}
-		return str + "}"
+			return str + "}"
+		}
 	}
 
 	if len(expr.Inst.Args) == 0 {

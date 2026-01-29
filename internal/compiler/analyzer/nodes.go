@@ -57,6 +57,7 @@ func (a Analyzer) analyzeNodes(
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
 }
 
+//nolint:gocyclo // Analyzer node handling is a high-branch routine.
 func (a Analyzer) analyzeNode(
 	name string, // name of the node
 	node src.Node, // node to analyze
@@ -71,7 +72,8 @@ func (a Analyzer) analyzeNode(
 	if node.EntityRef.Pkg == "" && node.EntityRef.Name == parentComponentName {
 		return src.Node{}, foundInterface{}, &compiler.Error{
 			Message: fmt.Sprintf(
-				"Recursive reference to component %q is not allowed. If you meant the builtin component, explicitly import the builtin package and use builtin.%s.",
+				"Recursive reference to component %q is not allowed. "+
+					"If you meant the builtin component, explicitly import the builtin package and use builtin.%s.",
 				parentComponentName,
 				parentComponentName,
 			),
@@ -440,10 +442,8 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 		)
 	}
 
-	var (
-		remainingIdx   []int
-		remainingComps []src.Component
-	)
+	remainingIdx := make([]int, 0, len(entity.Component))
+	remainingComps := make([]src.Component, 0, len(entity.Component))
 	for i, component := range entity.Component {
 		// skip network-based compatibility check for di arguments
 		if !isDIArg {
@@ -490,7 +490,12 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 	if len(remainingComps) == 0 {
 		return src.Component{}, nil, &compiler.Error{
-			Message: fmt.Sprintf("no compatible overload found for node %s (total components: %d, remaining: %d)", nodeName, len(entity.Component), len(remainingComps)),
+			Message: fmt.Sprintf(
+				"no compatible overload found for node %s (total components: %d, remaining: %d)",
+				nodeName,
+				len(entity.Component),
+				len(remainingComps),
+			),
 			Meta:    entity.Meta(),
 		}
 	}
@@ -510,6 +515,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 // collectDITypeConstraintsFromParent collects type constraints for a DI argument
 // from the parent component's dependency declaration.
+//nolint:gocyclo // DI constraint derivation has multiple cases to check.
 func (a Analyzer) collectDITypeConstraintsFromParent(
 	nodeName string, // the unique name of the DI argument (e.g., "__di_reduce_reducer")
 	scope src.Scope,
@@ -557,11 +563,12 @@ func (a Analyzer) collectDITypeConstraintsFromParent(
 
 	// find the component version that matches the parent node
 	var parentComponent src.Component
-	if len(parentEntity.Component) == 1 {
+	switch {
+	case len(parentEntity.Component) == 1:
 		parentComponent = parentEntity.Component[0]
-	} else if parentNode.OverloadIndex != nil {
+	case parentNode.OverloadIndex != nil:
 		parentComponent = parentEntity.Component[*parentNode.OverloadIndex]
-	} else {
+	default:
 		return emptyConstraints()
 	}
 
@@ -810,6 +817,7 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 	return nodeRefs
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type nodeRefInNet struct {
 	isOutgoing bool
 	port       string
@@ -833,6 +841,7 @@ func emptyConstraints() nodeUsageConstraints {
 // deriveNodeConstraintsFromNetwork inspects the network and extracts type constraints for the given node.
 // It only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
 // It is needed only to select correct version of the overloaded component.
+//nolint:gocyclo // Node constraint derivation handles many network patterns.
 func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	nodeName string,
 	resolvedParentIface src.Interface,

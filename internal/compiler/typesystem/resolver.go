@@ -3,6 +3,7 @@ package typesystem
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
@@ -165,6 +166,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this:
 // for struct and union apply recursion for it's every field/element.
+//nolint:gocyclo // Resolver covers many expression shapes and recursive cases.
 func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
@@ -172,21 +174,29 @@ func (r Resolver) resolveExpr(
 	trace *Trace, // how did we get here
 ) (Expr, error) {
 	if err := r.validator.Validate(expr); err != nil {
-		return Expr{}, fmt.Errorf("%w: %v", ErrInvalidExpr, err)
+		return Expr{}, fmt.Errorf("%w: %w", ErrInvalidExpr, err)
 	}
 
 	if expr.Lit != nil {
 		switch expr.Lit.Type() {
+		case EmptyLitType:
+			return Expr{}, fmt.Errorf("%w: empty literal", ErrInvalidExpr)
 		case UnionLitType:
 			resolvedUnion := make(map[string]*Expr, len(expr.Lit.Union))
-			for unionElName, unionEl := range expr.Lit.Union {
+			keys := make([]string, 0, len(expr.Lit.Union))
+			for unionElName := range expr.Lit.Union {
+				keys = append(keys, unionElName)
+			}
+			sort.Strings(keys)
+			for _, unionElName := range keys {
+				unionEl := expr.Lit.Union[unionElName]
 				if unionEl == nil {
 					resolvedUnion[unionElName] = nil
 					continue
 				}
 				resolvedEl, err := r.resolveExpr(*unionEl, scope, frame, trace)
 				if err != nil {
-					return Expr{}, fmt.Errorf("%w: %v", ErrUnionUnresolvedEl, err)
+					return Expr{}, fmt.Errorf("%w: %w", ErrUnionUnresolvedEl, err)
 				}
 				resolvedUnion[unionElName] = &resolvedEl
 			}
@@ -208,7 +218,7 @@ func (r Resolver) resolveExpr(
 				)
 				if err != nil {
 					return Expr{}, fmt.Errorf(
-						"%w: %v: %v",
+						"%w: %s: %w",
 						ErrRecFieldUnresolved,
 						field,
 						err,
@@ -248,7 +258,7 @@ func (r Resolver) resolveExpr(
 
 	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
 	if err != nil {
-		return Expr{}, fmt.Errorf("%w: %v", ErrTerminator, err)
+		return Expr{}, fmt.Errorf("%w: %w", ErrTerminator, err)
 	} else if shouldReturn {
 		return expr, nil
 	}
@@ -258,7 +268,7 @@ func (r Resolver) resolveExpr(
 	for i, param := range def.Params { // resolve args and constrs and check their compatibility
 		resolvedArg, err := r.resolveExpr(expr.Inst.Args[i], scope, frame, &newTrace)
 		if err != nil {
-			return Expr{}, fmt.Errorf("%w: %v", ErrUnresolvedArg, err)
+			return Expr{}, fmt.Errorf("%w: %w", ErrUnresolvedArg, err)
 		}
 
 		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
@@ -272,7 +282,7 @@ func (r Resolver) resolveExpr(
 			&newTrace,
 		)
 		if err != nil {
-			return Expr{}, fmt.Errorf("%w: %v", ErrConstr, err)
+			return Expr{}, fmt.Errorf("%w: %w", ErrConstr, err)
 		}
 
 		params := TerminatorParams{
@@ -282,7 +292,7 @@ func (r Resolver) resolveExpr(
 		}
 
 		if err := r.checker.Check(resolvedArg, resolvedConstr, params); err != nil {
-			return Expr{}, fmt.Errorf(" %w: %v", ErrIncompatArg, err)
+			return Expr{}, fmt.Errorf("%w: %w", ErrIncompatArg, err)
 		}
 	}
 
@@ -311,7 +321,7 @@ func (Resolver) getDef(
 
 	def, scope, err := scope.GetType(ref)
 	if err != nil {
-		return Def{}, nil, fmt.Errorf("%w: %v", ErrScope, err)
+		return Def{}, nil, fmt.Errorf("%w: %w", ErrScope, err)
 	}
 
 	return def, scope, nil

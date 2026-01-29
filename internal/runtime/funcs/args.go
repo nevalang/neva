@@ -20,7 +20,6 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	// TODO concider replacing with stream
 	return func(ctx context.Context) {
 		if _, ok := sigIn.Receive(ctx); !ok {
 			return

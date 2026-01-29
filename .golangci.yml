@@ -1,37 +1,117 @@
 version: "2"
 run:
-  concurrency: 4
-  tests: false
+  concurrency: 4 # number of parallel linters
+  tests: true # include *_test.go files
+  timeout: 5m # overall lint timeout
 linters:
+  enable: # explicit linter allowlist
+    - asciicheck # Non-ASCII identifiers (e.g., func Καλημέρα()).
+    - bidichk # Bidi control chars in source (e.g., hidden RTL in comment).
+    - bodyclose # Ensure HTTP response bodies are closed (e.g., defer resp.Body.Close()).
+    - copyloopvar # Unnecessary loop var copy (e.g., tt := tt).
+    - dogsled # Too many blank identifiers (e.g., a, _, _, _, := f()).
+    - durationcheck # Suspicious duration math (e.g., time.Second * time.Minute).
+    - depguard # Guard import boundaries per package.
+    - errcheck # Missing error checks (e.g., _ = f()).
+    - errorlint # Error wrapping/formatting (e.g., fmt.Errorf("%w", err)).
+    - exhaustive # Non-exhaustive switches on enums (e.g., switch myEnum { ... }).
+    - gocritic # Bug-prone patterns (e.g., append assigned to new slice).
+    - gocyclo # High cyclomatic complexity (e.g., long if/else chains).
+    - gochecknoglobals # Disallow global variables.
+    - gochecknoinits # Disallow init() functions.
+    - gosec # Security issues (e.g., exec.Command on tainted input).
+    - govet # Vet analyzers (e.g., fieldalignment).
+    - ineffassign # Assigned then unused (e.g., x = 1; x = 2; use x).
+    - lll # Long lines (e.g., 200+ char string/struct tag).
+    - misspell # Misspellings (e.g., "concider").
+    - nakedret # Naked returns in large funcs (e.g., return without values).
+    - nilerr # Returning nil error after err != nil check.
+    - nilnesserr # err != nil but returning different nil error value.
+    - nilnil # Returning (nil, nil) for (val, err).
+    - nolintlint # Stale/unknown //nolint (e.g., //nolint:golint).
+    - prealloc # Suggest slice prealloc (e.g., make([]T, 0, n)).
+    - predeclared # Shadowing predeclared names (e.g., var len = 3).
+    - revive # Style/semantic rules (e.g., error strings lowercase).
+    - staticcheck # Advanced correctness checks (e.g., unused results).
+    - thelper # Missing t.Helper() in test helpers.
+    - tparallel # Tests missing t.Parallel() where appropriate.
+    - unconvert # Redundant conversions (e.g., int64(v) when v already int64).
+    - unparam # Unused params/always-nil results.
+    - unused # Unused symbols (e.g., unused func/var).
+    - wastedassign # Wasted assignments (e.g., x = 1 before immediate overwrite).
+    - whitespace # Superfluous blank lines (e.g., extra newline at end of block).
+  settings:
+    errcheck:
+      check-blank: true # flag ignored errors via _
+      check-type-assertions: true # flag unchecked type assertions
+    gocritic:
+      enabled-tags: # rule tags to enable
+        - diagnostic # bug-finding rules only
+    gocyclo:
+      min-complexity: 20 # max cyclomatic complexity before warning
+    govet:
+      enable: # additional vet checks
+        - fieldalignment # report struct padding inefficiencies
+    depguard:
+      rules:
+        runtime:
+          list-mode: strict
+          files:
+            - "**/internal/runtime/*.go"
+          allow:
+            - $gostd
+        runtime_funcs:
+          list-mode: strict
+          files:
+            - "**/internal/runtime/funcs/**/*.go"
+          allow:
+            - $gostd
+            - github.com/nevalang/neva/internal/runtime
+    lll:
+      line-length: 140 # max line length
+      tab-width: 1 # tab width for length calc
+    revive:
+      rules:
+        - name: blank-imports # disallow blank imports
+        - name: context-keys-type # avoid basic type context keys
+        - name: error-strings # error strings lowercase
+        - name: errorf # use %w when wrapping
+        - name: if-return # simplify if-return patterns
+        - name: increment-decrement # prefer i++/i--
+        - name: range # prefer range over for with index when possible
+        - name: superfluous-else # remove unnecessary else blocks
+        - name: time-naming # time duration naming conventions
+        - name: unnecessary-stmt # remove redundant statements
   exclusions:
-    generated: lax
-    presets:
-      - comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
+    generated: lax # ignore generated code heuristics
+    presets: # preset exclusion bundles
+      - comments # ignore comment style linters
+      - common-false-positives # ignore common FP checks
+      - legacy # ignore legacy deprecations
+      - std-error-handling # ignore strict std error handling rules
     rules:
       - linters:
-          - dupword
-          - err113
-          - funlen
-          - lll
-          - varnamelen
-        source: ^//go:generate
+          - dupword # duplicate words in go:generate
+          - err113 # generator errors may use fmt.Errorf
+          - funlen # generator directives can be long
+          - lll # generator directives can be long
+          - varnamelen # generator vars may be short
+        source: ^//go:generate # apply to go:generate lines
       - linters:
-          - dupword
-          - err113
-          - funlen
-          - lll
-          - varnamelen
-        path: _test\.go
+          - dupword # tests may repeat words
+          - err113 # tests may use inline errors
+          - funlen # tests may be long
+          - gochecknoglobals # tests may use package-level fixtures
+          - lll # tests may be long
+          - varnamelen # tests may use short vars
+        path: _test\.go # apply to test files
     paths:
       - third_party$
       - builtin$
       - examples$
 formatters:
   exclusions:
-    generated: lax
+    generated: lax # ignore generated code heuristics
     paths:
       - third_party$
       - builtin$

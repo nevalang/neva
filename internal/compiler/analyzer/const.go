@@ -12,6 +12,7 @@ var (
 	ErrConstSeveralValues = errors.New("constant cannot have several values at once")
 )
 
+//nolint:gocyclo // Const analysis handles many literal/type branches.
 func (a Analyzer) analyzeConst(
 	constant src.Const,
 	scope src.Scope,

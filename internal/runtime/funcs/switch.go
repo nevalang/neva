@@ -70,9 +70,10 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			}
 
 			if matchIdx != -1 {
+				caseIdx := runtime.Uint8Index(matchIdx)
 				if !caseOut.Send(
 					ctx,
-					uint8(matchIdx),
+					caseIdx,
 					tryToUnboxIfUnion(dataMsg),
 				) {
 					return

@@ -159,6 +159,7 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
 	entity src.Entity
 	insert map[string]src.Entity
@@ -173,11 +174,7 @@ func (d *Desugarer) desugarEntity(
 	}
 
 	if entity.Kind == src.ConstEntity {
-		desugaredConst, err := d.handleConst(entity.Const)
-		if err != nil {
-			return desugarEntityResult{}, fmt.Errorf("desugar const: %w", err)
-		}
-
+		desugaredConst := d.handleConst(entity.Const)
 		return desugarEntityResult{
 			entity: src.Entity{
 				IsPublic: entity.IsPublic,

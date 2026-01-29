@@ -23,10 +23,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 	if err := buildWASM(tmpGoProj, dst); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(tmpGoProj); err != nil {
-		return err
-	}
-	return nil
+	return os.RemoveAll(tmpGoProj)
 }
 
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
@@ -38,6 +35,7 @@ func buildWASM(src, dst string) error {
 	if err := os.Chdir(src); err != nil {
 		return err
 	}
+	// #nosec G204 -- command args are constructed internally from known values
 	cmd := exec.Command(
 		"go",
 		"build",
