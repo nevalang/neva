@@ -83,7 +83,7 @@ func (d *Desugarer) mergeImplicitFanIn(
 	kept := make([]src.Connection, 0, len(net))
 
 	for _, conn := range net {
-		if conn.ArrayBypass != nil || conn.Normal == nil {
+		if conn.Normal == nil || isArrayBypassConn(conn.Normal) {
 			kept = append(kept, conn)
 			continue
 		}
@@ -183,6 +183,12 @@ type desugarConnectionResult struct {
 	insert  []src.Connection
 }
 
+func isArrayBypassConn(conn *src.NormalConnection) bool {
+	_, _, ok := src.ArrayBypassPorts(conn)
+	return ok
+}
+
+
 func (d *Desugarer) desugarConnection(
 	iface src.Interface,
 	conn src.Connection,
@@ -192,14 +198,14 @@ func (d *Desugarer) desugarConnection(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, error) {
-	if conn.ArrayBypass != nil { // nothing to desugar, just mark ports as used
+	if sender, receiver, ok := src.ArrayBypassPorts(conn.Normal); ok { // nothing to desugar, just mark ports as used
 		nodePortsUsed.set(
-			conn.ArrayBypass.SenderOutport.Node,
-			conn.ArrayBypass.SenderOutport.Port,
+			sender.Node,
+			sender.Port,
 		)
 		nodePortsUsed.set(
-			conn.ArrayBypass.ReceiverInport.Node,
-			conn.ArrayBypass.ReceiverInport.Port,
+			receiver.Node,
+			receiver.Port,
 		)
 		return desugarConnectionResult{replace: &conn}, nil
 	}

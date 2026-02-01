@@ -44,8 +44,9 @@ func (n netNodeUsage) trackInportUsage(addr src.PortAddr) error {
 type portsUsage map[string]map[uint8]struct{}
 
 func (p portsUsage) trackSlotUsage(addr src.PortAddr) error {
+	isArrayBypass := src.IsArrayBypassIdx(addr.Idx)
 	if _, ok := p[addr.Port]; !ok {
-		if addr.Idx != nil {
+		if addr.Idx != nil && !isArrayBypass {
 			p[addr.Port] = map[uint8]struct{}{
 				*addr.Idx: {},
 			}
@@ -55,8 +56,16 @@ func (p portsUsage) trackSlotUsage(addr src.PortAddr) error {
 		return nil
 	}
 
+	if isArrayBypass {
+		return fmt.Errorf("port '%v' is used twice", addr)
+	}
+
 	if addr.Idx == nil {
 		return fmt.Errorf("port '%v' is used twice", addr)
+	}
+
+	if p[addr.Port] == nil {
+		return fmt.Errorf("port '%v' mixes array-bypass with indexed usage", addr)
 	}
 
 	if _, ok := p[addr.Port][*addr.Idx]; ok {

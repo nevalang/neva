@@ -63,8 +63,6 @@ func (a Analyzer) analyzeNetwork(
 }
 
 // analyzeConnections does two things:
-// 1. Analyzes every connection and terminates with non-nil error if any of them is invalid.
-// 2. Updates nodesUsage (we mutate it in-place instead of returning to avoid merging across recursive calls).
 func (a Analyzer) analyzeConnections(
 	net []src.Connection,
 	iface src.Interface,
@@ -97,6 +95,8 @@ func (a Analyzer) analyzeConnections(
 	return analyzedConnections, nil
 }
 
+// 1. Analyzes every connection and terminates with non-nil error if any of them is invalid.
+// 2. Updates nodesUsage (we mutate it in-place instead of returning to avoid merging across recursive calls).
 func (a Analyzer) analyzeConnection(
 	conn src.Connection,
 	iface src.Interface,
@@ -108,9 +108,11 @@ func (a Analyzer) analyzeConnection(
 	net []src.Connection,
 	unionActiveTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
-	if conn.ArrayBypass != nil {
+	if sender, receiver, ok := src.ArrayBypassPorts(conn.Normal); ok {
 		if err := a.analyzeArrayBypassConnection(
-			conn,
+			*sender,
+			*receiver,
+			conn.Meta,
 			scope,
 			iface,
 			nodes,
@@ -120,6 +122,13 @@ func (a Analyzer) analyzeConnection(
 			return src.Connection{}, err
 		}
 		return conn, nil
+	}
+
+	if bypassAddr := arrayBypassPortAddr(conn.Normal); bypassAddr != nil {
+		return src.Connection{}, &compiler.Error{
+			Message: "Array-bypass requires [*] on both sides of a single connection",
+			Meta:    &bypassAddr.Meta,
+		}
 	}
 
 	analyzedNormalConn, err := a.analyzeNormalConnection(
@@ -141,6 +150,23 @@ func (a Analyzer) analyzeConnection(
 		Normal: analyzedNormalConn,
 		Meta:   conn.Meta,
 	}, nil
+}
+
+func arrayBypassPortAddr(conn *src.NormalConnection) *src.PortAddr {
+	if conn == nil {
+		return nil
+	}
+	for _, sender := range conn.Senders {
+		if src.IsArrayBypassPortAddr(sender.PortAddr) {
+			return sender.PortAddr
+		}
+	}
+	for _, receiver := range conn.Receivers {
+		if receiver.PortAddr != nil && src.IsArrayBypassPortAddr(receiver.PortAddr) {
+			return receiver.PortAddr
+		}
+	}
+	return nil
 }
 
 func (a Analyzer) analyzeNormalConnection(
@@ -240,17 +266,17 @@ func (a Analyzer) patchSwitchSenders(
 }
 
 func (a Analyzer) analyzeArrayBypassConnection(
-	conn src.Connection,
+	senderPort src.PortAddr,
+	receiverPort src.PortAddr,
+	connMeta core.Meta,
 	scope src.Scope,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
 ) *compiler.Error {
-	arrBypassConn := conn.ArrayBypass
-
 	_, senderType, isArray, err := a.getPortSenderType(
-		arrBypassConn.SenderOutport,
+		senderPort,
 		scope,
 		iface,
 		nodes,
@@ -258,18 +284,18 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	)
 	if err != nil {
 		return compiler.Error{
-			Meta: &conn.Meta,
+			Meta: &connMeta,
 		}.Wrap(err)
 	}
 	if !isArray {
 		return &compiler.Error{
 			Message: "Non-array outport in array-bypass connection",
-			Meta:    &arrBypassConn.SenderOutport.Meta,
+			Meta:    &senderPort.Meta,
 		}
 	}
 
 	_, receiverType, isArray, err := a.getReceiverPortType(
-		arrBypassConn.ReceiverInport,
+		receiverPort,
 		iface,
 		nodes,
 		nodesIfaces,
@@ -277,13 +303,13 @@ func (a Analyzer) analyzeArrayBypassConnection(
 	)
 	if err != nil {
 		return compiler.Error{
-			Meta: &conn.Meta,
+			Meta: &connMeta,
 		}.Wrap(err)
 	}
 	if !isArray {
 		return &compiler.Error{
 			Message: "Non-array outport in array-bypass connection",
-			Meta:    &arrBypassConn.SenderOutport.Meta,
+			Meta:    &senderPort.Meta,
 		}
 	}
 
@@ -295,23 +321,23 @@ func (a Analyzer) analyzeArrayBypassConnection(
 		return &compiler.Error{
 			Message: fmt.Sprintf(
 				"Incompatible types: %v -> %v: %v",
-				arrBypassConn.SenderOutport, arrBypassConn.ReceiverInport, err.Error(),
+				senderPort, receiverPort, err.Error(),
 			),
-			Meta: &conn.Meta,
+			Meta: &connMeta,
 		}
 	}
 
-	if err := netNodesUsage(nodesUsage).trackOutportUsage(arrBypassConn.SenderOutport); err != nil {
+	if err := netNodesUsage(nodesUsage).trackOutportUsage(senderPort); err != nil {
 		return &compiler.Error{
 			Message: err.Error(),
-			Meta:    &conn.Meta,
+			Meta:    &connMeta,
 		}
 	}
 
-	if err := netNodesUsage(nodesUsage).trackInportUsage(arrBypassConn.ReceiverInport); err != nil {
+	if err := netNodesUsage(nodesUsage).trackInportUsage(receiverPort); err != nil {
 		return &compiler.Error{
 			Message: err.Error(),
-			Meta:    &conn.Meta,
+			Meta:    &connMeta,
 		}
 	}
 

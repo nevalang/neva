@@ -645,11 +645,11 @@ Such components can't refer to their ports by index (e.g., `data[i]`). To operat
 def FanInWrap([data]) (res) {
     FanIn
     ---
-    :data => fanIn
+    :data[*] -> fanIn[*]
 }
 ```
 
-The `=>` operator indicates an array-bypass connection, where both sender and receiver are always port-addresses without indexes. This connects all array-port slots, not just two specific slots. Array-bypass effectively creates multiple connections, one for each used slot.
+The `[*]` syntax indicates an array-bypass connection, where both sender and receiver are always array port-addresses with a wildcard slot. This connects all array-port slots, not just two specific slots. Array-bypass effectively creates multiple connections, one for each used slot. Index `255` is reserved for this wildcard and cannot be used explicitly.
 
 Let's examine a specific example to understand how it works:
 
@@ -665,7 +665,7 @@ def Main() () {
 }
 ```
 
-In this example, `:data => fanIn` in `FanInWrap` expands to:
+In this example, `:data[*] -> fanIn[*]` in `FanInWrap` expands to:
 
 ```neva
 :data[0] -> fanIn[0]

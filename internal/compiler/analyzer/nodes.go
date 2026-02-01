@@ -727,36 +727,19 @@ func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefI
 	var refs []nodeRefInNet
 
 	for _, conn := range connections {
-		if conn.ArrayBypass != nil {
-			if conn.ArrayBypass.SenderOutport.Node == nodeName {
-				refs = append(refs, nodeRefInNet{
-					isOutgoing: true,
-					port:       conn.ArrayBypass.SenderOutport.Port,
-					arrayIdx:   conn.ArrayBypass.SenderOutport.Idx,
-				})
-			}
-			if conn.ArrayBypass.ReceiverInport.Node == nodeName {
-				refs = append(refs, nodeRefInNet{
-					isOutgoing: false,
-					port:       conn.ArrayBypass.ReceiverInport.Port,
-					arrayIdx:   conn.ArrayBypass.ReceiverInport.Idx,
-				})
-			}
+		if conn.Normal == nil {
 			continue
 		}
-
-		if conn.Normal != nil {
-			for _, sender := range conn.Normal.Senders {
-				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-					refs = append(refs, nodeRefInNet{
-						isOutgoing: true,
-						port:       sender.PortAddr.Port,
-						arrayIdx:   sender.PortAddr.Idx,
-					})
-				}
+		for _, sender := range conn.Normal.Senders {
+			if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+				refs = append(refs, nodeRefInNet{
+					isOutgoing: true,
+					port:       sender.PortAddr.Port,
+					arrayIdx:   sender.PortAddr.Idx,
+				})
 			}
-			refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
 		}
+		refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
 	}
 
 	return refs

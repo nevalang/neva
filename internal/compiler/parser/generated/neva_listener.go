@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -207,9 +207,6 @@ type nevaListener interface {
 
 	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
 	EnterMultipleSenderSide(c *MultipleSenderSideContext)
-
-	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
-	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
 
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
@@ -459,9 +456,6 @@ type nevaListener interface {
 
 	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
 	ExitMultipleSenderSide(c *MultipleSenderSideContext)
-
-	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
-	ExitArrBypassConnDef(c *ArrBypassConnDefContext)
 
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)

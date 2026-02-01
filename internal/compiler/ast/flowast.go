@@ -283,9 +283,8 @@ type Port struct {
 }
 
 type Connection struct {
-	Normal      *NormalConnection      `json:"normal,omitempty"`
-	ArrayBypass *ArrayBypassConnection `json:"arrayBypass,omitempty"`
-	Meta        core.Meta              `json:"meta,omitempty"`
+	Normal *NormalConnection `json:"normal,omitempty"`
+	Meta   core.Meta         `json:"meta,omitempty"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
@@ -293,11 +292,6 @@ type NormalConnection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
 	Meta      core.Meta            `json:"meta,omitempty"`
-}
-
-type ArrayBypassConnection struct {
-	SenderOutport  PortAddr `json:"senderOutport,omitempty"`
-	ReceiverInport PortAddr `json:"receiverOutport,omitempty"`
 }
 
 type ConnectionReceiver struct {
@@ -342,18 +336,60 @@ type PortAddr struct {
 	Meta core.Meta `json:"meta,omitempty"`
 }
 
+const ArrayBypassIdx uint8 = 255
+
+func IsArrayBypassIdx(idx *uint8) bool {
+	return idx != nil && *idx == ArrayBypassIdx
+}
+
+func IsArrayBypassPortAddr(addr *PortAddr) bool {
+	return addr != nil && IsArrayBypassIdx(addr.Idx)
+}
+
+func ArrayBypassPorts(conn *NormalConnection) (*PortAddr, *PortAddr, bool) {
+	if conn == nil || len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	if sender.PortAddr == nil || sender.Const != nil || len(sender.StructSelector) != 0 {
+		return nil, nil, false
+	}
+	if !IsArrayBypassIdx(sender.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	receiver := conn.Receivers[0]
+	if receiver.PortAddr == nil || receiver.ChainedConnection != nil || receiver.DeferredConnection != nil {
+		return nil, nil, false
+	}
+	if !IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
+}
+
 func (p PortAddr) String() string {
 	hasNode := p.Node != ""
 	hasPort := p.Port != ""
 	hasIdx := p.Idx != nil
+	idxString := ""
+	if hasIdx {
+		if IsArrayBypassIdx(p.Idx) {
+			idxString = "*"
+		} else {
+			idxString = fmt.Sprintf("%v", *p.Idx)
+		}
+	}
 
 	switch {
 	case hasNode && hasPort && hasIdx:
-		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, *p.Idx)
+		return fmt.Sprintf("%v:%v[%v]", p.Node, p.Port, idxString)
 	case hasNode && hasPort:
 		return fmt.Sprintf("%v:%v", p.Node, p.Port)
 	case hasNode && hasIdx:
-		return fmt.Sprintf("%v[%v]", p.Node, *p.Idx)
+		return fmt.Sprintf("%v[%v]", p.Node, idxString)
 	case hasNode:
 		return p.Node
 	}

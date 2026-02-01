@@ -19,9 +19,10 @@ func (g Generator) processNetwork(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		if conn.ArrayBypass != nil {
+		if sender, receiver, ok := src.ArrayBypassPorts(conn.Normal); ok {
 			g.processArrayBypassConnection(
-				conn,
+				*sender,
+				*receiver,
 				nodesPortsUsage,
 				nodeCtx,
 				result,
@@ -46,7 +47,8 @@ func (g Generator) processNetwork(
 }
 
 func (Generator) processArrayBypassConnection(
-	conn src.Connection,
+	senderPort src.PortAddr,
+	receiverPort src.PortAddr,
 	nodesPortsUsage map[string]portsUsage,
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -56,8 +58,8 @@ func (Generator) processArrayBypassConnection(
 	// based on that, we can set receiver's inport slots
 	// equal to slots of our own inport
 
-	arrBypassSender := conn.ArrayBypass.SenderOutport
-	arrBypassReceiver := conn.ArrayBypass.ReceiverInport
+	arrBypassSender := senderPort
+	arrBypassReceiver := receiverPort
 
 	if _, ok := nodesPortsUsage[arrBypassReceiver.Node]; !ok {
 		nodesPortsUsage[arrBypassReceiver.Node] = portsUsage{

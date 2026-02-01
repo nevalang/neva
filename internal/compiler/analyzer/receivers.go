@@ -147,6 +147,13 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}.Wrap(err)
 	}
 
+	if src.IsArrayBypassIdx(portAddr.Idx) {
+		return &compiler.Error{
+			Message: "Array-bypass [*] must be used on both sides of a single connection",
+			Meta:    &portAddr.Meta,
+		}
+	}
+
 	if !isArrPort && portAddr.Idx != nil {
 		return &compiler.Error{
 			Message: "Index for non-array port",

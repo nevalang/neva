@@ -50,7 +50,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
 		def C1() () {
-			foo[0] -> bar[255]
+			foo[0] -> bar[1]
 		}
 	`)
 
@@ -67,10 +67,43 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, "", conn.Senders[0].PortAddr.Port)
 	require.Equal(t, compiler.Pointer(uint8(0)), conn.Senders[0].PortAddr.Idx)
 
-	// ->bar[255]
+	// ->bar[1]
 	require.Equal(t, "bar", conn.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(255)), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(uint8(1)), conn.Receivers[0].PortAddr.Idx)
+}
+
+func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			foo[*] -> bar[*]
+		}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.True(t, err == nil)
+
+	net := got.Entities["C1"].Component[0].Net
+	conn := net[0].Normal
+
+	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Receivers[0].PortAddr.Idx)
+}
+
+func TestParser_ParseFile_ReservedArrayBypassIdx(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			foo[255] -> bar[0]
+		}
+	`)
+
+	p := New()
+
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "Index 255 is reserved")
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {

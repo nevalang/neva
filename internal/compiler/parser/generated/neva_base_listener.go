@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -421,12 +421,6 @@ func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContex
 
 // ExitMultipleSenderSide is called when production multipleSenderSide is exited.
 func (s *BasenevaListener) ExitMultipleSenderSide(ctx *MultipleSenderSideContext) {}
-
-// EnterArrBypassConnDef is called when production arrBypassConnDef is entered.
-func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
-
-// ExitArrBypassConnDef is called when production arrBypassConnDef is exited.
-func (s *BasenevaListener) ExitArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
 
 // EnterSingleSenderSide is called when production singleSenderSide is entered.
 func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {}

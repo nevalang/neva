@@ -1,0 +1,5 @@
+def Wrap([data]) (res) {
+    fanIn FanIn
+    ---
+    :data[*] -> fanIn:data[*]
+}
