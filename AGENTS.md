@@ -5,7 +5,7 @@ Follow these instructions.
 ## 1. 🤖 Operating Protocol
 
 1. Use `context7` MCP server (when available) to fetch libraries API documentation.
-2. If specialized tools (skills/MCPs) are unavailable, use `curl` to fetch required external context (e.g., GitHub issues/PR descriptions/comments).
+2. For GitHub context, try `gh` (GitHub CLI) first; if unavailable or insufficient, fall back to `curl` (e.g., issues/PR descriptions/comments).
 3. Run `golangci-lint` and `go test`. Fix warnings.
 4. If uncertainty > 10%, ask user.
 5. Update this file if changes to process, architecture, or rules.
