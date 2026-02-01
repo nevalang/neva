@@ -1,6 +1,4 @@
-import {
-    lists
-}
+import { @:lists }
 
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.

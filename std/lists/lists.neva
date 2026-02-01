@@ -1,5 +1,13 @@
 #extern(stream_to_list)
 pub def FromStream<T>(data stream<T>) (res list<T>)
 
+// FromArray iterates over all array-inport's slots in order and returns a list.
+#extern(array_port_to_list)
+pub def FromArray<T>([port] T) (res list<T>)
+
+// Push creates new list with appended element.
+#extern(list_push)
+pub def Push<T>(lst list<T>, data T) (res list<T>)
+
 #extern(list_at)
 pub def At<T>(data list<T>, idx int) (res T, err error)

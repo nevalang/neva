@@ -5,13 +5,14 @@ Follow these instructions.
 ## 1. 🤖 Operating Protocol
 
 1. Use `context7` MCP server (when available) to fetch libraries API documentation.
-2. Run `golangci-lint` and `go test`. Fix warnings.
-3. If uncertainty > 10%, ask user.
-4. Update this file if changes to process, architecture, or rules.
-5. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
-6. Plan -> Review -> Execute -> Review.
-7. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
-8. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
+2. If specialized tools (skills/MCPs) are unavailable, use `curl` to fetch required external context (e.g., GitHub issues/PR descriptions/comments).
+3. Run `golangci-lint` and `go test`. Fix warnings.
+4. If uncertainty > 10%, ask user.
+5. Update this file if changes to process, architecture, or rules.
+6. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
+7. Plan -> Review -> Execute -> Review.
+8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
+9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -94,6 +95,7 @@ Follow these instructions.
 - **Common patterns**: Stream/list conversions use `streams.FromList<T>` and `lists.FromStream<T>`; `StreamToList`/`ListToStream` were removed.
 - **Architecture insights**: Stream helpers live under `std/streams` (map/filter/reduce in dedicated files; `ForEach` in `std/streams/for_each.neva`).
 - **Gotchas**: `std/time` only provides delays/durations; there is no wall-clock date/time source, so pass timestamps/durations into components that need "today."
+- **Common patterns**: `lists.FromArray<T>` builds a list by chaining `streams.FromArray<T>` into `lists.FromStream<T>`.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
