@@ -1,6 +1,6 @@
 // RGBA represents a color in the RGBA 64-bit color space.
 pub type RGBA struct {
-	r int
+        r int
 	g int
 	b int
 	a int

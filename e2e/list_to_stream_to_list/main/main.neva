@@ -2,21 +2,18 @@ import {
     fmt
     lists
     runtime
+    streams
 }
 
-const f int = 69
-const l list<int> = [320, 420, 100, -100, 0, 5]
+const lst list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
-    push lists.Push<int>
+    to_stream streams.FromList<int>
+    to_list lists.FromStream<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
-	---
-	:start -> [
-        $l -> push:lst,
-        $f -> push:data
-	]
-    push -> println:data
+    ---
+    :start -> $lst -> to_stream -> to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }

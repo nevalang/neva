@@ -21,7 +21,7 @@ def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 }
 
 def NewStream(p image.Pixel) (s stream<image.Pixel>) {
-	sb Struct<stream<image.Pixel>>
+        sb Struct<stream<image.Pixel>>
 	---
 	:p -> [
 		sb:data,

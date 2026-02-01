@@ -1,10 +1,12 @@
+import { @:lists }
+
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
 // Note that the resulting stream will have its elements re-indexed to be continuous.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
     split Split<T>{predicate IPredicate<T>}
-    s2l StreamToList
-    l2s ListToStream
+    s2l lists.FromStream<T>
+    l2s FromList<T>
     ---
     :data -> split
     split:then -> s2l -> l2s -> :res
