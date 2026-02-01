@@ -13,14 +13,6 @@ pub def FromArray<T>([port] T) (data stream<T>)
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
 
-// ListToStream is kept for backward compatibility with the previous API.
-pub def ListToStream<T>(data list<T>) (res stream<T>) {
-    from_list FromList<T>
-    ---
-    :data -> from_list:data
-    from_list -> :res
-}
-
 // Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
 // It emits stream only after all 3 inports receive messages.
@@ -106,14 +98,6 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 }
 
 pub interface IPredicate<T>(T) (bool)
-
-// StreamToList is kept for backward compatibility with the previous API.
-pub def StreamToList<T>(data stream<T>) (res list<T>) {
-    to_list lists.FromStream<T>
-    ---
-    :data -> to_list:data
-    to_list -> :res
-}
 
 // --- Iteration ---
 
