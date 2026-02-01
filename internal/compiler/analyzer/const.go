@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 var (
-	ErrConstSeveralValues = errors.New("Constant cannot have several values at once")
+	ErrConstSeveralValues = errors.New("constant cannot have several values at once")
 )
 
+//nolint:gocyclo // Const analysis handles many literal/type branches.
 func (a Analyzer) analyzeConst(
 	constant src.Const,
 	scope src.Scope,
@@ -40,13 +41,6 @@ func (a Analyzer) analyzeConst(
 			Message: "Cannot resolve constant type",
 			Meta:    &constant.Meta,
 		}.Wrap(err)
-	}
-
-	if resolvedType.Lit != nil && resolvedType.Lit.Union != nil {
-		return src.Const{}, &compiler.Error{
-			Message: "Constant cannot have type union",
-			Meta:    &constant.Meta,
-		}
 	}
 
 	var typeExprStrRepr string

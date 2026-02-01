@@ -9,9 +9,9 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type Parser struct{}
@@ -66,6 +66,9 @@ func (p Parser) ParseFiles(
 	for fileName, fileBytes := range files {
 		parsedFile, err := p.parseFile(modRef, pkgName, fileName, fileBytes)
 		if err != nil {
+			if err.Meta == nil {
+				err.Meta = &core.Meta{}
+			}
 			err.Meta.Location = core.Location{
 				ModRef:   modRef,
 				Package:  pkgName,
@@ -124,16 +127,16 @@ func (p Parser) parseFile(
 func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
 	defer func() {
 		if e := recover(); e != nil {
-			if _, ok := e.(*compiler.Error); !ok {
-				err = &compiler.Error{
-					Message: fmt.Sprintf(
-						"%v: %v",
-						e,
-						string(debug.Stack()),
-					),
-				}
-			} else {
-				err = e.(*compiler.Error)
+			if compilerErr, ok := e.(*compiler.Error); ok {
+				err = compilerErr
+				return
+			}
+			err = &compiler.Error{
+				Message: fmt.Sprintf(
+					"%v: %v",
+					e,
+					string(debug.Stack()),
+				),
 			}
 		}
 	}()

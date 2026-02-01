@@ -2,10 +2,11 @@ package parser
 
 import (
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
+//nolint:govet // fieldalignment: listener fields grouped.
 type treeShapeListener struct {
 	*generated.BasenevaListener
 	loc   core.Location
@@ -18,10 +19,7 @@ func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
 }
 
 func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
-	imp, alias, err := s.parseImport(actx)
-	if err != nil {
-		panic(err)
-	}
+	imp, alias := s.parseImport(actx)
 	s.state.Imports[alias] = imp
 }
 
@@ -33,7 +31,7 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 		panic(err)
 	}
 
-	parsedEntity.IsPublic = actx.PUB_KW() != nil
+	parsedEntity.IsPublic = actx.PUB() != nil
 	name := typeDef.IDENTIFIER().GetText()
 	s.state.Entities[name] = parsedEntity
 }
@@ -46,7 +44,7 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 		panic(err)
 	}
 
-	parsedEntity.IsPublic = actx.PUB_KW() != nil
+	parsedEntity.IsPublic = actx.PUB() != nil
 	name := constDef.IDENTIFIER().GetText()
 	s.state.Entities[name] = parsedEntity
 }
@@ -58,7 +56,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	}
 	name := actx.InterfaceDef().IDENTIFIER().GetText()
 	s.state.Entities[name] = src.Entity{
-		IsPublic:  actx.PUB_KW() != nil,
+		IsPublic:  actx.PUB() != nil,
 		Kind:      src.InterfaceEntity,
 		Interface: v,
 	}
@@ -82,7 +80,7 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	if !ok {
 		s.state.Entities[name] = src.Entity{
 			Kind:      src.ComponentEntity,
-			IsPublic:  actx.PUB_KW() != nil, // in case of overloaded component, first version sets visibility
+			IsPublic:  actx.PUB() != nil, // in case of overloaded component, first version sets visibility
 			Component: []src.Component{parsedComponent},
 		}
 		return

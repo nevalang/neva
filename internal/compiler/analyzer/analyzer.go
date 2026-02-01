@@ -9,9 +9,9 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
-	ts "github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 type Analyzer struct {
@@ -163,7 +163,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 			Filename: result.FileName,
 		})
 
-		analyzedEntity, err := a.analyzeEntity(result.Entity, relocatedScope)
+		analyzedEntity, err := a.analyzeEntity(result.EntityName, result.Entity, relocatedScope)
 		if err != nil {
 			return nil, compiler.Error{
 				Meta: result.Entity.Meta(),
@@ -176,7 +176,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	return analyzedFiles, nil
 }
 
-func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
+func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
 	resolvedEntity := src.Entity{
 		IsPublic: entity.IsPublic,
 		Kind:     entity.Kind,
@@ -225,7 +225,7 @@ func (a Analyzer) analyzeEntity(entity src.Entity, scope src.Scope) (src.Entity,
 	case src.ComponentEntity:
 		analyzedVersions := make([]src.Component, 0, len(entity.Component))
 		for _, component := range entity.Component {
-			analyzedComponent, err := a.analyzeComponent(component, scope)
+			analyzedComponent, err := a.analyzeComponent(entityName, component, scope)
 			if err != nil {
 				return src.Entity{}, compiler.Error{
 					Meta: &component.Meta,

@@ -80,8 +80,7 @@ func TestLoadDotenvFile(t *testing.T) {
 		t.Fatalf("WriteString: %v", err)
 	}
 
-	values, err := loadDotenvFile(file.Name())
-	if err != nil {
+	if err := loadDotenvFile(file.Name(), false); err != nil {
 		t.Fatalf("loadDotenvFile: %v", err)
 	}
 
@@ -92,8 +91,27 @@ func TestLoadDotenvFile(t *testing.T) {
 	if got := os.Getenv("KEEP"); got != "existing" {
 		t.Fatalf("expected existing KEEP env untouched, got %q", got)
 	}
+}
 
-	if values["KEEP"] != "fromfile" || values["NEW"] != "value" {
-		t.Fatalf("unexpected parsed values: %v", values)
+func TestLoadDotenvFileOverride(t *testing.T) {
+	t.Setenv("KEEP", "existing")
+
+	file, err := os.CreateTemp(t.TempDir(), "dotenv-*.env")
+	if err != nil {
+		t.Fatalf("CreateTemp: %v", err)
+	}
+	defer file.Close()
+
+	data := "KEEP=fromfile\n"
+	if _, err := file.WriteString(data); err != nil {
+		t.Fatalf("WriteString: %v", err)
+	}
+
+	if err := loadDotenvFile(file.Name(), true); err != nil {
+		t.Fatalf("loadDotenvFile: %v", err)
+	}
+
+	if got := os.Getenv("KEEP"); got != "fromfile" {
+		t.Fatalf("expected KEEP overridden to fromfile, got %q", got)
 	}
 }

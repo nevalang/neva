@@ -1,21 +1,21 @@
 package test
 
 import (
-	"os/exec"
-	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	cmd := exec.Command("neva", "run", "main")
-	cmd.Stdin = strings.NewReader("yo\n")
-	out, _ := cmd.CombinedOutput()
-	require.Equal(t, 1, cmd.ProcessState.ExitCode())
+	// Note: previous test used stdin "yo\n" but asserted compiler error?
+	// The error "port 'in:start' is used twice" is a compiler error.
+	// Compiler doesn't read stdin. The stdin was likely ignored or copy-pasted.
+	// I will use RunExpectingError.
+	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
 	require.Contains(
 		t,
-		string(out),
+		stderr,
 		"main/main.neva:12:1: port 'in:start' is used twice\n",
 	)
 }

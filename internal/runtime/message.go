@@ -322,8 +322,8 @@ func newStructMsg(fields []StructField) StructMsg {
 
 // structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
 type StructField struct {
-	name  string
 	value Msg
+	name  string
 }
 
 // newstructfield constructs a structfield with provided name and value.
@@ -338,8 +338,8 @@ func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) 
 // --- UNION ---
 type UnionMsg struct {
 	internalMsg
-	tag  string
 	data Msg
+	tag  string
 }
 
 func (msg UnionMsg) Union() UnionMsg {
@@ -356,9 +356,21 @@ func (msg UnionMsg) Data() Msg {
 
 func (msg UnionMsg) String() string {
 	if msg.data == nil {
-		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
+		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
 	}
-	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
+	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+}
+
+// Uint8Index validates idx and returns it as uint8 or panics.
+func Uint8Index(idx int) uint8 {
+	if idx < 0 {
+		panic(fmt.Sprintf("runtime: negative index %d", idx))
+	}
+	if idx > int(^uint8(0)) {
+		panic(fmt.Sprintf("runtime: index %d overflows uint8", idx))
+	}
+	// #nosec G115 -- bounds checked above
+	return uint8(idx)
 }
 
 // Equal implements strict equality for UnionMsg messages.
@@ -399,21 +411,44 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 
 // --- OPERATIONS ---
 
+// Match compares two messages and return true if they matches and false otherwise.
+// Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
+	// at the moment we only match unions
+	// maybe in the future we'll add support for more types e.g. structs
 	msgUnion, ok := msg.(UnionMsg)
 	if !ok {
 		return msg.Equal(pattern)
 	}
 
+	// both msg and pattern must be unions to perform pattern matching
+	// if at least one of them is not, strict equality will be applied instead
 	patternUnion, ok := pattern.(UnionMsg)
 	if !ok {
 		return msg.Equal(pattern)
 	}
 
-	if msgUnion.data != nil && patternUnion.data == nil ||
-		msgUnion.data == nil && patternUnion.data != nil {
-		return msgUnion.tag == patternUnion.tag
+	// if tags are not equal data does not matter, there's no match
+	if msgUnion.tag != patternUnion.tag {
+		return false
 	}
 
+	// if pattern doesn't have data we match by tag
+	// and by this time we know tags are equal
+	if patternUnion.data == nil {
+		return true
+	}
+
+	// if we here we know that pattern has data
+	// so if msg doesn't, they don't match
+	if msgUnion.data == nil {
+		return false
+	}
+
+	// by this time we know
+	// both msg and pattern are union messages
+	// they both have the same tags and some data inside
+	// so we apply strict equality to the data they wrap
+	// maybe in the future we'll consider recursive matching, we'll see
 	return msgUnion.data.Equal(patternUnion.data)
 }

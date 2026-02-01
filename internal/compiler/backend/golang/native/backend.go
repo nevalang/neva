@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
@@ -14,14 +15,17 @@ type Backend struct {
 	golang golang.Backend
 }
 
-func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
-	tmpGoModuleDir := output + "/tmp"
-
-	if err := b.golang.Emit(tmpGoModuleDir, prog, trace); err != nil {
-		return fmt.Errorf("emit: %w", err)
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
+	tmpGoModuleDir, err := os.MkdirTemp(dst, "neva_build_")
+	if err != nil {
+		return fmt.Errorf("create temporary build directory: %w", err)
 	}
 
-	if err := b.buildExecutable(tmpGoModuleDir, output); err != nil {
+	if err := b.golang.EmitExecutable(tmpGoModuleDir, prog, trace); err != nil {
+		return fmt.Errorf("emit executable: %w", err)
+	}
+
+	if err := b.buildExecutable(tmpGoModuleDir, dst); err != nil {
 		return fmt.Errorf("build executable: %w", err)
 	}
 
@@ -32,39 +36,26 @@ func (b Backend) Emit(output string, prog *ir.Program, trace bool) error {
 	return nil
 }
 
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	return fmt.Errorf("library mode not implemented for native backend")
+}
+
 func (b Backend) buildExecutable(gomodule, output string) error {
-	// remember current working directory to change back to it later
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get working directory: %w", err)
-	}
-
-	// we need to be inside go module to run `go build` command
-	if err := os.Chdir(gomodule); err != nil {
-		return fmt.Errorf("change directory to gomodule: %w", err)
-	}
-
-	// change back to original wd or neva programs
-	// that interact with fs via relative paths will fail
-	defer func() {
-		if err := os.Chdir(wd); err != nil {
-			panic(err)
-		}
-	}()
-
 	fileName := "output"
 	if os.Getenv("GOOS") == "windows" { // either we're on windows or we're cross-compiling
 		fileName += ".exe"
 	}
 
+	// #nosec G204 -- command args are constructed internally from known values
 	cmd := exec.Command(
 		"go",
 		"build",
 		"-ldflags", "-s -w", // strip debug information
 		"-o",
 		filepath.Join(output, fileName),
-		gomodule,
+		".",
 	)
+	cmd.Dir = gomodule
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

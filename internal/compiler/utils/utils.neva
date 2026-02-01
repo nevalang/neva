@@ -1,0 +1,78 @@
+import {
+    strings
+    lists
+    runtime
+}
+
+pub type EntityRef struct {
+    pkg string
+    name string
+    metaText string
+}
+
+pub def ParseEntityRef(ref string) (res EntityRef) {
+    split strings.Split
+    len Len
+    eq Eq<int>
+    cond Cond<list<string>>
+    
+    lock_empty_pkg Lock<string>
+    
+    // Path 2 parts
+    at_pkg_2 MustAt
+    at_name_2 MustAt
+    
+    // Path 1 part
+    at_name_1 MustAt
+    fan_in_pkg FanIn<string>
+    fan_in_name FanIn<string>
+    builder Struct<EntityRef>
+    
+    ---
+    
+    :ref -> [
+        split:data, 
+        builder:metaText,
+        '.' -> split:delim,
+        2 -> eq:right,
+        0 -> at_pkg_2:idx,
+        1 -> at_name_2:idx,
+        '' -> lock_empty_pkg:data,
+        0 -> at_name_1:idx
+    ]
+    
+    split:res -> [len:data, cond:data]
+    
+    len -> eq:left
+    
+    eq -> cond:if
+    
+    // If 2 parts
+    cond:then -> [at_pkg_2:data, at_name_2:data]
+    
+    at_pkg_2:res -> fan_in_pkg:data[0]
+    at_name_2:res -> fan_in_name:data[0]
+    
+    // If 1 part
+    cond:else -> [lock_empty_pkg:sig, at_name_1:data]
+    
+    lock_empty_pkg:data -> fan_in_pkg:data[1]
+    
+    at_name_1:res -> fan_in_name:data[1]
+    
+    fan_in_pkg -> builder:pkg
+    fan_in_name -> builder:name
+    
+    builder -> :res
+}
+
+def MustAt(data list<string>, idx int) (res string) {
+    at lists.At<string>
+    panic runtime.Panic
+    ---
+    :data -> at:data
+    :idx -> at:idx
+    at:err -> panic
+    at:res -> :res
+}
+    

@@ -91,11 +91,9 @@ Follow these instructions.
 
 ### Session Notes (2026-02-01)
 
-- **Common patterns**: Stream/list conversions now prefer `streams.FromList<T>` and `lists.FromStream<T>`; `streams.ListToStream` and `streams.StreamToList` remain as compatibility wrappers.
-- **Architecture insights**: Stream helpers (map/filter/reduce/foreach/zip/range) moved out of `std/builtin` into `std/streams`, with builtins trimmed accordingly.
+- **Common patterns**: Stream/list conversions use `streams.FromList<T>` and `lists.FromStream<T>`; `StreamToList`/`ListToStream` were removed.
+- **Architecture insights**: Stream helpers live under `std/streams` (map/filter/reduce in dedicated files; `ForEach` in `std/streams/for_each.neva`).
 - **Gotchas**: `std/time` only provides delays/durations; there is no wall-clock date/time source, so pass timestamps/durations into components that need "today."
-- **Gotchas**: `codex/fix-issue-with-error-handling-9vro61` deletes `AGENTS.md`; restore before applying session updates.
-
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

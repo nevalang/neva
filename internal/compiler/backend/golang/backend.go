@@ -5,25 +5,24 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/nevalang/neva/internal"
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
-)
-
-type Mode string
-
-const (
-	ModeExecutable Mode = "executable"
-	ModePackage    Mode = "pkg"
+	"github.com/nevalang/neva/pkg/golang"
+	pkgos "github.com/nevalang/neva/pkg/os"
 )
 
 type Backend struct {
-	mode Mode
+	externalRuntimePath string
+	debugValidation     bool
 }
 
 var (
@@ -31,7 +30,7 @@ var (
 	ErrUnknownMsgType = errors.New("unknown msg type")
 )
 
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
 	// graph must not contain intermediate connections to be supported by runtime
 	prog.Connections = ir.GraphReduction(prog.Connections)
 
@@ -63,6 +62,7 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		FuncCalls:       funcCalls,
 		Trace:           trace,
 		TraceComment:    prog.Comment,
+		DebugValidation: b.debugValidation,
 	}
 
 	var buf bytes.Buffer
@@ -70,20 +70,219 @@ func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
 		return errors.Join(ErrExecTmpl, err)
 	}
 
-	files := map[string][]byte{}
-	switch b.mode {
-	case ModeExecutable, "":
-		files["main.go"] = buf.Bytes()
-		files["go.mod"] = []byte("module github.com/nevalang/neva/internal\n\ngo 1.23") //nolint:lll // must match imports in runtime package
-	case ModePackage:
-		panic("not implemented")
+	files := map[string][]byte{
+		"main.go": buf.Bytes(),
+		"go.mod":  []byte("module github.com/nevalang/neva/internal\n\ngo 1.25"),
 	}
 
-	if err := b.insertRuntimeFiles(files); err != nil {
+	if err := b.insertRuntimeFiles(files, nil); err != nil {
+		return err
+	}
+	if b.debugValidation {
+		files["runtime/debug_validation.go"] = []byte(debugValidationGoTemplate)
+	}
+
+	return pkgos.SaveFilesToDir(dst, files)
+}
+
+//nolint:gocyclo // Export emission spans multiple steps; refactor later.
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	exportList := make([]exportTemplateData, 0, len(exports))
+
+	for _, export := range exports {
+		prog := export.Program
+		prog.Connections = ir.GraphReduction(prog.Connections)
+		addrToChanVar, chanVarNames := b.buildPortChanMap(prog.Connections)
+		funcCalls, err := b.buildFuncCalls(prog.Funcs, addrToChanVar)
+		if err != nil {
+			return err
+		}
+
+		// Map fields
+		inFields := b.mapFields(export.Component.IO.In)
+		outFields := b.mapFields(export.Component.IO.Out)
+
+		// Look up start/stop chans
+		var inPortName string
+		for name := range export.Component.IO.In {
+			inPortName = name
+			break
+		}
+		var outPortName string
+		for name := range export.Component.IO.Out {
+			outPortName = name
+			break
+		}
+
+		startAddr := ir.PortAddr{Path: "in", Port: inPortName}
+		stopAddr := ir.PortAddr{Path: "out", Port: outPortName}
+		startChan, ok := addrToChanVar[startAddr]
+		if !ok {
+			return fmt.Errorf("start port chan not found for %s (port: %s)", export.Name, inPortName)
+		}
+		stopChan, ok := addrToChanVar[stopAddr]
+		if !ok {
+			return fmt.Errorf("stop port chan not found for %s (port: %s)", export.Name, outPortName)
+		}
+
+		exportList = append(exportList, exportTemplateData{
+			Name:          export.Name,
+			InFields:      inFields,
+			OutFields:     outFields,
+			ChanVarNames:  chanVarNames,
+			FuncCalls:     funcCalls,
+			Trace:         trace,
+			TraceComment:  prog.Comment,
+			StartPortChan: startChan,
+			StopPortChan:  stopChan,
+		})
+	}
+
+	funcmap := template.FuncMap{
+		"getPortChanNameByAddr": func(path string, port string) string {
+			return "ERROR_SHOULD_NOT_BE_CALLED"
+		},
+		// getMsgFromGo generates Go code that converts a raw Go value (passed from outside)
+		// into a runtime.Msg which is understandable by Neva runtime.
+		// For example, if we have a Go int variable "x", we want to generate "runtime.NewIntMsg(x)".
+		// If the type is not a primitive, we assume it's already a runtime.Msg (e.g. StructMsg, ListMsg)
+		// and perform a type assertion.
+		"getMsgFromGo": func(prefix, field, typeName string) string {
+			switch typeName {
+			case "int":
+				return fmt.Sprintf("runtime.NewIntMsg(int64(%s.%s))", prefix, field)
+			case "string":
+				return fmt.Sprintf("runtime.NewStringMsg(%s.%s)", prefix, field)
+			case "bool":
+				return fmt.Sprintf("runtime.NewBoolMsg(%s.%s)", prefix, field)
+			case "float64":
+				return fmt.Sprintf("runtime.NewFloatMsg(%s.%s)", prefix, field)
+			default:
+				return fmt.Sprintf("%s.%s.(runtime.Msg)", prefix, field)
+			}
+		},
+		// getGoFromMsg generates Go code that converts a runtime.Msg (received from Neva runtime)
+		// back into a raw Go value.
+		// For example, if we have a Neva IntMsg, we want to extract the underlying int64.
+		// If the type is not a primitive (e.g. struct, list), we return the runtime.Msg as is,
+		// allowing the caller to handle complex structures.
+		"getGoFromMsg": func(msgVar, typeName string) string {
+			switch typeName {
+			case "int":
+				return fmt.Sprintf("int(%s.Int())", msgVar)
+			case "string":
+				return fmt.Sprintf("%s.Str()", msgVar)
+			case "bool":
+				return fmt.Sprintf("%s.Bool()", msgVar)
+			case "float64":
+				return fmt.Sprintf("%s.Float()", msgVar)
+			default:
+				return msgVar
+			}
+		},
+	}
+
+	// Calculate runtime import path
+	goModRootPath, err := golang.FindModulePath(dst)
+	if err != nil {
+		return fmt.Errorf("find module path: %w", err)
+	}
+
+	// Handle runtime import path
+	var runtimeImportPath string
+	if b.externalRuntimePath != "" {
+		runtimeImportPath, err = golang.FindModulePath(b.externalRuntimePath)
+		if err != nil {
+			return fmt.Errorf("resolve external runtime import path: %w", err)
+		}
+	} else {
+		// Default to the runtime inside the module
+		runtimeImportPath = filepath.Join(goModRootPath, "runtime")
+	}
+
+	tmpl, err := template.New("exports.go").Funcs(funcmap).Parse(libraryGoTemplate)
+	if err != nil {
 		return err
 	}
 
-	return compiler.SaveFilesToDir(dst, files)
+	tplData := libraryTemplateData{
+		CompilerVersion:   pkg.Version,
+		Exports:           exportList,
+		RuntimeImportPath: runtimeImportPath,
+		PackageName:       filepath.Base(dst),
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, tplData); err != nil {
+		return errors.Join(ErrExecTmpl, err)
+	}
+
+	files := map[string][]byte{
+		"exports.go": buf.Bytes(),
+	}
+
+	// If we are NOT using an external runtime (default behavior), we must copy the runtime source code
+	// into the generated package. We also need to rewrite the imports inside those copied files
+	// so they refer to the local copy (e.g. "my/gen/pkg/runtime") instead of the original module.
+	if b.externalRuntimePath == "" {
+		replacements := map[string]string{
+			"github.com/nevalang/neva/internal/runtime": runtimeImportPath,
+		}
+
+		if err := b.insertRuntimeFiles(files, replacements); err != nil {
+			return err
+		}
+	}
+
+	return pkgos.SaveFilesToDir(dst, files)
+}
+
+func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
+	fields := make([]fieldTemplateData, 0, len(ports))
+	for name, port := range ports {
+		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
+		if port.TypeExpr.Inst != nil {
+			switch port.TypeExpr.Inst.Ref.Name {
+			case "int":
+				goType = "int"
+			case "string":
+				goType = "string"
+			case "bool":
+				goType = "bool"
+			case "float":
+				goType = "float64"
+			case "list":
+				goType = "[]runtime.Msg"
+			case "dict":
+				goType = "map[string]runtime.Msg"
+			}
+		} else if port.TypeExpr.Lit != nil {
+			switch {
+			case port.TypeExpr.Lit.Struct != nil:
+				goType = "runtime.StructMsg"
+			case port.TypeExpr.Lit.Union != nil:
+				goType = "runtime.UnionMsg"
+			}
+		}
+
+		fields = append(fields, fieldTemplateData{
+			Name: Title(name),
+			Type: goType,
+			Port: name,
+		})
+	}
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].Name < fields[j].Name
+	})
+	return fields
+}
+
+// Title capitalizes the first letter of the string.
+// strings.Title is deprecated.
+func Title(s string) string {
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
 }
 
 func (b Backend) buildFuncCalls(
@@ -93,7 +292,7 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct {
+	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
 		idx uint8
 		ch  string
 	}
@@ -190,7 +389,9 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcOutports[addr.Port] = fmt.Sprintf(
-				"runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, []chan<- runtime.OrderedMsg{%s}))",
+				"runtime.NewOutport(nil, runtime.NewArrayOutport("+
+					"runtime.PortAddr{Path: %q, Port: %q}, "+
+					"interceptor, []chan<- runtime.OrderedMsg{%s}))",
 				addr.Path,
 				addr.Port,
 				strings.Join(chans, ", "),
@@ -255,7 +456,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`"%s": %s`, k, el))
+			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`%q: %s`, k, el))
 		}
 		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
@@ -272,8 +473,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
 
-func (b Backend) insertRuntimeFiles(files map[string][]byte) error {
-	if err := fs.WalkDir(
+func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[string]string) error {
+	return fs.WalkDir(
 		internal.Efs,
 		"runtime",
 		func(path string, dirEntry fs.DirEntry, err error) error {
@@ -290,14 +491,18 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte) error {
 				return err
 			}
 
+			if replacements != nil {
+				s := string(bb)
+				for old, new := range replacements {
+					s = strings.ReplaceAll(s, old, new)
+				}
+				bb = []byte(s)
+			}
+
 			files[path] = bb
 			return nil
 		},
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 func (b Backend) buildPortChanMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {
@@ -329,6 +534,9 @@ func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
 	return handleSpecialChars(s)
 }
 
-func NewBackend(mode Mode) Backend {
-	return Backend{mode: mode}
+func NewBackend(runtimeImportPath string, debugValidation bool) Backend {
+	return Backend{
+		externalRuntimePath: runtimeImportPath,
+		debugValidation:     debugValidation,
+	}
 }

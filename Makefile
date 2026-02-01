@@ -1,12 +1,9 @@
 # === Development ===
 
-# build neva cli for host OS and put to the PATH as well as replaces stdlib
+# build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
 install:
-	@go build -ldflags="-s -w" ./cmd/neva && \
-	rm -rf $HOME/neva/std && \
-	rm -rf /usr/local/bin/neva && \
-	mv neva /usr/local/bin/neva
+	@go install ./cmd/neva
 
 # generate go parser from antlr grammar
 .PHONY: antlr
@@ -14,10 +11,10 @@ antlr:
 	@cd internal/compiler/parser && \
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
 
-# run lint
-.PHONY: lint
-lint:
-	golangci-lint run ./...
+# fix struct field ordering for optimal padding/pointer data
+.PHONY: align
+betteralign-fix:
+	betteralign -fix ./...
 
 # check potential nil-derefs
 .PHONY: nilaway
@@ -121,4 +118,3 @@ build-lsp-windows-amd64:
 .PHONY: build-lsp-windows-arm64
 build-lsp-windows-arm64:
 	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o neva-lsp-windows-arm64.exe ./cmd/lsp
-

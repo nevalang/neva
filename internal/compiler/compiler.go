@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	"github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
 )
 
 type Compiler struct {
@@ -17,16 +17,25 @@ type Compiler struct {
 	be Backend
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type CompilerInput struct {
 	MainPkgPath   string
 	OutputPath    string
 	EmitTraceFile bool
+	Mode          Mode
 }
 
-// CompilerOutput is result of intermediate steps done before backend.
+type Mode string
+
+const (
+	ModeExecutable Mode = "executable"
+	ModeLibrary    Mode = "library"
+)
+
+// CompilerOutput contains results of compilation.
+// For now it only exposes frontend result, but can be extended.
 type CompilerOutput struct {
-	FrontEnd  FrontendResult
-	MiddleEnd MiddleendResult
+	FrontEnd FrontendResult
 }
 
 func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOutput, error) {
@@ -35,18 +44,34 @@ func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOu
 		return nil, errors.New(err.Error()) // to avoid non-nil interface go-issue
 	}
 
-	meResult, err := c.me.Process(feResult)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := c.be.Emit(input.OutputPath, meResult.IR, input.EmitTraceFile); err != nil {
-		return nil, err
+	if input.Mode == ModeLibrary {
+		exports, err := c.me.ProcessLibrary(feResult)
+		if err != nil {
+			return nil, err
+		}
+		if err := c.be.EmitLibrary(
+			input.OutputPath,
+			exports,
+			input.EmitTraceFile,
+		); err != nil {
+			return nil, err
+		}
+	} else {
+		prog, err := c.me.ProcessExecutable(feResult)
+		if err != nil {
+			return nil, err
+		}
+		if err := c.be.EmitExecutable(
+			input.OutputPath,
+			prog,
+			input.EmitTraceFile,
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	return &CompilerOutput{
-		FrontEnd:  feResult,
-		MiddleEnd: meResult,
+		FrontEnd: feResult,
 	}, nil
 }
 
@@ -58,7 +83,7 @@ type Frontend struct {
 type FrontendResult struct {
 	MainPkg     string
 	RawBuild    RawBuild
-	ParsedBuild sourcecode.Build
+	ParsedBuild ast.Build
 	Path        string
 }
 
@@ -73,13 +98,21 @@ func (f Frontend) Process(ctx context.Context, main string) (FrontendResult, *Er
 		return FrontendResult{}, err
 	}
 
-	parsedBuild := sourcecode.Build{
+	parsedBuild := ast.Build{
 		EntryModRef: raw.EntryModRef,
 		Modules:     parsedMods,
 	}
 
 	mainPkg := strings.TrimPrefix(main, "./")
-	mainPkg = strings.TrimPrefix(mainPkg, moduleRoot+"/")
+
+	// Check if the main package is the module root itself.
+	// This happens when compiling a module where the main package is at the root level (e.g. `neva build .`).
+	// In Go, this is akin to having `go.mod` and `main.go` in the same directory.
+	if mainPkg == moduleRoot {
+		mainPkg = "."
+	} else {
+		mainPkg = strings.TrimPrefix(mainPkg, moduleRoot+"/")
+	}
 
 	return FrontendResult{
 		ParsedBuild: parsedBuild,
@@ -102,24 +135,18 @@ type Middleend struct {
 	irgen     Irgen
 }
 
-type MiddleendResult struct {
-	AnalyzedBuild  sourcecode.Build
-	DesugaredBuild sourcecode.Build
-	IR             *ir.Program
-}
-
-func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
+func (m Middleend) ProcessExecutable(feResult FrontendResult) (*ir.Program, *Error) {
 	analyzedBuild, err := m.analyzer.Analyze(
 		feResult.ParsedBuild,
 		feResult.MainPkg,
 	)
 	if err != nil {
-		return MiddleendResult{}, err
+		return nil, err
 	}
 
 	desugaredBuild, derr := m.desugarer.Desugar(analyzedBuild)
 	if derr != nil {
-		return MiddleendResult{}, &Error{
+		return nil, &Error{
 			Message: fmt.Sprintf("desugarer error: %v", derr),
 			Meta: &core.Meta{
 				Location: core.Location{
@@ -131,7 +158,7 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 
 	irProg, irerr := m.irgen.Generate(desugaredBuild, feResult.MainPkg)
 	if irerr != nil {
-		return MiddleendResult{}, &Error{
+		return nil, &Error{
 			Message: "internal error: unable to generate IR",
 			Meta: &core.Meta{
 				Location: core.Location{
@@ -141,11 +168,64 @@ func (m Middleend) Process(feResult FrontendResult) (MiddleendResult, *Error) {
 		}
 	}
 
-	return MiddleendResult{
-		AnalyzedBuild:  analyzedBuild,
-		DesugaredBuild: desugaredBuild,
-		IR:             irProg,
-	}, nil
+	return irProg, nil
+}
+
+func (m Middleend) ProcessLibrary(feResult FrontendResult) ([]LibraryExport, *Error) {
+	// Library analysis (empty main package)
+	analyzedBuild, err := m.analyzer.Analyze(
+		feResult.ParsedBuild,
+		"",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	desugaredBuild, derr := m.desugarer.Desugar(analyzedBuild)
+	if derr != nil {
+		return nil, &Error{
+			Message: fmt.Sprintf("desugarer error: %v", derr),
+			Meta: &core.Meta{
+				Location: core.Location{
+					ModRef: analyzedBuild.EntryModRef,
+				},
+			},
+		}
+	}
+
+	// Identify exports
+	entryMod := desugaredBuild.Modules[desugaredBuild.EntryModRef]
+	pkg, ok := entryMod.Packages[feResult.MainPkg]
+	if !ok {
+		return nil, &Error{
+			Message: fmt.Sprintf("package not found: %s", feResult.MainPkg),
+		}
+	}
+
+	interopableExports := pkg.GetInteropableComponents()
+	if len(interopableExports) == 0 {
+		return nil, &Error{
+			Message: fmt.Sprintf("no interopable exports found in %s", feResult.MainPkg),
+		}
+	}
+
+	result := make([]LibraryExport, 0, len(interopableExports))
+	for _, export := range interopableExports {
+		prog, err := m.irgen.GenerateForComponent(desugaredBuild, feResult.MainPkg, export.Name)
+		if err != nil {
+			return nil, &Error{
+				Message: fmt.Sprintf("generate IR for component %s: %v", export.Name, err),
+			}
+		}
+
+		result = append(result, LibraryExport{
+			Name:      export.Name,
+			Component: export.Component,
+			Program:   prog,
+		})
+	}
+
+	return result, nil
 }
 
 func New(

@@ -21,8 +21,10 @@ def Slow(data int) (res any, err error) {
     time.Delay<int>
     fmt.Println<int>?
     ---
-    :data -> delay:data
-    $time.second -> delay:dur
+    :data -> [
+        delay:data,
+        $time.second -> delay:dur
+    ]
     delay -> println:data
     println:res -> :res
 }

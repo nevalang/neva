@@ -2,10 +2,11 @@ package analyzer
 
 import (
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
 func (a Analyzer) analyzeComponent(
+	componentName string,
 	component src.Component,
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
@@ -42,6 +43,7 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	resolvedNodes, nodesIfaces, hasGuard, err := a.analyzeNodes(
+		componentName,
 		resolvedIface,
 		component.Nodes,
 		component.Net,

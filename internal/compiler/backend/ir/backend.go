@@ -2,11 +2,17 @@ package ir
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/dot"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/mermaid"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/threejs"
 	"github.com/nevalang/neva/internal/compiler/ir"
 )
 
@@ -17,42 +23,71 @@ type Backend struct {
 type Format string
 
 const (
-	FormatJSON Format = "json"
-	FormatYAML Format = "yaml"
+	FormatJSON    Format = "json"
+	FormatYAML    Format = "yaml"
+	FormatDOT     Format = "dot"
+	FormatMermaid Format = "mermaid"
+	FormatThreeJS Format = "threejs"
 )
 
-func (b Backend) Emit(dst string, prog *ir.Program, trace bool) error {
-	var encoder func(f *os.File, prog *ir.Program) error
-	fullFileName := filepath.Join(dst, "ir")
+func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
+	return b.emit(dst, "ir", prog)
+}
+
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	for _, export := range exports {
+		if err := b.emit(dst, "ir_"+export.Name, export.Program); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b Backend) emit(dst, name string, prog *ir.Program) error {
+	var (
+		fileName string
+		encode   func(io.Writer, *ir.Program) error
+	)
 
 	switch b.format {
 	case FormatJSON:
-		encoder = b.encodeJSON
-		fullFileName += ".json"
+		fileName = name + ".json"
+		encode = func(w io.Writer, p *ir.Program) error {
+			return json.NewEncoder(w).Encode(p)
+		}
 	case FormatYAML:
-		encoder = b.encodeYAML
-		fullFileName += ".yml"
+		fileName = name + ".yml"
+		encode = func(w io.Writer, p *ir.Program) error {
+			return yaml.NewEncoder(w).Encode(p)
+		}
+	case FormatDOT:
+		fileName = name + ".dot"
+		encode = dot.Encoder{}.Encode
+	case FormatMermaid:
+		fileName = name + ".md"
+		encode = mermaid.Encoder{}.Encode
+	case FormatThreeJS:
+		fileName = name + ".threejs.html"
+		encode = threejs.Encoder{}.Encode
 	default:
-		panic("unknown format")
+		return fmt.Errorf("unknown format: %s", b.format)
 	}
 
-	f, err := os.OpenFile(fullFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0755)
+	f, err := os.OpenFile(
+		filepath.Join(dst, fileName),
+		os.O_CREATE|os.O_TRUNC|os.O_RDWR,
+		0755,
+	)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	return encoder(f, prog)
-}
-
-func (b Backend) encodeJSON(f *os.File, prog *ir.Program) error {
-	return json.NewEncoder(f).Encode(prog)
-}
-
-func (b Backend) encodeYAML(f *os.File, prog *ir.Program) error {
-	return yaml.NewEncoder(f).Encode(prog)
+	return encode(f, prog)
 }
 
 func NewBackend(format Format) Backend {
-	return Backend{format}
+	return Backend{
+		format: format,
+	}
 }

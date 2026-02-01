@@ -4,46 +4,20 @@ import (
 	"fmt"
 	"maps"
 
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/pkg"
 )
 
 // Desugarer is NOT thread safe and must be used in single thread
 type Desugarer struct {
 	virtualSelectorsCount uint64
-	ternaryCounter        uint64
-	switchCounter         uint64
 	virtualLocksCounter   uint64
 	virtualEmittersCount  uint64
 	virtualConstCount     uint64
 	virtualTriggersCount  uint64
 	fanOutCounter         uint64
 	fanInCounter          uint64
-	rangeCounter          uint64
-	// Arithmetic
-	addCounter uint64
-	subCounter uint64
-	mulCounter uint64
-	divCounter uint64
-	modCounter uint64
-	powCounter uint64
-	// Comparison
-	eqCounter uint64
-	neCounter uint64
-	gtCounter uint64
-	ltCounter uint64
-	geCounter uint64
-	leCounter uint64
-	// Logical
-	andCounter uint64
-	orCounter  uint64
-	// Bitwise
-	bitAndCounter uint64
-	bitOrCounter  uint64
-	bitXorCounter uint64
-	bitLshCounter uint64
-	bitRshCounter uint64
 }
 
 func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
@@ -185,6 +159,7 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
 	entity src.Entity
 	insert map[string]src.Entity
@@ -199,11 +174,7 @@ func (d *Desugarer) desugarEntity(
 	}
 
 	if entity.Kind == src.ConstEntity {
-		desugaredConst, err := d.handleConst(entity.Const)
-		if err != nil {
-			return desugarEntityResult{}, fmt.Errorf("desugar const: %w", err)
-		}
-
+		desugaredConst := d.handleConst(entity.Const)
 		return desugarEntityResult{
 			entity: src.Entity{
 				IsPublic: entity.IsPublic,
@@ -239,57 +210,12 @@ func (d *Desugarer) desugarEntity(
 // Do NOT use this method until issue is fixed
 // func (d *Desugarer) resetCounters() {
 // 	d.virtualSelectorsCount = 0
-// 	d.ternaryCounter = 0
-// 	d.switchCounter = 0
 // 	d.virtualLocksCounter = 0
 // 	d.virtualEmittersCount = 0
 // 	d.virtualConstCount = 0
 // 	d.virtualTriggersCount = 0
 // 	d.fanOutCounter = 0
 // 	d.fanInCounter = 0
-// 	d.rangeCounter = 0
-// 	//
-// 	d.addCounter = 0
-// 	d.subCounter = 0
-// 	d.mulCounter = 0
-// 	d.divCounter = 0
-// 	d.modCounter = 0
-// 	d.powCounter = 0
-// 	//
-// 	d.eqCounter = 0
-// 	d.neCounter = 0
-// 	d.gtCounter = 0
-// 	d.ltCounter = 0
-// 	d.geCounter = 0
-// 	d.leCounter = 0
-// 	//
-// 	d.andCounter = 0
-// 	d.orCounter = 0
-// 	d.bitAndCounter = 0
-// 	d.bitOrCounter = 0
-// 	d.bitXorCounter = 0
-// 	d.bitLshCounter = 0
-// 	d.bitRshCounter = 0
-// 	d.mulCounter = 0
-// 	d.divCounter = 0
-// 	d.modCounter = 0
-// 	d.powCounter = 0
-// 	//
-// 	d.eqCounter = 0
-// 	d.neCounter = 0
-// 	d.gtCounter = 0
-// 	d.ltCounter = 0
-// 	d.geCounter = 0
-// 	d.leCounter = 0
-// 	//
-// 	d.andCounter = 0
-// 	d.orCounter = 0
-// 	//
-// 	d.bitAndCounter = 0
-// 	d.bitOrCounter = 0
-// 	d.bitXorCounter = 0
-// 	d.bitLshCounter = 0
-// 	d.bitRshCounter = 0
 // }
 
 func New() Desugarer {

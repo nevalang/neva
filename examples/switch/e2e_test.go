@@ -1,42 +1,22 @@
 package test
 
 import (
-	"os"
-	"os/exec"
-	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
 	// Test successful case with "Alice"
-	cmd := exec.Command("neva", "run", "switch")
-	cmd.Stdin = strings.NewReader("Alice\n")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, "Enter the name: ALICE\n", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Alice\n"))
+	require.Equal(t, "Enter the name: ALICE\n", out)
 
 	// Test panic case with "Bob"
-	cmd = exec.Command("neva", "run", "switch")
-	cmd.Stdin = strings.NewReader("Bob\n")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, "Enter the name: bob\n", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ = e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Bob\n"))
+	require.Equal(t, "Enter the name: bob\n", out)
 
 	// Test panic case with "Charlie"
-	cmd = exec.Command("neva", "run", "switch")
-	cmd.Stdin = strings.NewReader("Charlie\n")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, "Enter the name: panic: Charlie\n", string(out))
+	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Charlie\n"))
+	require.Equal(t, "Enter the name: panic: Charlie\n", out+stderr)
 }

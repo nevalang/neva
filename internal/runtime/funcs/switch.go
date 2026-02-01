@@ -16,7 +16,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, err
 	}
 
-	caseIn, err := io.In.Array("case")
+	caseArrIn, err := io.In.Array("case")
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 		return nil, err
 	}
 
-	if caseIn.Len() != caseOut.Len() {
+	if caseArrIn.Len() != caseOut.Len() {
 		return nil, errors.New("number of 'case' inports must match number of outports")
 	}
 
@@ -40,7 +40,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			var (
 				wg              sync.WaitGroup
 				dataMsg         runtime.Msg
-				cases           = make([]runtime.Msg, caseIn.Len())
+				cases           = make([]runtime.Msg, caseArrIn.Len())
 				dataOk, casesOk bool
 			)
 
@@ -49,7 +49,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			})
 
 			wg.Go(func() {
-				casesOk = caseIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
+				casesOk = caseArrIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
 					cases[idx] = msg
 					return true
 				})
@@ -69,20 +69,35 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				}
 			}
 
-			if u, ok := dataMsg.(runtime.UnionMsg); ok {
-				dataMsg = u.Data()
-			}
-
 			if matchIdx != -1 {
-				if !caseOut.Send(ctx, uint8(matchIdx), dataMsg) {
+				caseIdx := runtime.Uint8Index(matchIdx)
+				if !caseOut.Send(
+					ctx,
+					caseIdx,
+					tryToUnboxIfUnion(dataMsg),
+				) {
 					return
 				}
 				continue
 			}
 
+			// For unions: we never unbox even if possible when sending to :else
 			if !elseOut.Send(ctx, dataMsg) {
 				return
 			}
 		}
 	}, nil
+}
+
+func tryToUnboxIfUnion(dataMsg runtime.Msg) runtime.Msg {
+	u, ok := dataMsg.(runtime.UnionMsg)
+	if !ok {
+		return dataMsg
+	}
+
+	if u.Data() == nil {
+		return u
+	}
+
+	return u.Data()
 }

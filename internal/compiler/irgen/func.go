@@ -1,12 +1,14 @@
 package irgen
 
 import (
+	"context"
+
 	"github.com/nevalang/neva/internal/compiler"
+	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
-func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component, error) {
+func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component) {
 	var version src.Component
 	if len(versions) == 1 {
 		version = versions[0]
@@ -16,19 +18,25 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 
 	externArg, hasExtern := version.Directives[compiler.ExternDirective]
 	if !hasExtern {
-		return "", version, nil
+		return "", version
 	}
 
-	return externArg, version, nil
+	return externArg, version
 }
 
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	bindArg, hasBind := node.Directives[compiler.BindDirective]
 	if !hasBind {
+		//nolint:nilnil // nil config is expected when no bind directive is present
 		return nil, nil
 	}
 
-	entity, location, err := scope.Entity(compiler.ParseEntityRef(bindArg))
+	entityRef, err := compiler.ParseEntityRef(context.Background(), bindArg)
+	if err != nil {
+		return nil, err
+	}
+
+	entity, location, err := scope.Entity(entityRef)
 	if err != nil {
 		return nil, err
 	}

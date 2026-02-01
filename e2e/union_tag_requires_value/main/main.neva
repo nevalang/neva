@@ -1,0 +1,13 @@
+type Day union {
+	Friday
+}
+
+def Main(start any) (stop any) {
+	union_node Union<Day>
+	---
+	:start -> [
+		Day::Friday -> union_node:tag,
+		1 -> union_node:data
+	]
+	union_node -> :stop
+}

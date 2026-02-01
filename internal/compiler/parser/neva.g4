@@ -1,8 +1,8 @@
 grammar neva;
 
-prog: (NEWLINE | COMMENT | stmt)* EOF;
-
 /* PARSER */
+
+prog: (NEWLINE | COMMENT | stmt)* EOF;
 
 stmt:
 	importStmt
@@ -13,160 +13,107 @@ stmt:
 
 // Compiler Directives
 compilerDirectives: (compilerDirective NEWLINE)+;
-compilerDirective: '#' IDENTIFIER compilerDirectivesArg?;
-compilerDirectivesArg: '(' IDENTIFIER ')';
+compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
+compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: 'import' NEWLINE* '{' NEWLINE* importDef* '}';
-importDef: importAlias? importPath ','? NEWLINE*;
+importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE*;
+importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
 importAlias: IDENTIFIER;
-importPath: (importPathMod ':')? importPathPkg;
-importPathMod: '@' | importMod;
+importPath: (importPathMod COLON)? importPathPkg;
+importPathMod: AT | importMod;
 importMod: IDENTIFIER (importModeDelim IDENTIFIER)*;
-importModeDelim: '/' | '.';
-importPathPkg: IDENTIFIER ('/' IDENTIFIER)*;
+importModeDelim: SLASH | DOT;
+importPathPkg: IDENTIFIER (SLASH IDENTIFIER)*;
 
 // Entity Reference
 entityRef: importedEntityRef | localEntityRef;
 localEntityRef: IDENTIFIER;
-importedEntityRef: pkgRef '.' entityName;
+importedEntityRef: pkgRef DOT entityName;
 pkgRef: IDENTIFIER;
 entityName: IDENTIFIER;
 
 // Types
-typeStmt: PUB_KW? 'type' typeDef;
+typeStmt: PUB? TYPE typeDef;
 typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
-typeParams: '<' NEWLINE* typeParamList? '>';
-typeParamList: typeParam (',' NEWLINE* typeParam)*;
+typeParams: LT NEWLINE* typeParamList? GT;
+typeParamList: typeParam (COMMA NEWLINE* typeParam)*;
 typeParam: IDENTIFIER typeExpr? NEWLINE*;
 typeExpr: typeInstExpr | typeLitExpr;
 typeInstExpr: entityRef typeArgs?;
-typeArgs:
-	'<' NEWLINE* typeExpr (',' NEWLINE* typeExpr)* NEWLINE* '>';
+typeArgs: LT NEWLINE* typeExpr (COMMA NEWLINE* typeExpr)* NEWLINE* GT;
 typeLitExpr: structTypeExpr | unionTypeExpr;
-structTypeExpr:
-	'struct' NEWLINE* '{' NEWLINE* structFields? '}';
+structTypeExpr: STRUCT NEWLINE* LBRACE NEWLINE* structFields? RBRACE;
 structFields: structField (NEWLINE+ structField)*;
 structField: IDENTIFIER typeExpr NEWLINE*;
-unionTypeExpr: 'union' NEWLINE* '{' NEWLINE* unionFields? '}';
-unionFields: unionField ((',' NEWLINE* | NEWLINE+) unionField)*;
+unionTypeExpr: UNION NEWLINE* LBRACE NEWLINE* unionFields? RBRACE;
+unionFields: unionField ((COMMA NEWLINE* | NEWLINE+) unionField)*;
 unionField: IDENTIFIER typeExpr? NEWLINE*;
 
-// interfaces
-interfaceStmt: PUB_KW? 'interface' interfaceDef;
-interfaceDef:
-	IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
+// Interfaces
+interfaceStmt: PUB? INTERFACE interfaceDef;
+interfaceDef: IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
 outPortsDef: portsDef;
-portsDef:
-	'(' (NEWLINE* | portDef? | portDef (',' portDef)*) ')';
+portsDef: LPAREN (NEWLINE* | portDef? | portDef (COMMA portDef)*) RPAREN;
 portDef: singlePortDef | arrayPortDef;
 singlePortDef: NEWLINE* IDENTIFIER? typeExpr NEWLINE*;
-arrayPortDef: NEWLINE* '[' IDENTIFIER ']' typeExpr? NEWLINE*;
+arrayPortDef: NEWLINE* LBRACK IDENTIFIER RBRACK typeExpr? NEWLINE*;
 
-// const
-constStmt: PUB_KW? 'const' constDef;
-constDef:
-	IDENTIFIER typeExpr '=' (entityRef | constLit) NEWLINE*;
+// Constants
+constStmt: PUB? CONST constDef;
+constDef: IDENTIFIER typeExpr EQ (entityRef | constLit) NEWLINE*;
 constLit:
 	bool
-	| MINUS? INT
-	| MINUS? FLOAT
+	| (MINUS)? INT
+	| (MINUS)? FLOAT
 	| STRING
 	| unionLit
 	| listLit
 	| structLit;
-bool: 'true' | 'false';
-unionLit: entityRef '::' IDENTIFIER ('(' constLit ')')?;
-listLit: '[' NEWLINE* listItems? ']';
-listItems:
-	compositeItem
-	| compositeItem (',' NEWLINE* compositeItem NEWLINE*)*;
+bool: TRUE | FALSE;
+unionLit: entityRef DCOLON IDENTIFIER (LPAREN constLit RPAREN)?;
+listLit: LBRACK NEWLINE* listItems? RBRACK;
+listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;
-structLit:
-	'{' NEWLINE* structValueFields? '}'; // same for struct and dict
-structValueFields:
-	structValueField (',' NEWLINE* structValueField)*;
-structValueField: IDENTIFIER ':' compositeItem NEWLINE*;
+structLit: LBRACE NEWLINE* structValueFields? RBRACE;
+structValueFields: structValueField (COMMA NEWLINE* structValueField)* (COMMA NEWLINE*)?;
+structValueField: IDENTIFIER COLON compositeItem NEWLINE*;
 
-// def (component)
-compStmt: compilerDirectives? PUB_KW? 'def' compDef;
+// Components
+compStmt: compilerDirectives? PUB? DEF compDef;
 compDef: interfaceDef compBody? NEWLINE*;
 compBody:
-	'{' NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? (
-		COMMENT NEWLINE*
-	)* (connDefList NEWLINE*)? (COMMENT NEWLINE*)* '}';
+	LBRACE NEWLINE* (COMMENT NEWLINE*)* (compNodesDef NEWLINE*)? 
+	(COMMENT NEWLINE*)* (connDefList NEWLINE*)? (COMMENT NEWLINE*)* RBRACE;
 
-// nodes
-compNodesDef: compNodesDefBody NEWLINE+ '---';
-compNodesDefBody: ((compNodeDef ','? | COMMENT) NEWLINE*)+;
+// Nodes
+compNodesDef: compNodesDefBody NEWLINE+ DASH3;
+compNodesDefBody: ((compNodeDef (COMMA)? | COMMENT) NEWLINE*)+;
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
-nodeInst:
-	entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs? errGuard?;
-errGuard: '?';
-nodeDIArgs: '{' NEWLINE* compNodesDefBody '}';
+nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs? errGuard?;
+errGuard: QUEST;
+nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 
-// network
+// Connections
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: normConnDef | arrBypassConnDef;
-normConnDef: senderSide '->' receiverSide;
-senderSide: singleSenderSide | multipleSenderSide;
+normConnDef: senderSide ARROW receiverSide;
+senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
-	'[' NEWLINE* singleSenderSide (
-		',' NEWLINE* singleSenderSide NEWLINE*
-	)* ']';
-arrBypassConnDef: singlePortAddr '=>' singlePortAddr;
+	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
+arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;
 singleSenderSide:
 	portAddr
 	| senderConstRef
-	| primitiveConstLit
-	| rangeExpr
-	| structSelectors
-	| unaryExpr
-	| binaryExpr
-	| ternaryExpr
-	| unionSender;
-unionSender:
-	entityRef '::' IDENTIFIER ('(' singleSenderSide ')')?;
-primitiveConstLit:
-	bool
-	| MINUS? INT
-	| MINUS? FLOAT
-	| STRING; // TODO rename to sender const lit
-senderConstRef: '$' entityRef;
-unaryExpr: unaryOp singleSenderSide;
-unaryOp: '!' | '++' | '--' | '-';
-ternaryExpr:
-	'(' singleSenderSide '?' singleSenderSide ':' singleSenderSide ')';
-binaryExpr: '(' singleSenderSide binaryOp singleSenderSide ')';
-binaryOp:
-	// Arithmetic
-	'+'
-	| '-'
-	| '*'
-	| '/'
-	| '%'
-	| '**'
-	// Comparison
-	| '=='
-	| '!='
-	| '>'
-	| '<'
-	| '>='
-	| '<='
-	// Logical
-	| '&&'
-	| '||'
-	// Bitwise
-	| '&'
-	| '|'
-	| '^';
-// TODO: refactor - `singleReceiverSide | multipleReceiverSide` (chained must be inside single)
+	| constLit
+	| structSelectors;
+senderConstRef: DOLLAR entityRef;
+
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
-deferredConn: '{' NEWLINE* connDef NEWLINE* '}';
-rangeExpr: rangeMember '..' rangeMember;
-rangeMember: MINUS? INT;
+deferredConn: LBRACE NEWLINE* connDef NEWLINE* RBRACE;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -174,38 +121,66 @@ portAddr:
 	| lonelyArrPortAddr;
 lonelySinglePortAddr: portAddrNode;
 lonelyArrPortAddr: portAddrNode portAddrIdx;
-singlePortAddr: portAddrNode? ':' portAddrPort;
-arrPortAddr: portAddrNode? ':' portAddrPort portAddrIdx;
+singlePortAddr: portAddrNode? COLON portAddrPort;
+arrPortAddr: portAddrNode? COLON portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
-portAddrIdx: '[' INT ']';
-structSelectors: '.' IDENTIFIER ('.' IDENTIFIER)*;
+portAddrIdx: LBRACK INT RBRACK;
+structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
 	| portAddr
-	| deferredConn
-	| switchStmt;
+	| deferredConn;
 multipleReceiverSide:
-	'[' NEWLINE* singleReceiverSide (
-		',' NEWLINE* singleReceiverSide NEWLINE*
-	)* ']';
-
-// switch
-switchStmt:
-	'switch' NEWLINE* '{' NEWLINE* normConnDef (
-		NEWLINE+ normConnDef
-	)* (NEWLINE+ defaultCase)? NEWLINE* '}';
-defaultCase: '_' '->' receiverSide;
+	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
 
 /* LEXER */
 
-COMMENT: '//' ~( '\r' | '\n')*;
-PUB_KW: 'pub';
-IDENTIFIER: LETTER (LETTER | INT)*;
-fragment LETTER: [a-zA-Z_];
-INT: [0-9]+; // one or more (positive) integer digits
+// Keywords
+PUB: 'pub';
+TYPE: 'type';
+STRUCT: 'struct';
+UNION: 'union';
+INTERFACE: 'interface';
+CONST: 'const';
+DEF: 'def';
+IMPORT: 'import';
+TRUE: 'true';
+FALSE: 'false';
+
+// Operators and Punctuation
 MINUS: '-';
+SLASH: '/';
+EQ: '=';
+LT: '<';
+GT: '>';
+LPAREN: '(';
+RPAREN: ')';
+LBRACE: '{';
+RBRACE: '}';
+LBRACK: '[';
+RBRACK: ']';
+COMMA: ',';
+COLON: ':';
+DOT: '.';
+QUEST: '?';
+DOLLAR: '$';
+AT: '@';
+HASH: '#';
+
+// Compound Operators
+DCOLON: '::';
+ARROW: '->';
+FAT_ARROW: '=>';
+DASH3: '---';
+
+// Literals
+IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
+INT: [0-9]+;
 FLOAT: [0-9]* '.' [0-9]+;
 STRING: '\'' .*? '\'';
-NEWLINE: '\r'? '\n'; // `\r\n` on windows and `\n` on unix
-WS: [ \t]+ -> channel(HIDDEN); // ignore whitespace
+
+// Comments and Whitespace
+COMMENT: '//' ~[\r\n]*;
+NEWLINE: '\r'? '\n';
+WS: [ \t]+ -> skip;

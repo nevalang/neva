@@ -28,12 +28,14 @@ type MyErrorListener interface {
 }
 
 // FileAwareErrorListener provides better error reporting with file context
+//nolint:govet // fieldalignment: small helper struct.
 type FileAwareErrorListener struct {
 	filename string
 	t        *testing.T
 }
 
-func NewFileAwareErrorListener(filename string, t *testing.T) *FileAwareErrorListener {
+func NewFileAwareErrorListener(t *testing.T, filename string) *FileAwareErrorListener {
+	t.Helper()
 	return &FileAwareErrorListener{
 		filename: filename,
 		t:        t,
@@ -41,9 +43,12 @@ func NewFileAwareErrorListener(filename string, t *testing.T) *FileAwareErrorLis
 }
 
 func (f *FileAwareErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
-	token := offendingSymbol.(antlr.Token)
+	tokenText := "<unknown>"
+	if token, ok := offendingSymbol.(antlr.Token); ok {
+		tokenText = token.GetText()
+	}
 	f.t.Errorf("PARSER ERROR in %s at line %d:%d - %s\n  Token: '%s'",
-		f.filename, line, column, msg, token.GetText())
+		f.filename, line, column, msg, tokenText)
 }
 
 func (f *FileAwareErrorListener) ReportAmbiguity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, exact bool, ambigAlts *antlr.BitSet, configs *antlr.ATNConfigSet) {
@@ -87,7 +92,7 @@ func TestSmoke(t *testing.T) {
 		)
 
 		// create file-aware error listener for better error reporting
-		fileErrorListener := NewFileAwareErrorListener(fileName, t)
+		fileErrorListener := NewFileAwareErrorListener(t, fileName)
 		parser.AddErrorListener(fileErrorListener)
 
 		// create tree to walk

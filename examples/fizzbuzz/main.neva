@@ -7,10 +7,15 @@ import {
 def Main(start any) (stop any) {
     map streams.Map<int, any>{FizzBuzz}
     for_each streams.ForEach<any>{fmt.Println<any>}
+    range streams.Range
     wait streams.Wait
     panic runtime.Panic
     ---
-    :start -> 1..101 -> map -> for_each
+    :start -> [
+        1 -> range:from,
+        101 -> range:to
+    ]
+    range -> map -> for_each
     for_each:res -> wait -> :stop
     for_each:err -> panic
 }
@@ -23,18 +28,21 @@ def FizzBuzz(data int) (res any) {
     
     ---
     
-    :data -> [mod15, select:then[3]]
+    :data -> [
+        mod15,
+        select:then[3],
+        'FizzBuzz' -> select:then[0],
+        'Fizz' -> select:then[1],
+        'Buzz' -> select:then[2]
+    ]
 
     mod15:then -> select:if[0]
-    'FizzBuzz' -> select:then[0]
     mod15:else -> mod3
     
     mod3:then -> select:if[1]
-    'Fizz' -> select:then[1]
     mod3:else -> mod5
 
     mod5:then -> select:if[2]
-    'Buzz' -> select:then[2]
     mod5:else -> select:if[3]
 
     select -> :res
@@ -43,8 +51,7 @@ def FizzBuzz(data int) (res any) {
 def Mod15(num int) (then int, else int) {
     h ModHelper
     ---
-    :num -> h:num
-    15 -> h:den
+    :num -> [h:num, 15 -> h:den]
     h:then -> :then
     h:else -> :else
 }
@@ -52,8 +59,7 @@ def Mod15(num int) (then int, else int) {
 def Mod3(num int) (then int, else int) {
     h ModHelper
     ---
-    :num -> h:num
-    3 -> h:den
+    :num -> [h:num, 3 -> h:den]
     h:then -> :then
     h:else -> :else
 }
@@ -61,19 +67,21 @@ def Mod3(num int) (then int, else int) {
 def Mod5(num int) (then int, else int) {
     h ModHelper
     ---
-    :num -> h:num
-    5 -> h:den
+    :num -> [h:num, 5 -> h:den]
     h:then -> :then
     h:else -> :else
 }
 
 def ModHelper(num int, den int) (then int, else int) {
-    Mod, Cond<int>
+    mod Mod
+    cond Cond<int>
+    eq Eq<int>
     ---
     :num -> [mod:left, cond:data]
     :den -> mod:right
 
-    (mod == 0) -> cond:if
+    mod -> [eq:left, 0 -> eq:right]
+    eq -> cond:if
 
     cond:then -> :then
     cond:else -> :else

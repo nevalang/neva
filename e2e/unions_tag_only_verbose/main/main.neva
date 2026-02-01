@@ -3,12 +3,10 @@ import {
     runtime
 }
 
-// TODO get rid of deferred connnection syntax
-// when chained connection with tagged union will be supported
 def Main(start any) (stop any) {
-    day_printer DayPrinter
-    ---
-    :start -> { Day::Friday -> day_printer -> :stop }
+	day_printer DayPrinter
+	---
+	:start -> Day::Friday -> day_printer -> :stop
 }
 
 type Day union {

@@ -3,9 +3,9 @@ package test
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -17,26 +17,22 @@ func TestEmitDefault(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	cmd = exec.Command("neva", "run", "--emit-ir", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, "Hello, World!\n", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "src"})
+	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid YAML
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections []struct {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -56,26 +52,22 @@ func TestEmitYAML(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	cmd = exec.Command("neva", "run", "--emit-ir", "--emit-ir-format", "yaml", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, "Hello, World!\n", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "yaml", "src"})
+	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid YAML
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections []struct {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -95,19 +87,15 @@ func TestEmitJSON(t *testing.T) {
 	}()
 
 	// Create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// Run with IR emission
-	cmd = exec.Command("neva", "run", "--emit-ir", "--emit-ir-format", "json", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, "Hello, World!\n", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"run", "--emit-ir", "--emit-ir-format", "json", "src"})
+	require.Equal(t, "Hello, World!\n", out)
 
 	// Verify IR file exists and is valid JSON
 	irBytes, err := os.ReadFile("ir.json")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections map[string]string `json:"connections"`

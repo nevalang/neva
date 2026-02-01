@@ -12,7 +12,7 @@ import (
 	builder "github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/typesystem"
+	"github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 func main() {

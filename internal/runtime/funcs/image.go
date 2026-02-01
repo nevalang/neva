@@ -24,7 +24,12 @@ func (c *rgbaMsg) decode(msg runtime.Msg) {
 }
 
 func (c rgbaMsg) color() color.Color {
-	return color.RGBA64{R: uint16(c.r), G: uint16(c.g), B: uint16(c.b), A: uint16(c.a)}
+	return color.RGBA64{
+		R: clampUint16(c.r),
+		G: clampUint16(c.g),
+		B: clampUint16(c.b),
+		A: clampUint16(c.a),
+	}
 }
 
 type pixelMsg struct {
@@ -75,4 +80,15 @@ func (i *pixelStreamMsg) decode(msg runtime.Msg) {
 	i.idx = m.Get("idx").Int()
 	i.pixelMsg.decode(m.Get("data"))
 	i.last = m.Get("last").Bool()
+}
+
+func clampUint16(value int64) uint16 {
+	if value < 0 {
+		return 0
+	}
+	const maxUint16 = int64(^uint16(0))
+	if value > maxUint16 {
+		return ^uint16(0)
+	}
+	return uint16(value)
 }

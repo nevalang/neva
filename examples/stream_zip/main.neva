@@ -1,17 +1,26 @@
-import { streams, fmt, runtime }
+import {
+	fmt
+	runtime
+	streams
+}
 
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-        list_to_stream streams.FromList<string>
-        zip streams.Zip<int, string>
-        for_each streams.ForEach<streams.ZipResult<int, string>>{fmt.Println<streams.ZipResult<int, string>>}
-        wait streams.Wait
-        panic runtime.Panic
-        ---
-        :start -> 0..10 -> zip:left
+    list_to_stream streams.FromList<string>
+    zip streams.Zip<int, string>
+    for_each streams.ForEach<streams.ZipResult<int, string>>{fmt.Println<streams.ZipResult<int, string>>}
+    range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> [
+        0 -> range:from,
+        10 -> range:to,
         $strings -> list_to_stream -> zip:right
-        zip:res -> for_each
-        for_each:res -> wait -> :stop
-        for_each:err -> panic
+    ]
+    range -> zip:left
+    zip:res -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }

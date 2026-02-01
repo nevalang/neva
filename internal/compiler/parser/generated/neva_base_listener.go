@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -55,6 +55,12 @@ func (s *BasenevaListener) EnterImportStmt(ctx *ImportStmtContext) {}
 
 // ExitImportStmt is called when production importStmt is exited.
 func (s *BasenevaListener) ExitImportStmt(ctx *ImportStmtContext) {}
+
+// EnterImportBlockItem is called when production importBlockItem is entered.
+func (s *BasenevaListener) EnterImportBlockItem(ctx *ImportBlockItemContext) {}
+
+// ExitImportBlockItem is called when production importBlockItem is exited.
+func (s *BasenevaListener) ExitImportBlockItem(ctx *ImportBlockItemContext) {}
 
 // EnterImportDef is called when production importDef is entered.
 func (s *BasenevaListener) EnterImportDef(ctx *ImportDefContext) {}
@@ -428,53 +434,11 @@ func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {
 // ExitSingleSenderSide is called when production singleSenderSide is exited.
 func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
 
-// EnterUnionSender is called when production unionSender is entered.
-func (s *BasenevaListener) EnterUnionSender(ctx *UnionSenderContext) {}
-
-// ExitUnionSender is called when production unionSender is exited.
-func (s *BasenevaListener) ExitUnionSender(ctx *UnionSenderContext) {}
-
-// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
-func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
-// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
-func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
 
 // ExitSenderConstRef is called when production senderConstRef is exited.
 func (s *BasenevaListener) ExitSenderConstRef(ctx *SenderConstRefContext) {}
-
-// EnterUnaryExpr is called when production unaryExpr is entered.
-func (s *BasenevaListener) EnterUnaryExpr(ctx *UnaryExprContext) {}
-
-// ExitUnaryExpr is called when production unaryExpr is exited.
-func (s *BasenevaListener) ExitUnaryExpr(ctx *UnaryExprContext) {}
-
-// EnterUnaryOp is called when production unaryOp is entered.
-func (s *BasenevaListener) EnterUnaryOp(ctx *UnaryOpContext) {}
-
-// ExitUnaryOp is called when production unaryOp is exited.
-func (s *BasenevaListener) ExitUnaryOp(ctx *UnaryOpContext) {}
-
-// EnterTernaryExpr is called when production ternaryExpr is entered.
-func (s *BasenevaListener) EnterTernaryExpr(ctx *TernaryExprContext) {}
-
-// ExitTernaryExpr is called when production ternaryExpr is exited.
-func (s *BasenevaListener) ExitTernaryExpr(ctx *TernaryExprContext) {}
-
-// EnterBinaryExpr is called when production binaryExpr is entered.
-func (s *BasenevaListener) EnterBinaryExpr(ctx *BinaryExprContext) {}
-
-// ExitBinaryExpr is called when production binaryExpr is exited.
-func (s *BasenevaListener) ExitBinaryExpr(ctx *BinaryExprContext) {}
-
-// EnterBinaryOp is called when production binaryOp is entered.
-func (s *BasenevaListener) EnterBinaryOp(ctx *BinaryOpContext) {}
-
-// ExitBinaryOp is called when production binaryOp is exited.
-func (s *BasenevaListener) ExitBinaryOp(ctx *BinaryOpContext) {}
 
 // EnterReceiverSide is called when production receiverSide is entered.
 func (s *BasenevaListener) EnterReceiverSide(ctx *ReceiverSideContext) {}
@@ -493,18 +457,6 @@ func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
 
 // ExitDeferredConn is called when production deferredConn is exited.
 func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
-
-// EnterRangeExpr is called when production rangeExpr is entered.
-func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
-
-// ExitRangeExpr is called when production rangeExpr is exited.
-func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}
-
-// EnterRangeMember is called when production rangeMember is entered.
-func (s *BasenevaListener) EnterRangeMember(ctx *RangeMemberContext) {}
-
-// ExitRangeMember is called when production rangeMember is exited.
-func (s *BasenevaListener) ExitRangeMember(ctx *RangeMemberContext) {}
 
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
@@ -571,15 +523,3 @@ func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideCo
 
 // ExitMultipleReceiverSide is called when production multipleReceiverSide is exited.
 func (s *BasenevaListener) ExitMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}
-
-// EnterSwitchStmt is called when production switchStmt is entered.
-func (s *BasenevaListener) EnterSwitchStmt(ctx *SwitchStmtContext) {}
-
-// ExitSwitchStmt is called when production switchStmt is exited.
-func (s *BasenevaListener) ExitSwitchStmt(ctx *SwitchStmtContext) {}
-
-// EnterDefaultCase is called when production defaultCase is entered.
-func (s *BasenevaListener) EnterDefaultCase(ctx *DefaultCaseContext) {}
-
-// ExitDefaultCase is called when production defaultCase is exited.
-func (s *BasenevaListener) ExitDefaultCase(ctx *DefaultCaseContext) {}

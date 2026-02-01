@@ -1,4 +1,9 @@
-import { lists, fmt, runtime, streams }
+import {
+    fmt
+    lists
+    runtime
+    streams
+}
 
 const lst list<int> = [50, 30, 20, 100]
 

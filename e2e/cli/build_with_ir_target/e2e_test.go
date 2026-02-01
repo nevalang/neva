@@ -3,9 +3,9 @@ package test
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -17,25 +17,21 @@ func TestBuildIRDefault(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target (default yaml format)
-	cmd = exec.Command("neva", "build", "-target=ir", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "src"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections []struct {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -55,25 +51,21 @@ func TestBuildIRYAML(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and explicit yaml format
-	cmd = exec.Command("neva", "build", "-target=ir", "-target-ir-format=yaml", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=yaml", "src"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections []struct {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -93,18 +85,14 @@ func TestBuildIRJSON(t *testing.T) {
 	}()
 
 	// create new project
-	cmd := exec.Command("neva", "new", ".")
-	require.NoError(t, cmd.Run())
+	e2e.Run(t, []string{"new", "."})
 
 	// build with ir target and json format
-	cmd = exec.Command("neva", "build", "-target=ir", "-target-ir-format=json", "src")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "src"})
 
 	// verify ir file exists and is valid json
 	irBytes, err := os.ReadFile("ir.json")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections map[string]string `json:"connections"`
@@ -122,21 +110,18 @@ func TestBuildIRWithInterfaceWithImports(t *testing.T) {
 
 	// build the specific case that was failing in the original issue
 	// this tests the interface_with_imports case with ir target
-	cmd := exec.Command("neva", "build", "-target=ir", "../../interface_with_imports/main")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "../../interface_with_imports/main"})
 
 	// verify ir file exists and is valid yaml
 	irBytes, err := os.ReadFile("ir.yml")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections []struct {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct {
+		Funcs []struct { //nolint:govet // fieldalignment
 			Ref string `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
@@ -155,14 +140,11 @@ func TestBuildIRWithInterfaceWithImportsJSON(t *testing.T) {
 	}()
 
 	// build the specific case that was failing in the original issue with json format
-	cmd := exec.Command("neva", "build", "-target=ir", "-target-ir-format=json", "../../interface_with_imports/main")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "Command failed: %v", string(out))
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
+	out, _ := e2e.Run(t, []string{"build", "-target=ir", "-target-ir-format=json", "../../interface_with_imports/main"})
 
 	// verify ir file exists and is valid json
 	irBytes, err := os.ReadFile("ir.json")
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 
 	var ir struct {
 		Connections map[string]string `json:"connections"`

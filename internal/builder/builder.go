@@ -2,15 +2,14 @@ package builder
 
 import (
 	"context"
-	"io/fs"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/pkg"
-	"github.com/nevalang/neva/std"
 )
 
 type Builder struct {
@@ -36,6 +35,12 @@ func (b Builder) Build(
 	}
 
 	// inject stdlib dep to entry module
+	if _, ok := entryMod.Manifest.Deps["std"]; ok {
+		return compiler.RawBuild{}, "", &compiler.Error{
+			Message: "entry module cannot depend on 'std' explicitly; it is injected automatically",
+		}
+	}
+
 	stdModRef := core.ModuleRef{
 		Path:    "std",
 		Version: pkg.Version,
@@ -122,73 +127,16 @@ func getThirdPartyPath() (string, error) {
 	return path, nil
 }
 
-// rewriteStdlibOntoDisk erases stdlib on the disk if it's there and writes it again.
-func rewriteStdlibOntoDisk() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	path := filepath.Join(home, "neva", "std")
-
-	// TODO replace this dirty hack with good solution of https://github.com/nevalang/neva/issues/563
-	err = os.RemoveAll(path)
-	if err != nil {
-		return "", err
-	}
-
-	// _, err = os.Stat(path)
-	// if err == nil {
-	// 	return path, nil
-	// }
-
-	// if !os.IsNotExist(err) {
-	// 	return "", err
-	// }
-
-	// Inject missing stdlib files into user's home directory
-	stdFS := std.FS
-	err = fs.WalkDir(stdFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		data, err := fs.ReadFile(stdFS, path)
-		if err != nil {
-			return err
-		}
-		targetPath := filepath.Join(home, "neva", "std", path)
-		dir := filepath.Dir(targetPath)
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err = os.MkdirAll(dir, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		}
-		err = os.WriteFile(targetPath, data, 0644)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return path, nil
-}
-
 func New(parser ManifestParser) (Builder, error) {
 	thirdParty, err := getThirdPartyPath()
 	if err != nil {
 		return Builder{}, err
 	}
 
-	stdlibPath, err := rewriteStdlibOntoDisk()
+	// Use EnsureStdlib to handle stdlib extraction with checksum validation
+	stdlibPath, err := ensureStdlib()
 	if err != nil {
-		return Builder{}, err
+		return Builder{}, fmt.Errorf("ensure stdlib: %w", err)
 	}
 
 	return Builder{

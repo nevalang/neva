@@ -1,6 +1,6 @@
 package builder
 
-import "github.com/nevalang/neva/internal/compiler/sourcecode/core"
+import "github.com/nevalang/neva/internal/compiler/ast/core"
 
 type queue []core.ModuleRef
 

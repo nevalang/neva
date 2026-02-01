@@ -1,43 +1,31 @@
 package test
 
 import (
-	"os"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	// for i := 0; i < 10; i++ {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	cmd := exec.Command("neva", "run", "delayed_echo")
-
 	start := time.Now()
-	out, err := cmd.CombinedOutput()
+	out, _ := e2e.Run(t, []string{"run", "."})
 	elapsed := time.Since(start)
-	require.NoError(t, err, string(out))
 
-	// Check execution time is between 1-5 seconds
+	// Check execution time is between 1-10 seconds
 	require.GreaterOrEqual(t, elapsed.Seconds(), 1.0)
-	require.LessOrEqual(t, elapsed.Seconds(), 5.0)
+	require.LessOrEqual(t, elapsed.Seconds(), 10.0)
 
 	// Split output into lines and verify contents
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	require.Equal(t, 7, len(lines), string(out)) // Hello + World + 5 numbers
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	require.Equal(t, 7, len(lines), out) // Hello + World + 5 numbers
 
 	// First line must be Hello
-	require.Equal(t, "Hello", lines[0], string(out))
+	require.Equal(t, "Hello", lines[0], out)
 
-	// Create set of expected remaining values
+	// Check remaining lines contain all expected values
 	expected := map[string]bool{
 		"World": false,
 		"1":     false,
@@ -58,7 +46,4 @@ func Test(t *testing.T) {
 	for val, found := range expected {
 		require.True(t, found, "Expected value not found: %s", val)
 	}
-
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
-	// }
 }

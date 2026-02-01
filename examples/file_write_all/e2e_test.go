@@ -2,39 +2,29 @@ package test
 
 import (
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	err := os.Chdir("..")
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(wd)
-
-	cmd := exec.Command("neva", "run", "file_write_all")
-
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	out, _ := e2e.Run(t, []string{"run", "."})
 
 	require.Equal(
 		t,
 		"",
-		strings.TrimSuffix(string(out), "\n"),
+		strings.TrimSuffix(out, "\n"),
 	)
 
-	require.Equal(t, 0, cmd.ProcessState.ExitCode())
-
 	// Check file contents.
-	const filename = "file_writer_example.txt"
+	repoRoot := e2e.FindRepoRoot(t)
+	filename := filepath.Join(repoRoot, "examples", "file_write_all", "file_writer_example.txt")
 
 	want, err := os.ReadFile(filename)
-	require.NoError(t, err, string(out))
+	require.NoError(t, err, out)
 	require.Equal(
 		t,
 		"Hello, io.WriteAll!",
@@ -42,5 +32,5 @@ func Test(t *testing.T) {
 	)
 
 	// Remove file output.
-	os.Remove(filename)
+	_ = os.Remove(filename)
 }

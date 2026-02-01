@@ -1,8 +1,8 @@
 package desugarer
 
 import (
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 type unusedOutportsResult struct {
@@ -90,9 +90,9 @@ func (Desugarer) findUnusedOutports(
 			io = entity.Interface.IO
 		} else {
 			if len(entity.Component) == 1 {
-				io = entity.Component[0].Interface.IO
+				io = entity.Component[0].IO
 			} else {
-				io = entity.Component[*node.OverloadIndex].Interface.IO
+				io = entity.Component[*node.OverloadIndex].IO
 			}
 		}
 

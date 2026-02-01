@@ -4,12 +4,21 @@ import {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println
-    runtime.Panic
+    eq Eq<int>
+    ternary Ternary<string>
+    println fmt.Println
+    panic runtime.Panic
     ---
-    :start -> {
-        ((2 == 2) ? 'They match' : 'They do not match') -> println:data
-    }
+    :start -> [
+        2 -> eq:left,
+        2 -> eq:right
+    ]
+    eq -> [
+        ternary:if,
+        'They match' -> ternary:then,
+        'They do not match' -> ternary:else
+    ]
+    ternary -> println
     println:res -> :stop
     println:err -> panic
 }

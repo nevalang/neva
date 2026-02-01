@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
 )
 
 // processNetwork inserts connections to result and returns metadata about the network.
@@ -15,7 +15,7 @@ func (g Generator) processNetwork(
 	scope *src.Scope,
 	nodeCtx nodeContext,
 	result *ir.Program,
-) (map[string]portsUsage, error) {
+) map[string]portsUsage {
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
@@ -42,7 +42,7 @@ func (g Generator) processNetwork(
 		)
 	}
 
-	return nodesPortsUsage, nil
+	return nodesPortsUsage
 }
 
 func (Generator) processArrayBypassConnection(
@@ -125,24 +125,11 @@ func (g Generator) processSender(
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
-	// union senders should have been desugared by this point
-	if sender.Union != nil {
-		panic(fmt.Sprintf(
-			"INTERNAL ERROR: union sender %v::%v was not desugared (location: %v)",
-			sender.Union.EntityRef,
-			sender.Union.Tag,
-			sender.Meta.Location,
-		))
-	}
-
 	// other special senders should also have been desugared
 	if sender.PortAddr == nil {
 		panic(fmt.Sprintf(
-			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, binary=%v, ternary=%v, location: %v)",
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, location: %v)",
 			sender.Const != nil,
-			sender.Range != nil,
-			sender.Binary != nil,
-			sender.Ternary != nil,
 			sender.Meta.Location,
 		))
 	}
@@ -155,8 +142,8 @@ func (g Generator) processSender(
 		}
 	}
 
-	// if sender node is dependency from DI and if port we are reffering to is an empty string
-	// we need to find depedency component and use its outport name
+	// if sender node is dependency from DI and if port we are referring to is an empty string
+	// we need to find dependency component and use its outport name
 	// this is techically desugaring at irgen level but it's impossible to desugare before
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
@@ -175,7 +162,7 @@ func (g Generator) processSender(
 			version = versions[*depNode.OverloadIndex]
 		}
 
-		for outport := range version.Interface.IO.Out {
+		for outport := range version.IO.Out {
 			sender.PortAddr.Port = outport
 			break
 		}
@@ -220,9 +207,9 @@ func (g Generator) processReceiver(
 
 	// if receiver node DI
 	diArgNode, isDI := nodeCtx.node.DIArgs[receiver.PortAddr.Node]
-	// and if port we are reffering to is an empty string
+	// and if port we are referring to is an empty string
 	if isDI && receiver.PortAddr.Port == "" {
-		// we need to find depedency component and use its inport name
+		// we need to find dependency component and use its inport name
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
 
@@ -240,7 +227,7 @@ func (g Generator) processReceiver(
 			version = versions[*diArgNode.OverloadIndex]
 		}
 
-		for inport := range version.Interface.IO.In {
+		for inport := range version.IO.In {
 			receiver.PortAddr.Port = inport
 			break
 		}

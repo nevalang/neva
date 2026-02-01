@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/sourcecode"
-	"github.com/nevalang/neva/internal/compiler/sourcecode/core"
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 const (
@@ -18,6 +18,7 @@ type (
 	Builder interface {
 		Build(ctx context.Context, workdir string) (RawBuild, string, *Error)
 	}
+	//nolint:govet // fieldalignment: keep semantic grouping.
 	RawBuild struct {
 		EntryModRef core.ModuleRef
 		Modules     map[core.ModuleRef]RawModule
@@ -45,8 +46,17 @@ type Desugarer interface {
 
 type Irgen interface {
 	Generate(build src.Build, mainPkgName string) (*ir.Program, error)
+	GenerateForComponent(build src.Build, pkgName, componentName string) (*ir.Program, error)
 }
 
 type Backend interface {
-	Emit(dst string, prog *ir.Program, isTraceEnabled bool) error
+	EmitExecutable(dst string, prog *ir.Program, trace bool) error
+	EmitLibrary(dst string, exports []LibraryExport, trace bool) error
+}
+
+//nolint:govet // fieldalignment: keep semantic grouping.
+type LibraryExport struct {
+	Name      string
+	Component src.Component
+	Program   *ir.Program
 }
