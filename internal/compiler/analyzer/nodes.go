@@ -854,6 +854,24 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 		outgoing: map[string][]typesystem.Expr{},
 	}
 
+	filterAmbiguous := func(types []typesystem.Expr) []typesystem.Expr {
+		if len(types) == 0 {
+			return nil
+		}
+		seen := make(map[string]typesystem.Expr, len(types))
+		for _, t := range types {
+			seen[t.String()] = t
+		}
+		if len(seen) != 1 {
+			return nil
+		}
+		out := make([]typesystem.Expr, 0, 1)
+		for _, t := range seen {
+			out = append(out, t)
+		}
+		return out
+	}
+
 	// helper to append unique types (by String) to a slice
 	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
 		s := t.String()
@@ -905,7 +923,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 					continue
 				}
 				// get possible inport types across overloads
-				for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+				for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 					list := c.outgoing[port]
 					appendUnique(&list, t)
 					c.outgoing[port] = list
@@ -935,7 +953,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 							continue
 						}
 						// get possible inport types across overloads
-						for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+						for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 							list := c.outgoing[port]
 							appendUnique(&list, t)
 							c.outgoing[port] = list
@@ -990,7 +1008,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 							if !ok {
 								continue
 							}
-							for _, t := range a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port) {
+							for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 								list := c.outgoing[port]
 								appendUnique(&list, t)
 								c.outgoing[port] = list
@@ -1170,7 +1188,22 @@ func (a Analyzer) getPossibleSenderTypes(
 			return nil
 		}
 
-		return a.getPossibleNodePortTypes(scope, parentFrame, other, false, portAddr.Port)
+		types := a.getPossibleNodePortTypes(scope, parentFrame, other, false, portAddr.Port)
+		if len(types) == 0 {
+			return nil
+		}
+		seen := make(map[string]typesystem.Expr, len(types))
+		for _, t := range types {
+			seen[t.String()] = t
+		}
+		if len(seen) != 1 {
+			return nil
+		}
+		out := make([]typesystem.Expr, 0, 1)
+		for _, t := range seen {
+			out = append(out, t)
+		}
+		return out
 	}
 
 	return nil

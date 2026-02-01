@@ -80,6 +80,10 @@ Follow these instructions.
 - **Common patterns**: To satisfy `gochecknoglobals`, switch static template vars to `const`, and move shared values into helper funcs; use per-program counters instead of package globals.
 - **Common patterns**: If performance trumps `gochecknoglobals`, allow a scoped global counter with `//nolint:gochecknoglobals` rather than threading it through every outport.
 
+### Session Notes (2026-02-01)
+
+- **Gotchas**: Overload resolution can fail when constraints are collected from neighboring overloaded nodes; treat ambiguous neighbor port types as non-constraints to avoid eliminating all candidates.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
