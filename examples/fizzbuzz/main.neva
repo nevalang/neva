@@ -6,7 +6,7 @@ import {
 
 def Main(start any) (stop any) {
     map streams.Map<int, any>{FizzBuzz}
-    for For{fmt.Println}
+    for_each streams.ForEach<any>{fmt.Println<any>}
     range streams.Range
     wait streams.Wait
     panic runtime.Panic
@@ -15,9 +15,9 @@ def Main(start any) (stop any) {
         1 -> range:from,
         101 -> range:to
     ]
-    range -> map -> for
-    for:res -> wait -> :stop
-    for:err -> panic
+    range -> map -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
 def FizzBuzz(data int) (res any) {

@@ -9,19 +9,8 @@ pub def Len(data dict<any>) (res int)
 #extern(string_len)
 pub def Len(data string) (res int)
 
-// List receives stream and sends list with all elements from the stream.
-#extern(stream_to_list)
-pub def StreamToList<T>(data stream<T>) (res list<T>)
-
-// Push creates new list with appended element.
-#extern(list_push)
-pub def Push<T>(lst list<T>, data T) (res list<T>)
-
 // Slice returns a slice of the given string or list.
 #extern(string_slice)
 pub def Slice(data string, from int, to int) (res string)
 #extern(list_slice)
 pub def Slice<T>(data list<T>, from int, to int) (res list<T>)
-
-#extern(list_to_stream)
-pub def ListToStream<T>(data list<T>) (res stream<T>)

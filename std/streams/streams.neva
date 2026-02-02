@@ -1,8 +1,21 @@
+// --- Sources ---
+
+// FromArray iterates over all array-inport's slots in order
+// and produces a stream of messages.
+#extern(array_port_to_stream)
+pub def FromArray<T>([port] T) (data stream<T>)
+
+// FromList creates a stream from a list by sending each element as a stream item.
+#extern(list_to_stream)
+pub def FromList<T>(data list<T>) (res stream<T>)
+
 // Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
 // It emits stream only after both inports receive messages.
 #extern(stream_int_range)
 pub def Range(from int, to int) (res stream<int>)
+
+// --- Synchronization ---
 
 // Wait blocks until last stream item arrive, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
@@ -16,6 +29,8 @@ pub def Wait(data stream<any>) (sig any) {
     s:case[0] -> :sig
     s:else -> del
 }
+
+// --- Combinators ---
 
 // Produces a stream of tuples of the form (left, right)
 // where left is from the left stream and right is from the right stream.
@@ -39,6 +54,11 @@ pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 // elements from the second.
 #extern(stream_product)
 pub def Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
+
+pub type ProductResult<T, Y> struct {
+    first T
+    second Y
+}
 
 pub type ProductResult<T, Y> struct {
     first T

@@ -6,6 +6,12 @@
 
 <h1>Neva Programming Language</h1>
 
+<p align="center">
+  <a href="https://opencollective.com/nevalang" aria-label="Back Neva on Open Collective">
+    <img alt="Back Neva on Open Collective" src="https://img.shields.io/badge/Donate-Open%20Collective-2EC866?logo=opencollective&logoColor=white&labelColor=101010" />
+  </a>
+</p>
+
 ![Tests CI](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main)
 ![Linting CI](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
 [![Go Report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva)
@@ -78,9 +84,9 @@ flowchart LR
 
 ## Contributing
 
-1. See [contributing](./CONTRIBUTING.md) and [architecture](./ARCHITECTURE.md)
-2. Read our [CoC](./CODE_OF_CONDUCT.md)
-3. Join [discord server](https://discord.gg/dmXbC79UuH) 👈
+1. Join [discord server](https://discord.gg/dmXbC79UuH) or [telegram group](https://t.me/+H1kRClL8ppI1MWJi)
+2. Read [contributing](./CONTRIBUTING.md), [architecture](./ARCHITECTURE.md) and [CoC](./CODE_OF_CONDUCT.md)
+3. Support project on [Open Collective](https://opencollective.com/nevalang) ❤️‍🔥
 
 <p align="center">
   <img src="https://contrib.rocks/image?repo=nevalang/neva" />
@@ -88,12 +94,13 @@ flowchart LR
 
 ## Community
 
-Your support by joining us will show interest and motivate us to continue.
+Your support by donating to our open collective or joining us will show interest and motivate us to continue.
 
+[![Open Collective](https://img.shields.io/badge/Open%20Collective-2EC866?logo=opencollective&logoColor=white&labelColor=101010)](https://opencollective.com/nevalang)
 [![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.gg/dmXbC79UuH)
 [![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)](https://t.me/+H1kRClL8ppI1MWJi)
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/r/nevalang/)
-[![Twitter](https://img.shields.io/badge/Twitter-000000?logo=x&logoColor=white)](https://x.com/neva_language)
+[![Twitter](https://img.shields.io/badge/Twitter-000000?logo=x&logoColor=white)](https://x.com/efvaleev94)
 
 ## ⭐️ Star History
 
@@ -109,13 +116,15 @@ Your support by joining us will show interest and motivate us to continue.
 
 ## Support
 
-Please give us a star ⭐️ to increase our chances of getting into GitHub trends. The more developers we reach, the more likely we are to build something truly revolutionary together. 🚀
+We’re exploring a future of programming that few dare to build. If you believe in this direction, backing us on Open Collective keeps the work alive: https://opencollective.com/nevalang
+
+Also give us a star to increase our chances of getting into GitHub trends. The more developers we reach, the more likely we are to build this future together.
 
 <p align="center">
   <img src="./assets/animations/github_star.gif" alt="GitHub Star">
 </p>
 
-Every share helps us grow our community.
+And tell the world about Neva! Every share helps us grow our community.
 
 <div align="center" style="display:grid;place-items:center;">
 

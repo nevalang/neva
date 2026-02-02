@@ -1,0 +1,22 @@
+import {
+    fmt
+    lists
+    runtime
+    streams
+}
+
+def Main(start any) (stop any) {
+    to_stream streams.FromArray<int>
+    to_list lists.FromStream<int>
+    println fmt.Println<list<int>>
+    panic runtime.Panic
+    ---
+    :start -> [
+        1 -> to_stream:port[0],
+        2 -> to_stream:port[1],
+        3 -> to_stream:port[2]
+    ]
+    to_stream -> to_list -> println:data
+    println:res -> :stop
+    println:err -> panic
+}

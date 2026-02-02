@@ -8,13 +8,13 @@ import {
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    s2l StreamToList<int>
+    stream_to_list lists.FromStream<int>
     map_dec streams.Map<int, int>{Dec}
     println fmt.Println<list<int>>
-    l2s ListToStream<int>
+    list_to_stream streams.FromList<int>
     panic runtime.Panic
     ---
-    :start -> $lst -> l2s -> map_dec -> s2l -> println:data
+    :start -> $lst -> list_to_stream -> map_dec -> stream_to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }

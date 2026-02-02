@@ -104,7 +104,7 @@ pub def Tap<T>(data T) (res T, err error) {
 
 pub interface ITapHandler<T>(T) (res any, err error)
 
-// Enrich ...
+// Enrich runs a handler and returns both the original input and handler result.
 def Enrich<T, Y>(data T) (res EnrichResult<T, Y>, err error) {
     handler ITapHandler<T>
     builder Struct<EnrichResult<T, Y>>

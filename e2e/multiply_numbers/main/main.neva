@@ -1,7 +1,7 @@
 import {
     fmt
-	streams
     runtime
+    streams
 }
 
 const l list<int> = [1, 2, 3]
@@ -9,7 +9,7 @@ const l list<int> = [1, 2, 3]
 def Main(start any) (stop any) {
     println fmt.Println<int>
     reduce streams.Reduce<int, int>{Mul}
-    list_to_stream ListToStream<int>
+    list_to_stream streams.FromList<int>
     panic runtime.Panic
     ---
     :start -> [

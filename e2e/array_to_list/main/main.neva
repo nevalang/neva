@@ -4,19 +4,17 @@ import {
     runtime
 }
 
-const f int = 69
-const l list<int> = [320, 420, 100, -100, 0, 5]
-
 def Main(start any) (stop any) {
-    push lists.Push<int>
+    to_list lists.FromArray<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
-	---
-	:start -> [
-        $l -> push:lst,
-        $f -> push:data
-	]
-    push -> println:data
+    ---
+    :start -> [
+        1 -> to_list:port[0],
+        2 -> to_list:port[1],
+        3 -> to_list:port[2]
+    ]
+    to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }
