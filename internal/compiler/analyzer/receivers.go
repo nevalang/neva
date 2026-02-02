@@ -147,13 +147,6 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}.Wrap(err)
 	}
 
-	if src.IsArrayBypassIdx(portAddr.Idx) {
-		return &compiler.Error{
-			Message: "Array-bypass [*] must be used on both sides of a single connection",
-			Meta:    &portAddr.Meta,
-		}
-	}
-
 	if !isArrPort && portAddr.Idx != nil {
 		return &compiler.Error{
 			Message: "Index for non-array port",
@@ -220,22 +213,15 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	net []src.Connection,
 	unionTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
-	if chainedConn.Normal == nil {
+	// Chain head fan-in is intentionally disallowed to keep semantics simple.
+	if len(chainedConn.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
-			Message: "chained connection must be a normal connection",
+			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
 			Meta:    &chainedConn.Meta,
 		}
 	}
 
-	// Chain head fan-in is intentionally disallowed to keep semantics simple.
-	if len(chainedConn.Normal.Senders) != 1 {
-		return src.Connection{}, &compiler.Error{
-			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
-			Meta:    &chainedConn.Normal.Meta,
-		}
-	}
-
-	chainHeadSender := chainedConn.Normal.Senders[0]
+	chainHeadSender := chainedConn.Senders[0]
 
 	chainHeadType, err := a.getChainHeadInputType(
 		chainHeadSender,

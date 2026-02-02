@@ -11,6 +11,7 @@ import (
 
 // Build represents all the information in source code, that must be compiled.
 // User usually don't interacts with this abstraction, but it's important for compiler.
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Build struct {
 	EntryModRef core.ModuleRef            `json:"entryModRef,omitempty"`
@@ -125,6 +126,7 @@ const (
 )
 
 // Component is unit of computation.
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Component struct {
 	Interface  `json:"interface,omitempty"`
@@ -145,6 +147,7 @@ type Interface struct {
 }
 
 // TODO should we use it to typesystem package?
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
@@ -282,13 +285,8 @@ type Port struct {
 	Meta     core.Meta `json:"meta,omitempty"`
 }
 
-type Connection struct {
-	Normal *NormalConnection `json:"normal,omitempty"`
-	Meta   core.Meta         `json:"meta,omitempty"`
-}
-
 //nolint:govet // fieldalignment: keep semantic grouping.
-type NormalConnection struct {
+type Connection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
 	Meta      core.Meta            `json:"meta,omitempty"`
@@ -306,8 +304,8 @@ type ConnectionSender struct {
 	PortAddr *PortAddr `json:"portAddr,omitempty"`
 	Const    *Const    `json:"const,omitempty"`
 
-	StructSelector []string     `json:"selector,omitempty"`
-	Meta           core.Meta    `json:"meta"`
+	StructSelector []string  `json:"selector,omitempty"`
+	Meta           core.Meta `json:"meta"`
 }
 
 func (s ConnectionSender) String() string {
@@ -344,30 +342,6 @@ func IsArrayBypassIdx(idx *uint8) bool {
 
 func IsArrayBypassPortAddr(addr *PortAddr) bool {
 	return addr != nil && IsArrayBypassIdx(addr.Idx)
-}
-
-func ArrayBypassPorts(conn *NormalConnection) (*PortAddr, *PortAddr, bool) {
-	if conn == nil || len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
-		return nil, nil, false
-	}
-
-	sender := conn.Senders[0]
-	if sender.PortAddr == nil || sender.Const != nil || len(sender.StructSelector) != 0 {
-		return nil, nil, false
-	}
-	if !IsArrayBypassIdx(sender.PortAddr.Idx) {
-		return nil, nil, false
-	}
-
-	receiver := conn.Receivers[0]
-	if receiver.PortAddr == nil || receiver.ChainedConnection != nil || receiver.DeferredConnection != nil {
-		return nil, nil, false
-	}
-	if !IsArrayBypassIdx(receiver.PortAddr.Idx) {
-		return nil, nil, false
-	}
-
-	return sender.PortAddr, receiver.PortAddr, true
 }
 
 func (p PortAddr) String() string {

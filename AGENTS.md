@@ -103,6 +103,13 @@ Follow these instructions.
 - **Common patterns**: `e2e/` tests are separate Neva modules with Go e2e tests; `examples/` is a single Neva module where all examples must compile together.
 - **Gotchas**: `e2e/` includes verbose mirror variants that can duplicate `examples/` coverage; keep them only when they assert distinct semantics.
 
+### Session Notes (2026-02-02)
+
+- **Language semantics**: Connection AST now uses `Connection` directly; `NormalConnection` wrapper was removed (chained/deferred connections reuse the same struct).
+- **Architecture insights**: Parser `connDef` now directly parses sender/receiver; `chainedNormConn` points to `connDef` (no intermediate rule).
+- **Common patterns**: Array-bypass detection lives in analyzer; desugarer/irgen treat `[*]` connections as validated 1:1 wiring.
+- **Gotchas**: Array-bypass consumes the whole port; mixing `[*]` with other slot usage is rejected; index 255 remains reserved (max index 254).
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

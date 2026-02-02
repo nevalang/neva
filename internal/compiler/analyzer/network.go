@@ -108,7 +108,7 @@ func (a Analyzer) analyzeConnection(
 	net []src.Connection,
 	unionActiveTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
-	if sender, receiver, ok := src.ArrayBypassPorts(conn.Normal); ok {
+	if sender, receiver, ok := arrayBypassPorts(conn); ok {
 		if err := a.analyzeArrayBypassConnection(
 			*sender,
 			*receiver,
@@ -124,15 +124,16 @@ func (a Analyzer) analyzeConnection(
 		return conn, nil
 	}
 
-	if bypassAddr := arrayBypassPortAddr(conn.Normal); bypassAddr != nil {
+	// At this point any remaining [*] means only one side used array-bypass or it appears in a non-1:1 connection.
+	if bypassAddr := arrayBypassPortAddr(conn); bypassAddr != nil {
 		return src.Connection{}, &compiler.Error{
 			Message: "Array-bypass requires [*] on both sides of a single connection",
 			Meta:    &bypassAddr.Meta,
 		}
 	}
 
-	analyzedNormalConn, err := a.analyzeNormalConnection(
-		conn.Normal,
+	analyzedConn, err := a.analyzeNormalConnection(
+		conn,
 		iface,
 		nodes,
 		nodesIfaces,
@@ -146,16 +147,10 @@ func (a Analyzer) analyzeConnection(
 		return src.Connection{}, err
 	}
 
-	return src.Connection{
-		Normal: analyzedNormalConn,
-		Meta:   conn.Meta,
-	}, nil
+	return analyzedConn, nil
 }
 
-func arrayBypassPortAddr(conn *src.NormalConnection) *src.PortAddr {
-	if conn == nil {
-		return nil
-	}
+func arrayBypassPortAddr(conn src.Connection) *src.PortAddr {
 	for _, sender := range conn.Senders {
 		if src.IsArrayBypassPortAddr(sender.PortAddr) {
 			return sender.PortAddr
@@ -170,7 +165,7 @@ func arrayBypassPortAddr(conn *src.NormalConnection) *src.PortAddr {
 }
 
 func (a Analyzer) analyzeNormalConnection(
-	normConn *src.NormalConnection,
+	conn src.Connection,
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -179,9 +174,9 @@ func (a Analyzer) analyzeNormalConnection(
 	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
 	unionActiveTags map[string]unionActiveTagInfo,
-) (*src.NormalConnection, *compiler.Error) {
+) (src.Connection, *compiler.Error) {
 	analyzedSenders, resolvedSenderTypes, err := a.analyzeSenders(
-		normConn.Senders,
+		conn.Senders,
 		scope,
 		iface,
 		nodes,
@@ -190,7 +185,7 @@ func (a Analyzer) analyzeNormalConnection(
 		prevChainLink,
 	)
 	if err != nil {
-		return nil, err
+		return src.Connection{}, err
 	}
 
 	// Switch needs special typing: for union pattern matching, each case output may
@@ -204,11 +199,11 @@ func (a Analyzer) analyzeNormalConnection(
 		net,
 	)
 	if err != nil {
-		return nil, err
+		return src.Connection{}, err
 	}
 
 	analyzedReceivers, err := a.analyzeReceivers(
-		normConn.Receivers,
+		conn.Receivers,
 		scope,
 		iface,
 		nodes,
@@ -220,14 +215,36 @@ func (a Analyzer) analyzeNormalConnection(
 		unionActiveTags,
 	)
 	if err != nil {
-		return nil, err
+		return src.Connection{}, err
 	}
 
-	return &src.NormalConnection{
+	return src.Connection{
 		Senders:   analyzedSenders,
 		Receivers: analyzedReceivers,
-		Meta:      normConn.Meta,
+		Meta:      conn.Meta,
 	}, nil
+}
+
+func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
+	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	if sender.PortAddr == nil || sender.Const != nil || len(sender.StructSelector) != 0 {
+		return nil, nil, false
+	}
+
+	receiver := conn.Receivers[0]
+	if receiver.PortAddr == nil || receiver.ChainedConnection != nil || receiver.DeferredConnection != nil {
+		return nil, nil, false
+	}
+
+	if !src.IsArrayBypassIdx(sender.PortAddr.Idx) || !src.IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
 }
 
 // patchSwitchSenders patches sender types for Switch:case[i] outports.

@@ -404,12 +404,6 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
 
-// EnterNormConnDef is called when production normConnDef is entered.
-func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
-
-// ExitNormConnDef is called when production normConnDef is exited.
-func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
-
 // EnterSenderSide is called when production senderSide is entered.
 func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
 

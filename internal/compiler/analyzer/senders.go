@@ -96,13 +96,6 @@ func (a Analyzer) analyzeSender(
 	}
 
 	if sender.PortAddr != nil {
-		if src.IsArrayBypassIdx(sender.PortAddr.Idx) {
-			return nil, nil, &compiler.Error{
-				Message: "Array-bypass [*] must be used on both sides of a single connection",
-				Meta:    &sender.PortAddr.Meta,
-			}
-		}
-
 		if !isSenderArr && sender.PortAddr.Idx != nil {
 			return nil, nil, &compiler.Error{
 				Message: "Index for non-array port",

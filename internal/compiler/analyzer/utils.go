@@ -57,6 +57,7 @@ func (p portsUsage) trackSlotUsage(addr src.PortAddr) error {
 	}
 
 	if isArrayBypass {
+		// Array-bypass consumes the whole port, so any additional usage is a duplicate.
 		return fmt.Errorf("port '%v' is used twice", addr)
 	}
 

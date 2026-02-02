@@ -146,12 +146,9 @@ func (a Analyzer) collectPortSenders(
 	var out []src.ConnectionSender
 
 	for _, conn := range net {
-		if conn.Normal == nil {
-			continue
-		}
 		a.collectPortSendersInReceivers(
-			conn.Normal.Senders,
-			conn.Normal.Receivers,
+			conn.Senders,
+			conn.Receivers,
 			nodeName,
 			port,
 			&out,
@@ -180,7 +177,7 @@ func (a Analyzer) collectPortSendersInReceivers(
 
 		// Chained receiver: chain head is the receiver for outer senders.
 		if receiver.ChainedConnection != nil {
-			for _, chainHead := range receiver.ChainedConnection.Normal.Senders {
+			for _, chainHead := range receiver.ChainedConnection.Senders {
 				if chainHead.PortAddr != nil &&
 					chainHead.PortAddr.Node == nodeName &&
 					chainHead.PortAddr.Port == port {
@@ -190,8 +187,8 @@ func (a Analyzer) collectPortSendersInReceivers(
 
 			// Recurse into the chain to catch deeper receivers.
 			a.collectPortSendersInReceivers(
-				receiver.ChainedConnection.Normal.Senders,
-				receiver.ChainedConnection.Normal.Receivers,
+				receiver.ChainedConnection.Senders,
+				receiver.ChainedConnection.Receivers,
 				nodeName,
 				port,
 				out,
@@ -201,8 +198,8 @@ func (a Analyzer) collectPortSendersInReceivers(
 		// Deferred connections behave like nested receiver trees as well.
 		if receiver.DeferredConnection != nil {
 			a.collectPortSendersInReceivers(
-				receiver.DeferredConnection.Normal.Senders,
-				receiver.DeferredConnection.Normal.Receivers,
+				receiver.DeferredConnection.Senders,
+				receiver.DeferredConnection.Receivers,
 				nodeName,
 				port,
 				out,

@@ -19,7 +19,7 @@ func (g Generator) processNetwork(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		if sender, receiver, ok := src.ArrayBypassPorts(conn.Normal); ok {
+		if sender, receiver, ok := arrayBypassPorts(conn); ok {
 			g.processArrayBypassConnection(
 				*sender,
 				*receiver,
@@ -30,7 +30,7 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		if len(conn.Normal.Senders) != 1 || len(conn.Normal.Receivers) != 1 {
+		if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 			panic("not 1-1 connection found after desugaring")
 		}
 
@@ -109,16 +109,34 @@ func (g Generator) processNormalConnection(
 	irSenderSidePortAddr := g.processSender(
 		nodeCtx,
 		scope,
-		conn.Normal.Senders[0],
+		conn.Senders[0],
 		nodesPortsUsage,
 	)
 	irReceiverPortAddr := g.processReceiver(
 		nodeCtx,
 		scope,
-		conn.Normal.Receivers[0],
+		conn.Receivers[0],
 		nodesPortsUsage,
 	)
 	result.Connections[irSenderSidePortAddr] = irReceiverPortAddr
+}
+
+func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
+	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	receiver := conn.Receivers[0]
+	if sender.PortAddr == nil || receiver.PortAddr == nil {
+		return nil, nil, false
+	}
+
+	if !src.IsArrayBypassIdx(sender.PortAddr.Idx) || !src.IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
 }
 
 func (g Generator) processSender(

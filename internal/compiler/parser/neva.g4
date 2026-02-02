@@ -98,8 +98,7 @@ nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 
 // Connections
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
-connDef: normConnDef;
-normConnDef: senderSide ARROW receiverSide;
+connDef: senderSide ARROW receiverSide;
 senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
 	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
@@ -111,7 +110,7 @@ singleSenderSide:
 senderConstRef: DOLLAR entityRef;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
-chainedNormConn: normConnDef;
+chainedNormConn: connDef;
 deferredConn: LBRACE NEWLINE* connDef NEWLINE* RBRACE;
 portAddr:
 	singlePortAddr

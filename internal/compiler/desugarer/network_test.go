@@ -28,16 +28,14 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "simple_1_to_1",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
-							},
+					Senders: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								PortAddr: &src.PortAddr{Node: "node2", Port: "in"},
-							},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{Node: "node2", Port: "in"},
 						},
 					},
 				},
@@ -49,16 +47,14 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "node2", Port: "in"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "in"},
 							},
 						},
 					},
@@ -72,15 +68,13 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "fan_in",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{PortAddr: &src.PortAddr{Node: "node1", Port: "out"}},
-							{PortAddr: &src.PortAddr{Node: "node2", Port: "out"}},
-						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								PortAddr: &src.PortAddr{Node: "node3", Port: "in"},
-							},
+					Senders: []src.ConnectionSender{
+						{PortAddr: &src.PortAddr{Node: "node1", Port: "out"}},
+						{PortAddr: &src.PortAddr{Node: "node2", Port: "out"}},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{Node: "node3", Port: "in"},
 						},
 					},
 				},
@@ -93,44 +87,38 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node2", Port: "out"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "out"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "node3", Port: "in"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "node3", Port: "in"},
 							},
 						},
 					},
@@ -148,26 +136,22 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "implicit_fan_in_to_outport",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{PortAddr: &src.PortAddr{Node: "node1", Port: "out"}},
-						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								PortAddr: &src.PortAddr{Node: "out", Port: "err"},
-							},
+					Senders: []src.ConnectionSender{
+						{PortAddr: &src.PortAddr{Node: "node1", Port: "out"}},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{Node: "out", Port: "err"},
 						},
 					},
 				},
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{PortAddr: &src.PortAddr{Node: "node2", Port: "out"}},
-						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								PortAddr: &src.PortAddr{Node: "out", Port: "err"},
-							},
+					Senders: []src.ConnectionSender{
+						{PortAddr: &src.PortAddr{Node: "node2", Port: "out"}},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{Node: "out", Port: "err"},
 						},
 					},
 				},
@@ -179,44 +163,38 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node1", Port: "out"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node2", Port: "out"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "out"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "out", Port: "err"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "out", Port: "err"},
 							},
 						},
 					},
@@ -234,26 +212,22 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "chained",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
-							},
+					Senders: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								ChainedConnection: &src.Connection{
-									Normal: &src.NormalConnection{
-										Senders: []src.ConnectionSender{
-											{
-												PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
-											},
-										},
-										Receivers: []src.ConnectionReceiver{
-											{
-												PortAddr: &src.PortAddr{Node: "node3", Port: "baz"},
-											},
-										},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							ChainedConnection: &src.Connection{
+								Senders: []src.ConnectionSender{
+									{
+										PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
+									},
+								},
+								Receivers: []src.ConnectionReceiver{
+									{
+										PortAddr: &src.PortAddr{Node: "node3", Port: "baz"},
 									},
 								},
 							},
@@ -269,30 +243,26 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node1", Port: "foo"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "node2", Port: "bar"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "node3", Port: "baz"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "node3", Port: "baz"},
 							},
 						},
 					},
@@ -306,23 +276,19 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "struct_selector_chain",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
-							},
+					Senders: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								ChainedConnection: &src.Connection{
-									Normal: &src.NormalConnection{
-										Senders: []src.ConnectionSender{
-											{StructSelector: []string{"a", "b", "c"}},
-										},
-										Receivers: []src.ConnectionReceiver{
-											{PortAddr: &src.PortAddr{Node: "baz", Port: "bax"}},
-										},
-									},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							ChainedConnection: &src.Connection{
+								Senders: []src.ConnectionSender{
+									{StructSelector: []string{"a", "b", "c"}},
+								},
+								Receivers: []src.ConnectionReceiver{
+									{PortAddr: &src.PortAddr{Node: "baz", Port: "bax"}},
 								},
 							},
 						},
@@ -336,30 +302,26 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "foo", Port: "bar"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__field__1", Port: "data"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__field__1", Port: "data"},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__field__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__field__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "baz", Port: "bax"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "baz", Port: "bax"},
 							},
 						},
 					},
@@ -405,20 +367,18 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "const_ref_sender",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								Const: &src.Const{
-									Value: src.ConstValue{
-										Ref: &core.EntityRef{Name: "foo"},
-									},
+					Senders: []src.ConnectionSender{
+						{
+							Const: &src.Const{
+								Value: src.ConstValue{
+									Ref: &core.EntityRef{Name: "foo"},
 								},
 							},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
-							},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
 						},
 					},
 				},
@@ -442,16 +402,14 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__new__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "bar", Port: "baz"},
 							},
 						},
 					},
@@ -479,30 +437,26 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "const_ref_in_chain",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
-							},
+					Senders: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{Node: "a", Port: "b"},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								ChainedConnection: &src.Connection{
-									Normal: &src.NormalConnection{
-										Senders: []src.ConnectionSender{
-											{
-												Const: &src.Const{
-													Value: src.ConstValue{
-														Ref: &core.EntityRef{Name: "c"},
-													},
-												},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							ChainedConnection: &src.Connection{
+								Senders: []src.ConnectionSender{
+									{
+										Const: &src.Const{
+											Value: src.ConstValue{
+												Ref: &core.EntityRef{Name: "c"},
 											},
 										},
-										Receivers: []src.ConnectionReceiver{
-											{
-												PortAddr: &src.PortAddr{Node: "d", Port: "e"},
-											},
-										},
+									},
+								},
+								Receivers: []src.ConnectionReceiver{
+									{
+										PortAddr: &src.PortAddr{Node: "d", Port: "e"},
 									},
 								},
 							},
@@ -530,30 +484,26 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "a", Port: "b"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "d", Port: "e"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "d", Port: "e"},
 							},
 						},
 					},
@@ -581,35 +531,31 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "const_literal_in_chain",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
-							},
+					Senders: []src.ConnectionSender{
+						{
+							PortAddr: &src.PortAddr{Node: "a", Port: "b"},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{
-								ChainedConnection: &src.Connection{
-									Normal: &src.NormalConnection{
-										Senders: []src.ConnectionSender{
-											{
-												Const: &src.Const{
-													TypeExpr: ts.Expr{
-														Inst: &ts.InstExpr{
-															Ref: core.EntityRef{Name: "int"},
-														},
-													},
-													Value: src.ConstValue{
-														Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
-													},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{
+							ChainedConnection: &src.Connection{
+								Senders: []src.ConnectionSender{
+									{
+										Const: &src.Const{
+											TypeExpr: ts.Expr{
+												Inst: &ts.InstExpr{
+													Ref: core.EntityRef{Name: "int"},
 												},
 											},
-										},
-										Receivers: []src.ConnectionReceiver{
-											{
-												PortAddr: &src.PortAddr{Node: "c", Port: "d"},
+											Value: src.ConstValue{
+												Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
 											},
 										},
+									},
+								},
+								Receivers: []src.ConnectionReceiver{
+									{
+										PortAddr: &src.PortAddr{Node: "c", Port: "d"},
 									},
 								},
 							},
@@ -624,30 +570,26 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "a", Port: "b"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "a", Port: "b"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "sig"},
 							},
 						},
 					},
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{
-								{
-									PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
-								},
+						Senders: []src.ConnectionSender{
+							{
+								PortAddr: &src.PortAddr{Node: "__newv2__1", Port: "res"},
 							},
-							Receivers: []src.ConnectionReceiver{
-								{
-									PortAddr: &src.PortAddr{Node: "c", Port: "d"},
-								},
+						},
+						Receivers: []src.ConnectionReceiver{
+							{
+								PortAddr: &src.PortAddr{Node: "c", Port: "d"},
 							},
 						},
 					},
@@ -685,29 +627,27 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "union_literal_sender_tag_only",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								Const: &src.Const{
-									TypeExpr: ts.Expr{
-										Inst: &ts.InstExpr{
-											Ref: core.EntityRef{Name: "Input"},
-										},
+					Senders: []src.ConnectionSender{
+						{
+							Const: &src.Const{
+								TypeExpr: ts.Expr{
+									Inst: &ts.InstExpr{
+										Ref: core.EntityRef{Name: "Input"},
 									},
-									Value: src.ConstValue{
-										Message: &src.MsgLiteral{
-											Union: &src.UnionLiteral{
-												EntityRef: core.EntityRef{Name: "Input"},
-												Tag:       "Int",
-											},
+								},
+								Value: src.ConstValue{
+									Message: &src.MsgLiteral{
+										Union: &src.UnionLiteral{
+											EntityRef: core.EntityRef{Name: "Input"},
+											Tag:       "Int",
 										},
 									},
 								},
 							},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
-						},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
 					},
 				},
 			},
@@ -717,16 +657,14 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{{
-								PortAddr: &src.PortAddr{
-									Node: "__new__1",
-									Port: "res",
-								},
-							}},
-							Receivers: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						Senders: []src.ConnectionSender{{
+							PortAddr: &src.PortAddr{
+								Node: "__new__1",
+								Port: "res",
 							},
+						}},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
 						},
 					},
 				},
@@ -771,24 +709,22 @@ func TestDesugarNetwork(t *testing.T) {
 			name: "union_literal_sender_with_value",
 			net: []src.Connection{
 				{
-					Normal: &src.NormalConnection{
-						Senders: []src.ConnectionSender{
-							{
-								Const: &src.Const{
-									TypeExpr: ts.Expr{
-										Inst: &ts.InstExpr{
-											Ref: core.EntityRef{Name: "Input"},
-										},
+					Senders: []src.ConnectionSender{
+						{
+							Const: &src.Const{
+								TypeExpr: ts.Expr{
+									Inst: &ts.InstExpr{
+										Ref: core.EntityRef{Name: "Input"},
 									},
-									Value: src.ConstValue{
-										Message: &src.MsgLiteral{
-											Union: &src.UnionLiteral{
-												EntityRef: core.EntityRef{Name: "Input"},
-												Tag:       "Int",
-												Data: &src.ConstValue{
-													Message: &src.MsgLiteral{
-														Int: compiler.Pointer(42),
-													},
+								},
+								Value: src.ConstValue{
+									Message: &src.MsgLiteral{
+										Union: &src.UnionLiteral{
+											EntityRef: core.EntityRef{Name: "Input"},
+											Tag:       "Int",
+											Data: &src.ConstValue{
+												Message: &src.MsgLiteral{
+													Int: compiler.Pointer(42),
 												},
 											},
 										},
@@ -796,9 +732,9 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Receivers: []src.ConnectionReceiver{
-							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
-						},
+					},
+					Receivers: []src.ConnectionReceiver{
+						{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
 					},
 				},
 			},
@@ -808,16 +744,14 @@ func TestDesugarNetwork(t *testing.T) {
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
-						Normal: &src.NormalConnection{
-							Senders: []src.ConnectionSender{{
-								PortAddr: &src.PortAddr{
-									Node: "__new__1",
-									Port: "res",
-								},
-							}},
-							Receivers: []src.ConnectionReceiver{
-								{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
+						Senders: []src.ConnectionSender{{
+							PortAddr: &src.PortAddr{
+								Node: "__new__1",
+								Port: "res",
 							},
+						}},
+						Receivers: []src.ConnectionReceiver{
+							{PortAddr: &src.PortAddr{Node: "foo", Port: "bar"}},
 						},
 					},
 				},

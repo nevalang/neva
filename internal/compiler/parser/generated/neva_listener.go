@@ -199,9 +199,6 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterNormConnDef is called when entering the normConnDef production.
-	EnterNormConnDef(c *NormConnDefContext)
-
 	// EnterSenderSide is called when entering the senderSide production.
 	EnterSenderSide(c *SenderSideContext)
 
@@ -447,9 +444,6 @@ type nevaListener interface {
 
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
-
-	// ExitNormConnDef is called when exiting the normConnDef production.
-	ExitNormConnDef(c *NormConnDefContext)
 
 	// ExitSenderSide is called when exiting the senderSide production.
 	ExitSenderSide(c *SenderSideContext)

@@ -164,49 +164,45 @@ func (a Analyzer) findSenderForSwitchCaseInputInConn(
 	nodeName string,
 	idx *uint8,
 ) (*src.ConnectionSender, *compiler.Error) {
-	if conn.Normal == nil {
-		return nil, nil
-	}
-
-	return a.findSenderForSwitchCaseInportInConn(*conn.Normal, nodeName, idx)
+	return a.findSenderForSwitchCaseInportInConn(*conn, nodeName, idx)
 }
 
 func (a Analyzer) findSenderForSwitchCaseInportInConn(
-	normConn src.NormalConnection,
+	conn src.Connection,
 	nodeName string,
 	idx *uint8,
 ) (*src.ConnectionSender, *compiler.Error) {
-	for _, receiver := range normConn.Receivers {
+	for _, receiver := range conn.Receivers {
 		// Receiver is `... -> switch:case[i]`
 		if a.isSwitchCaseReceiver(receiver, nodeName, idx) {
-			if len(normConn.Senders) != 1 {
+			if len(conn.Senders) != 1 {
 				return nil, &compiler.Error{
 					Message: "switch case connection must have exactly one sender when its union tag",
-					Meta:    &normConn.Meta,
+					Meta:    &conn.Meta,
 				}
 			}
-			return &normConn.Senders[0], nil
+			return &conn.Senders[0], nil
 		}
 
 		// Check chained connection
 		// ... -> switch:case[i] -> ...
-		if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
-			if len(receiver.ChainedConnection.Normal.Senders) > 0 {
-				chainHead := receiver.ChainedConnection.Normal.Senders[0]
+		if receiver.ChainedConnection != nil {
+			if len(receiver.ChainedConnection.Senders) > 0 {
+				chainHead := receiver.ChainedConnection.Senders[0]
 				if a.isSwitchCaseSender(chainHead, nodeName, idx) {
-					if len(normConn.Senders) != 1 {
+					if len(conn.Senders) != 1 {
 						return nil, &compiler.Error{
 							Message: "switch case connection must have exactly one sender when its union tag",
-							Meta:    &normConn.Meta,
+							Meta:    &conn.Meta,
 						}
 					}
 					// Found the connection! (Switch case is head of chain)
-					return &normConn.Senders[0], nil
+					return &conn.Senders[0], nil
 				}
 			}
 
 			sender, err := a.findSenderForSwitchCaseInportInConn(
-				*receiver.ChainedConnection.Normal,
+				*receiver.ChainedConnection,
 				nodeName,
 				idx,
 			)
@@ -218,9 +214,9 @@ func (a Analyzer) findSenderForSwitchCaseInportInConn(
 			}
 		}
 
-		if receiver.DeferredConnection != nil && receiver.DeferredConnection.Normal != nil {
+		if receiver.DeferredConnection != nil {
 			sender, err := a.findSenderForSwitchCaseInportInConn(
-				*receiver.DeferredConnection.Normal,
+				*receiver.DeferredConnection,
 				nodeName,
 				idx,
 			)
@@ -251,7 +247,6 @@ func (Analyzer) isSwitchCaseReceiver(receiver src.ConnectionReceiver, nodeName s
 		receiver.PortAddr.Idx != nil &&
 		*receiver.PortAddr.Idx == *idx
 }
-
 
 // isSwitchCasePort checks if a port address refers to a Switch component's case port.
 func isSwitchCasePort(portAddr src.PortAddr, nodes map[string]src.Node) bool {
