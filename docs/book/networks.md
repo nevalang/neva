@@ -291,33 +291,47 @@ field2 -> bax
 
 As you can see `Field` is one of few components that are expected to be used with `#bind` directive so it's much better to just use `.` dot notation instead.
 
-#### Range Expression
+#### Range Component
 
-A range expression sender allows you to generate a `stream<int>` of messages within a specified range.
+`Range` generates a `stream<int>` of messages within a specified range.
 
-```
-sig -> 0..100 -> receiver
+```neva
+import { streams }
+
+range streams.Range
+---
+sig -> [
+    0 -> range:from,
+    100 -> range:to
+]
+range -> receiver
 ```
 
 In this example we generate stream of 100 integers from `0` up to `99` - that is, range is exclusive.
 
-> Only message literals (integers) are supported at the moment, but in the future we'll allow different kinds (e.g. port-addresses) of senders for more flexible ranging
-
-Negative ranging is also supported
-
-```
-sig -> 100..0 -> receiver
-```
-
-**How it works**
-
-Range expressions is syntax sugar over explicit `Range`:
+Negative ranging is also supported:
 
 ```neva
-def Range(from int, to int, sig any) (res stream<int>)
+import { streams }
+
+range streams.Range
+---
+sig -> [
+    100 -> range:from,
+    0 -> range:to
+]
+range -> receiver
 ```
 
-`Range` component waits for all 3 inports to fire, then emits a stream of `N` messages. You are free to use range as a normal component, but you should prefer `..` syntax whenever possible.
+**Signature**
+
+`Range` is an explicit component in the `streams` package:
+
+```neva
+pub def Range(from int, to int) (res stream<int>)
+```
+
+`Range` waits for both inports to fire, then emits a stream of `N` messages.
 
 ### Receivers
 
@@ -631,11 +645,11 @@ Such components can't refer to their ports by index (e.g., `data[i]`). To operat
 def FanInWrap([data]) (res) {
     FanIn
     ---
-    :data => fanIn
+    :data[*] -> fanIn[*]
 }
 ```
 
-The `=>` operator indicates an array-bypass connection, where both sender and receiver are always port-addresses without indexes. This connects all array-port slots, not just two specific slots. Array-bypass effectively creates multiple connections, one for each used slot.
+The `[*]` syntax indicates an array-bypass connection, where both sender and receiver are always array port-addresses with a wildcard slot. This connects all array-port slots, not just two specific slots. Array-bypass effectively creates multiple connections, one for each used slot. Index `255` is reserved for this wildcard and cannot be used explicitly.
 
 Let's examine a specific example to understand how it works:
 
@@ -651,7 +665,7 @@ def Main() () {
 }
 ```
 
-In this example, `:data => fanIn` in `FanInWrap` expands to:
+In this example, `:data[*] -> fanIn[*]` in `FanInWrap` expands to:
 
 ```neva
 :data[0] -> fanIn[0]

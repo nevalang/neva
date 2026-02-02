@@ -22,36 +22,42 @@ type ParseEntityRefOutput struct {
 
 func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRefOutput, error) {
 	var (
-		at_name_2_out_err_to_p2_in_data                   = make(chan runtime.OrderedMsg)
-		eq_out_res_to_cond_in_if                          = make(chan runtime.OrderedMsg)
-		__new__7_out_res_to_at_name_2_in_idx              = make(chan runtime.OrderedMsg)
-		fan_in_pkg_out_res_to_builder_in_pkg              = make(chan runtime.OrderedMsg)
-		__fan_out__13_out_data_1_to_at_name_1_in_data     = make(chan runtime.OrderedMsg)
-		__fan_out__10_out_data_0_to_split_in_data         = make(chan runtime.OrderedMsg)
-		in_ref_to___fan_out__10_in_data                   = make(chan runtime.OrderedMsg)
-		__fan_out__10_out_data_1_to_builder_in_metaText   = make(chan runtime.OrderedMsg)
-		__new__6_out_res_to_at_pkg_2_in_idx               = make(chan runtime.OrderedMsg)
-		at_name_2_out_res_to_fan_in_name_in_data_0        = make(chan runtime.OrderedMsg)
-		at_name_1_out_err_to_p3_in_data                   = make(chan runtime.OrderedMsg)
-		__fan_out__12_out_data_0_to_at_pkg_2_in_data      = make(chan runtime.OrderedMsg)
-		cond_out_else_to___fan_out__13_in_data            = make(chan runtime.OrderedMsg)
-		__new__4_out_res_to_split_in_delim                = make(chan runtime.OrderedMsg)
-		__fan_out__13_out_data_0_to_lock_empty_pkg_in_sig = make(chan runtime.OrderedMsg)
-		__fan_out__11_out_data_1_to_cond_in_data          = make(chan runtime.OrderedMsg)
-		__new__8_out_res_to_lock_empty_pkg_in_data        = make(chan runtime.OrderedMsg)
-		__fan_out__12_out_data_1_to_at_name_2_in_data     = make(chan runtime.OrderedMsg)
-		len_out_res_to_eq_in_left                         = make(chan runtime.OrderedMsg)
-		cond_out_then_to___fan_out__12_in_data            = make(chan runtime.OrderedMsg)
-		__new__9_out_res_to_at_name_1_in_idx              = make(chan runtime.OrderedMsg)
-		__fan_out__11_out_data_0_to_len_in_data           = make(chan runtime.OrderedMsg)
-		at_pkg_2_out_res_to_fan_in_pkg_in_data_0          = make(chan runtime.OrderedMsg)
-		at_name_1_out_res_to_fan_in_name_in_data_1        = make(chan runtime.OrderedMsg)
-		split_out_res_to___fan_out__11_in_data            = make(chan runtime.OrderedMsg)
-		at_pkg_2_out_err_to_p1_in_data                    = make(chan runtime.OrderedMsg)
-		builder_out_res_to_out_res                        = make(chan runtime.OrderedMsg)
-		fan_in_name_out_res_to_builder_in_name            = make(chan runtime.OrderedMsg)
-		lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1   = make(chan runtime.OrderedMsg)
-		__new__5_out_res_to_eq_in_right                   = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_2_to___newv2__1_in_sig     = make(chan runtime.OrderedMsg)
+		builder_out_res_to_out_res                       = make(chan runtime.OrderedMsg)
+		__fan_out__4_out_data_1_to_at_name_1_in_data     = make(chan runtime.OrderedMsg)
+		at_name_1_out_err_to_p3_in_data                  = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_5_to___newv2__4_in_sig     = make(chan runtime.OrderedMsg)
+		split_out_res_to___fan_out__2_in_data            = make(chan runtime.OrderedMsg)
+		__newv2__4_out_res_to_at_name_2_in_idx           = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_7_to___newv2__6_in_sig     = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_0_to_split_in_data         = make(chan runtime.OrderedMsg)
+		__fan_out__3_out_data_1_to_at_name_2_in_data     = make(chan runtime.OrderedMsg)
+		eq_out_res_to_cond_in_if                         = make(chan runtime.OrderedMsg)
+		__newv2__1_out_res_to_split_in_delim             = make(chan runtime.OrderedMsg)
+		__fan_out__2_out_data_1_to_cond_in_data          = make(chan runtime.OrderedMsg)
+		__fan_out__2_out_data_0_to_len_in_data           = make(chan runtime.OrderedMsg)
+		in_ref_to___fan_out__1_in_data                   = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_6_to___newv2__5_in_sig     = make(chan runtime.OrderedMsg)
+		cond_out_else_to___fan_out__4_in_data            = make(chan runtime.OrderedMsg)
+		__newv2__3_out_res_to_at_pkg_2_in_idx            = make(chan runtime.OrderedMsg)
+		fan_in_pkg_out_res_to_builder_in_pkg             = make(chan runtime.OrderedMsg)
+		at_name_2_out_res_to_fan_in_name_in_data_0       = make(chan runtime.OrderedMsg)
+		len_out_res_to_eq_in_left                        = make(chan runtime.OrderedMsg)
+		__fan_out__3_out_data_0_to_at_pkg_2_in_data      = make(chan runtime.OrderedMsg)
+		at_name_2_out_err_to_p2_in_data                  = make(chan runtime.OrderedMsg)
+		at_pkg_2_out_res_to_fan_in_pkg_in_data_0         = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_4_to___newv2__3_in_sig     = make(chan runtime.OrderedMsg)
+		at_pkg_2_out_err_to_p1_in_data                   = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_1_to_builder_in_metaText   = make(chan runtime.OrderedMsg)
+		fan_in_name_out_res_to_builder_in_name           = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_3_to___newv2__2_in_sig     = make(chan runtime.OrderedMsg)
+		__newv2__6_out_res_to_at_name_1_in_idx           = make(chan runtime.OrderedMsg)
+		lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1  = make(chan runtime.OrderedMsg)
+		__newv2__5_out_res_to_lock_empty_pkg_in_data     = make(chan runtime.OrderedMsg)
+		cond_out_then_to___fan_out__3_in_data            = make(chan runtime.OrderedMsg)
+		at_name_1_out_res_to_fan_in_name_in_data_1       = make(chan runtime.OrderedMsg)
+		__newv2__2_out_res_to_eq_in_right                = make(chan runtime.OrderedMsg)
+		__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig = make(chan runtime.OrderedMsg)
 	)
 	interceptor := runtime.ProdInterceptor{}
 
@@ -59,7 +65,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 		startPort = runtime.NewSingleOutport(
 			runtime.PortAddr{Path: "in", Port: "start"},
 			interceptor,
-			in_ref_to___fan_out__10_in_data,
+			in_ref_to___fan_out__1_in_data,
 		)
 		stopPort = runtime.NewSingleInport(
 			builder_out_res_to_out_res,
@@ -70,13 +76,70 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 
 	funcCalls := []runtime.FuncCall{
 		{
-			Ref: "fan_out",
+			Ref: "new",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(in_ref_to___fan_out__10_in_data, runtime.PortAddr{Path: "__fan_out__10/in", Port: "data"}, interceptor)),
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_7_to___newv2__6_in_sig, runtime.PortAddr{Path: "__newv2__6/in", Port: "sig"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__10/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__10_out_data_0_to_split_in_data, __fan_out__10_out_data_1_to_builder_in_metaText})),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__6/out", Port: "res"}, interceptor, __newv2__6_out_res_to_at_name_1_in_idx), nil),
+				}),
+			},
+			Config: runtime.NewIntMsg(0),
+		},
+		{
+			Ref: "new",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_3_to___newv2__2_in_sig, runtime.PortAddr{Path: "__newv2__2/in", Port: "sig"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__2/out", Port: "res"}, interceptor, __newv2__2_out_res_to_eq_in_right), nil),
+				}),
+			},
+			Config: runtime.NewIntMsg(2),
+		},
+		{
+			Ref: "panic",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_name_1_out_err_to_p3_in_data, runtime.PortAddr{Path: "p3/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "fan_in",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(runtime.NewArrayInport([]<-chan runtime.OrderedMsg{at_name_2_out_res_to_fan_in_name_in_data_0, at_name_1_out_res_to_fan_in_name_in_data_1}, runtime.PortAddr{Path: "fan_in_name/in", Port: "data"}, interceptor), nil),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "fan_in_name/out", Port: "res"}, interceptor, fan_in_name_out_res_to_builder_in_name), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "panic",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_pkg_2_out_err_to_p1_in_data, runtime.PortAddr{Path: "p1/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "eq",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"left":  runtime.NewInport(nil, runtime.NewSingleInport(len_out_res_to_eq_in_left, runtime.PortAddr{Path: "eq/in", Port: "left"}, interceptor)),
+					"right": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__2_out_res_to_eq_in_right, runtime.PortAddr{Path: "eq/in", Port: "right"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "eq/out", Port: "res"}, interceptor, eq_out_res_to_cond_in_if), nil),
 				}),
 			},
 			Config: runtime.Msg{},
@@ -94,12 +157,26 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Config: runtime.Msg{},
 		},
 		{
-			Ref: "panic",
+			Ref: "new",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_pkg_2_out_err_to_p1_in_data, runtime.PortAddr{Path: "p1/in", Port: "data"}, interceptor)),
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_5_to___newv2__4_in_sig, runtime.PortAddr{Path: "__newv2__4/in", Port: "sig"}, interceptor)),
 				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__4/out", Port: "res"}, interceptor, __newv2__4_out_res_to_at_name_2_in_idx), nil),
+				}),
+			},
+			Config: runtime.NewIntMsg(1),
+		},
+		{
+			Ref: "fan_out",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(cond_out_then_to___fan_out__3_in_data, runtime.PortAddr{Path: "__fan_out__3/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__3/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__3_out_data_0_to_at_pkg_2_in_data, __fan_out__3_out_data_1_to_at_name_2_in_data})),
+				}),
 			},
 			Config: runtime.Msg{},
 		},
@@ -107,8 +184,8 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Ref: "lock",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__new__8_out_res_to_lock_empty_pkg_in_data, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "data"}, interceptor)),
-					"sig":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__13_out_data_0_to_lock_empty_pkg_in_sig, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "sig"}, interceptor)),
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__5_out_res_to_lock_empty_pkg_in_data, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "data"}, interceptor)),
+					"sig":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "sig"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"data": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "lock_empty_pkg/out", Port: "data"}, interceptor, lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1), nil),
@@ -120,200 +197,8 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Ref: "list_at",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__13_out_data_1_to_at_name_1_in_data, runtime.PortAddr{Path: "at_name_1/in", Port: "data"}, interceptor)),
-					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__new__9_out_res_to_at_name_1_in_idx, runtime.PortAddr{Path: "at_name_1/in", Port: "idx"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/out", Port: "err"}, interceptor, at_name_1_out_err_to_p3_in_data), nil),
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/out", Port: "res"}, interceptor, at_name_1_out_res_to_fan_in_name_in_data_1), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "fan_in",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(runtime.NewArrayInport([]<-chan runtime.OrderedMsg{at_name_2_out_res_to_fan_in_name_in_data_0, at_name_1_out_res_to_fan_in_name_in_data_1}, runtime.PortAddr{Path: "fan_in_name/in", Port: "data"}, interceptor), nil),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "fan_in_name/out", Port: "res"}, interceptor, fan_in_name_out_res_to_builder_in_name), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "fan_out",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(split_out_res_to___fan_out__11_in_data, runtime.PortAddr{Path: "__fan_out__11/in", Port: "data"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__11/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__11_out_data_0_to_len_in_data, __fan_out__11_out_data_1_to_cond_in_data})),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "new",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__5/out", Port: "res"}, interceptor, __new__5_out_res_to_eq_in_right), nil),
-				}),
-			},
-			Config: runtime.NewIntMsg(2),
-		},
-		{
-			Ref: "list_at",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__12_out_data_1_to_at_name_2_in_data, runtime.PortAddr{Path: "at_name_2/in", Port: "data"}, interceptor)),
-					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__new__7_out_res_to_at_name_2_in_idx, runtime.PortAddr{Path: "at_name_2/in", Port: "idx"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/out", Port: "err"}, interceptor, at_name_2_out_err_to_p2_in_data), nil),
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/out", Port: "res"}, interceptor, at_name_2_out_res_to_fan_in_name_in_data_0), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "list_len",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__11_out_data_0_to_len_in_data, runtime.PortAddr{Path: "len/in", Port: "data"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "len/out", Port: "res"}, interceptor, len_out_res_to_eq_in_left), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "fan_out",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(cond_out_then_to___fan_out__12_in_data, runtime.PortAddr{Path: "__fan_out__12/in", Port: "data"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__12/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__12_out_data_0_to_at_pkg_2_in_data, __fan_out__12_out_data_1_to_at_name_2_in_data})),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "new",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__7/out", Port: "res"}, interceptor, __new__7_out_res_to_at_name_2_in_idx), nil),
-				}),
-			},
-			Config: runtime.NewIntMsg(1),
-		},
-		{
-			Ref: "struct_builder",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"metaText": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__10_out_data_1_to_builder_in_metaText, runtime.PortAddr{Path: "builder/in", Port: "metaText"}, interceptor)),
-					"name":     runtime.NewInport(nil, runtime.NewSingleInport(fan_in_name_out_res_to_builder_in_name, runtime.PortAddr{Path: "builder/in", Port: "name"}, interceptor)),
-					"pkg":      runtime.NewInport(nil, runtime.NewSingleInport(fan_in_pkg_out_res_to_builder_in_pkg, runtime.PortAddr{Path: "builder/in", Port: "pkg"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "builder/out", Port: "res"}, interceptor, builder_out_res_to_out_res), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "panic",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_name_1_out_err_to_p3_in_data, runtime.PortAddr{Path: "p3/in", Port: "data"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "strings_split",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__10_out_data_0_to_split_in_data, runtime.PortAddr{Path: "split/in", Port: "data"}, interceptor)),
-					"delim": runtime.NewInport(nil, runtime.NewSingleInport(__new__4_out_res_to_split_in_delim, runtime.PortAddr{Path: "split/in", Port: "delim"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "split/out", Port: "res"}, interceptor, split_out_res_to___fan_out__11_in_data), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "fan_out",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(cond_out_else_to___fan_out__13_in_data, runtime.PortAddr{Path: "__fan_out__13/in", Port: "data"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__13/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__13_out_data_0_to_lock_empty_pkg_in_sig, __fan_out__13_out_data_1_to_at_name_1_in_data})),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "new",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__4/out", Port: "res"}, interceptor, __new__4_out_res_to_split_in_delim), nil),
-				}),
-			},
-			Config: runtime.NewStringMsg("."),
-		},
-		{
-			Ref: "new",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__9/out", Port: "res"}, interceptor, __new__9_out_res_to_at_name_1_in_idx), nil),
-				}),
-			},
-			Config: runtime.NewIntMsg(0),
-		},
-		{
-			Ref: "eq",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"left":  runtime.NewInport(nil, runtime.NewSingleInport(len_out_res_to_eq_in_left, runtime.PortAddr{Path: "eq/in", Port: "left"}, interceptor)),
-					"right": runtime.NewInport(nil, runtime.NewSingleInport(__new__5_out_res_to_eq_in_right, runtime.PortAddr{Path: "eq/in", Port: "right"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "eq/out", Port: "res"}, interceptor, eq_out_res_to_cond_in_if), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "cond",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__11_out_data_1_to_cond_in_data, runtime.PortAddr{Path: "cond/in", Port: "data"}, interceptor)),
-					"if":   runtime.NewInport(nil, runtime.NewSingleInport(eq_out_res_to_cond_in_if, runtime.PortAddr{Path: "cond/in", Port: "if"}, interceptor)),
-				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"else": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "else"}, interceptor, cond_out_else_to___fan_out__13_in_data), nil),
-					"then": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "then"}, interceptor, cond_out_then_to___fan_out__12_in_data), nil),
-				}),
-			},
-			Config: runtime.Msg{},
-		},
-		{
-			Ref: "list_at",
-			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__12_out_data_0_to_at_pkg_2_in_data, runtime.PortAddr{Path: "at_pkg_2/in", Port: "data"}, interceptor)),
-					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__new__6_out_res_to_at_pkg_2_in_idx, runtime.PortAddr{Path: "at_pkg_2/in", Port: "idx"}, interceptor)),
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__3_out_data_0_to_at_pkg_2_in_data, runtime.PortAddr{Path: "at_pkg_2/in", Port: "data"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__3_out_res_to_at_pkg_2_in_idx, runtime.PortAddr{Path: "at_pkg_2/in", Port: "idx"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_pkg_2/out", Port: "err"}, interceptor, at_pkg_2_out_err_to_p1_in_data), nil),
@@ -333,24 +218,157 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Config: runtime.Msg{},
 		},
 		{
+			Ref: "struct_builder",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"metaText": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_1_to_builder_in_metaText, runtime.PortAddr{Path: "builder/in", Port: "metaText"}, interceptor)),
+					"name":     runtime.NewInport(nil, runtime.NewSingleInport(fan_in_name_out_res_to_builder_in_name, runtime.PortAddr{Path: "builder/in", Port: "name"}, interceptor)),
+					"pkg":      runtime.NewInport(nil, runtime.NewSingleInport(fan_in_pkg_out_res_to_builder_in_pkg, runtime.PortAddr{Path: "builder/in", Port: "pkg"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "builder/out", Port: "res"}, interceptor, builder_out_res_to_out_res), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "cond",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__2_out_data_1_to_cond_in_data, runtime.PortAddr{Path: "cond/in", Port: "data"}, interceptor)),
+					"if":   runtime.NewInport(nil, runtime.NewSingleInport(eq_out_res_to_cond_in_if, runtime.PortAddr{Path: "cond/in", Port: "if"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"else": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "else"}, interceptor, cond_out_else_to___fan_out__4_in_data), nil),
+					"then": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "then"}, interceptor, cond_out_then_to___fan_out__3_in_data), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
 			Ref: "new",
 			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_6_to___newv2__5_in_sig, runtime.PortAddr{Path: "__newv2__5/in", Port: "sig"}, interceptor)),
+				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__6/out", Port: "res"}, interceptor, __new__6_out_res_to_at_pkg_2_in_idx), nil),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__5/out", Port: "res"}, interceptor, __newv2__5_out_res_to_lock_empty_pkg_in_data), nil),
+				}),
+			},
+			Config: runtime.NewStringMsg(""),
+		},
+		{
+			Ref: "new",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_4_to___newv2__3_in_sig, runtime.PortAddr{Path: "__newv2__3/in", Port: "sig"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__3/out", Port: "res"}, interceptor, __newv2__3_out_res_to_at_pkg_2_in_idx), nil),
 				}),
 			},
 			Config: runtime.NewIntMsg(0),
 		},
 		{
-			Ref: "new",
+			Ref: "list_len",
 			IO: runtime.IO{
-				In: runtime.NewInports(map[string]runtime.Inport{}),
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__2_out_data_0_to_len_in_data, runtime.PortAddr{Path: "len/in", Port: "data"}, interceptor)),
+				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__new__8/out", Port: "res"}, interceptor, __new__8_out_res_to_lock_empty_pkg_in_data), nil),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "len/out", Port: "res"}, interceptor, len_out_res_to_eq_in_left), nil),
 				}),
 			},
-			Config: runtime.NewStringMsg(""),
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "strings_split",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_0_to_split_in_data, runtime.PortAddr{Path: "split/in", Port: "data"}, interceptor)),
+					"delim": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__1_out_res_to_split_in_delim, runtime.PortAddr{Path: "split/in", Port: "delim"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "split/out", Port: "res"}, interceptor, split_out_res_to___fan_out__2_in_data), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "fan_out",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(split_out_res_to___fan_out__2_in_data, runtime.PortAddr{Path: "__fan_out__2/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__2/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__2_out_data_0_to_len_in_data, __fan_out__2_out_data_1_to_cond_in_data})),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "fan_out",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(cond_out_else_to___fan_out__4_in_data, runtime.PortAddr{Path: "__fan_out__4/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__4/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig, __fan_out__4_out_data_1_to_at_name_1_in_data})),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "fan_out",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(in_ref_to___fan_out__1_in_data, runtime.PortAddr{Path: "__fan_out__1/in", Port: "data"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"data": runtime.NewOutport(nil, runtime.NewArrayOutport(runtime.PortAddr{Path: "__fan_out__1/out", Port: "data"}, interceptor, []chan<- runtime.OrderedMsg{__fan_out__1_out_data_0_to_split_in_data, __fan_out__1_out_data_1_to_builder_in_metaText, __fan_out__1_out_data_2_to___newv2__1_in_sig, __fan_out__1_out_data_3_to___newv2__2_in_sig, __fan_out__1_out_data_4_to___newv2__3_in_sig, __fan_out__1_out_data_5_to___newv2__4_in_sig, __fan_out__1_out_data_6_to___newv2__5_in_sig, __fan_out__1_out_data_7_to___newv2__6_in_sig})),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "list_at",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_1_to_at_name_1_in_data, runtime.PortAddr{Path: "at_name_1/in", Port: "data"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__6_out_res_to_at_name_1_in_idx, runtime.PortAddr{Path: "at_name_1/in", Port: "idx"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/out", Port: "err"}, interceptor, at_name_1_out_err_to_p3_in_data), nil),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/out", Port: "res"}, interceptor, at_name_1_out_res_to_fan_in_name_in_data_1), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "list_at",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__3_out_data_1_to_at_name_2_in_data, runtime.PortAddr{Path: "at_name_2/in", Port: "data"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__4_out_res_to_at_name_2_in_idx, runtime.PortAddr{Path: "at_name_2/in", Port: "idx"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/out", Port: "err"}, interceptor, at_name_2_out_err_to_p2_in_data), nil),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/out", Port: "res"}, interceptor, at_name_2_out_res_to_fan_in_name_in_data_0), nil),
+				}),
+			},
+			Config: runtime.Msg{},
+		},
+		{
+			Ref: "new",
+			IO: runtime.IO{
+				In: runtime.NewInports(map[string]runtime.Inport{
+					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_2_to___newv2__1_in_sig, runtime.PortAddr{Path: "__newv2__1/in", Port: "sig"}, interceptor)),
+				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "__newv2__1/out", Port: "res"}, interceptor, __newv2__1_out_res_to_split_in_delim), nil),
+				}),
+			},
+			Config: runtime.NewStringMsg("."),
 		},
 	}
 

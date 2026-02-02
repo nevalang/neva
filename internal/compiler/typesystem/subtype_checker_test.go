@@ -12,7 +12,7 @@ import (
 func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment
 		name           string
 		subType        ts.Expr
 		subtypeTrace   ts.Trace
@@ -22,7 +22,6 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 		terminator     func(*MockrecursionTerminatorMockRecorder)
 		wantErr        error
 	}{
-		// Instantiations
 		//  kinds
 		{
 			name:      "subtype inst, supertype tag-only union", // int is not a subtype of Union{foo, bar}
@@ -267,10 +266,7 @@ func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 			wantErr: ts.ErrUnions,
 		},
 	}
-
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)

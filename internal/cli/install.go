@@ -29,29 +29,13 @@ func newInstallCmd(
 		Args:      true,
 		ArgsUsage: "Provide path to main package",
 		Action: func(cliCtx *cli.Context) error {
-			mainPkg, err := mainPkgPathFromArgs(cliCtx)
+			absPkg, err := mainPkgPathFromArgs(cliCtx, workdir)
 			if err != nil {
 				return err
 			}
 
-			// Resolve absolute path to package
-			absPkg := mainPkg
-			if !filepath.IsAbs(absPkg) {
-				absPkg = filepath.Join(workdir, absPkg)
-			}
-
-			absPkg = filepath.Clean(absPkg)
+			// absPkg is now guaranteed to be a directory (mainPkgPathFromArgs strips .neva filenames)
 			pkgBase := absPkg
-
-			pkgInfo, err := os.Stat(absPkg)
-			if err != nil {
-				return fmt.Errorf("stat package: %w", err)
-			}
-
-			// If path points to a file, use its directory as base
-			if !pkgInfo.IsDir() {
-				pkgBase = filepath.Dir(absPkg)
-			}
 
 			// Resolve actual package path (handles module root vs src subdirectory)
 			compilePkg, err := resolveMainPkgPath(absPkg)
@@ -62,7 +46,7 @@ func newInstallCmd(
 			// Binary name is derived from package directory name
 			binName := filepath.Base(pkgBase)
 			if binName == string(filepath.Separator) || binName == "." || binName == "" {
-				return fmt.Errorf("cannot determine binary name for %s", mainPkg)
+				return fmt.Errorf("cannot determine binary name for %s", absPkg)
 			}
 
 			// Ensure GOOS/GOARCH match runtime to build for current platform

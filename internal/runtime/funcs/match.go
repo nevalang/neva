@@ -75,14 +75,7 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				}
 			}
 
-			if resMsg.IsUnion() {
-				unionMsg := resMsg.Union()
-				if unionMsg.HasData() {
-					resMsg = unionMsg.Data()
-				} else {
-					resMsg = runtime.Msg{}
-				}
-			}
+			resMsg = tryToUnboxIfUnion(resMsg)
 
 			if !resOut.Send(ctx, resMsg) {
 				return

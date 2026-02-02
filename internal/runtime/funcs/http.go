@@ -42,8 +42,15 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 			}
 
 			body, err := io.ReadAll(resp.Body)
+			closeErr := resp.Body.Close()
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
+					return
+				}
+				continue
+			}
+			if closeErr != nil {
+				if !errOut.Send(ctx, errFromErr(closeErr)) {
 					return
 				}
 				continue

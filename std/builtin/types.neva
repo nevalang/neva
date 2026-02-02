@@ -5,7 +5,9 @@ pub type float
 pub type string
 pub type dict<T>
 pub type list<T>
-pub type maybe<T> // TODO consider using union
+pub type maybe<T>
+
+type Type any
 
 pub type error struct {
     text string
@@ -17,3 +19,4 @@ pub type stream<T> struct {
     idx int
     last bool
 }
+

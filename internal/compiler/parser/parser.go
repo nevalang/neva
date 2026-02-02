@@ -127,16 +127,16 @@ func (p Parser) parseFile(
 func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
 	defer func() {
 		if e := recover(); e != nil {
-			if _, ok := e.(*compiler.Error); !ok {
-				err = &compiler.Error{
-					Message: fmt.Sprintf(
-						"%v: %v",
-						e,
-						string(debug.Stack()),
-					),
-				}
-			} else {
-				err = e.(*compiler.Error)
+			if compilerErr, ok := e.(*compiler.Error); ok {
+				err = compilerErr
+				return
+			}
+			err = &compiler.Error{
+				Message: fmt.Sprintf(
+					"%v: %v",
+					e,
+					string(debug.Stack()),
+				),
 			}
 		}
 	}()

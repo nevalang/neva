@@ -82,5 +82,5 @@ func (p parseInt) stringToRuntimeInt(
 	if err != nil {
 		return runtime.Msg{}, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 	}
-	return runtime.NewIntMsg(int64(v)), nil
+	return runtime.NewIntMsg(v), nil
 }

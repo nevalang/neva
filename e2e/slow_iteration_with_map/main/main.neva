@@ -2,18 +2,24 @@
 // https://github.com/nevalang/neva/issues/575
 // all elements of the array must be printed befofe program terminate
 
-import { time, fmt, runtime }
+import {
+    fmt
+    time
+    runtime
+    streams
+    lists
+}
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start any) (stop any) {
-    l2s ListToStream<int>
-    map Map<int, int>{Slow}
-    s2l StreamToList<int>
+    list_to_stream streams.FromList<int>
+    map streams.Map<int, int>{Slow}
+    stream_to_list lists.FromStream<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
     ---
-    :start -> $lst -> l2s -> map -> s2l -> println:data
+    :start -> $lst -> list_to_stream -> map -> stream_to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }
@@ -22,7 +28,9 @@ def Slow(data int) (res int) {
     delay time.Delay<int>
     dec Dec
     ---
-    :data -> delay:data
-    $time.second -> delay:dur
+    :data -> [
+        delay:data,
+        $time.second -> delay:dur
+    ]
     delay -> dec -> :res
 }

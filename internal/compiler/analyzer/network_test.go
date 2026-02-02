@@ -52,17 +52,6 @@ func TestCreateSingleElementUnion(t *testing.T) {
 	require.Equal(t, existingUnion, result3)
 }
 
-// testScope implements ts.Scope interface for testing
-type testScope struct{}
-
-func (s *testScope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
-	return ts.Def{}, s, nil
-}
-
-func (s *testScope) IsTopType(expr ts.Expr) bool {
-	return false
-}
-
 // createSingleElementUnion creates a union type with a single element matching the given type.
 // It's used only by unit tests.
 func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {

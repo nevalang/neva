@@ -102,7 +102,7 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 				argIndex, err := strconv.Atoi(argIndexStr)
 				if err != nil {
 					// Handle the error if the conversion fails
-					return "", fmt.Errorf("invalid placeholder %s: %v", argIndexStr, err)
+					return "", fmt.Errorf("invalid placeholder %s: %w", argIndexStr, err)
 				}
 
 				if argIndex < 0 || argIndex >= len(args) {

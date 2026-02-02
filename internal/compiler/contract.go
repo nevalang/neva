@@ -18,6 +18,7 @@ type (
 	Builder interface {
 		Build(ctx context.Context, workdir string) (RawBuild, string, *Error)
 	}
+	//nolint:govet // fieldalignment: keep semantic grouping.
 	RawBuild struct {
 		EntryModRef core.ModuleRef
 		Modules     map[core.ModuleRef]RawModule
@@ -53,6 +54,7 @@ type Backend interface {
 	EmitLibrary(dst string, exports []LibraryExport, trace bool) error
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type LibraryExport struct {
 	Name      string
 	Component src.Component

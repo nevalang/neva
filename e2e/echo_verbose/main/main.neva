@@ -11,5 +11,5 @@ def Main(start any) (stop any) {
 	:start -> scanln:sig
 	scanln:res -> println:data
 	println:res -> :stop
-	println:err -> panic
+	[println:err, scanln:err] -> panic
 }

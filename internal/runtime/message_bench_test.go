@@ -1,10 +1,8 @@
-package runtime_test
+package runtime
 
 import (
 	"strconv"
 	"testing"
-
-	"github.com/nevalang/neva/internal/runtime"
 )
 
 var (
@@ -13,11 +11,11 @@ var (
 )
 
 func BenchmarkMsgListIter(b *testing.B) {
-	items := make([]runtime.Msg, 1024)
+	items := make([]Msg, 1024)
 	for i := range items {
-		items[i] = runtime.NewIntMsg(int64(i))
+		items[i] = NewIntMsg(int64(i))
 	}
-	listMsg := runtime.NewListMsg(items)
+	listMsg := NewListMsg(items)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -31,14 +29,14 @@ func BenchmarkMsgListIter(b *testing.B) {
 }
 
 func BenchmarkMsgDictLookup(b *testing.B) {
-	entries := make(map[string]runtime.Msg, 1024)
+	entries := make(map[string]Msg, 1024)
 	keys := make([]string, 1024)
 	for i := range keys {
 		key := "k" + strconv.Itoa(i)
 		keys[i] = key
-		entries[key] = runtime.NewIntMsg(int64(i))
+		entries[key] = NewIntMsg(int64(i))
 	}
-	msg := runtime.NewDictMsg(entries)
+	msg := NewDictMsg(entries)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -53,14 +51,14 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 }
 
 func BenchmarkMsgEqualList(b *testing.B) {
-	itemsLeft := make([]runtime.Msg, 512)
-	itemsRight := make([]runtime.Msg, 512)
+	itemsLeft := make([]Msg, 512)
+	itemsRight := make([]Msg, 512)
 	for i := range itemsLeft {
-		itemsLeft[i] = runtime.NewStringMsg(strconv.Itoa(i))
-		itemsRight[i] = runtime.NewStringMsg(strconv.Itoa(i))
+		itemsLeft[i] = NewStringMsg(strconv.Itoa(i))
+		itemsRight[i] = NewStringMsg(strconv.Itoa(i))
 	}
-	left := runtime.NewListMsg(itemsLeft)
-	right := runtime.NewListMsg(itemsRight)
+	left := NewListMsg(itemsLeft)
+	right := NewListMsg(itemsRight)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -70,11 +68,11 @@ func BenchmarkMsgEqualList(b *testing.B) {
 }
 
 func BenchmarkMsgStructGet(b *testing.B) {
-	fields := make([]runtime.StructField, 0, 32)
+	fields := make([]StructField, 0, 32)
 	for i := 0; i < 32; i++ {
-		fields = append(fields, runtime.NewStructField("f"+strconv.Itoa(i), runtime.NewIntMsg(int64(i))))
+		fields = append(fields, NewStructField("f"+strconv.Itoa(i), NewIntMsg(int64(i))))
 	}
-	msg := runtime.NewStructMsg(fields)
+	msg := NewStructMsg(fields)
 
 	b.ReportAllocs()
 	b.ResetTimer()

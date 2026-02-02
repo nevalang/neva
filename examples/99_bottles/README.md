@@ -62,9 +62,14 @@ def PrintLines(data int) (res any, err error) {
 ```neva
 def Main(start any) (stop any) {
 	print_lines streams.For<int>{PrintLines}
+	range streams.Range
 	wait streams.Wait<any>
 	---
-	:start -> 99..-1 -> print_lines
+	:start -> [
+		99 -> range:from,
+		-1 -> range:to
+	]
+	range -> print_lines
 	print_lines:res -> wait -> :stop
 	print_lines:err -> panic
 }
@@ -86,10 +91,15 @@ import {
 def Main(start any) (stop any) {
 	print_lines streams.Map<int>{MapLines}
    println fmt.Println
+	range streams.Range
 	print_lines streams.Map<int>{MapSecond}
 	wait streams.Wait<any>
 	---
-	:start -> 99..-1 -> map_lines
+	:start -> [
+		99 -> range:from,
+		-1 -> range:to
+	]
+	range -> map_lines
 	map_lines:err -> panic
    map_lines:res -> println -> wait -> :stop
 }

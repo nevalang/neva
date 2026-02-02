@@ -36,10 +36,10 @@ const (
 // Msg is the runtime representation of a Neva message.
 // It is a tagged union optimized for minimal allocations in hot paths.
 type Msg struct {
-	kind MsgKind
-	bits uint64
-	str  string
 	val  any
+	str  string
+	bits uint64
+	kind MsgKind
 }
 
 func (msg Msg) Kind() MsgKind {
@@ -89,6 +89,7 @@ func (msg Msg) Bool() bool {
 
 func (msg Msg) Int() int64 {
 	msg.mustKind(MsgKindInt, "Int")
+	// #nosec G115 -- msg.bits stores int64 in two's complement form.
 	return int64(msg.bits)
 }
 
@@ -104,22 +105,38 @@ func (msg Msg) Str() string {
 
 func (msg Msg) List() []Msg {
 	msg.mustKind(MsgKindList, "List")
-	return msg.val.([]Msg)
+	list, ok := msg.val.([]Msg)
+	if !ok {
+		panic("unexpected List value type")
+	}
+	return list
 }
 
 func (msg Msg) Dict() map[string]Msg {
 	msg.mustKind(MsgKindDict, "Dict")
-	return msg.val.(map[string]Msg)
+	dict, ok := msg.val.(map[string]Msg)
+	if !ok {
+		panic("unexpected Dict value type")
+	}
+	return dict
 }
 
 func (msg Msg) Struct() StructMsg {
 	msg.mustKind(MsgKindStruct, "Struct")
-	return msg.val.(StructMsg)
+	structMsg, ok := msg.val.(StructMsg)
+	if !ok {
+		panic("unexpected Struct value type")
+	}
+	return structMsg
 }
 
 func (msg Msg) Union() UnionMsg {
 	msg.mustKind(MsgKindUnion, "Union")
-	return msg.val.(UnionMsg)
+	unionMsg, ok := msg.val.(UnionMsg)
+	if !ok {
+		panic("unexpected Union value type")
+	}
+	return unionMsg
 }
 
 func (msg Msg) String() string {
@@ -186,9 +203,9 @@ func (msg Msg) Equal(other Msg) bool {
 	case MsgKindString:
 		return msg.str == other.str
 	case MsgKindList:
-		return equalMsgSlices(msg.List(), other.List())
+		return equalMsgLists(msg.List(), other.List())
 	case MsgKindDict:
-		return equalMsgMaps(msg.Dict(), other.Dict())
+		return equalMsgDicts(msg.Dict(), other.Dict())
 	case MsgKindStruct:
 		return msg.Struct().Equal(other.Struct())
 	case MsgKindUnion:
@@ -242,6 +259,7 @@ func NewBoolMsg(b bool) Msg {
 // Int
 
 func NewIntMsg(n int64) Msg {
+	// #nosec G115 -- store int64 bit pattern in uint64 for compact storage.
 	return Msg{kind: MsgKindInt, bits: uint64(n)}
 }
 
@@ -387,17 +405,26 @@ func (msg UnionMsg) HasData() bool {
 }
 
 func (msg UnionMsg) Data() Msg {
-	if !msg.hasData {
-		return Msg{}
-	}
 	return msg.data
 }
 
 func (msg UnionMsg) String() string {
 	if !msg.hasData {
-		return fmt.Sprintf(`{ "tag": "%s" }`, msg.tag)
+		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
 	}
-	return fmt.Sprintf(`{ "tag": "%s", "data": %v }`, msg.tag, msg.data)
+	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+}
+
+// Uint8Index validates idx and returns it as uint8 or panics.
+func Uint8Index(idx int) uint8 {
+	if idx < 0 {
+		panic(fmt.Sprintf("runtime: negative index %d", idx))
+	}
+	if idx > int(^uint8(0)) {
+		panic(fmt.Sprintf("runtime: index %d overflows uint8", idx))
+	}
+	// #nosec G115 -- bounds checked above
+	return uint8(idx)
 }
 
 func (msg UnionMsg) MarshalJSON() ([]byte, error) {
@@ -459,6 +486,8 @@ func NewUnionValueNoData(tag string) UnionMsg {
 
 // --- OPERATIONS ---
 
+// Match compares two messages and return true if they matches and false otherwise.
+// Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
 	if !msg.IsUnion() || !pattern.IsUnion() {
 		return msg.Equal(pattern)
@@ -471,18 +500,23 @@ func Match(msg Msg, pattern Msg) bool {
 		return false
 	}
 
-	if msgUnion.hasData != patternUnion.hasData {
+	if !patternUnion.hasData {
 		return true
 	}
 
 	if !msgUnion.hasData {
-		return true
+		return false
 	}
 
+	// by this time we know
+	// both msg and pattern are union messages
+	// they both have the same tags and some data inside
+	// so we apply strict equality to the data they wrap
+	// maybe in the future we'll consider recursive matching, we'll see
 	return msgUnion.data.Equal(patternUnion.data)
 }
 
-func equalMsgSlices(left []Msg, right []Msg) bool {
+func equalMsgLists(left []Msg, right []Msg) bool {
 	if len(left) != len(right) {
 		return false
 	}
@@ -494,7 +528,8 @@ func equalMsgSlices(left []Msg, right []Msg) bool {
 	return true
 }
 
-func equalMsgMaps(left map[string]Msg, right map[string]Msg) bool {
+// equalMsgDicts is needed because maps.Equal won't work for non-comparable values.
+func equalMsgDicts(left map[string]Msg, right map[string]Msg) bool {
 	if len(left) != len(right) {
 		return false
 	}

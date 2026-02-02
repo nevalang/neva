@@ -12,6 +12,7 @@ import (
 // Encoder implements the logic to write Mermaid diagram to a writer
 type Encoder struct{}
 
+//nolint:gocyclo // Encoding includes multiple rendering branches.
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Parse comment for metadata (module, compiler version)
 	// Format: // module=@@ main=hello_world compiler=0.34.0
@@ -192,7 +193,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
 					case ir.MsgTypeList:
 						n.Meta.Msg = "[...]"
-					case ir.MsgTypeDict, ir.MsgTypeStruct:
+					case ir.MsgTypeDict, ir.MsgTypeStruct, ir.MsgTypeUnion:
 						n.Meta.Msg = "{...}"
 					}
 				}
@@ -201,7 +202,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	}
 
 	// Sort nodes for deterministic output
-	var nodePaths []string
+	nodePaths := make([]string, 0, len(nodes))
 	for p := range nodes {
 		nodePaths = append(nodePaths, p)
 	}
@@ -257,7 +258,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		From ir.PortAddr
 		To   ir.PortAddr
 	}
-	var conns []conn
+	conns := make([]conn, 0, len(prog.Connections))
 	for s, r := range prog.Connections {
 		conns = append(conns, conn{s, r})
 	}

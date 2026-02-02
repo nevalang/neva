@@ -1,30 +1,42 @@
 // we could use match instead, but we show Select here
 
-import { time, fmt, runtime, streams }
-
-def Main(start any) (stop any) {
-    Map<int, string>{Handler}
-    For<string>{fmt.Println}
-    streams.Wait
-    runtime.Panic
-    ---
-    :start -> 1..5 -> map -> for
-    for:res -> wait -> :stop
-    for:err -> panic
+import {
+    fmt
+    time
+    runtime
+    streams
 }
 
-def Handler(data int) (res string) {
-    Select<string>
+def Main(start any) (stop any) {
+    map streams.Map<int, string>{Mapper}
+    for_each streams.ForEach<string>{fmt.Println<string>}
+    range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
     ---
-    :data -> switch {
-        1 -> select:if[0]
-        2 -> select:if[1]
-        3 -> select:if[2]
-        _ -> select:if[3]
-    }
-    'a' -> select:then[0]
-    'b' -> select:then[1]
-    'c' -> select:then[2]
-    'd' -> select:then[3]
+    :start -> [
+        1 -> range:from,
+        5 -> range:to
+    ]
+    range -> map -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
+}
+
+def Mapper(data int) (res string) {
+    Select<string>
+    switch Switch<int>
+    ---
+    :data -> [
+        switch:data,
+        1 -> switch:case[0] -> select:if[0],
+        2 -> switch:case[1] -> select:if[1],
+        3 -> switch:case[2] -> select:if[2],
+        'a' -> select:then[0],
+        'b' -> select:then[1],
+        'c' -> select:then[2],
+        'd' -> select:then[3]
+    ]
+    switch:else -> select:if[3]
     select -> :res
 }

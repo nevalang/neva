@@ -1,5 +1,6 @@
 import {
     fmt
+    lists
     runtime
 }
 
@@ -7,13 +8,15 @@ const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
 def Main(start any) (stop any) {
-	Push, fmt.Println, runtime.Panic
+    push lists.Push<int>
+    println fmt.Println<list<int>>
+    panic runtime.Panic
 	---
 	:start -> [
-		$l -> push:lst,
-		$f -> push:data
+        $l -> push:lst,
+        $f -> push:data
 	]
-	push -> println:data
-	println:res -> :stop
-	println:err -> panic
+    push -> println:data
+    println:res -> :stop
+    println:err -> panic
 }

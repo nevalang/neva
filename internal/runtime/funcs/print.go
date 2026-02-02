@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type print struct{}
+type printFunc struct{}
 
-func (p print) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (printFunc) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -20,13 +20,25 @@ func (p print) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 		return nil, err
 	}
 
+	errOut, err := io.Out.Single("err")
+	if err != nil {
+		return nil, err
+	}
+
 	return func(ctx context.Context) {
 		for {
 			data, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
-			fmt.Print(data)
+
+			if _, err := fmt.Print(data); err != nil {
+				if !errOut.Send(ctx, errFromErr(err)) {
+					return
+				}
+				continue
+			}
+
 			if !resOut.Send(ctx, data) {
 				return
 			}

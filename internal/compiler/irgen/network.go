@@ -15,13 +15,14 @@ func (g Generator) processNetwork(
 	scope *src.Scope,
 	nodeCtx nodeContext,
 	result *ir.Program,
-) (map[string]portsUsage, error) {
+) map[string]portsUsage {
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		if conn.ArrayBypass != nil {
+		if sender, receiver, ok := arrayBypassPorts(conn); ok {
 			g.processArrayBypassConnection(
-				conn,
+				*sender,
+				*receiver,
 				nodesPortsUsage,
 				nodeCtx,
 				result,
@@ -29,7 +30,7 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		if len(conn.Normal.Senders) != 1 || len(conn.Normal.Receivers) != 1 {
+		if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 			panic("not 1-1 connection found after desugaring")
 		}
 
@@ -42,11 +43,12 @@ func (g Generator) processNetwork(
 		)
 	}
 
-	return nodesPortsUsage, nil
+	return nodesPortsUsage
 }
 
 func (Generator) processArrayBypassConnection(
-	conn src.Connection,
+	senderPort src.PortAddr,
+	receiverPort src.PortAddr,
 	nodesPortsUsage map[string]portsUsage,
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -56,8 +58,8 @@ func (Generator) processArrayBypassConnection(
 	// based on that, we can set receiver's inport slots
 	// equal to slots of our own inport
 
-	arrBypassSender := conn.ArrayBypass.SenderOutport
-	arrBypassReceiver := conn.ArrayBypass.ReceiverInport
+	arrBypassSender := senderPort
+	arrBypassReceiver := receiverPort
 
 	if _, ok := nodesPortsUsage[arrBypassReceiver.Node]; !ok {
 		nodesPortsUsage[arrBypassReceiver.Node] = portsUsage{
@@ -107,16 +109,34 @@ func (g Generator) processNormalConnection(
 	irSenderSidePortAddr := g.processSender(
 		nodeCtx,
 		scope,
-		conn.Normal.Senders[0],
+		conn.Senders[0],
 		nodesPortsUsage,
 	)
 	irReceiverPortAddr := g.processReceiver(
 		nodeCtx,
 		scope,
-		conn.Normal.Receivers[0],
+		conn.Receivers[0],
 		nodesPortsUsage,
 	)
 	result.Connections[irSenderSidePortAddr] = irReceiverPortAddr
+}
+
+func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
+	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	receiver := conn.Receivers[0]
+	if sender.PortAddr == nil || receiver.PortAddr == nil {
+		return nil, nil, false
+	}
+
+	if !src.IsArrayBypassIdx(sender.PortAddr.Idx) || !src.IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
 }
 
 func (g Generator) processSender(
@@ -125,22 +145,11 @@ func (g Generator) processSender(
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
-	// union senders should have been desugared by this point
-	if sender.Union != nil {
-		panic(fmt.Sprintf(
-			"INTERNAL ERROR: union sender %v::%v was not desugared (location: %v)",
-			sender.Union.EntityRef,
-			sender.Union.Tag,
-			sender.Meta.Location,
-		))
-	}
-
 	// other special senders should also have been desugared
 	if sender.PortAddr == nil {
 		panic(fmt.Sprintf(
-			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, range=%v, location: %v)",
+			"INTERNAL ERROR: sender with nil PortAddr was not desugared (const=%v, location: %v)",
 			sender.Const != nil,
-			sender.Range != nil,
 			sender.Meta.Location,
 		))
 	}
@@ -153,8 +162,8 @@ func (g Generator) processSender(
 		}
 	}
 
-	// if sender node is dependency from DI and if port we are reffering to is an empty string
-	// we need to find depedency component and use its outport name
+	// if sender node is dependency from DI and if port we are referring to is an empty string
+	// we need to find dependency component and use its outport name
 	// this is techically desugaring at irgen level but it's impossible to desugare before
 	// because only irgen really builds nodes and passes DI args to them
 	depNode, isNodeDep := nodeCtx.node.DIArgs[sender.PortAddr.Node]
@@ -218,9 +227,9 @@ func (g Generator) processReceiver(
 
 	// if receiver node DI
 	diArgNode, isDI := nodeCtx.node.DIArgs[receiver.PortAddr.Node]
-	// and if port we are reffering to is an empty string
+	// and if port we are referring to is an empty string
 	if isDI && receiver.PortAddr.Port == "" {
-		// we need to find depedency component and use its inport name
+		// we need to find dependency component and use its inport name
 		// this is techically desugaring at irgen level
 		// but it's impossible to desugare before, because only irgen really builds nodes
 

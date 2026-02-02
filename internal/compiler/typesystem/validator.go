@@ -51,7 +51,7 @@ func (v Validator) Validate(expr Expr) error {
 				continue
 			}
 			if err := v.Validate(*tagExpr); err != nil {
-				return fmt.Errorf("%w: invalid type for tag %s: %v", ErrUnionTagType, tag, err)
+				return fmt.Errorf("%s: invalid type for tag %s: %w", ErrUnionTagType.Error(), tag, err)
 			}
 		}
 	}

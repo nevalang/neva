@@ -1,14 +1,21 @@
 import {
     fmt
     runtime
+    lists
+    streams
 }
 
 def Main(start any) (stop any) {
-    s2l StreamToList
-    println fmt.Println
+    stream_to_list lists.FromStream<int>
+    range streams.Range
+    println fmt.Println<list<int>>
     panic runtime.Panic
     ---
-    :start -> 1..11 -> s2l -> println:data
+    :start -> [
+        1 -> range:from,
+        11 -> range:to
+    ]
+    range -> stream_to_list -> println:data
     println:res -> :stop
     println:err -> panic
 }

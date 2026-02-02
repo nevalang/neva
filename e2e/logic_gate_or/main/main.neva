@@ -8,8 +8,8 @@ def Main(start any) (stop any) {
 	panic runtime.Panic
 	---
 	:start -> [
-		{ false -> or:left },
-		{ false -> or:right }
+		false -> or:left,
+		false -> or:right
 	]
 	or -> println:data
 	println:res -> :stop

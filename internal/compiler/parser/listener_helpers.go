@@ -13,7 +13,7 @@ import (
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
-func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string, *compiler.Error) {
+func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
 
@@ -47,7 +47,7 @@ func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.I
 			},
 			Location: s.loc,
 		},
-	}, alias, nil
+	}, alias
 }
 
 func (s *treeShapeListener) parseTypeParams(
@@ -626,24 +626,15 @@ func (s *treeShapeListener) parsePortAddr(
 		idxStr := expr.LonelyArrPortAddr().PortAddrIdx()
 		withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
 
-		idxUint, err := strconv.ParseUint(
-			withoutSquareBraces,
-			10,
-			8,
-		)
+		idxUint8, err := s.parsePortAddrIdx(withoutSquareBraces, meta)
 		if err != nil {
-			return src.PortAddr{}, &compiler.Error{
-				Message: err.Error(),
-				Meta:    &meta,
-			}
+			return src.PortAddr{}, err
 		}
-
-		idxUint8 := uint8(idxUint)
 
 		return src.PortAddr{
 			Node: expr.LonelyArrPortAddr().PortAddrNode().GetText(),
 			Port: "",
-			Idx:  &idxUint8,
+			Idx:  idxUint8,
 			Meta: meta,
 		}, nil
 	}
@@ -664,16 +655,9 @@ func (s *treeShapeListener) parsePortAddr(
 	idxStr := expr.ArrPortAddr().PortAddrIdx()
 	withoutSquareBraces := strings.Trim(idxStr.GetText(), "[]")
 
-	idxUint, err := strconv.ParseUint(
-		withoutSquareBraces,
-		10,
-		8,
-	)
+	idxUint8, err := s.parsePortAddrIdx(withoutSquareBraces, meta)
 	if err != nil {
-		return src.PortAddr{}, &compiler.Error{
-			Message: err.Error(),
-			Meta:    &meta,
-		}
+		return src.PortAddr{}, err
 	}
 
 	nodeName := fallbackNode
@@ -681,15 +665,38 @@ func (s *treeShapeListener) parsePortAddr(
 		nodeName = n.GetText()
 	}
 
-	idxUint8 := uint8(idxUint)
-
 	return src.PortAddr{
-		Idx:  &idxUint8,
+		Idx:  idxUint8,
 		Node: nodeName,
 		Port: expr.ArrPortAddr().PortAddrPort().GetText(),
 		Meta: meta,
 	}, nil
+}
 
+func (s *treeShapeListener) parsePortAddrIdx(
+	idxText string,
+	meta core.Meta,
+) (*uint8, *compiler.Error) {
+	if idxText == "*" {
+		return compiler.Pointer(src.ArrayBypassIdx), nil
+	}
+
+	idxUint, err := strconv.ParseUint(idxText, 10, 8)
+	if err != nil {
+		return nil, &compiler.Error{
+			Message: err.Error(),
+			Meta:    &meta,
+		}
+	}
+	if idxUint == uint64(src.ArrayBypassIdx) {
+		return nil, &compiler.Error{
+			Message: "Index 255 is reserved by the compiler to represent array-bypass [*]; maximum allowed index is 254",
+			Meta:    &meta,
+		}
+	}
+
+	idxUint8 := uint8(idxUint)
+	return &idxUint8, nil
 }
 
 func (s *treeShapeListener) parseSinglePortAddr(
@@ -709,124 +716,65 @@ func (s *treeShapeListener) parseSinglePortAddr(
 	}, nil
 }
 
-func (s *treeShapeListener) parsePrimitiveConstLiteral(
-	lit generated.IPrimitiveConstLitContext,
+func (s *treeShapeListener) parseConstSenderLiteral(
+	lit generated.IConstLitContext,
 ) (src.Const, *compiler.Error) {
+	meta := core.Meta{
+		Text: lit.GetText(),
+		Start: core.Position{
+			Line:   lit.GetStart().GetLine(),
+			Column: lit.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   lit.GetStop().GetLine(),
+			Column: lit.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	}
+
+	parsedMsg, err := s.parseMessage(lit)
+	if err != nil {
+		return src.Const{}, err
+	}
+
 	parsedConst := src.Const{
 		Value: src.ConstValue{
-			Message: &src.MsgLiteral{},
+			Message: &parsedMsg,
 		},
-		Meta: core.Meta{
-			Text: lit.GetText(),
-			Start: core.Position{
-				Line:   lit.GetStart().GetLine(),
-				Column: lit.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   lit.GetStop().GetLine(),
-				Column: lit.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		},
+		Meta: meta,
 	}
 
 	switch {
 	case lit.Bool_() != nil:
-		boolVal := lit.Bool_().GetText()
-		if boolVal != "true" && boolVal != "false" {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid boolean value %v", boolVal),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "bool"},
 		}
-		parsedConst.Value.Message.Bool = compiler.Pointer(boolVal == "true")
 	case lit.INT() != nil:
-		parsedInt, err := strconv.ParseInt(lit.INT().GetText(), 10, 64)
-		if err != nil {
-			return src.Const{}, &compiler.Error{
-				Message: err.Error(),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "int"},
 		}
-		if lit.MINUS() != nil {
-			parsedInt = -parsedInt
-		}
-		parsedConst.Value.Message.Int = compiler.Pointer(int(parsedInt))
 	case lit.FLOAT() != nil:
-		parsedFloat, err := strconv.ParseFloat(lit.FLOAT().GetText(), 64)
-		if err != nil {
-			return src.Const{}, &compiler.Error{
-				Message: err.Error(),
-				Meta: &core.Meta{
-					Text: lit.GetText(),
-					Start: core.Position{
-						Line:   lit.GetStart().GetLine(),
-						Column: lit.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   lit.GetStop().GetLine(),
-						Column: lit.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "float"},
 		}
-		if lit.MINUS() != nil {
-			parsedFloat = -parsedFloat
-		}
-		parsedConst.Value.Message.Float = &parsedFloat
 	case lit.STRING() != nil:
-		parsedConst.Value.Message.Str = compiler.Pointer(
-			strings.Trim(
-				strings.ReplaceAll(
-					lit.STRING().GetText(),
-					"\\n",
-					"\n",
-				),
-				"'",
-			),
-		)
 		parsedConst.TypeExpr.Inst = &ts.InstExpr{
 			Ref: core.EntityRef{Name: "string"},
 		}
-	default:
-		panic("unknown const: " + lit.GetText())
+	case lit.UnionLit() != nil:
+		parsedUnionRef, err := s.parseEntityRef(lit.UnionLit().EntityRef())
+		if err != nil {
+			return src.Const{}, err
+		}
+		parsedConst.TypeExpr.Inst = &ts.InstExpr{
+			Ref: parsedUnionRef,
+		}
 	}
 
 	return parsedConst, nil
 }
 
+//nolint:gocyclo // Parsing literals requires many grammar branches.
 func (s *treeShapeListener) parseMessage(
 	constVal generated.IConstLitContext,
 ) (src.MsgLiteral, *compiler.Error) {
@@ -976,7 +924,6 @@ func (s *treeShapeListener) parseMessage(
 					return src.MsgLiteral{}, err
 				}
 				constant.Value.Message = &parsedConstValue
-
 			}
 			msg.List = append(msg.List, constant.Value)
 		}
@@ -1242,85 +1189,13 @@ func (s *treeShapeListener) parseConnection(connDef generated.IConnDefContext) (
 		Location: s.loc,
 	}
 
-	normConn := connDef.NormConnDef()
-	arrBypassConn := connDef.ArrBypassConnDef()
-
-	if normConn == nil && arrBypassConn == nil {
-		return src.Connection{}, &compiler.Error{
-			Message: "Connection must be either normal or array bypass",
-			Meta:    &meta,
-		}
-	}
-
-	if arrBypassConn != nil {
-		return s.parseArrayBypassConn(arrBypassConn)
-	}
-
-	return s.parseNormConn(normConn)
+	return s.parseConnDef(connDef, meta)
 }
 
-func (s *treeShapeListener) parseArrayBypassConn(
-	arrBypassConn generated.IArrBypassConnDefContext,
+func (s *treeShapeListener) parseConnDef(
+	actx generated.IConnDefContext,
+	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
-	senderPortAddr := arrBypassConn.SinglePortAddr(0)
-	receiverPortAddr := arrBypassConn.SinglePortAddr(1)
-
-	meta := core.Meta{
-		Text: arrBypassConn.GetText(),
-		Start: core.Position{
-			Line:   arrBypassConn.GetStart().GetLine(),
-			Column: arrBypassConn.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   arrBypassConn.GetStop().GetLine(),
-			Column: arrBypassConn.GetStop().GetColumn(),
-		},
-		Location: s.loc,
-	}
-
-	senderPortAddrParsed, err := s.parseSinglePortAddr(
-		"in",
-		senderPortAddr,
-		meta,
-	)
-	if err != nil {
-		return src.Connection{}, err
-	}
-
-	receiverPortAddrParsed, err := s.parseSinglePortAddr(
-		"out",
-		receiverPortAddr,
-		meta,
-	)
-	if err != nil {
-		return src.Connection{}, err
-	}
-
-	return src.Connection{
-		ArrayBypass: &src.ArrayBypassConnection{
-			SenderOutport:  senderPortAddrParsed,
-			ReceiverInport: receiverPortAddrParsed,
-		},
-		Meta: meta,
-	}, nil
-}
-
-func (s *treeShapeListener) parseNormConn(
-	actx generated.INormConnDefContext,
-) (src.Connection, *compiler.Error) {
-	meta := core.Meta{
-		Text: actx.GetText(),
-		Start: core.Position{
-			Line:   actx.GetStart().GetLine(),
-			Column: actx.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   actx.GetStop().GetLine(),
-			Column: actx.GetStop().GetColumn(),
-		},
-		Location: s.loc,
-	}
-
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
 	if err != nil {
 		return src.Connection{}, err
@@ -1332,12 +1207,9 @@ func (s *treeShapeListener) parseNormConn(
 	}
 
 	return src.Connection{
-		Normal: &src.NormalConnection{
-			Senders:   parsedSenderSide,
-			Receivers: parsedReceiverSide,
-			Meta:      meta,
-		},
-		Meta: meta,
+		Senders:   parsedSenderSide,
+		Receivers: parsedReceiverSide,
+		Meta:      meta,
 	}, nil
 }
 
@@ -1392,7 +1264,6 @@ func (s *treeShapeListener) parseSingleReceiverSide(
 	deferredConn := actx.DeferredConn()
 	portAddr := actx.PortAddr()
 	chainedConn := actx.ChainedNormConn()
-	switchStmt := actx.SwitchStmt()
 
 	meta := core.Meta{
 		Text: actx.GetText(),
@@ -1414,8 +1285,6 @@ func (s *treeShapeListener) parseSingleReceiverSide(
 		return s.parseChainedConnExpr(chainedConn, meta)
 	case portAddr != nil:
 		return s.parsePortAddrReceiver(portAddr)
-	case switchStmt != nil:
-		return s.parseSwitchStmt(switchStmt)
 	default:
 		return src.ConnectionReceiver{}, &compiler.Error{
 			Message: "missing receiver side",
@@ -1424,65 +1293,13 @@ func (s *treeShapeListener) parseSingleReceiverSide(
 	}
 }
 
-func (s *treeShapeListener) parseSwitchStmt(
-	switchStmt generated.ISwitchStmtContext,
-) (src.ConnectionReceiver, *compiler.Error) {
-	meta := core.Meta{
-		Text: switchStmt.GetText(),
-		Start: core.Position{
-			Line:   switchStmt.GetStart().GetLine(),
-			Column: switchStmt.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   switchStmt.GetStop().GetLine(),
-			Column: switchStmt.GetStop().GetColumn(),
-		},
-		Location: s.loc,
-	}
-
-	unparsedCases := switchStmt.AllNormConnDef()
-	cases := make([]src.NormalConnection, 0, len(unparsedCases))
-	for _, connDef := range unparsedCases {
-		parsedConn, err := s.parseNormConn(connDef)
-		if err != nil {
-			return src.ConnectionReceiver{}, err
-		}
-		cases = append(cases, *parsedConn.Normal)
-	}
-
-	var defaultCase []src.ConnectionReceiver = nil
-	defaultCaseCtx := switchStmt.DefaultCase()
-	if defaultCaseCtx != nil {
-		parsedDefault, err := s.parseReceiverSide(defaultCaseCtx.ReceiverSide())
-		if err != nil {
-			return src.ConnectionReceiver{}, err
-		}
-		defaultCase = parsedDefault
-	}
-
-	return src.ConnectionReceiver{
-		Switch: &src.Switch{
-			Cases:   cases,
-			Default: defaultCase,
-		},
-		Meta: meta,
-	}, nil
-}
-
 func (s *treeShapeListener) parseChainedConnExpr(
 	actx generated.IChainedNormConnContext,
 	connMeta core.Meta,
 ) (src.ConnectionReceiver, *compiler.Error) {
-	parsedConn, err := s.parseNormConn(actx.NormConnDef())
+	parsedConn, err := s.parseConnDef(actx.ConnDef(), connMeta)
 	if err != nil {
 		return src.ConnectionReceiver{}, err
-	}
-
-	if parsedConn.Meta.Start.Line == 0 && parsedConn.Meta.Start.Column == 0 {
-		parsedConn.Meta = connMeta
-		if parsedConn.Normal != nil {
-			parsedConn.Normal.Meta = connMeta
-		}
 	}
 
 	return src.ConnectionReceiver{
@@ -1580,17 +1397,12 @@ func (s *treeShapeListener) parseSingleSender(
 	structSelectors := senderSide.StructSelectors()
 	portSender := senderSide.PortAddr()
 	constRefSender := senderSide.SenderConstRef()
-	primitiveConstLitSender := senderSide.PrimitiveConstLit()
-	rangeExprSender := senderSide.RangeExpr()
-
-	unionSender := senderSide.UnionSender()
+	constLitSender := senderSide.ConstLit()
 
 	if portSender == nil &&
 		constRefSender == nil &&
-		primitiveConstLitSender == nil &&
-		rangeExprSender == nil &&
-		structSelectors == nil &&
-		unionSender == nil {
+		constLitSender == nil &&
+		structSelectors == nil {
 		return src.ConnectionSender{}, &compiler.Error{
 			Message: "Sender side is missing in connection",
 			Meta: &core.Meta{
@@ -1630,120 +1442,12 @@ func (s *treeShapeListener) parseSingleSender(
 		}
 	}
 
-	var unionSenderData *src.UnionSender
-	if unionSender != nil {
-		parsedUnionRef, err := s.parseEntityRef(unionSender.EntityRef())
+	if constLitSender != nil {
+		parsedConstSender, err := s.parseConstSenderLiteral(constLitSender)
 		if err != nil {
 			return src.ConnectionSender{}, err
 		}
-
-		unionSenderData = &src.UnionSender{
-			EntityRef: parsedUnionRef,
-			Tag:       unionSender.IDENTIFIER().GetText(),
-			Meta: core.Meta{
-				Text: unionSender.GetText(),
-				Start: core.Position{
-					Line:   unionSender.GetStart().GetLine(),
-					Column: unionSender.GetStart().GetColumn(),
-				},
-				Stop: core.Position{
-					Line:   unionSender.GetStop().GetLine(),
-					Column: unionSender.GetStop().GetColumn(),
-				},
-				Location: s.loc,
-			},
-		}
-
-		// If there's a wrapped value
-		if unionSender.SingleSenderSide() != nil {
-			wrappedSender, err := s.parseSingleSender(unionSender.SingleSenderSide())
-			if err != nil {
-				return src.ConnectionSender{}, err
-			}
-			unionSenderData.Data = &wrappedSender
-		}
-	}
-
-	if primitiveConstLitSender != nil {
-		parsedPrimitiveConstLiteralSender, err := s.parsePrimitiveConstLiteral(primitiveConstLitSender)
-		if err != nil {
-			return src.ConnectionSender{}, err
-		}
-		constant = &parsedPrimitiveConstLiteralSender
-	}
-
-	var rangeExpr *src.Range
-	if rangeExprSender != nil {
-		rangeMeta := &core.Meta{
-			Text: rangeExprSender.GetText(),
-			Start: core.Position{
-				Line:   rangeExprSender.GetStart().GetLine(),
-				Column: rangeExprSender.GetStart().GetColumn(),
-			},
-			Stop: core.Position{
-				Line:   rangeExprSender.GetStop().GetLine(),
-				Column: rangeExprSender.GetStop().GetColumn(),
-			},
-			Location: s.loc,
-		}
-
-		members := rangeExprSender.AllRangeMember()
-		if len(members) != 2 {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: "Range expression must have exactly two members",
-				Meta:    rangeMeta,
-			}
-		}
-
-		fromCtx := members[0]
-		fromText := fromCtx.GetText()
-
-		from, err := strconv.ParseInt(fromText, 10, 64)
-		if err != nil {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid range 'from' value: %v", err),
-				Meta: &core.Meta{
-					Text: rangeExprSender.GetText(),
-					Start: core.Position{
-						Line:   rangeExprSender.GetStart().GetLine(),
-						Column: rangeExprSender.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   rangeExprSender.GetStop().GetLine(),
-						Column: rangeExprSender.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
-
-		toCtx := members[1]
-		toText := toCtx.GetText()
-
-		to, err := strconv.ParseInt(toText, 10, 64)
-		if err != nil {
-			return src.ConnectionSender{}, &compiler.Error{
-				Message: fmt.Sprintf("Invalid range 'to' value: %v", err),
-				Meta: &core.Meta{
-					Text: rangeExprSender.GetText(),
-					Start: core.Position{
-						Line:   rangeExprSender.GetStart().GetLine(),
-						Column: rangeExprSender.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   rangeExprSender.GetStop().GetLine(),
-						Column: rangeExprSender.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
-
-		rangeExpr = &src.Range{
-			From: from,
-			To:   to,
-			Meta: *rangeMeta,
-		}
+		constant = &parsedConstSender
 	}
 
 	var senderSelectors []string
@@ -1756,9 +1460,7 @@ func (s *treeShapeListener) parseSingleSender(
 	parsedSender := src.ConnectionSender{
 		PortAddr:       senderSidePortAddr,
 		Const:          constant,
-		Range:          rangeExpr,
 		StructSelector: senderSelectors,
-		Union:          unionSenderData,
 		Meta: core.Meta{
 			Text: senderSide.GetText(),
 			Start: core.Position{

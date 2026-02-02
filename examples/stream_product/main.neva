@@ -3,16 +3,18 @@ import { streams, fmt, runtime }
 type ProductResult streams.ProductResult<int, int>
 
 def Main(start any) (stop any) {
-	streams.Product<int, int>
-	For<ProductResult>{fmt.Println<ProductResult>}
-        streams.Wait
-	runtime.Panic
-	---
-	:start -> [
-		0..4 -> product:first,
-		0..4 -> product:second
-	]
-	product -> for
-	for:res -> wait -> :stop
-	for:err -> panic
+    product streams.Product<int, int>
+    for_each streams.ForEach<ProductResult>{fmt.Println<ProductResult>}
+    range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> [
+        0 -> range:from,
+        4 -> range:to
+    ]
+    range -> [product:first, product:second]
+    product -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }

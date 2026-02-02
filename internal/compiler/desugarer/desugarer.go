@@ -12,14 +12,12 @@ import (
 // Desugarer is NOT thread safe and must be used in single thread
 type Desugarer struct {
 	virtualSelectorsCount uint64
-	switchCounter         uint64
 	virtualLocksCounter   uint64
 	virtualEmittersCount  uint64
 	virtualConstCount     uint64
 	virtualTriggersCount  uint64
 	fanOutCounter         uint64
 	fanInCounter          uint64
-	rangeCounter          uint64
 }
 
 func (d *Desugarer) Desugar(build src.Build) (src.Build, error) {
@@ -161,6 +159,7 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
 	entity src.Entity
 	insert map[string]src.Entity
@@ -175,11 +174,7 @@ func (d *Desugarer) desugarEntity(
 	}
 
 	if entity.Kind == src.ConstEntity {
-		desugaredConst, err := d.handleConst(entity.Const)
-		if err != nil {
-			return desugarEntityResult{}, fmt.Errorf("desugar const: %w", err)
-		}
-
+		desugaredConst := d.handleConst(entity.Const)
 		return desugarEntityResult{
 			entity: src.Entity{
 				IsPublic: entity.IsPublic,
@@ -215,14 +210,12 @@ func (d *Desugarer) desugarEntity(
 // Do NOT use this method until issue is fixed
 // func (d *Desugarer) resetCounters() {
 // 	d.virtualSelectorsCount = 0
-// 	d.switchCounter = 0
 // 	d.virtualLocksCounter = 0
 // 	d.virtualEmittersCount = 0
 // 	d.virtualConstCount = 0
 // 	d.virtualTriggersCount = 0
 // 	d.fanOutCounter = 0
 // 	d.fanInCounter = 0
-// 	d.rangeCounter = 0
 // }
 
 func New() Desugarer {

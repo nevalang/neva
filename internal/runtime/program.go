@@ -76,9 +76,9 @@ func NewInport(
 }
 
 type SingleInport struct {
+	interceptor Interceptor
 	ch          <-chan OrderedMsg
 	addr        PortAddr
-	interceptor Interceptor
 }
 
 func NewSingleInport(
@@ -86,7 +86,7 @@ func NewSingleInport(
 	addr PortAddr,
 	interceptor Interceptor,
 ) *SingleInport {
-	return &SingleInport{ch, addr, interceptor}
+	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
 }
 
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
@@ -152,7 +152,7 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	case <-ctx.Done():
 		return Msg{}, false
 	case v := <-a.chans[idx]:
-		index := uint8(idx)
+		index := Uint8Index(idx)
 		msg := a.interceptor.Received(
 			PortSlotAddr{
 				PortAddr: PortAddr{
@@ -184,7 +184,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 			case <-ctx.Done():
 				success = false
 			case received := <-a.chans[idx]:
-				index := uint8(idx)
+				index := Uint8Index(idx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -234,7 +234,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
 		// if we do len(ss) iterations, that's ok, because we will go back and check
-		if len(buf) > 0 && i >= len(a.chans) {
+		if len(buf) > 0 && i >= len(a.chans) { //nolint:staticcheck // keep explicit break to match original loop structure
 			break
 		}
 
@@ -245,7 +245,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				index := uint8(slotIdx)
+				index := Uint8Index(slotIdx)
 				msg := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -343,9 +343,9 @@ func NewOutport(
 }
 
 type SingleOutport struct {
-	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 	interceptor Interceptor
 	ch          chan<- OrderedMsg
+	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 }
 
 func NewSingleOutport(
@@ -387,18 +387,18 @@ type Interceptor interface {
 }
 
 type PortSlotAddr struct {
-	PortAddr
 	Index *uint8 // nil means single port
+	PortAddr
 }
 
 type ArrayOutport struct {
-	addr        PortAddr
 	interceptor Interceptor
+	addr        PortAddr
 	slots       []chan<- OrderedMsg
 }
 
 func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- OrderedMsg) *ArrayOutport {
-	return &ArrayOutport{addr: addr, slots: slots, interceptor: interceptor}
+	return &ArrayOutport{interceptor: interceptor, addr: addr, slots: slots}
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
@@ -436,7 +436,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			case <-ctx.Done():
 				success = false
 			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
-				i := uint8(idx)
+				i := Uint8Index(idx)
 				slotAddr := PortSlotAddr{
 					PortAddr: a.addr,
 					Index:    &i,

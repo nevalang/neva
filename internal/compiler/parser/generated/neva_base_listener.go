@@ -404,12 +404,6 @@ func (s *BasenevaListener) EnterConnDef(ctx *ConnDefContext) {}
 // ExitConnDef is called when production connDef is exited.
 func (s *BasenevaListener) ExitConnDef(ctx *ConnDefContext) {}
 
-// EnterNormConnDef is called when production normConnDef is entered.
-func (s *BasenevaListener) EnterNormConnDef(ctx *NormConnDefContext) {}
-
-// ExitNormConnDef is called when production normConnDef is exited.
-func (s *BasenevaListener) ExitNormConnDef(ctx *NormConnDefContext) {}
-
 // EnterSenderSide is called when production senderSide is entered.
 func (s *BasenevaListener) EnterSenderSide(ctx *SenderSideContext) {}
 
@@ -422,29 +416,11 @@ func (s *BasenevaListener) EnterMultipleSenderSide(ctx *MultipleSenderSideContex
 // ExitMultipleSenderSide is called when production multipleSenderSide is exited.
 func (s *BasenevaListener) ExitMultipleSenderSide(ctx *MultipleSenderSideContext) {}
 
-// EnterArrBypassConnDef is called when production arrBypassConnDef is entered.
-func (s *BasenevaListener) EnterArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
-
-// ExitArrBypassConnDef is called when production arrBypassConnDef is exited.
-func (s *BasenevaListener) ExitArrBypassConnDef(ctx *ArrBypassConnDefContext) {}
-
 // EnterSingleSenderSide is called when production singleSenderSide is entered.
 func (s *BasenevaListener) EnterSingleSenderSide(ctx *SingleSenderSideContext) {}
 
 // ExitSingleSenderSide is called when production singleSenderSide is exited.
 func (s *BasenevaListener) ExitSingleSenderSide(ctx *SingleSenderSideContext) {}
-
-// EnterUnionSender is called when production unionSender is entered.
-func (s *BasenevaListener) EnterUnionSender(ctx *UnionSenderContext) {}
-
-// ExitUnionSender is called when production unionSender is exited.
-func (s *BasenevaListener) ExitUnionSender(ctx *UnionSenderContext) {}
-
-// EnterPrimitiveConstLit is called when production primitiveConstLit is entered.
-func (s *BasenevaListener) EnterPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
-
-// ExitPrimitiveConstLit is called when production primitiveConstLit is exited.
-func (s *BasenevaListener) ExitPrimitiveConstLit(ctx *PrimitiveConstLitContext) {}
 
 // EnterSenderConstRef is called when production senderConstRef is entered.
 func (s *BasenevaListener) EnterSenderConstRef(ctx *SenderConstRefContext) {}
@@ -469,18 +445,6 @@ func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
 
 // ExitDeferredConn is called when production deferredConn is exited.
 func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
-
-// EnterRangeExpr is called when production rangeExpr is entered.
-func (s *BasenevaListener) EnterRangeExpr(ctx *RangeExprContext) {}
-
-// ExitRangeExpr is called when production rangeExpr is exited.
-func (s *BasenevaListener) ExitRangeExpr(ctx *RangeExprContext) {}
-
-// EnterRangeMember is called when production rangeMember is entered.
-func (s *BasenevaListener) EnterRangeMember(ctx *RangeMemberContext) {}
-
-// ExitRangeMember is called when production rangeMember is exited.
-func (s *BasenevaListener) ExitRangeMember(ctx *RangeMemberContext) {}
 
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
@@ -547,15 +511,3 @@ func (s *BasenevaListener) EnterMultipleReceiverSide(ctx *MultipleReceiverSideCo
 
 // ExitMultipleReceiverSide is called when production multipleReceiverSide is exited.
 func (s *BasenevaListener) ExitMultipleReceiverSide(ctx *MultipleReceiverSideContext) {}
-
-// EnterSwitchStmt is called when production switchStmt is entered.
-func (s *BasenevaListener) EnterSwitchStmt(ctx *SwitchStmtContext) {}
-
-// ExitSwitchStmt is called when production switchStmt is exited.
-func (s *BasenevaListener) ExitSwitchStmt(ctx *SwitchStmtContext) {}
-
-// EnterDefaultCase is called when production defaultCase is entered.
-func (s *BasenevaListener) EnterDefaultCase(ctx *DefaultCaseContext) {}
-
-// ExitDefaultCase is called when production defaultCase is exited.
-func (s *BasenevaListener) ExitDefaultCase(ctx *DefaultCaseContext) {}

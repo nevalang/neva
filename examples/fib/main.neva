@@ -1,9 +1,14 @@
 // import { fmt }
 
 // def Main(start any) (stop any) {
-//     map_fib Map<int, int>{Fib}
+//     map_fib streams.Map<int, int>{Fib}
+//     range streams.Range
 //     ---
-//     :start -> 0..10 -> ...map_fib -> :res
+//     :start -> [
+//         0 -> range:from,
+//         10 -> range:to
+//     ]
+//     range -> ...map_fib -> :res
 // }
 
 // def Fib(data int) (res int) {

@@ -18,6 +18,8 @@ func (a Analyzer) analyzeReceivers(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
+	net []src.Connection,
+	unionTags map[string]unionActiveTagInfo,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	analyzedReceivers := make([]src.ConnectionReceiver, 0, len(receiverSide))
 
@@ -31,6 +33,8 @@ func (a Analyzer) analyzeReceivers(
 			nodesUsage,
 			resolvedSenderTypes,
 			analyzedSenders,
+			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -51,6 +55,8 @@ func (a Analyzer) analyzeReceiver(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
+	net []src.Connection,
+	unionTags map[string]unionActiveTagInfo,
 ) (*src.ConnectionReceiver, *compiler.Error) {
 	switch {
 	case receiver.PortAddr != nil:
@@ -63,6 +69,7 @@ func (a Analyzer) analyzeReceiver(
 			nodesUsage,
 			resolvedSenderTypes,
 			analyzedSenders,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -81,6 +88,8 @@ func (a Analyzer) analyzeReceiver(
 			nodesUsage,
 			resolvedSenderTypes,
 			analyzedSenders,
+			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -97,6 +106,8 @@ func (a Analyzer) analyzeReceiver(
 			scope,
 			nodesUsage,
 			nil,
+			net,
+			unionTags,
 		)
 		if err != nil {
 			return nil, err
@@ -104,165 +115,12 @@ func (a Analyzer) analyzeReceiver(
 		return &src.ConnectionReceiver{
 			DeferredConnection: &analyzedDeferredConn,
 		}, nil
-	case receiver.Switch != nil:
-		analyzedSwitchConns, analyzedDefault, err := a.analyzeSwitchReceiver(
-			receiver,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			nodesUsage,
-			analyzedSenders,
-			resolvedSenderTypes,
-		)
-		if err != nil {
-			return nil, err
-		}
-		return &src.ConnectionReceiver{
-			Switch: &src.Switch{
-				Cases:   analyzedSwitchConns,
-				Default: analyzedDefault,
-			},
-			Meta: receiver.Meta,
-		}, nil
 	}
 
 	return nil, &compiler.Error{
 		Message: "Connection must have receiver-side",
 		Meta:    &receiver.Meta,
 	}
-}
-
-func (a Analyzer) analyzeSwitchReceiver(
-	receiver src.ConnectionReceiver, // switch receiver
-	iface src.Interface,
-	nodes map[string]src.Node,
-	nodesIfaces map[string]foundInterface,
-	scope src.Scope,
-	nodesUsage map[string]netNodeUsage,
-	analyzedSenders []src.ConnectionSender, // input senders for switch
-	resolvedSwitchInputTypes []*ts.Expr, // types of input senders for switch
-) ([]src.NormalConnection, []src.ConnectionReceiver, *compiler.Error) {
-	analyzedSwitchConns := make([]src.NormalConnection, 0, len(receiver.Switch.Cases))
-
-	for _, switchCaseBranch := range receiver.Switch.Cases {
-		// step 1: analyze each branch as a normal connection in pattern-matching mode
-		// - inside a branch, union patterns with typed members must behave as payload types
-		//   (e.g. `foo::bar -> yyy` where `bar` carries `int` makes the branch sender `int`),
-		//   because runtime unwraps the matched variant before forwarding to the branch receiver.
-		// - this is why we pass `isPatternMatchingBranch = true` here.
-		//
-		// note: this step validates branch-internal sender->receiver compatibility only.
-		// the global compatibility of switch inputs vs branch patterns is handled below.
-		//
-		// all option-senders must be subtypes of their branch-receivers
-		analyzedSwitchBranch, err := a.analyzeNormalConnection(
-			&switchCaseBranch,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			nodesUsage,
-			nil,
-			true, // isPatternMatchingBranch = true for switch
-		)
-		if err != nil {
-			return nil, nil, &compiler.Error{
-				Message: fmt.Sprintf("Invalid switch case: %v", err),
-				Meta:    &switchCaseBranch.Meta,
-			}
-		}
-
-		analyzedSwitchConns = append(analyzedSwitchConns, *analyzedSwitchBranch)
-
-		// step 2: ensure each switch input sender is compatible with each branch pattern sender
-		//
-		// important: union patterns must be compared as the union type (not payload).
-		// - calling `getResolvedSenderType` with isPattern=false would reject typed tag-only patterns
-		//   (it demands wrapped data for typed members), which is incorrect for pattern syntax.
-		// - calling it with isPattern=true would yield the payload type (e.g. `int`) which is
-		//   also incorrect for matchability (we need to compare incoming `foo` against pattern `foo`,
-		//   not `int`).
-		// therefore we resolve union patterns to the union type manually here; for non-union senders
-		// the flag is irrelevant, so we safely call the generic resolver with `false`.
-		//
-		// all switch branch senders must be compatible with switch input senders
-		for _, branchSender := range switchCaseBranch.Senders {
-			var branchSenderType ts.Expr
-			if branchSender.Union != nil {
-				// for pattern matching compatibility, compare against the union type itself
-				typeDef, _, err := scope.GetType(branchSender.Union.EntityRef)
-				if err != nil {
-					return nil, nil, &compiler.Error{
-						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", err),
-						Meta:    &branchSender.Meta,
-					}
-				}
-				resolvedUnion, analyzeErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
-				if analyzeErr != nil {
-					return nil, nil, &compiler.Error{
-						Message: fmt.Sprintf("Invalid switch case sender: failed to resolve union type: %v", analyzeErr),
-						Meta:    &branchSender.Meta,
-					}
-				}
-				branchSenderType = resolvedUnion
-			} else {
-				_, resolvedType, _, err := a.getResolvedSenderType(
-					branchSender,
-					iface,
-					nodes,
-					nodesIfaces,
-					scope,
-					nil,
-					nodesUsage,
-					false,
-				)
-				if err != nil {
-					return nil, nil, &compiler.Error{
-						Message: fmt.Sprintf("Invalid switch case sender: %v", err),
-						Meta:    &branchSender.Meta,
-					}
-				}
-
-				branchSenderType = resolvedType
-			}
-
-			for i, resolverSwitchInputType := range resolvedSwitchInputTypes {
-				if err := a.resolver.IsSubtypeOf(*resolverSwitchInputType, branchSenderType, scope); err != nil {
-					return nil, nil, &compiler.Error{
-						Message: fmt.Sprintf(
-							"Incompatible types in switch: %v -> %v: %v",
-							analyzedSenders[i], branchSender, err.Error(),
-						),
-						Meta: &branchSender.Meta,
-					}
-				}
-			}
-		}
-	}
-
-	if receiver.Switch.Default == nil {
-		return nil, nil, &compiler.Error{
-			Message: "Switch must have a default case",
-			Meta:    &receiver.Meta,
-		}
-	}
-
-	analyzedDefault, err := a.analyzeReceivers(
-		receiver.Switch.Default,
-		scope,
-		iface,
-		nodes,
-		nodesIfaces,
-		nodesUsage,
-		resolvedSwitchInputTypes,
-		analyzedSenders,
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return analyzedSwitchConns, analyzedDefault, nil
 }
 
 func (a Analyzer) analyzePortAddrReceiver(
@@ -274,6 +132,7 @@ func (a Analyzer) analyzePortAddrReceiver(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
+	unionTags map[string]unionActiveTagInfo,
 ) *compiler.Error {
 	resolvedPortAddr, typeExpr, isArrPort, err := a.getReceiverPortType(
 		portAddr,
@@ -302,6 +161,8 @@ func (a Analyzer) analyzePortAddrReceiver(
 		}
 	}
 
+	// Validate all outer senders that feed the chain head (fan-in into the chain start).
+	// Example: [a, b] -> x -> y  => both a and b must be compatible with x's inport.
 	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
 			return &compiler.Error{
@@ -311,6 +172,19 @@ func (a Analyzer) analyzePortAddrReceiver(
 				),
 				Meta: &portAddr.Meta,
 			}
+		}
+	}
+
+	// Union:data is a special receiver: validate payload types against the active tag.
+	if isUnionDataReceiver(portAddr, unionTags) {
+		if err := a.validateUnionDataReceiverPort(
+			portAddr,
+			analyzedSenders,
+			resolvedSenderTypes,
+			unionTags,
+			scope,
+		); err != nil {
+			return err
 		}
 	}
 
@@ -336,25 +210,21 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	nodesUsage map[string]netNodeUsage,
 	resolvedSenderTypes []*ts.Expr,
 	analyzedSenders []src.ConnectionSender,
+	net []src.Connection,
+	unionTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
-	if chainedConn.Normal == nil {
+	// Chain head fan-in is intentionally disallowed to keep semantics simple.
+	if len(chainedConn.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
-			Message: "chained connection must be a normal connection",
+			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
 			Meta:    &chainedConn.Meta,
 		}
 	}
 
-	if len(chainedConn.Normal.Senders) != 1 {
-		return src.Connection{}, &compiler.Error{
-			Message: "multiple senders are only allowed at the start of a connection",
-			Meta:    &chainedConn.Normal.Meta,
-		}
-	}
-
-	chainHead := chainedConn.Normal.Senders[0]
+	chainHeadSender := chainedConn.Senders[0]
 
 	chainHeadType, err := a.getChainHeadInputType(
-		chainHead,
+		chainHeadSender,
 		nodes,
 		nodesIfaces,
 		scope,
@@ -368,10 +238,24 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 			return src.Connection{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Incompatible types: %v -> %v: %v",
-					analyzedSenders[i], chainHead, err.Error(),
+					analyzedSenders[i], chainHeadSender, err.Error(),
 				),
 				Meta: &chainedConn.Meta,
 			}
+		}
+	}
+
+	// Chain head is a receiver for the outer senders; recursive analysis treats it as sender,
+	// so we must validate Union:data here to avoid skipping the receiver-side check.
+	if chainHeadSender.PortAddr != nil && isUnionDataReceiver(*chainHeadSender.PortAddr, unionTags) {
+		if err := a.validateUnionDataReceiverPort(
+			*chainHeadSender.PortAddr,
+			analyzedSenders,
+			resolvedSenderTypes,
+			unionTags,
+			scope,
+		); err != nil {
+			return src.Connection{}, err
 		}
 	}
 
@@ -383,13 +267,15 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		scope,
 		nodesUsage,
 		analyzedSenders,
+		net,
+		unionTags,
 	)
 	if err != nil {
 		return src.Connection{}, err
 	}
 
-	if chainHead.PortAddr != nil {
-		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHead.PortAddr); err != nil {
+	if chainHeadSender.PortAddr != nil {
+		if err := netNodesUsage(nodesUsage).trackInportUsage(*chainHeadSender.PortAddr); err != nil {
 			return src.Connection{}, &compiler.Error{
 				Message: err.Error(),
 				Meta:    &chainedConn.Meta,
@@ -398,6 +284,18 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	}
 
 	return analyzedChainedConn, nil
+}
+
+// isUnionDataReceiver reports whether a port address targets Union:data with a known active tag.
+func isUnionDataReceiver(
+	portAddr src.PortAddr,
+	unionActiveTags map[string]unionActiveTagInfo,
+) bool {
+	if portAddr.Port != "data" {
+		return false
+	}
+	_, ok := unionActiveTags[portAddr.Node]
+	return ok
 }
 
 // getReceiverPortType returns resolved port-addr, type expr and isArray bool.

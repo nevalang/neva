@@ -34,8 +34,10 @@ def PrintAfter1Sec(data any) (res any) {
 	println fmt.Println
 	panic runtime.Panic
 	---
-	:data -> delay:data
-	$time.second -> delay:dur
+	:data -> [
+		delay:data,
+		$time.second -> delay:dur
+	]
 	delay -> println
 	println:res -> :res
 	println:err -> panic

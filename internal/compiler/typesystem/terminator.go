@@ -58,7 +58,7 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 			if errors.Is(err, ErrCounter) || errors.Is(err, ErrIndirectRecursion) {
 				return false, fmt.Errorf("%w: %v", ErrIndirectRecursion, cur)
 			}
-			return false, fmt.Errorf("%w: %v", ErrSwapRun, err)
+			return false, fmt.Errorf("%w: %w", ErrSwapRun, err)
 		} else if isPrevRecursive {
 			return true, nil
 		}

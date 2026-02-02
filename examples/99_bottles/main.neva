@@ -5,54 +5,62 @@ import {
 }
 
 def Main(start any) (stop any) {
-	print For<int>{Next2Lines}
-        wait streams.Wait
-	panic runtime.Panic
-	---
-	:start -> 99..-1 -> print
-	print:res -> wait -> :stop
-	print:err -> panic
+    for_each streams.ForEach<int>{Print2Lines}
+    range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> [
+        99 -> range:from,
+        -1 -> range:to
+    ]
+    range -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
-def Next2Lines(data int) (res any, err error) {
-	first Tap<int>{FirstLine}?
+def Print2Lines(data int) (res any, err error) {
+	print_first_line Tap<int>{PrintFirstLine}?
 	dec Dec
-	second SecondLine?
+	print_second_line PrintSecondLine?
 	---
-	:data -> first
-	first:res -> dec -> second -> :res
+	:data -> print_first_line -> dec -> print_second_line -> :res
 }
 
-def FirstLine(data int) (res any, err error) {
+def PrintFirstLine(data int) (res any, err error) {
 	p1 fmt.Println?
 	p2 fmt.Println?
 	p3 fmt.Printf?
+	switch Switch<int>
 	---
-	:data -> switch {
-		0 -> 'No more bottles of beer on the wall, no more bottles of beer.' -> p1
-		1 -> '1 bottle of beer on the wall, 1 bottle of beer.' -> p2
-		_ -> [
-			p3:args[0],
-			'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
-		]
-	}
-	[p1:res, p2:res, p3:sig] -> :res
+	:data -> [
+		switch:data,
+		0 -> switch:case[0] -> 'No more bottles of beer on the wall, no more bottles of beer.' -> p1,
+		1 -> switch:case[1] -> '1 bottle of beer on the wall, 1 bottle of beer.' -> p2
+	]
+	switch:else -> [
+		p3:args[0],
+		'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
+	]
+	[p1, p2, p3] -> :res
 }
 
-def SecondLine(data int) (res any, err error) {
+def PrintSecondLine(data int) (res any, err error) {
 	p1 fmt.Println?
 	p2 fmt.Println?
 	p3 fmt.Println?
 	p4 fmt.Printf?
+	switch Switch<int>
 	---
-	:data -> switch {
-		-1 -> 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1
-		0 -> 'Take one down and pass it around, no more bottles of beer on the wall.\n' -> p2 
-		1 -> 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3
-		_ -> [
-			p4:args[0],
-			'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
-		]
-	}
-	[p1:res, p2:res, p3:res, p4:sig] -> :res
+	:data -> [
+		switch:data,
+		-1 -> switch:case[0] -> 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1,
+		0 -> switch:case[1] -> 'Take one down and pass it around, no more bottles of beer on the wall.\n' -> p2,
+		1 -> switch:case[2] -> 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3
+	]
+	switch:else -> [
+		p4:args[0],
+		'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
+	]
+	[p1, p2, p3, p4] -> :res
 }

@@ -10,15 +10,15 @@ func SaveFilesToDir(dst string, files map[string][]byte) error {
 		filePath := filepath.Join(dst, path)
 		dirPath := filepath.Dir(filePath)
 
-		if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(dirPath, 0o755); err != nil {
 			return err
 		}
 
-		if err := os.WriteFile(filePath, content, os.ModePerm); err != nil {
+		// #nosec G306 -- build outputs are intended to be readable
+		if err := os.WriteFile(filePath, content, 0o644); err != nil {
 			return err
 		}
 	}
 
 	return nil
 }
-

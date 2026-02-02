@@ -6,18 +6,15 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// unionWrapV2 wraps with extra signal
-type unionWrapV2 struct{}
+type unionWrapper struct{}
 
-func (unionWrapV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
-	tag := cfg.Str()
-
+func (unionWrapper) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
 	}
 
-	signalIn, err := io.In.Single("sig")
+	tagIn, err := io.In.Single("tag")
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +26,18 @@ func (unionWrapV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Cont
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			if _, ok := signalIn.Receive(ctx); !ok {
+			tagMsg, ok := tagIn.Receive(ctx)
+			if !ok {
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewUnionMsg(tag, data)) {
+			tag := tagMsg.Union().Tag()
+			if !resOut.Send(ctx, runtime.NewUnionMsg(tag, dataMsg)) {
 				return
 			}
 		}

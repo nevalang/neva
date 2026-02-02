@@ -7,6 +7,7 @@ import (
 	src "github.com/nevalang/neva/internal/compiler/ast"
 )
 
+//nolint:govet // fieldalignment: keep semantic grouping.
 type handleComponentResult struct {
 	desugaredFlow   src.Component
 	virtualEntities map[string]src.Entity
@@ -30,8 +31,9 @@ func (d *Desugarer) desugarComponent(
 	if err != nil {
 		return handleComponentResult{}, err
 	}
-
-	connectionsToDesugar := append(virtualConnections, component.Net...)
+	connectionsToDesugar := make([]src.Connection, 0, len(virtualConnections)+len(component.Net))
+	connectionsToDesugar = append(connectionsToDesugar, virtualConnections...)
+	connectionsToDesugar = append(connectionsToDesugar, component.Net...)
 
 	desugarNetResult, err := d.desugarNetwork(
 		component.Interface,

@@ -199,26 +199,14 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterNormConnDef is called when entering the normConnDef production.
-	EnterNormConnDef(c *NormConnDefContext)
-
 	// EnterSenderSide is called when entering the senderSide production.
 	EnterSenderSide(c *SenderSideContext)
 
 	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
 	EnterMultipleSenderSide(c *MultipleSenderSideContext)
 
-	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
-	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
-
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
-
-	// EnterUnionSender is called when entering the unionSender production.
-	EnterUnionSender(c *UnionSenderContext)
-
-	// EnterPrimitiveConstLit is called when entering the primitiveConstLit production.
-	EnterPrimitiveConstLit(c *PrimitiveConstLitContext)
 
 	// EnterSenderConstRef is called when entering the senderConstRef production.
 	EnterSenderConstRef(c *SenderConstRefContext)
@@ -231,12 +219,6 @@ type nevaListener interface {
 
 	// EnterDeferredConn is called when entering the deferredConn production.
 	EnterDeferredConn(c *DeferredConnContext)
-
-	// EnterRangeExpr is called when entering the rangeExpr production.
-	EnterRangeExpr(c *RangeExprContext)
-
-	// EnterRangeMember is called when entering the rangeMember production.
-	EnterRangeMember(c *RangeMemberContext)
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
@@ -270,12 +252,6 @@ type nevaListener interface {
 
 	// EnterMultipleReceiverSide is called when entering the multipleReceiverSide production.
 	EnterMultipleReceiverSide(c *MultipleReceiverSideContext)
-
-	// EnterSwitchStmt is called when entering the switchStmt production.
-	EnterSwitchStmt(c *SwitchStmtContext)
-
-	// EnterDefaultCase is called when entering the defaultCase production.
-	EnterDefaultCase(c *DefaultCaseContext)
 
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
@@ -469,26 +445,14 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
-	// ExitNormConnDef is called when exiting the normConnDef production.
-	ExitNormConnDef(c *NormConnDefContext)
-
 	// ExitSenderSide is called when exiting the senderSide production.
 	ExitSenderSide(c *SenderSideContext)
 
 	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
 	ExitMultipleSenderSide(c *MultipleSenderSideContext)
 
-	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
-	ExitArrBypassConnDef(c *ArrBypassConnDefContext)
-
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)
-
-	// ExitUnionSender is called when exiting the unionSender production.
-	ExitUnionSender(c *UnionSenderContext)
-
-	// ExitPrimitiveConstLit is called when exiting the primitiveConstLit production.
-	ExitPrimitiveConstLit(c *PrimitiveConstLitContext)
 
 	// ExitSenderConstRef is called when exiting the senderConstRef production.
 	ExitSenderConstRef(c *SenderConstRefContext)
@@ -501,12 +465,6 @@ type nevaListener interface {
 
 	// ExitDeferredConn is called when exiting the deferredConn production.
 	ExitDeferredConn(c *DeferredConnContext)
-
-	// ExitRangeExpr is called when exiting the rangeExpr production.
-	ExitRangeExpr(c *RangeExprContext)
-
-	// ExitRangeMember is called when exiting the rangeMember production.
-	ExitRangeMember(c *RangeMemberContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)
@@ -540,10 +498,4 @@ type nevaListener interface {
 
 	// ExitMultipleReceiverSide is called when exiting the multipleReceiverSide production.
 	ExitMultipleReceiverSide(c *MultipleReceiverSideContext)
-
-	// ExitSwitchStmt is called when exiting the switchStmt production.
-	ExitSwitchStmt(c *SwitchStmtContext)
-
-	// ExitDefaultCase is called when exiting the defaultCase production.
-	ExitDefaultCase(c *DefaultCaseContext)
 }

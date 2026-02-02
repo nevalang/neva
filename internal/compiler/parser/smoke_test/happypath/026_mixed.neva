@@ -21,3 +21,9 @@ def Main(start any) (stop any) {
 	abs:v -> [concrete:v]
 	concrete:v -> :code
 }
+
+def Wrap([data]) (res) {
+	fanIn FanIn
+	---
+	:data[*] -> fanIn:data[*]
+}
