@@ -92,6 +92,9 @@ Follow these instructions.
 
 ### Session Notes (2026-02-01)
 
+- **Language semantics**: Array-bypass now uses `[*]` on both sides of a normal connection; index `255` is reserved for the wildcard.
+- **Architecture insights**: Array-bypass is handled as a normal connection with a sentinel slot index (`ArrayBypassIdx`) instead of a dedicated AST connection type.
+- **Gotchas**: Using `[255]` directly is now a parser error; always use `[*]` for array-bypass.
 - **Common patterns**: Stream/list conversions use `streams.FromList<T>` and `lists.FromStream<T>`; `StreamToList`/`ListToStream` were removed.
 - **Architecture insights**: Stream helpers live under `std/streams` (map/filter/reduce in dedicated files; `ForEach` in `std/streams/for_each.neva`).
 - **Gotchas**: `std/time` only provides delays/durations; there is no wall-clock date/time source, so pass timestamps/durations into components that need "today."
@@ -99,6 +102,15 @@ Follow these instructions.
 - **Common patterns**: README community CTAs use shields.io badges for Open Collective links to keep style consistent.
 - **Common patterns**: `e2e/` tests are separate Neva modules with Go e2e tests; `examples/` is a single Neva module where all examples must compile together.
 - **Gotchas**: `e2e/` includes verbose mirror variants that can duplicate `examples/` coverage; keep them only when they assert distinct semantics.
+
+### Session Notes (2026-02-02)
+
+- **Language semantics**: Connection AST now uses `Connection` directly; `NormalConnection` wrapper was removed (chained/deferred connections reuse the same struct).
+- **Architecture insights**: Parser `connDef` now directly parses sender/receiver; `chainedNormConn` points to `connDef` (no intermediate rule).
+- **Common patterns**: Array-bypass detection lives in analyzer; desugarer/irgen treat `[*]` connections as validated 1:1 wiring.
+- **Gotchas**: Array-bypass consumes the whole port; mixing `[*]` with other slot usage is rejected; index 255 remains reserved (max index 254).
+- **Gotchas**: Desugaring anonymous DI args must preserve `ErrGuard`/`OverloadIndex`; dropping `ErrGuard` makes portless senders pick `err`, creating implicit fan-out and flaky emit errors.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

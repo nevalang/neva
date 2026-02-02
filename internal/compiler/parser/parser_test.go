@@ -31,15 +31,15 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
-	conn := net[0].Normal
+	conn := net[0]
 	require.Equal(t, "userSender", conn.Senders[0].PortAddr.Node)
 	require.Equal(t, "", conn.Senders[0].PortAddr.Port)
 
-	chain := conn.Receivers[0].ChainedConnection.Normal
+	chain := conn.Receivers[0].ChainedConnection
 	require.Equal(t, "pet", chain.Senders[0].StructSelector[0])
 	require.Equal(t, "name", chain.Senders[0].StructSelector[1])
 
-	secondChain := chain.Receivers[0].ChainedConnection.Normal
+	secondChain := chain.Receivers[0].ChainedConnection
 	require.Equal(t, "println", secondChain.Senders[0].PortAddr.Node)
 	require.Equal(t, "", secondChain.Senders[0].PortAddr.Port)
 
@@ -50,7 +50,7 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
 		def C1() () {
-			foo[0] -> bar[255]
+			foo[0] -> bar[1]
 		}
 	`)
 
@@ -60,17 +60,51 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, true, err == nil)
 
 	net := got.Entities["C1"].Component[0].Net
-	conn := net[0].Normal
+	conn := net[0]
 
 	// foo[0]->
 	require.Equal(t, "foo", conn.Senders[0].PortAddr.Node)
 	require.Equal(t, "", conn.Senders[0].PortAddr.Port)
 	require.Equal(t, compiler.Pointer(uint8(0)), conn.Senders[0].PortAddr.Idx)
 
-	// ->bar[255]
+	// ->bar[1]
 	require.Equal(t, "bar", conn.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(255)), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(uint8(1)), conn.Receivers[0].PortAddr.Idx)
+}
+
+func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			foo[*] -> bar[*]
+		}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.True(t, err == nil)
+
+	net := got.Entities["C1"].Component[0].Net
+	conn := net[0]
+
+	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Receivers[0].PortAddr.Idx)
+}
+
+func TestParser_ParseFile_ReservedArrayBypassIdx(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			foo[255] -> bar[0]
+		}
+	`)
+
+	p := New()
+
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "reserved by the compiler")
+	require.Contains(t, err.Message, "maximum allowed index is 254")
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
@@ -88,17 +122,17 @@ func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
 	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
 
-	conn := net[0].Normal
+	conn := net[0]
 	require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
 	require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
 
 	deferred := conn.Receivers[0].DeferredConnection
 
-	deferSender := deferred.Normal.Senders[0].PortAddr
+	deferSender := deferred.Senders[0].PortAddr
 	require.Equal(t, "foo", deferSender.Node)
 	require.Equal(t, "", deferSender.Port)
 
-	chainHead := deferred.Normal.Receivers[0].ChainedConnection.Normal
+	chainHead := deferred.Receivers[0].ChainedConnection
 	require.Equal(t, "bar", chainHead.Senders[0].PortAddr.Node)
 	require.Equal(t, "", chainHead.Senders[0].PortAddr.Port)
 
@@ -126,12 +160,12 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	require.Equal(t, 2, len(net))
 
 	// 1) :port -> lonely
-	receiverPortAddr := net[0].Normal.Receivers[0].PortAddr
+	receiverPortAddr := net[0].Receivers[0].PortAddr
 	require.Equal(t, "lonely", receiverPortAddr.Node)
 	require.Equal(t, "", receiverPortAddr.Port)
 
 	// 2) lonely -> :port
-	senderPortAddr := net[1].Normal.Senders[0].PortAddr
+	senderPortAddr := net[1].Senders[0].PortAddr
 	require.Equal(t, "lonely", senderPortAddr.Node)
 	require.Equal(t, "", senderPortAddr.Port)
 }
@@ -148,13 +182,13 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 
 	net := got.Entities["C1"].Component[0].Net
 	require.Equal(t, 1, len(net))
-	conn := net[0].Normal
+	conn := net[0]
 
 	sender := conn.Senders[0].PortAddr
 	require.Equal(t, "in", sender.Node)
 	require.Equal(t, "foo", sender.Port)
 
-	chain := conn.Receivers[0].ChainedConnection.Normal
+	chain := conn.Receivers[0].ChainedConnection
 	chainSender := chain.Senders[0].PortAddr
 	require.Equal(t, "n1", chainSender.Node)
 	require.Equal(t, "p1", chainSender.Port)
@@ -182,12 +216,12 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
 				require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
 
-				chain := conn.Receivers[0].ChainedConnection.Normal
+				chain := conn.Receivers[0].ChainedConnection
 				require.NotNil(t, chain.Senders[0].Const)
 				require.Equal(t, "greeting", chain.Senders[0].Const.Value.Ref.Name)
 				require.Equal(t, "out", chain.Receivers[0].PortAddr.Node)
@@ -202,12 +236,12 @@ func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
 				require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
 
-				chain := conn.Receivers[0].ChainedConnection.Normal
+				chain := conn.Receivers[0].ChainedConnection
 				require.NotNil(t, chain.Senders[0].Const)
 				require.Equal(t, "hello", *chain.Senders[0].Const.Value.Message.Str)
 				require.Equal(t, "out", chain.Receivers[0].PortAddr.Node)
@@ -308,10 +342,10 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 
 	conn := got.Entities["C1"].Component[0].Net[0]
 
-	sender := conn.Normal.Senders[0].PortAddr.Node
+	sender := conn.Senders[0].PortAddr.Node
 	require.Equal(t, "in", sender)
 
-	receiver := conn.Normal.Receivers[0].PortAddr.Node
+	receiver := conn.Receivers[0].PortAddr.Node
 	require.Equal(t, "out", receiver)
 }
 
@@ -353,7 +387,7 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				unionType := got.Entities["Input"].Type.BodyExpr.Lit.Union
 				require.NotNil(t, unionType)
 
@@ -374,7 +408,7 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 				type Result union { Ok int, Err string }
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				unionType := got.Entities["Result"].Type.BodyExpr.Lit.Union
 				require.NotNil(t, unionType)
 
@@ -413,7 +447,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c0 Input = Input::Int(42)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c0"].Const.Value.Message.Union
 				require.Equal(t, "", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -427,7 +461,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c1 pkg.Input = pkg.Input::None
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c1"].Const.Value.Message.Union
 				require.Equal(t, "pkg", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -441,7 +475,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c2 pkg.Input = pkg.Input::Int(100)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c2"].Const.Value.Message.Union
 				require.Equal(t, "pkg", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -453,7 +487,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 			name: "nested union const value",
 			text: "const c3 Input = Input::Nested(Input::Int(7))",
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c3"].Const.Value.Message.Union
 				require.Equal(t, "", union.EntityRef.Pkg)
 				require.Equal(t, "Input", union.EntityRef.Name)
@@ -473,7 +507,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c4 U = U::Empty
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c4"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Empty", union.Tag)
@@ -487,7 +521,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c5 U = U::Int(42)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c5"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -501,7 +535,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c6 U = U::Int(-7)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c6"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -515,7 +549,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c7 U = U::Float(1.5)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c7"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Float", union.Tag)
@@ -529,7 +563,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c8 U = U::Float(-2.25)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c8"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Float", union.Tag)
@@ -543,7 +577,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c9 U = U::Str('hello')
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c9"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Str", union.Tag)
@@ -557,7 +591,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c10 U = U::Flag(true)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c10"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Flag", union.Tag)
@@ -571,7 +605,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c11 U = U::Flag(false)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c11"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Flag", union.Tag)
@@ -586,7 +620,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c1 U = c0
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				ref := got.Entities["c1"].Const.Value.Ref
 				require.NotNil(t, ref)
 				require.Equal(t, "c0", ref.Name)
@@ -599,7 +633,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c12 U = U::Empty
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c12"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Empty", union.Tag)
@@ -613,7 +647,7 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 				const c13 U = U::Int(5)
 			`,
 			check: func(t *testing.T, got src.File) {
-			    t.Helper()
+				t.Helper()
 				union := got.Entities["c13"].Const.Value.Message.Union
 				require.Equal(t, "U", union.EntityRef.Name)
 				require.Equal(t, "Int", union.Tag)
@@ -647,8 +681,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.NotNil(t, senderUnion)
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
@@ -665,8 +699,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "I", senderUnion.Tag)
@@ -682,8 +716,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "I", senderUnion.Tag)
@@ -699,8 +733,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "F", senderUnion.Tag)
@@ -716,8 +750,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "F", senderUnion.Tag)
@@ -733,8 +767,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "S", senderUnion.Tag)
@@ -750,8 +784,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "B", senderUnion.Tag)
@@ -767,8 +801,8 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
+				t.Helper()
+				conn := net[0]
 				senderUnion := conn.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "B", senderUnion.Tag)
@@ -784,9 +818,9 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
-				chain := conn.Receivers[0].ChainedConnection.Normal
+				t.Helper()
+				conn := net[0]
+				chain := conn.Receivers[0].ChainedConnection
 				senderUnion := chain.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "A", senderUnion.Tag)
@@ -801,9 +835,9 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 				}
 			`,
 			check: func(t *testing.T, net []src.Connection) {
-			    t.Helper()
-				conn := net[0].Normal
-				chain := conn.Receivers[0].ChainedConnection.Normal
+				t.Helper()
+				conn := net[0]
+				chain := conn.Receivers[0].ChainedConnection
 				senderUnion := chain.Senders[0].Const.Value.Message.Union
 				require.Equal(t, "U", senderUnion.EntityRef.Name)
 				require.Equal(t, "S", senderUnion.Tag)
@@ -843,17 +877,17 @@ func TestParser_ParseFile_ConnectionSendersConstRefAndPortAddr(t *testing.T) {
 	net := got.Entities["C1"].Component[0].Net
 	require.Len(t, net, 3)
 
-	constSender := net[0].Normal.Senders[0].Const
+	constSender := net[0].Senders[0].Const
 	require.NotNil(t, constSender)
 	require.NotNil(t, constSender.Value.Ref)
 	require.Equal(t, "c0", constSender.Value.Ref.Name)
 
-	implicitPortSender := net[1].Normal.Senders[0].PortAddr
+	implicitPortSender := net[1].Senders[0].PortAddr
 	require.NotNil(t, implicitPortSender)
 	require.Equal(t, "a", implicitPortSender.Node)
 	require.Equal(t, "", implicitPortSender.Port)
 
-	explicitPortSender := net[2].Normal.Senders[0].PortAddr
+	explicitPortSender := net[2].Senders[0].PortAddr
 	require.NotNil(t, explicitPortSender)
 	require.Equal(t, "a", explicitPortSender.Node)
 	require.Equal(t, "res", explicitPortSender.Port)

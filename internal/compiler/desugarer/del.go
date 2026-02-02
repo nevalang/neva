@@ -45,21 +45,18 @@ func (Desugarer) handleUnusedOutports(
 	for nodeName, ports := range unusedOutports.m {
 		for portName := range ports {
 			voidConns = append(voidConns, src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: []src.ConnectionSender{
-						{
-							PortAddr: &src.PortAddr{
-								Node: nodeName,
-								Port: portName,
-								Meta: meta,
-							},
+				Senders: []src.ConnectionSender{
+					{
+						PortAddr: &src.PortAddr{
+							Node: nodeName,
+							Port: portName,
 							Meta: meta,
 						},
+						Meta: meta,
 					},
-					Receivers: receiverSides,
-					Meta:      meta,
 				},
-				Meta: meta,
+				Receivers: receiverSides,
+				Meta:      meta,
 			})
 		}
 	}
