@@ -99,6 +99,24 @@ Follow these instructions.
 - **Common patterns**: README community CTAs use shields.io badges for Open Collective links to keep style consistent.
 - **Common patterns**: `e2e/` tests are separate Neva modules with Go e2e tests; `examples/` is a single Neva module where all examples must compile together.
 - **Gotchas**: `e2e/` includes verbose mirror variants that can duplicate `examples/` coverage; keep them only when they assert distinct semantics.
+- **Architecture insights**: Avoid composite/control-flow syntax to preserve 1:1 visual/text graph mapping; express control flow via explicit stdlib nodes.
+- **Common patterns**: Use HOCs and stdlib components for looping/branching since Neva is static and code is not data.
+- **Gotchas**: Composite senders collided with chain-only sender/type-system rules; explicit node wiring avoids those conflicts.
+
+### Session Notes (2026-02-02)
+
+- **Common patterns**: `go fix ./...` in Go 1.25 updates build tags to `//go:build` when needed; check for removed legacy `+build` lines in tests.
+- **Common patterns**: Prefer adding a `toolchain` line in `go.mod` to pin the Go patch version for consistent local builds.
+- **Common patterns**: Align CI `go-version` with the `toolchain` patch level to avoid mismatched builds.
+- **Common patterns**: Full `go test ./...` can exceed 5 minutes; rerun with a higher timeout or target slower `e2e/` packages.
+
+### Session Notes (2026-02-02)
+
+- **Common patterns**: In CI, combine `go test -race` with `-count=1` and `-shuffle=on` to surface concurrency flakiness earlier.
+- **Common patterns**: Use targeted benchmark jobs (`go test -run=^$ -bench=. -benchmem`) to catch CPU/memory regressions without slowing the main test lane.
+- **Gotchas**: `go test ./...` can exceed 5 minutes when e2e packages dominate; split jobs or shard packages to keep CI timeouts stable.
+- **Common patterns**: Runtime must remain stdlib-only; use build tags to keep leak-detection helpers/test deps out of runtime packages.
+- **Architecture insights**: E2E tests that invoke `go run` exercise compiler + runtime; add `go test`-driven e2e using built binaries for runtime-only coverage.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
