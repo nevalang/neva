@@ -7,11 +7,14 @@ import { time, fmt, runtime, streams }
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start any) (stop any) {
-    ListToStream<int>, For{Slow}, streams.Wait, runtime.Panic
+    list_to_stream streams.FromList<int>
+    for_each streams.ForEach<int>{Slow}
+    wait streams.Wait
+    panic runtime.Panic
     ---
-    :start -> $lst -> listToStream -> for
-    for:res -> wait -> :stop
-    for:err -> panic
+    :start -> $lst -> list_to_stream -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
 def Slow(data int) (res any, err error) {

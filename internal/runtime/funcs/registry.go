@@ -42,6 +42,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"float_is_lesser":  floatIsLesser{},
 
 		"array_port_to_stream": arrayPortToStream{},
+		"array_port_to_list":   arrayPortToList{},
 		"list_to_stream":       listToStream{},
 		"stream_to_list":       streamToList{},
 

@@ -7,20 +7,20 @@ import {
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-	list_to_stream ListToStream<string>
-	range streams.Range
-	zip streams.Zip<int, string>
-	for_println For{fmt.Println}
-	wait streams.Wait
-	panic runtime.Panic
-	---
-	:start -> [
-		0 -> range:from,
-		10 -> range:to,
-		$strings -> list_to_stream -> zip:right
-	]
-	range -> zip:left
-	zip:res -> for_println
-	for_println:res -> wait -> :stop
-	for_println:err -> panic
+    list_to_stream streams.FromList<string>
+    zip streams.Zip<int, string>
+    for_each streams.ForEach<streams.ZipResult<int, string>>{fmt.Println<streams.ZipResult<int, string>>}
+    range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> [
+        0 -> range:from,
+        10 -> range:to,
+        $strings -> list_to_stream -> zip:right
+    ]
+    range -> zip:left
+    zip:res -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }

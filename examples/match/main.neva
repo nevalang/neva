@@ -5,16 +5,18 @@ import {
 }
 
 def Main(start any) (stop any) {
-    For{Handler}, streams.Wait, runtime.Panic
+    for_each streams.ForEach<int>{Handler}
     range streams.Range
+    wait streams.Wait
+    panic runtime.Panic
     ---
     :start -> [
         1 -> range:from,
         5 -> range:to
     ]
-    range -> for
-    for:res -> wait -> :stop
-    for:err -> panic
+    range -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
 def Handler(data int) (res any, err error) {

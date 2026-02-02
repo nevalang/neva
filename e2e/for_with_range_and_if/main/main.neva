@@ -1,21 +1,16 @@
-import {
-	fmt
-	lists
-	runtime
-	streams
-}
+import { fmt, runtime, streams }
 
 const lst list<bool> = [true, false]
 
 def Main(start any) (stop any) {
-	list_to_stream ListToStream<bool>
-	for_print For<bool>{PrintAsNum}
-	wait streams.Wait
-	panic runtime.Panic
-	---
-	:start -> $lst -> list_to_stream -> for_print
-	for_print:res -> wait -> :stop
-	for_print:err -> panic
+    list_to_stream streams.FromList<bool>
+    for_each streams.ForEach<bool>{PrintAsNum}
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> $lst -> list_to_stream -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }
 
 def PrintAsNum(data bool) (res any, err error) {

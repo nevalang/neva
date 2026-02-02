@@ -1,9 +1,13 @@
 import { os, fmt, runtime, streams }
 
 def Main(start any) (stop any) {
-        os.Args, ListToStream, For{fmt.Println}, streams.Wait, runtime.Panic
-	---
-	:start -> args -> listToStream -> for
-	for:res -> wait -> :stop
-	for:err -> panic
+        args os.Args
+        list_to_stream streams.FromList<string>
+        for_each streams.ForEach<string>{fmt.Println<string>}
+        wait streams.Wait
+        panic runtime.Panic
+        ---
+        :start -> args -> list_to_stream -> for_each
+        for_each:res -> wait -> :stop
+        for_each:err -> panic
 }
