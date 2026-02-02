@@ -109,6 +109,7 @@ Follow these instructions.
 - **Architecture insights**: Parser `connDef` now directly parses sender/receiver; `chainedNormConn` points to `connDef` (no intermediate rule).
 - **Common patterns**: Array-bypass detection lives in analyzer; desugarer/irgen treat `[*]` connections as validated 1:1 wiring.
 - **Gotchas**: Array-bypass consumes the whole port; mixing `[*]` with other slot usage is rejected; index 255 remains reserved (max index 254).
+- **Gotchas**: Desugaring anonymous DI args must preserve `ErrGuard`/`OverloadIndex`; dropping `ErrGuard` makes portless senders pick `err`, creating implicit fan-out and flaky emit errors.
 
 ## 3. ⚡ Core Concepts
 

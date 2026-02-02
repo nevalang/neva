@@ -100,8 +100,11 @@ func (Desugarer) handleNode(
 			Directives: node.Directives,
 			EntityRef:  node.EntityRef,
 			TypeArgs:   node.TypeArgs,
+			ErrGuard:   node.ErrGuard,
 			DIArgs:     desugaredDIArgs,
 			Meta:       node.Meta, // original node meta has not just location, but also position
+			// Preserve overload selection on rewritten nodes.
+			OverloadIndex: node.OverloadIndex,
 		}
 	}
 
