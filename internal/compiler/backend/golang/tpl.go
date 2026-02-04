@@ -378,11 +378,11 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		return out, fmt.Errorf("expected StructMsg, got %v", res)
 	}
 	outStruct := res.Struct()
-	for name, msg := range outStruct.Map() {
-		switch name {
+	for _, field := range outStruct.Fields() {
+		switch field.Name() {
 		{{- range .OutFields}}
 		case "{{.Port}}":
-			out.{{.Name}} = {{getGoFromMsg "msg" .Type}}
+			out.{{.Name}} = {{getGoFromMsg "field.Value()" .Type}}
 		{{- end}}
 	}
 	{{- end}}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -142,7 +143,7 @@ func (msg Msg) Union() UnionMsg {
 func (msg Msg) String() string {
 	switch msg.kind {
 	case MsgKindInvalid:
-		return "<nil>"
+		panic("unexpected String call on invalid message")
 	case MsgKindBool:
 		return strconv.FormatBool(msg.Bool())
 	case MsgKindInt:
@@ -160,14 +161,14 @@ func (msg Msg) String() string {
 	case MsgKindUnion:
 		return msg.Union().String()
 	default:
-		return "<unknown>"
+		panic(fmt.Sprintf("unexpected String call on unknown message kind: %d", msg.kind))
 	}
 }
 
 func (msg Msg) MarshalJSON() ([]byte, error) {
 	switch msg.kind {
 	case MsgKindInvalid:
-		return []byte("null"), nil
+		panic("unexpected MarshalJSON call on invalid message")
 	case MsgKindBool:
 		return []byte(strconv.FormatBool(msg.Bool())), nil
 	case MsgKindInt:
@@ -185,7 +186,7 @@ func (msg Msg) MarshalJSON() ([]byte, error) {
 	case MsgKindUnion:
 		return msg.Union().MarshalJSON()
 	default:
-		return []byte("null"), nil
+		panic(fmt.Sprintf("unexpected MarshalJSON call on unknown message kind: %d", msg.kind))
 	}
 }
 
@@ -195,7 +196,7 @@ func (msg Msg) Equal(other Msg) bool {
 	}
 	switch msg.kind {
 	case MsgKindInvalid:
-		return true
+		panic("unexpected Equal call on invalid message")
 	case MsgKindBool, MsgKindInt:
 		return msg.bits == other.bits
 	case MsgKindFloat:
@@ -314,16 +315,47 @@ func (msg StructMsg) Fields() []StructField {
 	return msg.fields
 }
 
-func (msg StructMsg) Map() map[string]Msg {
-	result := make(map[string]Msg, len(msg.fields))
-	for i := range msg.fields {
-		result[msg.fields[i].name] = msg.fields[i].value
-	}
-	return result
-}
-
 func (msg StructMsg) MarshalJSON() ([]byte, error) {
-	return marshalMapWithSpaces(msg.Map())
+	if len(msg.fields) == 0 {
+		return []byte("{}"), nil
+	}
+
+	fields := make([]StructField, len(msg.fields))
+	copy(fields, msg.fields)
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].name < fields[j].name
+	})
+
+	var bb strings.Builder
+	bb.Grow(2 + len(msg.fields)*8)
+	bb.WriteByte('{')
+
+	for i := range fields {
+		if i > 0 {
+			bb.WriteByte(',')
+		}
+
+		nameJSON, err := json.Marshal(fields[i].name)
+		if err != nil {
+			return nil, err
+		}
+
+		valueJSON, err := json.Marshal(fields[i].value)
+		if err != nil {
+			return nil, err
+		}
+
+		bb.Write(nameJSON)
+		bb.WriteByte(':')
+		bb.Write(valueJSON)
+	}
+
+	bb.WriteByte('}')
+
+	jsonString := bb.String()
+	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
+	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+	return []byte(jsonString), nil
 }
 
 func (msg StructMsg) String() string {
@@ -372,6 +404,14 @@ func newStructMsg(fields []StructField) StructMsg {
 type StructField struct {
 	name  string
 	value Msg
+}
+
+func (field StructField) Name() string {
+	return field.name
+}
+
+func (field StructField) Value() Msg {
+	return field.value
 }
 
 // newstructfield constructs a structfield with provided name and value.

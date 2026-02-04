@@ -4,6 +4,18 @@ import (
 	"testing"
 )
 
+func mustPanic(t *testing.T, name string, fn func()) {
+	t.Helper()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatalf("expected panic: %s", name)
+		}
+	}()
+
+	fn()
+}
+
 func TestStructMsgEqualIgnoresFieldOrder(t *testing.T) {
 	left := NewStructMsg([]StructField{
 		NewStructField("a", NewIntMsg(1)),
@@ -58,4 +70,25 @@ func TestUnionMarshalJSON(t *testing.T) {
 	if string(data) != `{ "tag": "ok" }` {
 		t.Fatalf("unexpected union json: %s", data)
 	}
+}
+
+func TestIntMsgNegativeRoundTrip(t *testing.T) {
+	msg := NewIntMsg(-42)
+	if got := msg.Int(); got != -42 {
+		t.Fatalf("expected -42, got %d", got)
+	}
+}
+
+func TestInvalidMsgPanics(t *testing.T) {
+	invalid := Msg{}
+
+	mustPanic(t, "String", func() {
+		_ = invalid.String()
+	})
+	mustPanic(t, "MarshalJSON", func() {
+		_, _ = invalid.MarshalJSON()
+	})
+	mustPanic(t, "Equal", func() {
+		_ = invalid.Equal(Msg{})
+	})
 }
