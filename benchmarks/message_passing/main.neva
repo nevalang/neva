@@ -6,7 +6,7 @@ def Main(start any) (stop any) {
     ---
     :start -> [
         1 -> range:from,
-        1000 -> range:to
+        100000 -> range:to
     ]
     range -> wait -> :stop
 }
