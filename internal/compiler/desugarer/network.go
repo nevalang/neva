@@ -83,12 +83,12 @@ func (d *Desugarer) mergeImplicitFanIn(
 	kept := make([]src.Connection, 0, len(net))
 
 	for _, conn := range net {
-		if conn.ArrayBypass != nil || conn.Normal == nil {
+		if isArrayBypassConn(conn) {
 			kept = append(kept, conn)
 			continue
 		}
 
-		norm := conn.Normal
+		norm := conn
 		if len(norm.Receivers) != 1 {
 			kept = append(kept, conn)
 			continue
@@ -131,12 +131,9 @@ func (d *Desugarer) mergeImplicitFanIn(
 	for _, key := range order {
 		g := groups[key]
 		kept[positions[key]] = src.Connection{
-			Normal: &src.NormalConnection{
-				Senders:   g.senders,
-				Receivers: []src.ConnectionReceiver{g.receiver},
-				Meta:      g.meta,
-			},
-			Meta: g.meta,
+			Senders:   g.senders,
+			Receivers: []src.ConnectionReceiver{g.receiver},
+			Meta:      g.meta,
 		}
 	}
 
@@ -183,6 +180,30 @@ type desugarConnectionResult struct {
 	insert  []src.Connection
 }
 
+func isArrayBypassConn(conn src.Connection) bool {
+	_, _, ok := arrayBypassPorts(conn)
+	return ok
+}
+
+func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
+	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	receiver := conn.Receivers[0]
+
+	if sender.PortAddr == nil || receiver.PortAddr == nil {
+		return nil, nil, false
+	}
+
+	if !src.IsArrayBypassIdx(sender.PortAddr.Idx) || !src.IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
+}
+
 func (d *Desugarer) desugarConnection(
 	iface src.Interface,
 	conn src.Connection,
@@ -192,21 +213,21 @@ func (d *Desugarer) desugarConnection(
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) (desugarConnectionResult, error) {
-	if conn.ArrayBypass != nil { // nothing to desugar, just mark ports as used
+	if sender, receiver, ok := arrayBypassPorts(conn); ok { // nothing to desugar, just mark ports as used
 		nodePortsUsed.set(
-			conn.ArrayBypass.SenderOutport.Node,
-			conn.ArrayBypass.SenderOutport.Port,
+			sender.Node,
+			sender.Port,
 		)
 		nodePortsUsed.set(
-			conn.ArrayBypass.ReceiverInport.Node,
-			conn.ArrayBypass.ReceiverInport.Port,
+			receiver.Node,
+			receiver.Port,
 		)
 		return desugarConnectionResult{replace: &conn}, nil
 	}
 
 	return d.desugarNormalConnection(
 		iface,
-		*conn.Normal,
+		conn,
 		nodePortsUsed,
 		scope,
 		nodes,
@@ -217,7 +238,7 @@ func (d *Desugarer) desugarConnection(
 
 func (d *Desugarer) desugarNormalConnection(
 	iface src.Interface,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
 	scope Scope,
 	nodes map[string]src.Node,
@@ -254,7 +275,7 @@ func (d *Desugarer) desugarNormalConnection(
 		return desugarConnectionResult{}, fmt.Errorf("desugar single sender: %w", err)
 	}
 
-	normConn = *desugarSenderResult.replace.Normal
+	normConn = desugarSenderResult.replace
 	insert := desugarSenderResult.insert
 
 	// We need to first degugar fan-out and convert it to a single receiver in this connection
@@ -305,7 +326,7 @@ type desugarReceiverResult struct {
 // desugarSingleReceiver expects connection without fan-out (it must be desugared before).
 func (d *Desugarer) desugarSingleReceiver(
 	iface src.Interface,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 	scope Scope,
 	nodes map[string]src.Node,
 	nodesToInsert map[string]src.Node,
@@ -323,11 +344,9 @@ func (d *Desugarer) desugarSingleReceiver(
 		if receiver.PortAddr.Port != "" {
 			return desugarReceiverResult{
 				replace: src.Connection{
-					Normal: &src.NormalConnection{
-						Senders:   normConn.Senders,
-						Receivers: []src.ConnectionReceiver{receiver},
-					},
-					Meta: locOnlyMeta,
+					Senders:   normConn.Senders,
+					Receivers: []src.ConnectionReceiver{receiver},
+					Meta:      locOnlyMeta,
 				},
 				insert: []src.Connection{},
 			}, nil
@@ -342,40 +361,20 @@ func (d *Desugarer) desugarSingleReceiver(
 		// to be later desugared at irgen step, because it's not possible to do here
 		return desugarReceiverResult{
 			replace: src.Connection{
-				Normal: &src.NormalConnection{
-					Senders: normConn.Senders,
-					Receivers: []src.ConnectionReceiver{
-						{
-							PortAddr: &src.PortAddr{
-								Port: firstInportName,
-								Node: receiver.PortAddr.Node,
-								Idx:  receiver.PortAddr.Idx,
-								Meta: receiver.PortAddr.Meta,
-							},
+				Senders: normConn.Senders,
+				Receivers: []src.ConnectionReceiver{
+					{
+						PortAddr: &src.PortAddr{
+							Port: firstInportName,
+							Node: receiver.PortAddr.Node,
+							Idx:  receiver.PortAddr.Idx,
+							Meta: receiver.PortAddr.Meta,
 						},
 					},
-					Meta: locOnlyMeta,
 				},
 				Meta: locOnlyMeta,
 			},
 		}, nil
-	}
-
-	if receiver.DeferredConnection != nil {
-		result, err := d.desugarDeferredConnection(
-			iface,
-			normConn,
-			scope,
-			constsToInsert,
-			nodesToInsert,
-			nodePortsUsed,
-			nodes,
-		)
-		if err != nil {
-			return desugarReceiverResult{}, err
-		}
-
-		return desugarReceiverResult(result), nil
 	}
 
 	desugarChainResult, err := d.desugarChainedConnection(
@@ -406,10 +405,10 @@ func (d *Desugarer) desugarChainedConnection(
 	nodePortsUsed nodeOutportsUsed,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 ) (desugarConnectionResult, error) {
 	chainedConn := *receiver.ChainedConnection
-	chainHead := chainedConn.Normal.Senders[0] // chain head is always single sender
+	chainHead := chainedConn.Senders[0] // chain head is always single sender
 
 	// it's only possible to find receiver port before desugaring of chained connection
 	var chainHeadPort string
@@ -474,7 +473,7 @@ func (d *Desugarer) desugarChainedConnection(
 			}
 		}
 
-		chainedConn.Normal.Senders = []src.ConnectionSender{
+		chainedConn.Senders = []src.ConnectionSender{
 			{
 				PortAddr: &src.PortAddr{
 					Node: triggerNodeName,
@@ -499,24 +498,22 @@ func (d *Desugarer) desugarChainedConnection(
 		return desugarConnectionResult{}, err
 	}
 
-	desugaredHead := desugarChainResult.replace.Normal.Senders[0]
+	desugaredHead := desugarChainResult.replace.Senders[0]
 
 	replace := src.Connection{
-		Normal: &src.NormalConnection{
-			Senders: normConn.Senders,
-			Receivers: []src.ConnectionReceiver{
-				{
-					PortAddr: &src.PortAddr{
-						Node: desugaredHead.PortAddr.Node,
-						Port: chainHeadPort,
-						Idx:  desugaredHead.PortAddr.Idx,
-						Meta: chainHead.Meta,
-					},
+		Senders: normConn.Senders,
+		Receivers: []src.ConnectionReceiver{
+			{
+				PortAddr: &src.PortAddr{
+					Node: desugaredHead.PortAddr.Node,
+					Port: chainHeadPort,
+					Idx:  desugaredHead.PortAddr.Idx,
 					Meta: chainHead.Meta,
 				},
+				Meta: chainHead.Meta,
 			},
-			Meta: locOnlyMeta,
 		},
+		Meta: locOnlyMeta,
 	}
 
 	// we need to insert both: replace and insert, example:
@@ -536,119 +533,6 @@ func (d *Desugarer) desugarChainedConnection(
 	}, nil
 }
 
-type desugarDeferredConnectionsResult struct {
-	replace src.Connection
-	insert  []src.Connection
-}
-
-func (d *Desugarer) desugarDeferredConnection(
-	iface src.Interface,
-	normConn src.NormalConnection,
-	scope Scope,
-	constsToInsert map[string]src.Const,
-	nodesToInsert map[string]src.Node,
-	nodesPortsUsed nodeOutportsUsed,
-	nodes map[string]src.Node,
-) (desugarDeferredConnectionsResult, error) {
-	deferredConnection := *normConn.Receivers[0].DeferredConnection
-
-	desugarDeferredConnResult, err := d.desugarConnection(
-		iface,
-		deferredConnection,
-		nodesPortsUsed,
-		scope,
-		nodes,
-		nodesToInsert,
-		constsToInsert,
-	)
-	if err != nil {
-		return desugarDeferredConnectionsResult{}, err
-	}
-
-	locOnlyMeta := core.Meta{Location: deferredConnection.Meta.Location}
-
-	deferredConnection = *desugarDeferredConnResult.replace
-	connsToInsert := desugarDeferredConnResult.insert
-
-	// 1) create lock node
-	d.virtualLocksCounter++
-	lockNodeName := fmt.Sprintf("__lock__%d", d.virtualLocksCounter)
-	nodesToInsert[lockNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "Lock",
-			Meta: locOnlyMeta,
-		},
-		TypeArgs: []ts.Expr{
-			{
-				Inst: &ts.InstExpr{
-					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		Meta: locOnlyMeta,
-	}
-
-	// 2) connect original sender to lock receiver
-	replace := src.Connection{
-		Normal: &src.NormalConnection{
-			Senders: normConn.Senders,
-			Receivers: []src.ConnectionReceiver{
-				{
-					PortAddr: &src.PortAddr{
-						Node: lockNodeName,
-						Port: "sig",
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-		},
-	}
-
-	connsToInsert = append(
-		// 3) connect deferred sender to lock data
-		connsToInsert,
-		src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: deferredConnection.Normal.Senders,
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: lockNodeName,
-							Port: "data",
-							Meta: locOnlyMeta,
-						},
-					},
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		// 4) create connection from lock:data to receiver-side of deferred connection
-		src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: lockNodeName,
-							Port: "data",
-							Meta: locOnlyMeta,
-						},
-						Meta: locOnlyMeta,
-					},
-				},
-				Receivers: deferredConnection.Normal.Receivers,
-				Meta:      locOnlyMeta,
-			},
-		},
-	)
-
-	return desugarDeferredConnectionsResult{
-		replace: replace,
-		insert:  connsToInsert,
-	}, nil
-}
-
 type desugarSenderResult struct {
 	replace src.Connection   // receiver side might need desugaring
 	insert  []src.Connection // already desugared
@@ -657,7 +541,7 @@ type desugarSenderResult struct {
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
 func (d *Desugarer) desugarSingleSender(
 	iface src.Interface,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 	scope Scope,
 	nodes map[string]src.Node,
 	usedNodeOutports nodeOutportsUsed,
@@ -693,7 +577,7 @@ func (d *Desugarer) desugarSingleSender(
 		// if node is interface with anonymous port, port-addr will remain empty string
 		// to be later desugared at irgen step, because it's not possible to do here
 		return desugarSenderResult{
-			replace: src.Connection{Normal: &normConn},
+			replace: normConn,
 			insert:  nil,
 		}, nil
 	}
@@ -720,11 +604,8 @@ func (d *Desugarer) desugarSingleSender(
 		}
 
 		return desugarSenderResult{
-			replace: src.Connection{
-				Normal: replacedConnDesugarRes.replace.Normal,
-				Meta:   replacedConnDesugarRes.replace.Meta,
-			},
-			insert: replacedConnDesugarRes.insert,
+			replace: *replacedConnDesugarRes.replace,
+			insert:  replacedConnDesugarRes.insert,
 		}, nil
 	}
 
@@ -735,7 +616,7 @@ func (d *Desugarer) desugarSingleSender(
 				return desugarSenderResult{}, err
 			}
 
-			normConn = src.NormalConnection{
+			normConn = src.Connection{
 				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &portAddr,
@@ -748,7 +629,7 @@ func (d *Desugarer) desugarSingleSender(
 		} else if sender.Const.Value.Message != nil {
 			portAddr := d.handleLiteralSender(*sender.Const, nodesToInsert, constsToInsert)
 
-			normConn = src.NormalConnection{
+			normConn = src.Connection{
 				Senders: []src.ConnectionSender{
 					{
 						PortAddr: &portAddr,
@@ -761,7 +642,7 @@ func (d *Desugarer) desugarSingleSender(
 		}
 
 		return desugarSenderResult{
-			replace: src.Connection{Normal: &normConn},
+			replace: normConn,
 			insert:  nil,
 		}, nil
 	}
@@ -921,7 +802,7 @@ type desugarFanOutResult struct {
 
 func (d *Desugarer) desugarFanOut(
 	iface src.Interface,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
@@ -957,21 +838,19 @@ func (d *Desugarer) desugarFanOut(
 			return desugarFanOutResult{}, fmt.Errorf("fan-out index %d overflows uint8", i)
 		}
 		conn := src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{
-					{
-						PortAddr: &src.PortAddr{
-							Node: nodeName,
-							Port: "data",
-							Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
-							Meta: locOnlyMeta,
-						},
+			Senders: []src.ConnectionSender{
+				{
+					PortAddr: &src.PortAddr{
+						Node: nodeName,
+						Port: "data",
+						Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
 						Meta: locOnlyMeta,
 					},
+					Meta: locOnlyMeta,
 				},
-				Receivers: []src.ConnectionReceiver{receiver},
-				Meta:      locOnlyMeta,
 			},
+			Receivers: []src.ConnectionReceiver{receiver},
+			Meta:      locOnlyMeta,
 		}
 
 		desugarConnRes, err := d.desugarConnection(
@@ -993,12 +872,9 @@ func (d *Desugarer) desugarFanOut(
 
 	return desugarFanOutResult{
 		replace: src.Connection{
-			Normal: &src.NormalConnection{
-				Senders:   normConn.Senders, // senders must be desugared
-				Receivers: []src.ConnectionReceiver{receiverToReplace},
-				Meta:      locOnlyMeta,
-			},
-			Meta: locOnlyMeta,
+			Senders:   normConn.Senders, // senders must be desugared
+			Receivers: []src.ConnectionReceiver{receiverToReplace},
+			Meta:      locOnlyMeta,
 		},
 		insert: insert,
 	}, nil
@@ -1009,7 +885,7 @@ func (d *Desugarer) desugarFanOut(
 // It recursevely desugars each connection before return so result is final.
 func (d *Desugarer) desugarFanIn(
 	iface src.Interface,
-	normConn src.NormalConnection,
+	normConn src.Connection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 	nodePortsUsed nodeOutportsUsed,
@@ -1037,20 +913,17 @@ func (d *Desugarer) desugarFanIn(
 			return nil, fmt.Errorf("fan-in index %d overflows uint8", i)
 		}
 		desugaredFanIn = append(desugaredFanIn, src.Connection{
-			Normal: &src.NormalConnection{
-				Senders: []src.ConnectionSender{originalSender},
-				Receivers: []src.ConnectionReceiver{
-					{
-						PortAddr: &src.PortAddr{
-							Node: fanInNodeName,
-							Port: "data",
-							Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
-							Meta: locOnlyMeta,
-						},
+			Senders: []src.ConnectionSender{originalSender},
+			Receivers: []src.ConnectionReceiver{
+				{
+					PortAddr: &src.PortAddr{
+						Node: fanInNodeName,
+						Port: "data",
+						Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
 						Meta: locOnlyMeta,
 					},
+					Meta: locOnlyMeta,
 				},
-				Meta: locOnlyMeta,
 			},
 			Meta: locOnlyMeta,
 		})
@@ -1058,21 +931,18 @@ func (d *Desugarer) desugarFanIn(
 
 	// 3. insert new connection: fan_in -> original receivers
 	desugaredFanIn = append(desugaredFanIn, src.Connection{
-		Normal: &src.NormalConnection{
-			Senders: []src.ConnectionSender{
-				{
-					PortAddr: &src.PortAddr{
-						Node: fanInNodeName,
-						Port: "res",
-						Meta: locOnlyMeta,
-					},
+		Senders: []src.ConnectionSender{
+			{
+				PortAddr: &src.PortAddr{
+					Node: fanInNodeName,
+					Port: "res",
 					Meta: locOnlyMeta,
 				},
+				Meta: locOnlyMeta,
 			},
-			Receivers: normConn.Receivers,
-			Meta:      locOnlyMeta,
 		},
-		Meta: locOnlyMeta,
+		Receivers: normConn.Receivers,
+		Meta:      locOnlyMeta,
 	})
 
 	// 4. desugar each connection (original senders and receivers might need it)

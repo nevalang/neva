@@ -171,44 +171,6 @@ def Main() () {
     ]
 }
 
-def Main() () {
-    $foo -> { foo:bar -> bar:baz }
-
-    $foo -> [
-        { foo:bar -> bar:baz },
-        { foo:bar -> bar:baz }
-    ]
-
-    $foo -> [
-        { foo:bar -> bar:baz },
-        { foo:bar -> bar:baz }
-    ]
-
-    $foo -> [
-        { foo:bar -> bar:baz },
-        { foo:bar -> bar:baz }
-    ]
-
-    $foo -> [
-        { foo:bar -> bar:baz },
-        { foo:bar -> bar:baz }
-    ]
-}
-
-def Main() () {
-    $a -> { $b -> { $c -> d:e } }
-
-    $a -> {
-        $b -> { $c -> d:e }
-    }
-
-    $a -> {
-        $b -> {
-            $c -> d:e
-        }
-    }
-}
-
 def Main(start any) (stop any) { :start -> :stop }
 
 def Main(start any) (stop any) {

@@ -2,6 +2,8 @@ module github.com/nevalang/neva
 
 go 1.25
 
+toolchain go1.25.6
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/antlr4-go/antlr/v4 v4.13.0

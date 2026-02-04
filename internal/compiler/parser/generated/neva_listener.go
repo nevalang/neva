@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -199,17 +199,11 @@ type nevaListener interface {
 	// EnterConnDef is called when entering the connDef production.
 	EnterConnDef(c *ConnDefContext)
 
-	// EnterNormConnDef is called when entering the normConnDef production.
-	EnterNormConnDef(c *NormConnDefContext)
-
 	// EnterSenderSide is called when entering the senderSide production.
 	EnterSenderSide(c *SenderSideContext)
 
 	// EnterMultipleSenderSide is called when entering the multipleSenderSide production.
 	EnterMultipleSenderSide(c *MultipleSenderSideContext)
-
-	// EnterArrBypassConnDef is called when entering the arrBypassConnDef production.
-	EnterArrBypassConnDef(c *ArrBypassConnDefContext)
 
 	// EnterSingleSenderSide is called when entering the singleSenderSide production.
 	EnterSingleSenderSide(c *SingleSenderSideContext)
@@ -222,9 +216,6 @@ type nevaListener interface {
 
 	// EnterChainedNormConn is called when entering the chainedNormConn production.
 	EnterChainedNormConn(c *ChainedNormConnContext)
-
-	// EnterDeferredConn is called when entering the deferredConn production.
-	EnterDeferredConn(c *DeferredConnContext)
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
@@ -451,17 +442,11 @@ type nevaListener interface {
 	// ExitConnDef is called when exiting the connDef production.
 	ExitConnDef(c *ConnDefContext)
 
-	// ExitNormConnDef is called when exiting the normConnDef production.
-	ExitNormConnDef(c *NormConnDefContext)
-
 	// ExitSenderSide is called when exiting the senderSide production.
 	ExitSenderSide(c *SenderSideContext)
 
 	// ExitMultipleSenderSide is called when exiting the multipleSenderSide production.
 	ExitMultipleSenderSide(c *MultipleSenderSideContext)
-
-	// ExitArrBypassConnDef is called when exiting the arrBypassConnDef production.
-	ExitArrBypassConnDef(c *ArrBypassConnDefContext)
 
 	// ExitSingleSenderSide is called when exiting the singleSenderSide production.
 	ExitSingleSenderSide(c *SingleSenderSideContext)
@@ -474,9 +459,6 @@ type nevaListener interface {
 
 	// ExitChainedNormConn is called when exiting the chainedNormConn production.
 	ExitChainedNormConn(c *ChainedNormConnContext)
-
-	// ExitDeferredConn is called when exiting the deferredConn production.
-	ExitDeferredConn(c *DeferredConnContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

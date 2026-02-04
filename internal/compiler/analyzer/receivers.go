@@ -97,24 +97,6 @@ func (a Analyzer) analyzeReceiver(
 		return &src.ConnectionReceiver{
 			ChainedConnection: &analyzedChainedConn,
 		}, nil
-	case receiver.DeferredConnection != nil:
-		analyzedDeferredConn, err := a.analyzeConnection(
-			*receiver.DeferredConnection,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			nodesUsage,
-			nil,
-			net,
-			unionTags,
-		)
-		if err != nil {
-			return nil, err
-		}
-		return &src.ConnectionReceiver{
-			DeferredConnection: &analyzedDeferredConn,
-		}, nil
 	}
 
 	return nil, &compiler.Error{
@@ -213,22 +195,15 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 	net []src.Connection,
 	unionTags map[string]unionActiveTagInfo,
 ) (src.Connection, *compiler.Error) {
-	if chainedConn.Normal == nil {
+	// Chain head fan-in is intentionally disallowed to keep semantics simple.
+	if len(chainedConn.Senders) != 1 {
 		return src.Connection{}, &compiler.Error{
-			Message: "chained connection must be a normal connection",
+			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
 			Meta:    &chainedConn.Meta,
 		}
 	}
 
-	// Chain head fan-in is intentionally disallowed to keep semantics simple.
-	if len(chainedConn.Normal.Senders) != 1 {
-		return src.Connection{}, &compiler.Error{
-			Message: "chained connection head must have exactly one sender (fan-in is not supported there yet)",
-			Meta:    &chainedConn.Normal.Meta,
-		}
-	}
-
-	chainHeadSender := chainedConn.Normal.Senders[0]
+	chainHeadSender := chainedConn.Senders[0]
 
 	chainHeadType, err := a.getChainHeadInputType(
 		chainHeadSender,

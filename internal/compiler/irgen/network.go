@@ -19,9 +19,10 @@ func (g Generator) processNetwork(
 	nodesPortsUsage := map[string]portsUsage{}
 
 	for _, conn := range conns {
-		if conn.ArrayBypass != nil {
+		if sender, receiver, ok := arrayBypassPorts(conn); ok {
 			g.processArrayBypassConnection(
-				conn,
+				*sender,
+				*receiver,
 				nodesPortsUsage,
 				nodeCtx,
 				result,
@@ -29,7 +30,7 @@ func (g Generator) processNetwork(
 			continue
 		}
 
-		if len(conn.Normal.Senders) != 1 || len(conn.Normal.Receivers) != 1 {
+		if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 			panic("not 1-1 connection found after desugaring")
 		}
 
@@ -46,7 +47,8 @@ func (g Generator) processNetwork(
 }
 
 func (Generator) processArrayBypassConnection(
-	conn src.Connection,
+	senderPort src.PortAddr,
+	receiverPort src.PortAddr,
 	nodesPortsUsage map[string]portsUsage,
 	nodeCtx nodeContext,
 	result *ir.Program,
@@ -56,8 +58,8 @@ func (Generator) processArrayBypassConnection(
 	// based on that, we can set receiver's inport slots
 	// equal to slots of our own inport
 
-	arrBypassSender := conn.ArrayBypass.SenderOutport
-	arrBypassReceiver := conn.ArrayBypass.ReceiverInport
+	arrBypassSender := senderPort
+	arrBypassReceiver := receiverPort
 
 	if _, ok := nodesPortsUsage[arrBypassReceiver.Node]; !ok {
 		nodesPortsUsage[arrBypassReceiver.Node] = portsUsage{
@@ -107,16 +109,34 @@ func (g Generator) processNormalConnection(
 	irSenderSidePortAddr := g.processSender(
 		nodeCtx,
 		scope,
-		conn.Normal.Senders[0],
+		conn.Senders[0],
 		nodesPortsUsage,
 	)
 	irReceiverPortAddr := g.processReceiver(
 		nodeCtx,
 		scope,
-		conn.Normal.Receivers[0],
+		conn.Receivers[0],
 		nodesPortsUsage,
 	)
 	result.Connections[irSenderSidePortAddr] = irReceiverPortAddr
+}
+
+func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
+	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
+		return nil, nil, false
+	}
+
+	sender := conn.Senders[0]
+	receiver := conn.Receivers[0]
+	if sender.PortAddr == nil || receiver.PortAddr == nil {
+		return nil, nil, false
+	}
+
+	if !src.IsArrayBypassIdx(sender.PortAddr.Idx) || !src.IsArrayBypassIdx(receiver.PortAddr.Idx) {
+		return nil, nil, false
+	}
+
+	return sender.PortAddr, receiver.PortAddr, true
 }
 
 func (g Generator) processSender(
