@@ -496,7 +496,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 				len(entity.Component),
 				len(remainingComps),
 			),
-			Meta:    entity.Meta(),
+			Meta: entity.Meta(),
 		}
 	}
 
@@ -515,6 +515,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 // collectDITypeConstraintsFromParent collects type constraints for a DI argument
 // from the parent component's dependency declaration.
+//
 //nolint:gocyclo // DI constraint derivation has multiple cases to check.
 func (a Analyzer) collectDITypeConstraintsFromParent(
 	nodeName string, // the unique name of the DI argument (e.g., "__di_reduce_reducer")
@@ -727,36 +728,16 @@ func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefI
 	var refs []nodeRefInNet
 
 	for _, conn := range connections {
-		if conn.ArrayBypass != nil {
-			if conn.ArrayBypass.SenderOutport.Node == nodeName {
+		for _, sender := range conn.Senders {
+			if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
 				refs = append(refs, nodeRefInNet{
 					isOutgoing: true,
-					port:       conn.ArrayBypass.SenderOutport.Port,
-					arrayIdx:   conn.ArrayBypass.SenderOutport.Idx,
+					port:       sender.PortAddr.Port,
+					arrayIdx:   sender.PortAddr.Idx,
 				})
 			}
-			if conn.ArrayBypass.ReceiverInport.Node == nodeName {
-				refs = append(refs, nodeRefInNet{
-					isOutgoing: false,
-					port:       conn.ArrayBypass.ReceiverInport.Port,
-					arrayIdx:   conn.ArrayBypass.ReceiverInport.Idx,
-				})
-			}
-			continue
 		}
-
-		if conn.Normal != nil {
-			for _, sender := range conn.Normal.Senders {
-				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-					refs = append(refs, nodeRefInNet{
-						isOutgoing: true,
-						port:       sender.PortAddr.Port,
-						arrayIdx:   sender.PortAddr.Idx,
-					})
-				}
-			}
-			refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Normal.Receivers)...)
-		}
+		refs = append(refs, findNodeUsagesInReceivers(nodeName, conn.Receivers)...)
 	}
 
 	return refs
@@ -778,21 +759,19 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 
 		// Check chained connection
 		if receiver.ChainedConnection != nil {
-			if receiver.ChainedConnection.Normal != nil {
-				// Check senders in the chain
-				for _, sender := range receiver.ChainedConnection.Normal.Senders {
-					if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-						nodeRefs = append(nodeRefs, nodeRefInNet{
-							isOutgoing: true,
-							port:       sender.PortAddr.Port,
-							arrayIdx:   sender.PortAddr.Idx,
-						})
-					}
+			// Check senders in the chain
+			for _, sender := range receiver.ChainedConnection.Senders {
+				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
+					nodeRefs = append(nodeRefs, nodeRefInNet{
+						isOutgoing: true,
+						port:       sender.PortAddr.Port,
+						arrayIdx:   sender.PortAddr.Idx,
+					})
 				}
-
-				// Recursively check receivers in the chain
-				nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Normal.Receivers)...)
 			}
+
+			// Recursively check receivers in the chain
+			nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Receivers)...)
 		}
 	}
 
@@ -823,6 +802,7 @@ func emptyConstraints() nodeUsageConstraints {
 // deriveNodeConstraintsFromNetwork inspects the network and extracts type constraints for the given node.
 // It only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
 // It is needed only to select correct version of the overloaded component.
+//
 //nolint:gocyclo // Node constraint derivation handles many network patterns.
 func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	nodeName string,
@@ -857,18 +837,14 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 
 	// walk all connections
 	for _, conn := range net {
-		if conn.Normal == nil {
-			continue
-		}
-
 		// check if our node is a sender in this connection (including chained connections)
-		for _, sender := range conn.Normal.Senders {
+		for _, sender := range conn.Senders {
 			if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
 				continue
 			}
 			port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
 			// derive expected types from all receivers
-			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Normal.Receivers)
+			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Receivers)
 			for _, rpa := range recvPortAddrs {
 				// parent out
 				if rpa.Node == "out" {
@@ -895,10 +871,10 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 			}
 
 			// also check chained connections for outgoing constraints
-			for _, receiver := range conn.Normal.Receivers {
-				if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
+			for _, receiver := range conn.Receivers {
+				if receiver.ChainedConnection != nil {
 					// this is a chained connection, look at the receivers within the chain
-					chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Normal.Receivers)
+					chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Receivers)
 					for _, rpa := range chainedRecvPortAddrs {
 						// parent out
 						if rpa.Node == "out" {
@@ -934,8 +910,8 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 		var checkChainedConnections func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver)
 		checkChainedConnections = func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver) {
 			for _, receiver := range receivers {
-				if receiver.ChainedConnection != nil && receiver.ChainedConnection.Normal != nil {
-					for _, sender := range receiver.ChainedConnection.Normal.Senders {
+				if receiver.ChainedConnection != nil {
+					for _, sender := range receiver.ChainedConnection.Senders {
 						if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
 							continue
 						}
@@ -956,7 +932,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 
 						// collect outgoing constraints from the chained connection's receivers
 						port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
-						chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Normal.Receivers)
+						chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Receivers)
 						for _, rpa := range chainedRecvPortAddrs {
 							if rpa.Node == "out" {
 								if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
@@ -982,14 +958,14 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 
 					// recursively check nested chained connections
 					// in a chain like "a -> b -> c -> d", we need to check if c contains our node
-					checkChainedConnections(receiver.ChainedConnection.Normal.Senders, receiver.ChainedConnection.Normal.Receivers)
+					checkChainedConnections(receiver.ChainedConnection.Senders, receiver.ChainedConnection.Receivers)
 				}
 			}
 		}
-		checkChainedConnections(conn.Normal.Senders, conn.Normal.Receivers)
+		checkChainedConnections(conn.Senders, conn.Receivers)
 
 		// Check if our node is a receiver in this connection.
-		recvPairs := a.collectReceiverSenderPairs(conn.Normal.Receivers, conn.Normal.Senders)
+		recvPairs := a.collectReceiverSenderPairs(conn.Receivers, conn.Senders)
 		for _, pair := range recvPairs {
 			if pair.portAddr.Node != nodeName {
 				continue
@@ -1013,11 +989,12 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 // ignoring which sender feeds each receiver. It is useful for coarse "who can receive" scans.
 //
 // Examples:
-//   :a -> b -> :c
-//     => returns [:c] (not paired with b)
 //
-//   :x -> [y, z]
-//     => returns [y, z]
+//	:a -> b -> :c
+//	  => returns [:c] (not paired with b)
+//
+//	:x -> [y, z]
+//	  => returns [y, z]
 //
 // Note: use collectReceiverSenderPairs when sender/receiver pairing matters.
 func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) []src.PortAddr {
@@ -1028,9 +1005,9 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 			if r.PortAddr != nil {
 				res = append(res, *r.PortAddr)
 			}
-			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
+			if r.ChainedConnection != nil {
 				// only the head receiver is relevant as a consumer of our sender
-				visit(r.ChainedConnection.Normal.Receivers)
+				visit(r.ChainedConnection.Receivers)
 			}
 		}
 	}
@@ -1070,8 +1047,8 @@ func (a Analyzer) collectReceiverSenderPairs(
 				})
 				continue
 			}
-			if r.ChainedConnection != nil && r.ChainedConnection.Normal != nil {
-				visit(r.ChainedConnection.Normal.Receivers, r.ChainedConnection.Normal.Senders)
+			if r.ChainedConnection != nil {
+				visit(r.ChainedConnection.Receivers, r.ChainedConnection.Senders)
 			}
 		}
 	}

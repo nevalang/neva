@@ -98,12 +98,10 @@ nodeDIArgs: LBRACE NEWLINE* compNodesDefBody RBRACE;
 
 // Connections
 connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
-connDef: normConnDef | arrBypassConnDef;
-normConnDef: senderSide ARROW receiverSide;
+connDef: senderSide ARROW receiverSide;
 senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
 	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
-arrBypassConnDef: singlePortAddr FAT_ARROW singlePortAddr;
 singleSenderSide:
 	portAddr
 	| senderConstRef
@@ -112,7 +110,7 @@ singleSenderSide:
 senderConstRef: DOLLAR entityRef;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
-chainedNormConn: normConnDef;
+chainedNormConn: connDef;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -124,7 +122,7 @@ singlePortAddr: portAddrNode? COLON portAddrPort;
 arrPortAddr: portAddrNode? COLON portAddrPort portAddrIdx;
 portAddrNode: IDENTIFIER;
 portAddrPort: IDENTIFIER;
-portAddrIdx: LBRACK INT RBRACK;
+portAddrIdx: LBRACK (INT | STAR) RBRACK;
 structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
@@ -169,7 +167,7 @@ HASH: '#';
 // Compound Operators
 DCOLON: '::';
 ARROW: '->';
-FAT_ARROW: '=>';
+STAR: '*';
 DASH3: '---';
 
 // Literals

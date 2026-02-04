@@ -16,12 +16,12 @@ type desugarStructSelectorsResult struct {
 // desugarStructSelectors doesn't generate incoming connections for field node,
 // it's responsibility of desugarChainConnection.
 func (d *Desugarer) desugarStructSelectors(
-	normConn src.NormalConnection, // sender here is selector (this is chained connection)
+	conn src.Connection, // sender here is selector (this is chained connection)
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
 ) desugarStructSelectorsResult {
 	locOnlyMeta := core.Meta{
-		Location: normConn.Senders[0].Meta.Location, // FIXME for some reason norm-conn sometimes doesn't have meta
+		Location: conn.Senders[0].Meta.Location, // FIXME for some reason connection meta sometimes empty
 	}
 
 	d.virtualConstCount++
@@ -42,26 +42,24 @@ func (d *Desugarer) desugarStructSelectors(
 
 	// struct selectors are discarded from this point
 	replace := src.Connection{
-		Normal: &src.NormalConnection{
-			// created node will receive data from prev chain link
-			Senders: []src.ConnectionSender{
-				{
-					PortAddr: &src.PortAddr{
-						Node: selectorNodeName,
-						Port: "res",
-						Meta: locOnlyMeta,
-					},
+		// created node will receive data from prev chain link
+		Senders: []src.ConnectionSender{
+			{
+				PortAddr: &src.PortAddr{
+					Node: selectorNodeName,
+					Port: "res",
 					Meta: locOnlyMeta,
 				},
+				Meta: locOnlyMeta,
 			},
-			// and send it to original receiver side
-			Receivers: normConn.Receivers,
 		},
-		Meta: locOnlyMeta,
+		// and send it to original receiver side
+		Receivers: conn.Receivers,
+		Meta:      locOnlyMeta,
 	}
 
 	nodesToInsert[selectorNodeName] = selectorNode
-	constsToInsert[constName] = d.createSelectorCfgMsg(normConn.Senders[0])
+	constsToInsert[constName] = d.createSelectorCfgMsg(conn.Senders[0])
 
 	return desugarStructSelectorsResult{
 		replace: replace,
