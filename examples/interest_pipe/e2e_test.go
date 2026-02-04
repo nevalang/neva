@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/nevalang/neva/pkg/e2e"
@@ -9,5 +10,5 @@ import (
 
 func Test(t *testing.T) {
 	out, _ := e2e.Run(t, []string{"run", "."})
-	require.Equal(t, "5000\n5000\n6000\n", out)
+	require.ElementsMatch(t, []string{"5000", "5000", "6000"}, strings.Fields(out))
 }

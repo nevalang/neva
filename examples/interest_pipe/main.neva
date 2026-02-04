@@ -10,6 +10,10 @@ type State struct {
 	last_time int
 }
 
+// Avoid overload ambiguity by binding directly to int arithmetic externs.
+#extern(int_mul)
+def MulInt(left int, right int) (res int)
+
 def Main(start any) (stop any) {
 	init InitialDeposit
 	calc InterestCalc
@@ -110,8 +114,8 @@ def BalanceChange(state State, new_balance int, now int) (
 
 def ComputeInterest(state State, now int) (interest int) {
 	sub Sub
-	mul_rate_balance Mul
-	mul_total Mul
+	mul_rate_balance MulInt
+	mul_total MulInt
 	---
 	:state -> [
 		.rate -> mul_rate_balance:left,
