@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -222,9 +222,6 @@ type nevaListener interface {
 
 	// EnterChainedNormConn is called when entering the chainedNormConn production.
 	EnterChainedNormConn(c *ChainedNormConnContext)
-
-	// EnterDeferredConn is called when entering the deferredConn production.
-	EnterDeferredConn(c *DeferredConnContext)
 
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
@@ -474,9 +471,6 @@ type nevaListener interface {
 
 	// ExitChainedNormConn is called when exiting the chainedNormConn production.
 	ExitChainedNormConn(c *ChainedNormConnContext)
-
-	// ExitDeferredConn is called when exiting the deferredConn production.
-	ExitDeferredConn(c *DeferredConnContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

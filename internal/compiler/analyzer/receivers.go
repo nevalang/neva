@@ -97,24 +97,6 @@ func (a Analyzer) analyzeReceiver(
 		return &src.ConnectionReceiver{
 			ChainedConnection: &analyzedChainedConn,
 		}, nil
-	case receiver.DeferredConnection != nil:
-		analyzedDeferredConn, err := a.analyzeConnection(
-			*receiver.DeferredConnection,
-			iface,
-			nodes,
-			nodesIfaces,
-			scope,
-			nodesUsage,
-			nil,
-			net,
-			unionTags,
-		)
-		if err != nil {
-			return nil, err
-		}
-		return &src.ConnectionReceiver{
-			DeferredConnection: &analyzedDeferredConn,
-		}, nil
 	}
 
 	return nil, &compiler.Error{

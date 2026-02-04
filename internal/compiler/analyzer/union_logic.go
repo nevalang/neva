@@ -137,7 +137,7 @@ func (a Analyzer) validateUnionDataReceiverPort(
 }
 
 // collectPortSenders finds all senders that target nodeName:port in the network.
-// This includes direct receivers and nested receivers inside chained/deferred connections.
+// This includes direct receivers and nested receivers inside chained connections.
 func (a Analyzer) collectPortSenders(
 	net []src.Connection,
 	nodeName string,
@@ -192,17 +192,6 @@ func (a Analyzer) collectPortSendersInReceivers(
 			a.collectPortSendersInReceivers(
 				receiver.ChainedConnection.Normal.Senders,
 				receiver.ChainedConnection.Normal.Receivers,
-				nodeName,
-				port,
-				out,
-			)
-		}
-
-		// Deferred connections behave like nested receiver trees as well.
-		if receiver.DeferredConnection != nil {
-			a.collectPortSendersInReceivers(
-				receiver.DeferredConnection.Normal.Senders,
-				receiver.DeferredConnection.Normal.Receivers,
 				nodeName,
 				port,
 				out,

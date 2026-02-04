@@ -117,6 +117,12 @@ Follow these instructions.
 - **Gotchas**: `go test ./...` can exceed 5 minutes when e2e packages dominate; split jobs or shard packages to keep CI timeouts stable.
 - **Common patterns**: Runtime must remain stdlib-only; use build tags to keep leak-detection helpers/test deps out of runtime packages.
 - **Architecture insights**: E2E tests that invoke `go run` exercise compiler + runtime; add `go test`-driven e2e using built binaries for runtime-only coverage.
+
+### Session Notes (2026-02-04)
+
+- **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
+- **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
+- **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

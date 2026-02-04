@@ -217,20 +217,6 @@ func (a Analyzer) findSenderForSwitchCaseInportInConn(
 				return sender, nil
 			}
 		}
-
-		if receiver.DeferredConnection != nil && receiver.DeferredConnection.Normal != nil {
-			sender, err := a.findSenderForSwitchCaseInportInConn(
-				*receiver.DeferredConnection.Normal,
-				nodeName,
-				idx,
-			)
-			if err != nil {
-				return nil, err
-			}
-			if sender != nil {
-				return sender, nil
-			}
-		}
 	}
 
 	return nil, nil
@@ -251,7 +237,6 @@ func (Analyzer) isSwitchCaseReceiver(receiver src.ConnectionReceiver, nodeName s
 		receiver.PortAddr.Idx != nil &&
 		*receiver.PortAddr.Idx == *idx
 }
-
 
 // isSwitchCasePort checks if a port address refers to a Switch component's case port.
 func isSwitchCasePort(portAddr src.PortAddr, nodes map[string]src.Node) bool {

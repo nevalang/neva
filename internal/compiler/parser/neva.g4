@@ -113,7 +113,6 @@ senderConstRef: DOLLAR entityRef;
 
 receiverSide: singleReceiverSide | multipleReceiverSide;
 chainedNormConn: normConnDef;
-deferredConn: LBRACE NEWLINE* connDef NEWLINE* RBRACE;
 portAddr:
 	singlePortAddr
 	| arrPortAddr
@@ -129,8 +128,7 @@ portAddrIdx: LBRACK INT RBRACK;
 structSelectors: DOT IDENTIFIER (DOT IDENTIFIER)*;
 singleReceiverSide:
 	chainedNormConn
-	| portAddr
-	| deferredConn;
+	| portAddr;
 multipleReceiverSide:
 	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
 
