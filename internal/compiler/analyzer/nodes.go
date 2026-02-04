@@ -816,6 +816,12 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 		outgoing: map[string][]typesystem.Expr{},
 	}
 
+	// Keep only constraints that are unambiguous across overloads.
+	// Example:
+	//   x Foo          // Foo has overloads Foo(int) and Foo(float)
+	//   x:out -> y:in  // y should not force both int and float as constraints
+	// If a neighbor contributes multiple distinct candidate types, we drop it
+	// from overload constraints and let other edges disambiguate.
 	filterAmbiguous := func(types []typesystem.Expr) []typesystem.Expr {
 		if len(types) == 0 {
 			return nil
@@ -1143,6 +1149,12 @@ func (a Analyzer) getPossibleSenderTypes(
 		if len(types) == 0 {
 			return nil
 		}
+		// Same rule as in deriveNodeConstraintsFromNetwork: ambiguous neighbor output
+		// should not be treated as a hard constraint.
+		// Example:
+		//   maybe_num SomeNode // SomeNode:out can be int OR float due to overloads
+		//   maybe_num -> add:left
+		// We only return a type here when every overload agrees on a single type.
 		seen := make(map[string]typesystem.Expr, len(types))
 		for _, t := range types {
 			seen[t.String()] = t

@@ -10,10 +10,17 @@ type State struct {
 	last_time int
 }
 
-// Avoid overload ambiguity by binding directly to int arithmetic externs.
+// MulInt is a typed int multiplication helper.
+// We keep this explicit wrapper because `Mul` is still ambiguous in this graph.
+// Repro: `go test ./examples/interest_pipe` fails on `mul_rate_balance Mul`.
 #extern(int_mul)
 def MulInt(left int, right int) (res int)
 
+// Main runs three interest calculations in sequence and prints each result.
+// The state transitions are:
+// 1) initial deposit,
+// 2) rate update,
+// 3) balance update.
 def Main(start any) (stop any) {
 	init InitialDeposit
 	calc InterestCalc
@@ -49,6 +56,7 @@ def Main(start any) (stop any) {
 	[p1:err, p2:err, p3:err] -> panic
 }
 
+// InitialDeposit creates the initial account state and emits zero interest.
 def InitialDeposit(rate int, balance int, now int) (
 	state State,
 	interest int
@@ -64,6 +72,7 @@ def InitialDeposit(rate int, balance int, now int) (
 	builder -> :state
 }
 
+// InterestCalc computes interest using the current state and updates last_time.
 def InterestCalc(state State, now int) (state State, interest int) {
 	builder Struct<State>
 	calc ComputeInterest
@@ -78,6 +87,7 @@ def InterestCalc(state State, now int) (state State, interest int) {
 	builder -> :state
 }
 
+// RateChange recalculates interest and updates the account rate.
 def RateChange(state State, new_rate int, now int) (
 	state State,
 	interest int
@@ -95,6 +105,7 @@ def RateChange(state State, new_rate int, now int) (
 	builder -> :state
 }
 
+// BalanceChange recalculates interest and updates the account balance.
 def BalanceChange(state State, new_balance int, now int) (
 	state State,
 	interest int
@@ -112,6 +123,8 @@ def BalanceChange(state State, new_balance int, now int) (
 	builder -> :state
 }
 
+// ComputeInterest applies:
+// interest = state.rate * state.balance * (now - state.last_time)
 def ComputeInterest(state State, now int) (interest int) {
 	sub Sub
 	mul_rate_balance MulInt
