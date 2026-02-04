@@ -773,22 +773,6 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 			// Recursively check receivers in the chain
 			nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.ChainedConnection.Receivers)...)
 		}
-
-		// Check deferred connection
-		if receiver.DeferredConnection != nil {
-			// Similar logic to what we do with normal connections
-			for _, sender := range receiver.DeferredConnection.Senders {
-				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
-					nodeRefs = append(nodeRefs, nodeRefInNet{
-						isOutgoing: true,
-						port:       sender.PortAddr.Port,
-						arrayIdx:   sender.PortAddr.Idx,
-					})
-				}
-			}
-
-			nodeRefs = append(nodeRefs, findNodeUsagesInReceivers(nodeName, receiver.DeferredConnection.Receivers)...)
-		}
 	}
 
 	return nodeRefs
@@ -1025,9 +1009,6 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 				// only the head receiver is relevant as a consumer of our sender
 				visit(r.ChainedConnection.Receivers)
 			}
-			if r.DeferredConnection != nil {
-				visit(r.DeferredConnection.Receivers)
-			}
 		}
 	}
 	visit(receivers)
@@ -1040,7 +1021,7 @@ type receiverSenderPair struct {
 }
 
 // collectReceiverSenderPairs maps each receiver port to the senders that feed it.
-// It preserves sender/receiver pairing across chained and deferred connections.
+// It preserves sender/receiver pairing across chained connections.
 //
 // Examples:
 //
@@ -1050,8 +1031,6 @@ type receiverSenderPair struct {
 //	:start -> U::A -> switch:case[0]
 //	  => pairs: (switch:case[0] <- U::A)
 //
-//	:x -> { :y -> :z }
-//	  => pairs: (:z <- :y) for the deferred connection
 func (a Analyzer) collectReceiverSenderPairs(
 	receivers []src.ConnectionReceiver,
 	senders []src.ConnectionSender,
@@ -1070,9 +1049,6 @@ func (a Analyzer) collectReceiverSenderPairs(
 			}
 			if r.ChainedConnection != nil {
 				visit(r.ChainedConnection.Receivers, r.ChainedConnection.Senders)
-			}
-			if r.DeferredConnection != nil {
-				visit(r.DeferredConnection.Receivers, r.DeferredConnection.Senders)
 			}
 		}
 	}

@@ -68,6 +68,14 @@ Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary 
 
 It enables easier type inference and keeps networks readable.
 
+## Why is there no syntax for `switch`, `for`, `if`, binary and ternary expressions etc.?
+
+Neva is a dataflow language first. Control-flow syntax assumes a tree of expressions that "pulls" data, but in dataflow every computation is a node and every edge is explicit. When we added composite syntax like `switch`, `for`, and expression-style senders, we had to smuggle hidden nodes and edges into the graph. That broke the 1:1 mapping between the visual editor and the text, created context-dependent rules (what is allowed in sender position vs inside a composite), and forced the compiler to know stdlib internals. We moved in a more conventional direction before, and it caused real problems across the parser, analyzer, desugarer, and visualization. Turning back and removing that sugar was hard, but it restored a single, consistent model.
+
+Neva is intentionally hybrid. That means we optimize for a small, pure dataflow core rather than for compact control-flow syntax. The language is also static and code is not data, so we use higher-order components (HOCs) for many patterns that other languages express with syntax features like `for {}`.
+
+In short, we pay a price for being cool.
+
 ## Why is there no syntax sugar for `list<T>` or `maybe<T>`?
 
 For consistency with other type syntax and to avoid confusion with different syntaxes in other languages.

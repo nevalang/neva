@@ -377,23 +377,6 @@ func (d *Desugarer) desugarSingleReceiver(
 		}, nil
 	}
 
-	if receiver.DeferredConnection != nil {
-		result, err := d.desugarDeferredConnection(
-			iface,
-			normConn,
-			scope,
-			constsToInsert,
-			nodesToInsert,
-			nodePortsUsed,
-			nodes,
-		)
-		if err != nil {
-			return desugarReceiverResult{}, err
-		}
-
-		return desugarReceiverResult(result), nil
-	}
-
 	desugarChainResult, err := d.desugarChainedConnection(
 		iface,
 		receiver,
@@ -547,114 +530,6 @@ func (d *Desugarer) desugarChainedConnection(
 	return desugarConnectionResult{
 		replace: &replace,
 		insert:  insert,
-	}, nil
-}
-
-type desugarDeferredConnectionsResult struct {
-	replace src.Connection
-	insert  []src.Connection
-}
-
-func (d *Desugarer) desugarDeferredConnection(
-	iface src.Interface,
-	normConn src.Connection,
-	scope Scope,
-	constsToInsert map[string]src.Const,
-	nodesToInsert map[string]src.Node,
-	nodesPortsUsed nodeOutportsUsed,
-	nodes map[string]src.Node,
-) (desugarDeferredConnectionsResult, error) {
-	deferredConnection := *normConn.Receivers[0].DeferredConnection
-
-	desugarDeferredConnResult, err := d.desugarConnection(
-		iface,
-		deferredConnection,
-		nodesPortsUsed,
-		scope,
-		nodes,
-		nodesToInsert,
-		constsToInsert,
-	)
-	if err != nil {
-		return desugarDeferredConnectionsResult{}, err
-	}
-
-	locOnlyMeta := core.Meta{Location: deferredConnection.Meta.Location}
-
-	deferredConnection = *desugarDeferredConnResult.replace
-	connsToInsert := desugarDeferredConnResult.insert
-
-	// 1) create lock node
-	d.virtualLocksCounter++
-	lockNodeName := fmt.Sprintf("__lock__%d", d.virtualLocksCounter)
-	nodesToInsert[lockNodeName] = src.Node{
-		EntityRef: core.EntityRef{
-			Pkg:  "builtin",
-			Name: "Lock",
-			Meta: locOnlyMeta,
-		},
-		TypeArgs: []ts.Expr{
-			{
-				Inst: &ts.InstExpr{
-					Ref: core.EntityRef{Pkg: "builtin", Name: "any"},
-				},
-				Meta: locOnlyMeta,
-			},
-		},
-		Meta: locOnlyMeta,
-	}
-
-	// 2) connect original sender to lock receiver
-	replace := src.Connection{
-		Senders: normConn.Senders,
-		Receivers: []src.ConnectionReceiver{
-			{
-				PortAddr: &src.PortAddr{
-					Node: lockNodeName,
-					Port: "sig",
-					Meta: locOnlyMeta,
-				},
-			},
-		},
-		Meta: locOnlyMeta,
-	}
-
-	connsToInsert = append(
-		// 3) connect deferred sender to lock data
-		connsToInsert,
-		src.Connection{
-			Senders: deferredConnection.Senders,
-			Receivers: []src.ConnectionReceiver{
-				{
-					PortAddr: &src.PortAddr{
-						Node: lockNodeName,
-						Port: "data",
-						Meta: locOnlyMeta,
-					},
-				},
-			},
-			Meta: locOnlyMeta,
-		},
-		// 4) create connection from lock:data to receiver-side of deferred connection
-		src.Connection{
-			Senders: []src.ConnectionSender{
-				{
-					PortAddr: &src.PortAddr{
-						Node: lockNodeName,
-						Port: "data",
-						Meta: locOnlyMeta,
-					},
-					Meta: locOnlyMeta,
-				},
-			},
-			Receivers: deferredConnection.Receivers,
-			Meta:      locOnlyMeta,
-		},
-	)
-
-	return desugarDeferredConnectionsResult{
-		replace: replace,
-		insert:  connsToInsert,
 	}, nil
 }
 

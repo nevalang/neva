@@ -236,7 +236,7 @@ func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) 
 	}
 
 	receiver := conn.Receivers[0]
-	if receiver.PortAddr == nil || receiver.ChainedConnection != nil || receiver.DeferredConnection != nil {
+	if receiver.PortAddr == nil || receiver.ChainedConnection != nil {
 		return nil, nil, false
 	}
 

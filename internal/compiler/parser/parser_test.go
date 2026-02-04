@@ -107,40 +107,6 @@ func TestParser_ParseFile_ReservedArrayBypassIdx(t *testing.T) {
 	require.Contains(t, err.Message, "maximum allowed index is 254")
 }
 
-func TestParser_ParseFile_ChainedConnectionsWithDefer(t *testing.T) {
-	text := []byte(`
-		def C1() () {
-			:start -> { foo -> bar -> :stop }
-		}
-	`)
-
-	p := New()
-
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.True(t, err == nil)
-
-	net := got.Entities["C1"].Component[0].Net
-	require.Equal(t, 1, len(net))
-
-	conn := net[0]
-	require.Equal(t, "in", conn.Senders[0].PortAddr.Node)
-	require.Equal(t, "start", conn.Senders[0].PortAddr.Port)
-
-	deferred := conn.Receivers[0].DeferredConnection
-
-	deferSender := deferred.Senders[0].PortAddr
-	require.Equal(t, "foo", deferSender.Node)
-	require.Equal(t, "", deferSender.Port)
-
-	chainHead := deferred.Receivers[0].ChainedConnection
-	require.Equal(t, "bar", chainHead.Senders[0].PortAddr.Node)
-	require.Equal(t, "", chainHead.Senders[0].PortAddr.Port)
-
-	chainTail := chainHead.Receivers[0].PortAddr
-	require.Equal(t, "out", chainTail.Node)
-	require.Equal(t, "stop", chainTail.Port)
-}
-
 func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	text := []byte(`
 		def C1() () {

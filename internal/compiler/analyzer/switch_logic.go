@@ -213,20 +213,6 @@ func (a Analyzer) findSenderForSwitchCaseInportInConn(
 				return sender, nil
 			}
 		}
-
-		if receiver.DeferredConnection != nil {
-			sender, err := a.findSenderForSwitchCaseInportInConn(
-				*receiver.DeferredConnection,
-				nodeName,
-				idx,
-			)
-			if err != nil {
-				return nil, err
-			}
-			if sender != nil {
-				return sender, nil
-			}
-		}
 	}
 
 	return nil, nil

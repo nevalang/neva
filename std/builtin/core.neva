@@ -14,7 +14,7 @@ pub def New<T>(sig any) (res T)
 #extern(del)
 pub def Del(data any) ()
 
-// Lock allows to defer receiving until some sending happens.
+// Lock allows to delay receiving data until a signal arrives.
 #extern(lock)
 pub def Lock<T>(sig any, data T) (data T)
 
@@ -75,7 +75,7 @@ pub def Union<T Type>(data Type, tag T) (res T)
 pub def Get<T>(dict dict<T>, key T) (res T, err error)
 
 // Pass is used to pass data through. It receives data and sends it to outport.
-// E.g. when you want to trigger a constant from deferred connection
+// E.g. when you want to trigger a constant before fan-in wiring
 // and then use it as a sender in fan-in receiver-side:
 // :start -> 99 -> pass; [pass, receiver2] -> ...
 pub def Pass<T>(data T) (res T) {
@@ -84,8 +84,8 @@ pub def Pass<T>(data T) (res T) {
 
 // Sometimes component needs to receive data, perform some action and pass that
 // data further. However, due to impossibility to reuse same sender twice or
-// more, it leads to need for explicit locks. Deferred connections do not cover
-// this case. Explicit lock make network harder to reason about.
+// more, it leads to need for explicit locks.
+// Explicit lock make network harder to reason about.
 // `Tap` is a higher-order component, that implements this logic for you.
 // All you need to do, is to provide dependency node, that receives data and
 // sends a signal when finishes. Signal could be of any type, so no need for
