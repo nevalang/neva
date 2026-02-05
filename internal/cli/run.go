@@ -70,7 +70,7 @@ func newRunCmd(
 			}
 
 			switch emitIRFormat {
-			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid, ir_backend.FormatThreeJS:
+			case ir_backend.FormatYAML, ir_backend.FormatJSON, ir_backend.FormatDOT, ir_backend.FormatMermaid, ir_backend.FormatASCII, ir_backend.FormatThreeJS:
 			default:
 				return fmt.Errorf("unknown emit-ir-format: %s", emitIRFormat)
 			}

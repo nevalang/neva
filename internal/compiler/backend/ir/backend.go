@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/nevalang/neva/internal/compiler"
+	"github.com/nevalang/neva/internal/compiler/backend/ir/ascii"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/dot"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/mermaid"
 	"github.com/nevalang/neva/internal/compiler/backend/ir/threejs"
@@ -27,6 +28,7 @@ const (
 	FormatYAML    Format = "yaml"
 	FormatDOT     Format = "dot"
 	FormatMermaid Format = "mermaid"
+	FormatASCII   Format = "ascii"
 	FormatThreeJS Format = "threejs"
 )
 
@@ -66,6 +68,9 @@ func (b Backend) emit(dst, name string, prog *ir.Program) error {
 	case FormatMermaid:
 		fileName = name + ".md"
 		encode = mermaid.Encoder{}.Encode
+	case FormatASCII:
+		fileName = name + ".ascii.md"
+		encode = ascii.Encoder{}.Encode
 	case FormatThreeJS:
 		fileName = name + ".threejs.html"
 		encode = threejs.Encoder{}.Encode

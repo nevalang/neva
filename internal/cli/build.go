@@ -66,7 +66,7 @@ func newBuildCmd(
 			},
 			&cli.StringFlag{
 				Name:  "target-ir-format",
-				Usage: "IR target format (json, yaml, dot, mermaid, threejs)",
+				Usage: "IR target format (json, yaml, dot, mermaid, ascii, threejs)",
 				Value: "yaml",
 			},
 			&cli.StringFlag{
@@ -116,7 +116,7 @@ func newBuildCmd(
 			}
 
 			switch irTargetFormat {
-			case ir.FormatYAML, ir.FormatJSON, ir.FormatDOT, ir.FormatMermaid, ir.FormatThreeJS:
+			case ir.FormatYAML, ir.FormatJSON, ir.FormatDOT, ir.FormatMermaid, ir.FormatASCII, ir.FormatThreeJS:
 			default:
 				return fmt.Errorf("unknown target-ir-format: %s", irTargetFormat)
 			}
@@ -238,14 +238,14 @@ func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 		return "", errors.New("path to main package is required")
 	}
 	raw := cliCtx.Args().First()
-	
+
 	// Resolve path relative to workdir if not absolute
 	abs := raw
 	if !filepath.IsAbs(abs) {
 		abs = filepath.Join(workdir, raw)
 	}
 	abs = filepath.Clean(abs)
-	
+
 	// Check if path exists and is a .neva file - if so, use its directory
 	info, err := os.Stat(abs)
 	if err == nil && !info.IsDir() {
@@ -253,6 +253,6 @@ func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 			abs = filepath.Dir(abs)
 		}
 	}
-	
+
 	return abs, nil
 }
