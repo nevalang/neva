@@ -146,27 +146,18 @@ func makeToken(meta core.Meta, offset int, length int, tokenType int) semanticTo
 
 func collectPortTokens(conn src.Connection, index map[string]int) []semanticToken {
 	var tokens []semanticToken
-	if conn.Normal != nil {
-		for _, sender := range conn.Normal.Senders {
-			if sender.PortAddr != nil {
-				tokens = append(tokens, portAddrTokens(*sender.PortAddr, index)...)
-			}
-		}
-		for _, receiver := range conn.Normal.Receivers {
-			if receiver.PortAddr != nil {
-				tokens = append(tokens, portAddrTokens(*receiver.PortAddr, index)...)
-			}
-			if receiver.ChainedConnection != nil {
-				tokens = append(tokens, collectPortTokens(*receiver.ChainedConnection, index)...)
-			}
-			if receiver.DeferredConnection != nil {
-				tokens = append(tokens, collectPortTokens(*receiver.DeferredConnection, index)...)
-			}
+	for _, sender := range conn.Senders {
+		if sender.PortAddr != nil {
+			tokens = append(tokens, portAddrTokens(*sender.PortAddr, index)...)
 		}
 	}
-	if conn.ArrayBypass != nil {
-		tokens = append(tokens, portAddrTokens(conn.ArrayBypass.SenderOutport, index)...)
-		tokens = append(tokens, portAddrTokens(conn.ArrayBypass.ReceiverInport, index)...)
+	for _, receiver := range conn.Receivers {
+		if receiver.PortAddr != nil {
+			tokens = append(tokens, portAddrTokens(*receiver.PortAddr, index)...)
+		}
+		if receiver.ChainedConnection != nil {
+			tokens = append(tokens, collectPortTokens(*receiver.ChainedConnection, index)...)
+		}
 	}
 	return tokens
 }

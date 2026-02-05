@@ -299,23 +299,15 @@ func collectRefsInFile(file src.File) []refOccurrence {
 
 	var visitConnection func(conn src.Connection)
 	visitConnection = func(conn src.Connection) {
-		if conn.Normal != nil {
-			for _, sender := range conn.Normal.Senders {
-				if sender.Const != nil {
-					visitConstValue(sender.Const.Value)
-				}
-			}
-			for _, receiver := range conn.Normal.Receivers {
-				if receiver.ChainedConnection != nil {
-					visitConnection(*receiver.ChainedConnection)
-				}
-				if receiver.DeferredConnection != nil {
-					visitConnection(*receiver.DeferredConnection)
-				}
+		for _, sender := range conn.Senders {
+			if sender.Const != nil {
+				visitConstValue(sender.Const.Value)
 			}
 		}
-		if conn.ArrayBypass != nil {
-			// No entity refs inside array bypass.
+		for _, receiver := range conn.Receivers {
+			if receiver.ChainedConnection != nil {
+				visitConnection(*receiver.ChainedConnection)
+			}
 		}
 	}
 
