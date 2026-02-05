@@ -8,8 +8,13 @@ import (
 func (s *Server) Initialize(glspCtx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	s.workspacePath = *params.RootPath
 
+	capabilities := s.handler.CreateServerCapabilities()
+	if opts, ok := capabilities.SemanticTokensProvider.(*protocol.SemanticTokensOptions); ok {
+		opts.Legend = semanticTokensLegend()
+	}
+
 	return protocol.InitializeResult{
-		Capabilities: s.handler.CreateServerCapabilities(),
+		Capabilities: capabilities,
 		ServerInfo: &protocol.InitializeResultServerInfo{
 			Name:    s.name,
 			Version: &s.version,

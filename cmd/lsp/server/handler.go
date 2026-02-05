@@ -120,9 +120,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		return nil
 	}
 
-	h.TextDocumentDidOpen = func(glpsCtx *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
-		return nil
-	}
+	h.TextDocumentDidOpen = s.TextDocumentDidOpen
 	h.TextDocumentDidChange = s.TextDocumentDidChange
 	h.TextDocumentWillSave = func(context *glsp.Context, params *protocol.WillSaveTextDocumentParams) error {
 		return nil
@@ -137,19 +135,19 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 
 	h.TextDocumentCompletion = s.TextDocumentCompletion
 	h.CompletionItemResolve = nil
-	h.TextDocumentHover = nil
+	h.TextDocumentHover = s.TextDocumentHover
 	h.TextDocumentSignatureHelp = nil
 	h.TextDocumentDeclaration = nil
-	h.TextDocumentDefinition = nil
+	h.TextDocumentDefinition = s.TextDocumentDefinition
 	h.TextDocumentTypeDefinition = nil
-	h.TextDocumentImplementation = nil
-	h.TextDocumentReferences = nil
+	h.TextDocumentImplementation = s.TextDocumentImplementation
+	h.TextDocumentReferences = s.TextDocumentReferences
 	h.TextDocumentDocumentHighlight = nil
-	h.TextDocumentDocumentSymbol = nil
+	h.TextDocumentDocumentSymbol = s.TextDocumentDocumentSymbol
 	h.TextDocumentCodeAction = nil
 	h.CodeActionResolve = nil
-	h.TextDocumentCodeLens = nil
-	h.CodeLensResolve = nil
+	h.TextDocumentCodeLens = s.TextDocumentCodeLens
+	h.CodeLensResolve = s.CodeLensResolve
 	h.TextDocumentDocumentLink = nil
 	h.DocumentLinkResolve = nil
 	h.TextDocumentColor = nil
@@ -157,14 +155,15 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 	h.TextDocumentFormatting = nil
 	h.TextDocumentRangeFormatting = nil
 	h.TextDocumentOnTypeFormatting = nil
-	h.TextDocumentRename = nil
-	h.TextDocumentPrepareRename = nil
+	h.TextDocumentRename = s.TextDocumentRename
+	h.TextDocumentPrepareRename = s.TextDocumentPrepareRename
 	h.TextDocumentFoldingRange = nil
 	h.TextDocumentSelectionRange = nil
 	h.TextDocumentPrepareCallHierarchy = nil
 	h.CallHierarchyIncomingCalls = nil
 	h.CallHierarchyOutgoingCalls = nil
 	h.TextDocumentSemanticTokensFull = nil
+	h.TextDocumentSemanticTokensFull = s.TextDocumentSemanticTokensFull
 	h.TextDocumentSemanticTokensFullDelta = nil
 	h.TextDocumentSemanticTokensRange = nil
 	h.TextDocumentLinkedEditingRange = nil

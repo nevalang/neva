@@ -1,0 +1,797 @@
+package server
+
+import (
+	"fmt"
+	"net/url"
+	"path/filepath"
+	"strings"
+
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/glsp/protocol_3_16"
+
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+)
+
+type fileContext struct {
+	moduleRef   core.ModuleRef
+	packageName string
+	fileName    string
+	filePath    string
+	file        src.File
+}
+
+type resolvedEntity struct {
+	moduleRef   core.ModuleRef
+	packageName string
+	name        string
+	entity      src.Entity
+	filePath    string
+}
+
+type refOccurrence struct {
+	ref  core.EntityRef
+	meta core.Meta
+}
+
+type componentContext struct {
+	name      string
+	component src.Component
+}
+
+func (s *Server) getBuild() (*src.Build, bool) {
+	s.indexMutex.Lock()
+	defer s.indexMutex.Unlock()
+	if s.index == nil {
+		return nil, false
+	}
+	return s.index, true
+}
+
+func uriToPath(uri string) (string, error) {
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		return "", err
+	}
+	if parsed.Scheme == "file" {
+		return parsed.Path, nil
+	}
+	return uri, nil
+}
+
+func pathToURI(path string) string {
+	u := url.URL{Scheme: "file", Path: path}
+	return u.String()
+}
+
+func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
+	filePath, err := uriToPath(uri)
+	if err != nil {
+		return nil, err
+	}
+	filePath = filepath.Clean(filePath)
+
+	for modRef, mod := range build.Modules {
+		for pkgName, pkg := range mod.Packages {
+			for fileName, file := range pkg {
+				loc := core.Location{
+					ModRef:   modRef,
+					Package:  pkgName,
+					Filename: fileName,
+				}
+				resolvedPath := s.pathForLocation(loc)
+				if resolvedPath == "" {
+					continue
+				}
+				if filepath.Clean(resolvedPath) == filePath {
+					return &fileContext{
+						moduleRef:   modRef,
+						packageName: pkgName,
+						fileName:    fileName,
+						filePath:    resolvedPath,
+						file:        file,
+					}, nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("file not found in build: %s", uri)
+}
+
+func (s *Server) pathForLocation(loc core.Location) string {
+	if loc.Filename == "" {
+		return ""
+	}
+
+	if loc.ModRef.Path == "@" {
+		return filepath.Join(s.workspacePath, loc.Package, loc.Filename+".neva")
+	}
+
+	// Only resolve workspace-local files for now.
+	return ""
+}
+
+func lspToCorePosition(pos protocol.Position) core.Position {
+	return core.Position{
+		Line:   int(pos.Line) + 1,
+		Column: int(pos.Character),
+	}
+}
+
+func metaContains(meta core.Meta, pos core.Position) bool {
+	if meta.Start.Line == 0 && meta.Stop.Line == 0 {
+		return false
+	}
+
+	if pos.Line < meta.Start.Line || pos.Line > meta.Stop.Line {
+		return false
+	}
+	if pos.Line == meta.Start.Line && pos.Column < meta.Start.Column {
+		return false
+	}
+	if pos.Line == meta.Stop.Line && pos.Column > meta.Stop.Column {
+		return false
+	}
+	return true
+}
+
+func rangeForName(meta core.Meta, name string, nameOffset int) protocol.Range {
+	startLine := meta.Start.Line - 1
+	startChar := meta.Start.Column + nameOffset
+	endChar := startChar + len(name)
+
+	return protocol.Range{
+		Start: protocol.Position{Line: uint32(startLine), Character: uint32(startChar)},
+		End:   protocol.Position{Line: uint32(startLine), Character: uint32(endChar)},
+	}
+}
+
+func nameOffsetForRef(meta core.Meta, name string) int {
+	if meta.Text == "" {
+		return 0
+	}
+	lastDot := strings.LastIndex(meta.Text, ".")
+	if lastDot == -1 {
+		return 0
+	}
+	return lastDot + 1
+}
+
+func (s *Server) resolveEntityRef(build *src.Build, ctx *fileContext, ref core.EntityRef) (*resolvedEntity, bool) {
+	modRef := ctx.moduleRef
+	pkgName := ctx.packageName
+
+	if ref.Pkg != "" {
+		imp, ok := ctx.file.Imports[ref.Pkg]
+		if !ok {
+			return nil, false
+		}
+		pkgName = imp.Package
+		for mod := range build.Modules {
+			if mod.Path == imp.Module {
+				modRef = mod
+				break
+			}
+		}
+	}
+
+	mod, ok := build.Modules[modRef]
+	if !ok {
+		return nil, false
+	}
+
+	entity, filename, err := mod.Entity(core.EntityRef{Pkg: pkgName, Name: ref.Name})
+	if err != nil {
+		return nil, false
+	}
+
+	loc := entity.Meta().Location
+	if loc.Filename == "" {
+		loc = core.Location{ModRef: modRef, Package: pkgName, Filename: filename}
+	}
+
+	return &resolvedEntity{
+		moduleRef:   modRef,
+		packageName: pkgName,
+		name:        ref.Name,
+		entity:      entity,
+		filePath:    s.pathForLocation(loc),
+	}, true
+}
+
+func (s *Server) findEntityDefinitionAtPosition(ctx *fileContext, pos core.Position) (string, *src.Entity, bool) {
+	for name, entity := range ctx.file.Entities {
+		meta := entity.Meta()
+		if meta == nil {
+			continue
+		}
+		defRange := rangeForName(*meta, name, 0)
+		start := core.Position{Line: int(defRange.Start.Line) + 1, Column: int(defRange.Start.Character)}
+		stop := core.Position{Line: int(defRange.End.Line) + 1, Column: int(defRange.End.Character)}
+		if metaContains(core.Meta{Start: start, Stop: stop}, pos) {
+			return name, &entity, true
+		}
+	}
+	return "", nil, false
+}
+
+func collectRefsInFile(file src.File) []refOccurrence {
+	var refs []refOccurrence
+
+	addRef := func(ref core.EntityRef) {
+		refs = append(refs, refOccurrence{ref: ref, meta: ref.Meta})
+	}
+
+	var visitTypeExpr func(expr ts.Expr)
+	visitTypeExpr = func(expr ts.Expr) {
+		if expr.Inst != nil {
+			addRef(expr.Inst.Ref)
+			for _, arg := range expr.Inst.Args {
+				visitTypeExpr(arg)
+			}
+			return
+		}
+		if expr.Lit != nil {
+			switch expr.Lit.Type() {
+			case ts.StructLitType:
+				for _, field := range expr.Lit.Struct {
+					visitTypeExpr(field)
+				}
+			case ts.UnionLitType:
+				for _, tag := range expr.Lit.Union {
+					if tag != nil {
+						visitTypeExpr(*tag)
+					}
+				}
+			}
+		}
+	}
+
+	var visitConstValue func(val src.ConstValue)
+	var visitMsgLiteral func(msg src.MsgLiteral)
+
+	visitConstValue = func(val src.ConstValue) {
+		if val.Ref != nil {
+			addRef(*val.Ref)
+			return
+		}
+		if val.Message != nil {
+			visitMsgLiteral(*val.Message)
+		}
+	}
+
+	visitMsgLiteral = func(msg src.MsgLiteral) {
+		if msg.Union != nil {
+			addRef(msg.Union.EntityRef)
+			if msg.Union.Data != nil {
+				visitConstValue(*msg.Union.Data)
+			}
+		}
+		for _, item := range msg.List {
+			visitConstValue(item)
+		}
+		for _, item := range msg.DictOrStruct {
+			visitConstValue(item)
+		}
+	}
+
+	visitInterface := func(iface src.Interface) {
+		for _, port := range iface.IO.In {
+			visitTypeExpr(port.TypeExpr)
+		}
+		for _, port := range iface.IO.Out {
+			visitTypeExpr(port.TypeExpr)
+		}
+	}
+
+	var visitNode func(node src.Node)
+	visitNode = func(node src.Node) {
+		addRef(node.EntityRef)
+		for _, arg := range node.TypeArgs {
+			visitTypeExpr(arg)
+		}
+		for _, di := range node.DIArgs {
+			visitNode(di)
+		}
+	}
+
+	var visitConnection func(conn src.Connection)
+	visitConnection = func(conn src.Connection) {
+		if conn.Normal != nil {
+			for _, sender := range conn.Normal.Senders {
+				if sender.Const != nil {
+					visitConstValue(sender.Const.Value)
+				}
+			}
+			for _, receiver := range conn.Normal.Receivers {
+				if receiver.ChainedConnection != nil {
+					visitConnection(*receiver.ChainedConnection)
+				}
+				if receiver.DeferredConnection != nil {
+					visitConnection(*receiver.DeferredConnection)
+				}
+			}
+		}
+		if conn.ArrayBypass != nil {
+			// No entity refs inside array bypass.
+		}
+	}
+
+	for _, entity := range file.Entities {
+		switch entity.Kind {
+		case src.TypeEntity:
+			if entity.Type.BodyExpr != nil {
+				visitTypeExpr(*entity.Type.BodyExpr)
+			}
+			for _, param := range entity.Type.Params {
+				visitTypeExpr(param.Constr)
+			}
+		case src.ConstEntity:
+			visitTypeExpr(entity.Const.TypeExpr)
+			visitConstValue(entity.Const.Value)
+		case src.InterfaceEntity:
+			visitInterface(entity.Interface)
+		case src.ComponentEntity:
+			for _, comp := range entity.Component {
+				visitInterface(comp.Interface)
+				for _, node := range comp.Nodes {
+					visitNode(node)
+				}
+				for _, conn := range comp.Net {
+					visitConnection(conn)
+				}
+			}
+		}
+	}
+
+	return refs
+}
+
+func (s *Server) findRefAtPosition(ctx *fileContext, pos core.Position) (*core.EntityRef, *core.Meta, bool) {
+	refs := collectRefsInFile(ctx.file)
+	for _, ref := range refs {
+		if metaContains(ref.meta, pos) {
+			return &ref.ref, &ref.meta, true
+		}
+	}
+	return nil, nil, false
+}
+
+func findComponentAtPosition(file src.File, pos core.Position) (*componentContext, bool) {
+	for name, entity := range file.Entities {
+		if entity.Kind != src.ComponentEntity {
+			continue
+		}
+		for _, comp := range entity.Component {
+			if metaContains(comp.Meta, pos) {
+				return &componentContext{name: name, component: comp}, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func (s *Server) TextDocumentDefinition(
+	glspCtx *glsp.Context,
+	params *protocol.DefinitionParams,
+) (any, error) {
+	locations, err := s.definitionLocations(params.TextDocument.URI, params.Position)
+	if err != nil {
+		return nil, err
+	}
+	if len(locations) == 0 {
+		return nil, nil
+	}
+	return locations, nil
+}
+
+func (s *Server) definitionLocations(
+	uri string,
+	position protocol.Position,
+) ([]protocol.Location, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+
+	ctx, err := s.findFile(build, uri)
+	if err != nil {
+		return nil, nil
+	}
+
+	pos := lspToCorePosition(position)
+	if ref, _, found := s.findRefAtPosition(ctx, pos); found {
+		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
+		if !ok || resolved.filePath == "" {
+			return nil, nil
+		}
+		defMeta := resolved.entity.Meta()
+		if defMeta == nil {
+			return nil, nil
+		}
+		loc := protocol.Location{
+			URI:   pathToURI(resolved.filePath),
+			Range: rangeForName(*defMeta, resolved.name, 0),
+		}
+		return []protocol.Location{loc}, nil
+	}
+
+	if name, entity, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
+		meta := entity.Meta()
+		if meta == nil {
+			return nil, nil
+		}
+		loc := protocol.Location{
+			URI:   pathToURI(ctx.filePath),
+			Range: rangeForName(*meta, name, 0),
+		}
+		return []protocol.Location{loc}, nil
+	}
+
+	return nil, nil
+}
+
+func (s *Server) TextDocumentImplementation(
+	glspCtx *glsp.Context,
+	params *protocol.ImplementationParams,
+) (any, error) {
+	// Neva currently does not distinguish interface vs implementation at LSP level.
+	locations, err := s.definitionLocations(params.TextDocument.URI, params.Position)
+	if err != nil {
+		return nil, err
+	}
+	if len(locations) == 0 {
+		return nil, nil
+	}
+	return locations, nil
+}
+
+func (s *Server) TextDocumentReferences(
+	glspCtx *glsp.Context,
+	params *protocol.ReferenceParams,
+) ([]protocol.Location, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	pos := lspToCorePosition(params.Position)
+	var target *resolvedEntity
+
+	if ref, _, found := s.findRefAtPosition(ctx, pos); found {
+		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
+		if ok {
+			target = resolved
+		}
+	}
+	if target == nil {
+		if name, _, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
+			resolved, ok := s.resolveEntityRef(build, ctx, core.EntityRef{Name: name})
+			if ok {
+				target = resolved
+			}
+		}
+	}
+	if target == nil {
+		return nil, nil
+	}
+
+	locations := s.referencesForEntity(build, target)
+	if params.Context.IncludeDeclaration {
+		locations = s.appendDeclarationLocation(locations, target)
+	}
+
+	return locations, nil
+}
+
+func (s *Server) TextDocumentPrepareRename(
+	glspCtx *glsp.Context,
+	params *protocol.PrepareRenameParams,
+) (any, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	pos := lspToCorePosition(params.Position)
+
+	if ref, meta, found := s.findRefAtPosition(ctx, pos); found {
+		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
+		if !ok {
+			return nil, nil
+		}
+		offset := nameOffsetForRef(*meta, resolved.name)
+		r := rangeForName(*meta, resolved.name, offset)
+		return r, nil
+	}
+
+	if name, entity, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
+		meta := entity.Meta()
+		if meta != nil {
+			r := rangeForName(*meta, name, 0)
+			return r, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (s *Server) TextDocumentRename(
+	glspCtx *glsp.Context,
+	params *protocol.RenameParams,
+) (*protocol.WorkspaceEdit, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	pos := lspToCorePosition(params.Position)
+	var target *resolvedEntity
+
+	if ref, _, found := s.findRefAtPosition(ctx, pos); found {
+		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
+		if ok {
+			target = resolved
+		}
+	}
+	if target == nil {
+		if name, _, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
+			resolved, ok := s.resolveEntityRef(build, ctx, core.EntityRef{Name: name})
+			if ok {
+				target = resolved
+			}
+		}
+	}
+	if target == nil {
+		return nil, nil
+	}
+
+	edits := map[string][]protocol.TextEdit{}
+
+	for modRef, mod := range build.Modules {
+		for pkgName, pkg := range mod.Packages {
+			for fileName, file := range pkg {
+				locPath := s.pathForLocation(core.Location{ModRef: modRef, Package: pkgName, Filename: fileName})
+				if locPath == "" {
+					continue
+				}
+				fileCtx := fileContext{
+					moduleRef:   modRef,
+					packageName: pkgName,
+					fileName:    fileName,
+					filePath:    locPath,
+					file:        file,
+				}
+				refs := collectRefsInFile(file)
+				for _, ref := range refs {
+					resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
+					if !ok {
+						continue
+					}
+					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
+						continue
+					}
+					offset := nameOffsetForRef(ref.meta, resolved.name)
+					r := rangeForName(ref.meta, resolved.name, offset)
+					edits[pathToURI(locPath)] = append(edits[pathToURI(locPath)], protocol.TextEdit{
+						Range:   r,
+						NewText: params.NewName,
+					})
+				}
+			}
+		}
+	}
+
+	// Rename definition
+	if meta := target.entity.Meta(); meta != nil {
+		r := rangeForName(*meta, target.name, 0)
+		edits[pathToURI(target.filePath)] = append(edits[pathToURI(target.filePath)], protocol.TextEdit{
+			Range:   r,
+			NewText: params.NewName,
+		})
+	}
+
+	return &protocol.WorkspaceEdit{Changes: edits}, nil
+}
+
+func (s *Server) referencesForEntity(build *src.Build, target *resolvedEntity) []protocol.Location {
+	var locations []protocol.Location
+	for modRef, mod := range build.Modules {
+		for pkgName, pkg := range mod.Packages {
+			for fileName, file := range pkg {
+				locPath := s.pathForLocation(core.Location{ModRef: modRef, Package: pkgName, Filename: fileName})
+				if locPath == "" {
+					continue
+				}
+				fileCtx := fileContext{
+					moduleRef:   modRef,
+					packageName: pkgName,
+					fileName:    fileName,
+					filePath:    locPath,
+					file:        file,
+				}
+				refs := collectRefsInFile(file)
+				for _, ref := range refs {
+					resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
+					if !ok {
+						continue
+					}
+					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
+						continue
+					}
+					nameOffset := nameOffsetForRef(ref.meta, resolved.name)
+					locations = append(locations, protocol.Location{
+						URI:   pathToURI(locPath),
+						Range: rangeForName(ref.meta, resolved.name, nameOffset),
+					})
+				}
+			}
+		}
+	}
+	return locations
+}
+
+func (s *Server) appendDeclarationLocation(
+	locations []protocol.Location,
+	target *resolvedEntity,
+) []protocol.Location {
+	meta := target.entity.Meta()
+	if meta == nil {
+		return locations
+	}
+	return append(locations, protocol.Location{
+		URI:   pathToURI(target.filePath),
+		Range: rangeForName(*meta, target.name, 0),
+	})
+}
+
+func (s *Server) TextDocumentHover(
+	glspCtx *glsp.Context,
+	params *protocol.HoverParams,
+) (*protocol.Hover, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	pos := lspToCorePosition(params.Position)
+	var target *resolvedEntity
+	var hoverRange *protocol.Range
+
+	if ref, meta, found := s.findRefAtPosition(ctx, pos); found {
+		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
+		if ok {
+			target = resolved
+			offset := nameOffsetForRef(*meta, resolved.name)
+			r := rangeForName(*meta, resolved.name, offset)
+			hoverRange = &r
+		}
+	}
+	if target == nil {
+		if name, entity, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
+			resolved, ok := s.resolveEntityRef(build, ctx, core.EntityRef{Name: name})
+			if ok {
+				target = resolved
+				meta := entity.Meta()
+				if meta != nil {
+					r := rangeForName(*meta, name, 0)
+					hoverRange = &r
+				}
+			}
+		}
+	}
+	if target == nil {
+		return nil, nil
+	}
+
+	contents := formatEntityHover(target)
+	return &protocol.Hover{
+		Contents: protocol.MarkupContent{Kind: protocol.MarkupKindMarkdown, Value: contents},
+		Range:    hoverRange,
+	}, nil
+}
+
+func formatEntityHover(target *resolvedEntity) string {
+	switch target.entity.Kind {
+	case src.ConstEntity:
+		return fmt.Sprintf("```neva\nconst %s %s = %s\n```", target.name, target.entity.Const.TypeExpr.String(), target.entity.Const.Value.String())
+	case src.TypeEntity:
+		if target.entity.Type.BodyExpr == nil {
+			return fmt.Sprintf("```neva\ntype %s\n```", target.name)
+		}
+		return fmt.Sprintf("```neva\ntype %s %s\n```", target.name, target.entity.Type.BodyExpr.String())
+	case src.InterfaceEntity:
+		return fmt.Sprintf("```neva\ninterface %s%s\n```", target.name, formatInterfaceSignature(target.entity.Interface))
+	case src.ComponentEntity:
+		return fmt.Sprintf("```neva\ndef %s%s\n```", target.name, formatInterfaceSignature(target.entity.Component[0].Interface))
+	default:
+		return fmt.Sprintf("```neva\n%s\n```", target.name)
+	}
+}
+
+func formatInterfaceSignature(iface src.Interface) string {
+	inParts := []string{}
+	outParts := []string{}
+
+	for name, port := range iface.IO.In {
+		label := name
+		if port.IsArray {
+			label = "[" + name + "]"
+		}
+		inParts = append(inParts, fmt.Sprintf("%s %s", label, port.TypeExpr.String()))
+	}
+	for name, port := range iface.IO.Out {
+		label := name
+		if port.IsArray {
+			label = "[" + name + "]"
+		}
+		outParts = append(outParts, fmt.Sprintf("%s %s", label, port.TypeExpr.String()))
+	}
+
+	return fmt.Sprintf("(%s) (%s)", strings.Join(inParts, ", "), strings.Join(outParts, ", "))
+}
+
+func (s *Server) TextDocumentDocumentSymbol(
+	glspCtx *glsp.Context,
+	params *protocol.DocumentSymbolParams,
+) (any, error) {
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	var symbols []protocol.DocumentSymbol
+	for name, entity := range ctx.file.Entities {
+		meta := entity.Meta()
+		if meta == nil {
+			continue
+		}
+		symbol := protocol.DocumentSymbol{
+			Name:           name,
+			Kind:           entitySymbolKind(entity.Kind),
+			Range:          rangeForName(*meta, name, 0),
+			SelectionRange: rangeForName(*meta, name, 0),
+		}
+		symbols = append(symbols, symbol)
+	}
+
+	return symbols, nil
+}
+
+func entitySymbolKind(kind src.EntityKind) protocol.SymbolKind {
+	switch kind {
+	case src.ConstEntity:
+		return protocol.SymbolKindConstant
+	case src.TypeEntity:
+		return protocol.SymbolKindStruct
+	case src.InterfaceEntity:
+		return protocol.SymbolKindInterface
+	case src.ComponentEntity:
+		return protocol.SymbolKindFunction
+	default:
+		return protocol.SymbolKindVariable
+	}
+}

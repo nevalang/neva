@@ -1,14 +1,267 @@
 package server
 
 import (
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
+
+	src "github.com/nevalang/neva/internal/compiler/ast"
+	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
 func (s *Server) TextDocumentCompletion(
 	glspCtx *glsp.Context,
 	params *protocol.CompletionParams,
 ) (any, error) {
-	s.logger.Info("TextDocumentCompletion")
-	return []protocol.CompletionItem{}, nil
+	build, ok := s.getBuild()
+	if !ok {
+		return nil, nil
+	}
+
+	ctx, err := s.findFile(build, params.TextDocument.URI)
+	if err != nil {
+		return nil, nil
+	}
+
+	lineText, err := readLineAt(ctx.filePath, int(params.Position.Line))
+	if err != nil {
+		return nil, nil
+	}
+
+	prefix := linePrefix(lineText, int(params.Position.Character))
+	pos := lspToCorePosition(params.Position)
+	compCtx, _ := findComponentAtPosition(ctx.file, pos)
+
+	if items, ok := s.portCompletions(build, ctx, compCtx, prefix); ok {
+		return protocol.CompletionList{IsIncomplete: false, Items: items}, nil
+	}
+	if items, ok := s.packageCompletions(build, ctx, prefix); ok {
+		return protocol.CompletionList{IsIncomplete: false, Items: items}, nil
+	}
+
+	items := s.generalCompletions(build, ctx, compCtx)
+	return protocol.CompletionList{IsIncomplete: false, Items: items}, nil
+}
+
+var (
+	pkgAccessRe  = regexp.MustCompile(`([A-Za-z_][\\w]*)\\.(\\w*)$`)
+	portAccessRe = regexp.MustCompile(`([A-Za-z_][\\w]*)?:([A-Za-z_][\\w]*)?$`)
+)
+
+func readLineAt(path string, line int) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	lines := strings.Split(string(data), "\n")
+	if line < 0 || line >= len(lines) {
+		return "", nil
+	}
+	return lines[line], nil
+}
+
+func linePrefix(line string, col int) string {
+	if col < 0 {
+		return ""
+	}
+	if col > len(line) {
+		col = len(line)
+	}
+	return line[:col]
+}
+
+func (s *Server) portCompletions(
+	build *src.Build,
+	ctx *fileContext,
+	compCtx *componentContext,
+	prefix string,
+) ([]protocol.CompletionItem, bool) {
+	if strings.Contains(prefix, "::") {
+		return nil, false
+	}
+
+	matches := portAccessRe.FindStringSubmatch(prefix)
+	if len(matches) == 0 {
+		return nil, false
+	}
+
+	nodeName := matches[1]
+	portPrefix := matches[2]
+
+	var ports map[string]src.Port
+	if nodeName == "" {
+		if compCtx == nil {
+			return nil, false
+		}
+		ports = mergePorts(compCtx.component.Interface.IO)
+	} else if compCtx != nil {
+		node, ok := compCtx.component.Nodes[nodeName]
+		if !ok {
+			return nil, false
+		}
+		resolved, ok := s.resolveEntityRef(build, ctx, node.EntityRef)
+		if !ok || resolved.entity.Kind != src.ComponentEntity {
+			return nil, false
+		}
+		ports = mergePorts(resolved.entity.Component[0].Interface.IO)
+	} else {
+		return nil, false
+	}
+
+	items := []protocol.CompletionItem{}
+	for name, port := range ports {
+		if portPrefix != "" && !strings.HasPrefix(name, portPrefix) {
+			continue
+		}
+		items = append(items, protocol.CompletionItem{
+			Label:  name,
+			Kind:   completionKind(protocol.CompletionItemKindField),
+			Detail: completionDetail(port.TypeExpr.String()),
+		})
+	}
+
+	return items, true
+}
+
+func mergePorts(io src.IO) map[string]src.Port {
+	merged := map[string]src.Port{}
+	for name, port := range io.In {
+		merged[name] = port
+	}
+	for name, port := range io.Out {
+		merged[name] = port
+	}
+	return merged
+}
+
+func (s *Server) packageCompletions(
+	build *src.Build,
+	ctx *fileContext,
+	prefix string,
+) ([]protocol.CompletionItem, bool) {
+	matches := pkgAccessRe.FindStringSubmatch(prefix)
+	if len(matches) == 0 {
+		return nil, false
+	}
+
+	pkgAlias := matches[1]
+	namePrefix := matches[2]
+
+	importDef, ok := ctx.file.Imports[pkgAlias]
+	if !ok {
+		return nil, false
+	}
+
+	modRef := core.ModuleRef{Path: importDef.Module}
+	for mod := range build.Modules {
+		if mod.Path == importDef.Module {
+			modRef = mod
+			break
+		}
+	}
+
+	mod, ok := build.Modules[modRef]
+	if !ok {
+		return nil, false
+	}
+
+	pkg, ok := mod.Packages[importDef.Package]
+	if !ok {
+		return nil, false
+	}
+
+	items := []protocol.CompletionItem{}
+	for entityName, entity := range collectPackageEntities(pkg) {
+		if namePrefix != "" && !strings.HasPrefix(entityName, namePrefix) {
+			continue
+		}
+		items = append(items, protocol.CompletionItem{
+			Label:  entityName,
+			Kind:   completionKind(entityCompletionKind(entity.Kind)),
+			Detail: completionDetail(fmt.Sprintf("%s.%s", pkgAlias, entityName)),
+		})
+	}
+
+	return items, true
+}
+
+func collectPackageEntities(pkg src.Package) map[string]src.Entity {
+	result := map[string]src.Entity{}
+	for _, file := range pkg {
+		for name, entity := range file.Entities {
+			result[name] = entity
+		}
+	}
+	return result
+}
+
+func (s *Server) generalCompletions(
+	build *src.Build,
+	ctx *fileContext,
+	compCtx *componentContext,
+) []protocol.CompletionItem {
+	items := []protocol.CompletionItem{}
+
+	for _, kw := range []string{"import", "type", "interface", "const", "def", "pub", "struct", "union"} {
+		items = append(items, protocol.CompletionItem{
+			Label: kw,
+			Kind:  completionKind(protocol.CompletionItemKindKeyword),
+		})
+	}
+
+	if compCtx != nil {
+		for name := range compCtx.component.Nodes {
+			items = append(items, protocol.CompletionItem{
+				Label: name,
+				Kind:  completionKind(protocol.CompletionItemKindVariable),
+			})
+		}
+	}
+
+	mod := build.Modules[ctx.moduleRef]
+	if pkg, ok := mod.Packages[ctx.packageName]; ok {
+		for name, entity := range collectPackageEntities(pkg) {
+			items = append(items, protocol.CompletionItem{
+				Label: name,
+				Kind:  completionKind(entityCompletionKind(entity.Kind)),
+			})
+		}
+	}
+
+	for alias, imp := range ctx.file.Imports {
+		items = append(items, protocol.CompletionItem{
+			Label:  alias,
+			Kind:   completionKind(protocol.CompletionItemKindModule),
+			Detail: completionDetail(imp.Package),
+		})
+	}
+
+	return items
+}
+
+func entityCompletionKind(kind src.EntityKind) protocol.CompletionItemKind {
+	switch kind {
+	case src.TypeEntity:
+		return protocol.CompletionItemKindClass
+	case src.InterfaceEntity:
+		return protocol.CompletionItemKindInterface
+	case src.ComponentEntity:
+		return protocol.CompletionItemKindFunction
+	case src.ConstEntity:
+		return protocol.CompletionItemKindConstant
+	default:
+		return protocol.CompletionItemKindVariable
+	}
+}
+
+func completionKind(kind protocol.CompletionItemKind) *protocol.CompletionItemKind {
+	return &kind
+}
+
+func completionDetail(value string) *string {
+	return &value
 }
