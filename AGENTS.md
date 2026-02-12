@@ -128,6 +128,14 @@ Follow these instructions.
 - **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
 - **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
 - **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
+
+### Session Notes (2026-02-10)
+
+- **Common patterns**: Visual editor should preserve 1:1 mapping between text and graph; avoid hidden nodes/edges that break this invariant.
+- **Common patterns**: IR visualization backends (DOT/Mermaid/ThreeJS) already group ports by component path; reuse this hierarchy for visual editor clustering.
+- **UI/UX patterns**: Node editors commonly offer a palette with categorized nodes and wire-splice insertion; Neva should mirror this for discoverability and fast wiring.
+- **UI/UX patterns**: Canvas annotations/notes are first-class (n8n-style), useful for comments and documentation in the visual view.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
