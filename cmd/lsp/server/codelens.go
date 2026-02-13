@@ -17,6 +17,7 @@ type codeLensData struct {
 	Kind string `json:"kind"`
 }
 
+// TextDocumentCodeLens emits per-entity code lenses for references and implementations.
 func (s *Server) TextDocumentCodeLens(
 	glspCtx *glsp.Context,
 	params *protocol.CodeLensParams,
@@ -62,6 +63,7 @@ func (s *Server) TextDocumentCodeLens(
 	return lenses, nil
 }
 
+// CodeLensResolve computes locations and attaches the show-references command payload.
 func (s *Server) CodeLensResolve(
 	glspCtx *glsp.Context,
 	lens *protocol.CodeLens,
@@ -100,6 +102,7 @@ func (s *Server) CodeLensResolve(
 	return lens, nil
 }
 
+// parseCodeLensData decodes strongly-typed lens metadata from LSP's generic data field.
 func parseCodeLensData(raw any) (codeLensData, bool) {
 	data := codeLensData{}
 	bytes, err := json.Marshal(raw)
@@ -115,6 +118,7 @@ func parseCodeLensData(raw any) (codeLensData, bool) {
 	return data, true
 }
 
+// buildShowReferencesCommand creates the editor command expected by VS Code's references UI.
 func buildShowReferencesCommand(
 	uri string,
 	position protocol.Position,

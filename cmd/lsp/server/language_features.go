@@ -13,6 +13,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
+// TextDocumentCompletion provides context-aware completions for ports, packages, and keywords.
 func (s *Server) TextDocumentCompletion(
 	glspCtx *glsp.Context,
 	params *protocol.CompletionParams,
@@ -36,6 +37,7 @@ func (s *Server) TextDocumentCompletion(
 	pos := lspToCorePosition(params.Position)
 	compCtx, _ := findComponentAtPosition(ctx.file, pos)
 
+	// Try the most specific completion contexts first.
 	if items, ok := s.portCompletions(build, ctx, compCtx, prefix); ok {
 		return protocol.CompletionList{IsIncomplete: false, Items: items}, nil
 	}
@@ -48,10 +50,13 @@ func (s *Server) TextDocumentCompletion(
 }
 
 var (
-	pkgAccessRe  = regexp.MustCompile(`([A-Za-z_][\\w]*)\\.(\\w*)$`)
+	// pkgAccessRe matches `alias.partial_name` style package access.
+	pkgAccessRe = regexp.MustCompile(`([A-Za-z_][\\w]*)\\.(\\w*)$`)
+	// portAccessRe matches `node:partial_port` and `:partial_port` forms.
 	portAccessRe = regexp.MustCompile(`([A-Za-z_][\\w]*)?:([A-Za-z_][\\w]*)?$`)
 )
 
+// readLineAt reads one source line by zero-based line index.
 func readLineAt(path string, line int) (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -64,6 +69,7 @@ func readLineAt(path string, line int) (string, error) {
 	return lines[line], nil
 }
 
+// linePrefix returns the part of a line before the cursor column.
 func linePrefix(line string, col int) string {
 	if col < 0 {
 		return ""
@@ -74,6 +80,7 @@ func linePrefix(line string, col int) string {
 	return line[:col]
 }
 
+// portCompletions suggests ports for the current component or a referenced node.
 func (s *Server) portCompletions(
 	build *src.Build,
 	ctx *fileContext,
@@ -127,6 +134,7 @@ func (s *Server) portCompletions(
 	return items, true
 }
 
+// mergePorts combines component inputs and outputs for completion lookup.
 func mergePorts(io src.IO) map[string]src.Port {
 	merged := map[string]src.Port{}
 	for name, port := range io.In {
@@ -138,6 +146,7 @@ func mergePorts(io src.IO) map[string]src.Port {
 	return merged
 }
 
+// packageCompletions suggests public entities from an imported package alias.
 func (s *Server) packageCompletions(
 	build *src.Build,
 	ctx *fileContext,
@@ -189,6 +198,7 @@ func (s *Server) packageCompletions(
 	return items, true
 }
 
+// collectPackageEntities flattens all entities from package files into a single map.
 func collectPackageEntities(pkg src.Package) map[string]src.Entity {
 	result := map[string]src.Entity{}
 	for _, file := range pkg {
@@ -199,6 +209,7 @@ func collectPackageEntities(pkg src.Package) map[string]src.Entity {
 	return result
 }
 
+// generalCompletions provides fallback keyword, local, package, and import suggestions.
 func (s *Server) generalCompletions(
 	build *src.Build,
 	ctx *fileContext,
@@ -243,6 +254,7 @@ func (s *Server) generalCompletions(
 	return items
 }
 
+// entityCompletionKind maps Neva entity kinds to completion item kinds.
 func entityCompletionKind(kind src.EntityKind) protocol.CompletionItemKind {
 	switch kind {
 	case src.TypeEntity:
@@ -258,10 +270,12 @@ func entityCompletionKind(kind src.EntityKind) protocol.CompletionItemKind {
 	}
 }
 
+// completionKind returns a pointer to an enum value for optional LSP fields.
 func completionKind(kind protocol.CompletionItemKind) *protocol.CompletionItemKind {
 	return &kind
 }
 
+// completionDetail returns a pointer to completion detail text.
 func completionDetail(value string) *string {
 	return &value
 }

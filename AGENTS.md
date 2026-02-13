@@ -128,6 +128,10 @@ Follow these instructions.
 - **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
 - **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
 - **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
+
+### Session Notes (2026-02-13)
+
+- **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

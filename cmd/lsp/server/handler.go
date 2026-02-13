@@ -133,6 +133,7 @@ func BuildHandler(logger commonlog.Logger, serverName string, indexer indexer.In
 		return nil
 	}
 
+	// Register supported text-document language features.
 	h.TextDocumentCompletion = s.TextDocumentCompletion
 	h.CompletionItemResolve = nil
 	h.TextDocumentHover = s.TextDocumentHover

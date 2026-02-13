@@ -23,6 +23,7 @@ var semanticTokenTypes = []string{
 	"constant",
 }
 
+// semanticTokensLegend returns the static token schema advertised during initialize.
 func semanticTokensLegend() protocol.SemanticTokensLegend {
 	return protocol.SemanticTokensLegend{
 		TokenTypes:     semanticTokenTypes,
@@ -38,6 +39,7 @@ type semanticToken struct {
 	modifiers int
 }
 
+// TextDocumentSemanticTokensFull returns full semantic tokens for a single Neva document.
 func (s *Server) TextDocumentSemanticTokensFull(
 	glspCtx *glsp.Context,
 	params *protocol.SemanticTokensParams,
@@ -57,6 +59,7 @@ func (s *Server) TextDocumentSemanticTokensFull(
 	return &protocol.SemanticTokens{Data: data}, nil
 }
 
+// collectSemanticTokens gathers declaration, reference, and port-address tokens from a file.
 func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []semanticToken {
 	typeIndex := tokenTypeIndex()
 	var tokens []semanticToken
@@ -93,6 +96,7 @@ func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []sem
 		tokens = append(tokens, makeToken(ref.meta, offset, len(resolved.name), tokenType))
 	}
 
+	// LSP expects monotonically ordered tokens before delta encoding.
 	sort.Slice(tokens, func(i, j int) bool {
 		if tokens[i].line == tokens[j].line {
 			return tokens[i].start < tokens[j].start
@@ -103,6 +107,7 @@ func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []sem
 	return tokens
 }
 
+// tokenTypeIndex maps legend token names to numeric indices.
 func tokenTypeIndex() map[string]int {
 	index := make(map[string]int, len(semanticTokenTypes))
 	for i, t := range semanticTokenTypes {
@@ -111,6 +116,7 @@ func tokenTypeIndex() map[string]int {
 	return index
 }
 
+// entityTokenType maps Neva entity kinds to semantic token categories.
 func entityTokenType(kind src.EntityKind, index map[string]int) (int, bool) {
 	switch kind {
 	case src.TypeEntity:
@@ -126,6 +132,7 @@ func entityTokenType(kind src.EntityKind, index map[string]int) (int, bool) {
 	}
 }
 
+// makeToken converts Neva metadata into absolute token coordinates.
 func makeToken(meta core.Meta, offset int, length int, tokenType int) semanticToken {
 	line := meta.Start.Line - 1
 	start := meta.Start.Column + offset
@@ -144,6 +151,7 @@ func makeToken(meta core.Meta, offset int, length int, tokenType int) semanticTo
 	}
 }
 
+// collectPortTokens walks a connection tree and tokenizes node/port address segments.
 func collectPortTokens(conn src.Connection, index map[string]int) []semanticToken {
 	var tokens []semanticToken
 	for _, sender := range conn.Senders {
@@ -162,6 +170,7 @@ func collectPortTokens(conn src.Connection, index map[string]int) []semanticToke
 	return tokens
 }
 
+// portAddrTokens emits separate tokens for node names and port names inside an address.
 func portAddrTokens(addr src.PortAddr, index map[string]int) []semanticToken {
 	if addr.Meta.Text == "" {
 		return nil
@@ -185,6 +194,7 @@ func portAddrTokens(addr src.PortAddr, index map[string]int) []semanticToken {
 	return tokens
 }
 
+// encodeSemanticTokens converts absolute tokens to LSP delta-encoded payload format.
 func encodeSemanticTokens(tokens []semanticToken) []uint32 {
 	var data []uint32
 	lastLine := 0

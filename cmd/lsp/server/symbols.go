@@ -40,6 +40,7 @@ type componentContext struct {
 	component src.Component
 }
 
+// getBuild returns the latest indexed build snapshot when available.
 func (s *Server) getBuild() (*src.Build, bool) {
 	s.indexMutex.Lock()
 	defer s.indexMutex.Unlock()
@@ -49,6 +50,7 @@ func (s *Server) getBuild() (*src.Build, bool) {
 	return s.index, true
 }
 
+// uriToPath converts a file URI to a local path.
 func uriToPath(uri string) (string, error) {
 	parsed, err := url.Parse(uri)
 	if err != nil {
@@ -60,11 +62,13 @@ func uriToPath(uri string) (string, error) {
 	return uri, nil
 }
 
+// pathToURI converts a local path to a file URI.
 func pathToURI(path string) string {
 	u := url.URL{Scheme: "file", Path: path}
 	return u.String()
 }
 
+// findFile resolves an LSP document URI to compiler file context.
 func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
 	filePath, err := uriToPath(uri)
 	if err != nil {
@@ -100,6 +104,7 @@ func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
 	return nil, fmt.Errorf("file not found in build: %s", uri)
 }
 
+// pathForLocation maps compiler source locations to workspace file paths.
 func (s *Server) pathForLocation(loc core.Location) string {
 	if loc.Filename == "" {
 		return ""
@@ -113,6 +118,7 @@ func (s *Server) pathForLocation(loc core.Location) string {
 	return ""
 }
 
+// lspToCorePosition converts zero-based LSP coordinates to core.Position.
 func lspToCorePosition(pos protocol.Position) core.Position {
 	return core.Position{
 		Line:   int(pos.Line) + 1,
@@ -120,6 +126,7 @@ func lspToCorePosition(pos protocol.Position) core.Position {
 	}
 }
 
+// metaContains reports whether a position is inside a metadata span.
 func metaContains(meta core.Meta, pos core.Position) bool {
 	if meta.Start.Line == 0 && meta.Stop.Line == 0 {
 		return false
@@ -137,6 +144,7 @@ func metaContains(meta core.Meta, pos core.Position) bool {
 	return true
 }
 
+// rangeForName builds an LSP range for an entity name inside a metadata span.
 func rangeForName(meta core.Meta, name string, nameOffset int) protocol.Range {
 	startLine := meta.Start.Line - 1
 	startChar := meta.Start.Column + nameOffset
@@ -148,6 +156,7 @@ func rangeForName(meta core.Meta, name string, nameOffset int) protocol.Range {
 	}
 }
 
+// nameOffsetForRef returns the offset for qualified references like `pkg.Name`.
 func nameOffsetForRef(meta core.Meta, name string) int {
 	if meta.Text == "" {
 		return 0
@@ -159,6 +168,7 @@ func nameOffsetForRef(meta core.Meta, name string) int {
 	return lastDot + 1
 }
 
+// resolveEntityRef resolves a reference from file context to a concrete entity.
 func (s *Server) resolveEntityRef(build *src.Build, ctx *fileContext, ref core.EntityRef) (*resolvedEntity, bool) {
 	modRef := ctx.moduleRef
 	pkgName := ctx.packageName
@@ -201,6 +211,7 @@ func (s *Server) resolveEntityRef(build *src.Build, ctx *fileContext, ref core.E
 	}, true
 }
 
+// findEntityDefinitionAtPosition finds declarations whose name range contains the cursor.
 func (s *Server) findEntityDefinitionAtPosition(ctx *fileContext, pos core.Position) (string, *src.Entity, bool) {
 	for name, entity := range ctx.file.Entities {
 		meta := entity.Meta()
@@ -217,6 +228,7 @@ func (s *Server) findEntityDefinitionAtPosition(ctx *fileContext, pos core.Posit
 	return "", nil, false
 }
 
+// collectRefsInFile recursively walks a file AST and collects entity references.
 func collectRefsInFile(file src.File) []refOccurrence {
 	var refs []refOccurrence
 
@@ -224,6 +236,7 @@ func collectRefsInFile(file src.File) []refOccurrence {
 		refs = append(refs, refOccurrence{ref: ref, meta: ref.Meta})
 	}
 
+	// Traverse type expressions to catch generic instantiations and nested literals.
 	var visitTypeExpr func(expr ts.Expr)
 	visitTypeExpr = func(expr ts.Expr) {
 		if expr.Inst != nil {
@@ -249,6 +262,7 @@ func collectRefsInFile(file src.File) []refOccurrence {
 		}
 	}
 
+	// Traverse const/message literals to include references in nested values.
 	var visitConstValue func(val src.ConstValue)
 	var visitMsgLiteral func(msg src.MsgLiteral)
 
@@ -277,6 +291,7 @@ func collectRefsInFile(file src.File) []refOccurrence {
 		}
 	}
 
+	// Traverse interfaces, nodes, and connections for references in wiring and DI args.
 	visitInterface := func(iface src.Interface) {
 		for _, port := range iface.IO.In {
 			visitTypeExpr(port.TypeExpr)
@@ -311,6 +326,7 @@ func collectRefsInFile(file src.File) []refOccurrence {
 		}
 	}
 
+	// Visit every entity body and collect references from relevant subtrees.
 	for _, entity := range file.Entities {
 		switch entity.Kind {
 		case src.TypeEntity:
@@ -341,6 +357,7 @@ func collectRefsInFile(file src.File) []refOccurrence {
 	return refs
 }
 
+// findRefAtPosition finds the first reference occurrence that contains the cursor.
 func (s *Server) findRefAtPosition(ctx *fileContext, pos core.Position) (*core.EntityRef, *core.Meta, bool) {
 	refs := collectRefsInFile(ctx.file)
 	for _, ref := range refs {
@@ -351,6 +368,7 @@ func (s *Server) findRefAtPosition(ctx *fileContext, pos core.Position) (*core.E
 	return nil, nil, false
 }
 
+// findComponentAtPosition returns the innermost component that contains the cursor.
 func findComponentAtPosition(file src.File, pos core.Position) (*componentContext, bool) {
 	for name, entity := range file.Entities {
 		if entity.Kind != src.ComponentEntity {
@@ -365,6 +383,7 @@ func findComponentAtPosition(file src.File, pos core.Position) (*componentContex
 	return nil, false
 }
 
+// TextDocumentDefinition returns definition locations for the symbol under cursor.
 func (s *Server) TextDocumentDefinition(
 	glspCtx *glsp.Context,
 	params *protocol.DefinitionParams,
@@ -379,6 +398,7 @@ func (s *Server) TextDocumentDefinition(
 	return locations, nil
 }
 
+// definitionLocations resolves definitions for both references and local declarations.
 func (s *Server) definitionLocations(
 	uri string,
 	position protocol.Position,
@@ -425,6 +445,7 @@ func (s *Server) definitionLocations(
 	return nil, nil
 }
 
+// TextDocumentImplementation returns definition locations as implementation fallbacks.
 func (s *Server) TextDocumentImplementation(
 	glspCtx *glsp.Context,
 	params *protocol.ImplementationParams,
@@ -440,6 +461,7 @@ func (s *Server) TextDocumentImplementation(
 	return locations, nil
 }
 
+// TextDocumentReferences returns all usage locations for the symbol under cursor.
 func (s *Server) TextDocumentReferences(
 	glspCtx *glsp.Context,
 	params *protocol.ReferenceParams,
@@ -483,6 +505,7 @@ func (s *Server) TextDocumentReferences(
 	return locations, nil
 }
 
+// TextDocumentPrepareRename validates rename targets and returns editable ranges.
 func (s *Server) TextDocumentPrepareRename(
 	glspCtx *glsp.Context,
 	params *protocol.PrepareRenameParams,
@@ -519,6 +542,7 @@ func (s *Server) TextDocumentPrepareRename(
 	return nil, nil
 }
 
+// TextDocumentRename rewrites references and declaration for the target symbol.
 func (s *Server) TextDocumentRename(
 	glspCtx *glsp.Context,
 	params *protocol.RenameParams,
@@ -555,6 +579,7 @@ func (s *Server) TextDocumentRename(
 
 	edits := map[string][]protocol.TextEdit{}
 
+	// Collect edits across all workspace-resolved files.
 	for modRef, mod := range build.Modules {
 		for pkgName, pkg := range mod.Packages {
 			for fileName, file := range pkg {
@@ -601,6 +626,7 @@ func (s *Server) TextDocumentRename(
 	return &protocol.WorkspaceEdit{Changes: edits}, nil
 }
 
+// referencesForEntity collects all locations that resolve to the target entity.
 func (s *Server) referencesForEntity(build *src.Build, target *resolvedEntity) []protocol.Location {
 	var locations []protocol.Location
 	for modRef, mod := range build.Modules {
@@ -638,6 +664,7 @@ func (s *Server) referencesForEntity(build *src.Build, target *resolvedEntity) [
 	return locations
 }
 
+// appendDeclarationLocation appends the declaration location if available.
 func (s *Server) appendDeclarationLocation(
 	locations []protocol.Location,
 	target *resolvedEntity,
@@ -652,6 +679,7 @@ func (s *Server) appendDeclarationLocation(
 	})
 }
 
+// TextDocumentHover renders contextual markdown for the symbol under cursor.
 func (s *Server) TextDocumentHover(
 	glspCtx *glsp.Context,
 	params *protocol.HoverParams,
@@ -702,6 +730,7 @@ func (s *Server) TextDocumentHover(
 	}, nil
 }
 
+// formatEntityHover formats a Neva snippet for hover markdown.
 func formatEntityHover(target *resolvedEntity) string {
 	switch target.entity.Kind {
 	case src.ConstEntity:
@@ -720,6 +749,7 @@ func formatEntityHover(target *resolvedEntity) string {
 	}
 }
 
+// formatInterfaceSignature formats `(in) (out)` interface signatures for hovers.
 func formatInterfaceSignature(iface src.Interface) string {
 	inParts := []string{}
 	outParts := []string{}
@@ -742,6 +772,7 @@ func formatInterfaceSignature(iface src.Interface) string {
 	return fmt.Sprintf("(%s) (%s)", strings.Join(inParts, ", "), strings.Join(outParts, ", "))
 }
 
+// TextDocumentDocumentSymbol returns top-level symbols for the current document.
 func (s *Server) TextDocumentDocumentSymbol(
 	glspCtx *glsp.Context,
 	params *protocol.DocumentSymbolParams,
@@ -773,6 +804,7 @@ func (s *Server) TextDocumentDocumentSymbol(
 	return symbols, nil
 }
 
+// entitySymbolKind maps Neva entity kinds to LSP document symbol kinds.
 func entitySymbolKind(kind src.EntityKind) protocol.SymbolKind {
 	switch kind {
 	case src.ConstEntity:
