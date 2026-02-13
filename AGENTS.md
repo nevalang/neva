@@ -128,6 +128,12 @@ Follow these instructions.
 - **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
 - **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
 - **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
+
+### Session Notes (2026-02-13)
+
+- **Common patterns**: In panic tests, avoid blank-identifier discards on error-returning calls; bind `err` so `errcheck` remains satisfied.
+- **Common patterns**: Benchmark/test fixture writes may intentionally use `0644`; document that with `// #nosec G306` plus rationale.
+- **Gotchas**: macOS environments may not provide `timeout`; use a bounded wrapper (for example, Python `subprocess.run(..., timeout=...)`) when capping long test runs.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

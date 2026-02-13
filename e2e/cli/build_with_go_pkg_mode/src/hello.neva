@@ -1,0 +1,16 @@
+import {
+	fmt
+	runtime
+}
+
+// PrintHello prints a fixed greeting and forwards printer failures to runtime panic.
+// Example:
+// :start -> hello:sig
+pub def PrintHello(sig int) (res string) {
+    println fmt.Println<string>
+    panic runtime.Panic
+    ---
+    :sig -> 'Hello from Neva!' -> println:data
+    println:res -> :res
+    println:err -> panic
+}

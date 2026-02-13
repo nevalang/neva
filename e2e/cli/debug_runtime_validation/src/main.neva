@@ -1,0 +1,16 @@
+import {
+	fmt
+	runtime
+}
+
+// Main prints a greeting and routes print errors to runtime panic.
+// Example:
+// :start -> 'Hello, World!' -> println
+def Main(start any) (stop any) {
+	println fmt.Println<string>
+	panic runtime.Panic
+	---
+	:start -> 'Hello, World!' -> println
+	println:res -> :stop
+	println:err -> panic
+}
