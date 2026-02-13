@@ -86,7 +86,10 @@ func TestInvalidMsgPanics(t *testing.T) {
 		_ = invalid.String()
 	})
 	mustPanic(t, "MarshalJSON", func() {
-		_, _ = invalid.MarshalJSON()
+		_, err := invalid.MarshalJSON()
+		if err != nil {
+			t.Fatalf("unexpected error before panic: %v", err)
+		}
 	})
 	mustPanic(t, "Equal", func() {
 		_ = invalid.Equal(Msg{})

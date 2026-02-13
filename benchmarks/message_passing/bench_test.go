@@ -68,6 +68,7 @@ func copyFile(b *testing.B, src, dst string) {
 	if err != nil {
 		b.Fatalf("read %s: %v", src, err)
 	}
+	// #nosec G306 -- benchmark fixture file should be world-readable for local inspection.
 	if err := os.WriteFile(dst, data, 0o644); err != nil {
 		b.Fatalf("write %s: %v", dst, err)
 	}
