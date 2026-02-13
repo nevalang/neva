@@ -293,10 +293,9 @@ type Connection struct {
 }
 
 type ConnectionReceiver struct {
-	PortAddr           *PortAddr   `json:"portAddr,omitempty"`
-	DeferredConnection *Connection `json:"deferredConnection,omitempty"`
-	ChainedConnection  *Connection `json:"chainedConnection,omitempty"`
-	Meta               core.Meta   `json:"meta,omitempty"`
+	PortAddr          *PortAddr   `json:"portAddr,omitempty"`
+	ChainedConnection *Connection `json:"chainedConnection,omitempty"`
+	Meta              core.Meta   `json:"meta,omitempty"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.

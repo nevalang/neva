@@ -440,12 +440,6 @@ func (s *BasenevaListener) EnterChainedNormConn(ctx *ChainedNormConnContext) {}
 // ExitChainedNormConn is called when production chainedNormConn is exited.
 func (s *BasenevaListener) ExitChainedNormConn(ctx *ChainedNormConnContext) {}
 
-// EnterDeferredConn is called when production deferredConn is entered.
-func (s *BasenevaListener) EnterDeferredConn(ctx *DeferredConnContext) {}
-
-// ExitDeferredConn is called when production deferredConn is exited.
-func (s *BasenevaListener) ExitDeferredConn(ctx *DeferredConnContext) {}
-
 // EnterPortAddr is called when production portAddr is entered.
 func (s *BasenevaListener) EnterPortAddr(ctx *PortAddrContext) {}
 

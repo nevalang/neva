@@ -217,9 +217,6 @@ type nevaListener interface {
 	// EnterChainedNormConn is called when entering the chainedNormConn production.
 	EnterChainedNormConn(c *ChainedNormConnContext)
 
-	// EnterDeferredConn is called when entering the deferredConn production.
-	EnterDeferredConn(c *DeferredConnContext)
-
 	// EnterPortAddr is called when entering the portAddr production.
 	EnterPortAddr(c *PortAddrContext)
 
@@ -462,9 +459,6 @@ type nevaListener interface {
 
 	// ExitChainedNormConn is called when exiting the chainedNormConn production.
 	ExitChainedNormConn(c *ChainedNormConnContext)
-
-	// ExitDeferredConn is called when exiting the deferredConn production.
-	ExitDeferredConn(c *DeferredConnContext)
 
 	// ExitPortAddr is called when exiting the portAddr production.
 	ExitPortAddr(c *PortAddrContext)

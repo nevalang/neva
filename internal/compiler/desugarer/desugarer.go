@@ -12,7 +12,6 @@ import (
 // Desugarer is NOT thread safe and must be used in single thread
 type Desugarer struct {
 	virtualSelectorsCount uint64
-	virtualLocksCounter   uint64
 	virtualEmittersCount  uint64
 	virtualConstCount     uint64
 	virtualTriggersCount  uint64

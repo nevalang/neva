@@ -1,11 +1,14 @@
-import { time, fmt, runtime }
+import { fmt, runtime, builtin }
 
 def Main(start any) (stop any) {
     p1 fmt.Println
     p2 fmt.Println
+    lock builtin.Lock<any>
     panic runtime.Panic
     ---
     :start -> [p1:data, p2:data]
-    p1:res -> { p2:res -> :stop }
+    p1:res -> lock:sig
+    p2:res -> lock:data
+    lock:data -> :stop
     [p1:err, p2:err] -> panic
 }
