@@ -10,12 +10,6 @@ type State struct {
 	last_time int
 }
 
-// MulInt is a typed int multiplication helper.
-// We keep this explicit wrapper because `Mul` is still ambiguous in this graph.
-// Repro: `go test ./examples/interest_pipe` fails on `mul_rate_balance Mul`.
-#extern(int_mul)
-def MulInt(left int, right int) (res int)
-
 // Main runs three interest calculations in sequence and prints each result.
 // The state transitions are:
 // 1) initial deposit,
@@ -127,8 +121,8 @@ def BalanceChange(state State, new_balance int, now int) (
 // interest = state.rate * state.balance * (now - state.last_time)
 def ComputeInterest(state State, now int) (interest int) {
 	sub Sub
-	mul_rate_balance MulInt
-	mul_total MulInt
+	mul_rate_balance Mul
+	mul_total Mul
 	---
 	:state -> [
 		.rate -> mul_rate_balance:left,

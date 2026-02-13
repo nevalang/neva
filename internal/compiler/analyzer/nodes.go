@@ -824,6 +824,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	// from overload constraints and let other edges disambiguate.
 	filterAmbiguous := func(types []typesystem.Expr) []typesystem.Expr {
 		if len(types) == 0 {
+			// No inferred neighbor type means "no constraint", not a mismatch.
 			return nil
 		}
 		seen := make(map[string]typesystem.Expr, len(types))
@@ -946,7 +947,15 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 
 						// collect types from the outer senders
 						for _, outerSender := range outerSenders {
-							types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, outerSender, net)
+							types := a.getPossibleSenderTypes(
+								scope,
+								parentFrame,
+								resolvedParentIface,
+								nodes,
+								outerSender,
+								nil,
+								net,
+							)
 							for _, t := range types {
 								list := c.incoming[inPort]
 								appendUnique(&list, t)
@@ -996,7 +1005,15 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 			}
 			port := a.resolvePortName(nodeName, nodes, scope, true, pair.portAddr.Port)
 			for _, sender := range pair.senders {
-				types := a.getPossibleSenderTypes(scope, parentFrame, resolvedParentIface, nodes, sender, net)
+				types := a.getPossibleSenderTypes(
+					scope,
+					parentFrame,
+					resolvedParentIface,
+					nodes,
+					sender,
+					pair.prevChainLink,
+					net,
+				)
 				for _, t := range types {
 					list := c.incoming[port]
 					appendUnique(&list, t)
@@ -1040,8 +1057,9 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 }
 
 type receiverSenderPair struct {
-	portAddr src.PortAddr
-	senders  []src.ConnectionSender
+	portAddr      src.PortAddr
+	senders       []src.ConnectionSender
+	prevChainLink []src.ConnectionSender
 }
 
 // collectReceiverSenderPairs maps each receiver port to the senders that feed it.
@@ -1054,44 +1072,63 @@ type receiverSenderPair struct {
 //
 //	:start -> U::A -> switch:case[0]
 //	  => pairs: (switch:case[0] <- U::A)
-//
 func (a Analyzer) collectReceiverSenderPairs(
 	receivers []src.ConnectionReceiver,
 	senders []src.ConnectionSender,
 ) []receiverSenderPair {
 	var pairs []receiverSenderPair
 	// Inline recursion keeps the accumulator local and avoids extra allocations/signatures.
-	var visit func(recs []src.ConnectionReceiver, snd []src.ConnectionSender)
-	visit = func(recs []src.ConnectionReceiver, snd []src.ConnectionSender) {
+	var visit func(
+		recs []src.ConnectionReceiver,
+		snd []src.ConnectionSender,
+		prevChainLink []src.ConnectionSender,
+	)
+	visit = func(
+		recs []src.ConnectionReceiver,
+		snd []src.ConnectionSender,
+		prevChainLink []src.ConnectionSender,
+	) {
 		for _, r := range recs {
 			if r.PortAddr != nil {
 				pairs = append(pairs, receiverSenderPair{
-					portAddr: *r.PortAddr,
-					senders:  snd,
+					portAddr:      *r.PortAddr,
+					senders:       snd,
+					prevChainLink: prevChainLink,
 				})
-				continue
 			}
 			if r.ChainedConnection != nil {
-				visit(r.ChainedConnection.Receivers, r.ChainedConnection.Senders)
+				visit(r.ChainedConnection.Receivers, r.ChainedConnection.Senders, snd)
 			}
 		}
 	}
-	visit(receivers, senders)
+	visit(receivers, senders, nil)
 	return pairs
 }
 
 // getPossibleSenderTypes is needed to derive node constraints from the network.
 // It's part of the overloading implementation.
 // It returns a set of possible types produced by a given sender without requiring resolved node interfaces.
+//nolint:gocyclo // Sender type derivation must cover const/selector/port forms in one path.
 func (a Analyzer) getPossibleSenderTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
 	parentIface src.Interface,
 	nodes map[string]src.Node,
 	sender src.ConnectionSender,
+	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
 ) []typesystem.Expr {
 	// FIXME: looks like we ignore errors here (and in some lower-level functions we call)
+
+	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
+		s := t.String()
+		for _, existing := range *dst {
+			if existing.String() == s {
+				return
+			}
+		}
+		*dst = append(*dst, t)
+	}
 
 	// const sender
 	if sender.Const != nil {
@@ -1107,6 +1144,47 @@ func (a Analyzer) getPossibleSenderTypes(
 				return []typesystem.Expr{t}
 			}
 		}
+	}
+
+	// struct selector sender in a chain (e.g. :state -> .rate -> mul:left)
+	if len(sender.StructSelector) > 0 {
+		if len(prevChainLink) == 0 {
+			return nil
+		}
+
+		var selectorTypes []typesystem.Expr
+		for _, chainHead := range prevChainLink {
+			headTypes := a.getPossibleSenderTypes(
+				scope,
+				parentFrame,
+				parentIface,
+				nodes,
+				chainHead,
+				nil,
+				net,
+			)
+			for _, headType := range headTypes {
+				resolvedSelectorType, err := a.getSelectorsSenderType(headType, sender.StructSelector, scope)
+				if err != nil {
+					continue
+				}
+				appendUnique(&selectorTypes, resolvedSelectorType)
+			}
+		}
+
+		seen := make(map[string]typesystem.Expr, len(selectorTypes))
+		for _, t := range selectorTypes {
+			seen[t.String()] = t
+		}
+		if len(seen) != 1 {
+			return nil
+		}
+
+		out := make([]typesystem.Expr, 0, 1)
+		for _, t := range seen {
+			out = append(out, t)
+		}
+		return out
 	}
 
 	// port-addr

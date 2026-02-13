@@ -129,6 +129,13 @@ Follow these instructions.
 - **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
 - **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
 - **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
+
+### Session Notes (2026-02-13)
+
+- **Language semantics**: Receiver/sender pairing for chained connections must recurse even when a chain head has a concrete `PortAddr`, otherwise downstream receivers lose constraints.
+- **Common patterns**: For selector senders in overload-constraint collection (for example `:state -> .rate -> mul:left`), pass previous chain-link senders into sender-type derivation.
+- **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
+- **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
