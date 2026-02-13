@@ -20,17 +20,17 @@ func (s *Server) TextDocumentCompletion(
 ) (any, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return protocol.CompletionList{IsIncomplete: false, Items: []protocol.CompletionItem{}}, nil
 	}
 
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	lineText, err := readLineAt(ctx.filePath, int(params.Position.Line))
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	prefix := linePrefix(lineText, int(params.Position.Character))
@@ -100,12 +100,13 @@ func (s *Server) portCompletions(
 	portPrefix := matches[2]
 
 	var ports map[string]src.Port
-	if nodeName == "" {
+	switch {
+	case nodeName == "":
 		if compCtx == nil {
 			return nil, false
 		}
-		ports = mergePorts(compCtx.component.Interface.IO)
-	} else if compCtx != nil {
+		ports = mergePorts(compCtx.component.IO)
+	case compCtx != nil:
 		node, ok := compCtx.component.Nodes[nodeName]
 		if !ok {
 			return nil, false
@@ -114,8 +115,8 @@ func (s *Server) portCompletions(
 		if !ok || resolved.entity.Kind != src.ComponentEntity {
 			return nil, false
 		}
-		ports = mergePorts(resolved.entity.Component[0].Interface.IO)
-	} else {
+		ports = mergePorts(resolved.entity.Component[0].IO)
+	default:
 		return nil, false
 	}
 

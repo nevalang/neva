@@ -1,6 +1,7 @@
 package server
 
 import (
+	"math"
 	"sort"
 	"strings"
 
@@ -11,22 +12,26 @@ import (
 	"github.com/nevalang/neva/internal/compiler/ast/core"
 )
 
-var semanticTokenTypes = []string{
-	"namespace",
-	"type",
-	"class",
-	"interface",
-	"function",
-	"variable",
-	"property",
-	"keyword",
-	"constant",
+// semanticTokenTypes returns the token names declared in the semantic token legend.
+func semanticTokenTypes() []string {
+	return []string{
+		"namespace",
+		"type",
+		"class",
+		"interface",
+		"function",
+		"variable",
+		"property",
+		"keyword",
+		"constant",
+	}
 }
 
 // semanticTokensLegend returns the static token schema advertised during initialize.
 func semanticTokensLegend() protocol.SemanticTokensLegend {
+	tokenTypes := semanticTokenTypes()
 	return protocol.SemanticTokensLegend{
-		TokenTypes:     semanticTokenTypes,
+		TokenTypes:     tokenTypes,
 		TokenModifiers: []string{},
 	}
 }
@@ -46,12 +51,12 @@ func (s *Server) TextDocumentSemanticTokensFull(
 ) (*protocol.SemanticTokens, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return &protocol.SemanticTokens{Data: []uint32{}}, nil
 	}
 
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	tokens := s.collectSemanticTokens(build, ctx)
@@ -62,7 +67,7 @@ func (s *Server) TextDocumentSemanticTokensFull(
 // collectSemanticTokens gathers declaration, reference, and port-address tokens from a file.
 func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []semanticToken {
 	typeIndex := tokenTypeIndex()
-	var tokens []semanticToken
+	tokens := make([]semanticToken, 0, len(ctx.file.Entities))
 
 	for name, entity := range ctx.file.Entities {
 		meta := entity.Meta()
@@ -92,7 +97,7 @@ func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []sem
 		if !ok {
 			continue
 		}
-		offset := nameOffsetForRef(ref.meta, resolved.name)
+		offset := nameOffsetForRef(ref.meta)
 		tokens = append(tokens, makeToken(ref.meta, offset, len(resolved.name), tokenType))
 	}
 
@@ -109,8 +114,9 @@ func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []sem
 
 // tokenTypeIndex maps legend token names to numeric indices.
 func tokenTypeIndex() map[string]int {
-	index := make(map[string]int, len(semanticTokenTypes))
-	for i, t := range semanticTokenTypes {
+	tokenTypes := semanticTokenTypes()
+	index := make(map[string]int, len(tokenTypes))
+	for i, t := range tokenTypes {
 		index[t] = i
 	}
 	return index
@@ -196,7 +202,7 @@ func portAddrTokens(addr src.PortAddr, index map[string]int) []semanticToken {
 
 // encodeSemanticTokens converts absolute tokens to LSP delta-encoded payload format.
 func encodeSemanticTokens(tokens []semanticToken) []uint32 {
-	var data []uint32
+	data := make([]uint32, 0, len(tokens)*5)
 	lastLine := 0
 	lastStart := 0
 
@@ -207,17 +213,41 @@ func encodeSemanticTokens(tokens []semanticToken) []uint32 {
 			deltaStart = token.start - lastStart
 		}
 
-		data = append(data,
-			uint32(deltaLine),
-			uint32(deltaStart),
-			uint32(token.length),
-			uint32(token.tokenType),
-			uint32(token.modifiers),
-		)
+		deltaLine32, ok := intToUint32(deltaLine)
+		if !ok {
+			continue
+		}
+		deltaStart32, ok := intToUint32(deltaStart)
+		if !ok {
+			continue
+		}
+		length32, ok := intToUint32(token.length)
+		if !ok {
+			continue
+		}
+		tokenType32, ok := intToUint32(token.tokenType)
+		if !ok {
+			continue
+		}
+		modifiers32, ok := intToUint32(token.modifiers)
+		if !ok {
+			continue
+		}
+
+		data = append(data, deltaLine32, deltaStart32, length32, tokenType32, modifiers32)
 
 		lastLine = token.line
 		lastStart = token.start
 	}
 
 	return data
+}
+
+// intToUint32 safely converts a non-negative int that fits into uint32.
+func intToUint32(value int) (uint32, bool) {
+	if value < 0 || value > math.MaxUint32 {
+		return 0, false
+	}
+	// #nosec G115 -- range is checked above before conversion.
+	return uint32(value), true
 }

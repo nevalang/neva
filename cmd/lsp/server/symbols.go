@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -15,19 +16,19 @@ import (
 )
 
 type fileContext struct {
+	file        src.File
 	moduleRef   core.ModuleRef
 	packageName string
 	fileName    string
 	filePath    string
-	file        src.File
 }
 
 type resolvedEntity struct {
 	moduleRef   core.ModuleRef
 	packageName string
 	name        string
-	entity      src.Entity
 	filePath    string
+	entity      src.Entity
 }
 
 type refOccurrence struct {
@@ -151,13 +152,25 @@ func rangeForName(meta core.Meta, name string, nameOffset int) protocol.Range {
 	endChar := startChar + len(name)
 
 	return protocol.Range{
-		Start: protocol.Position{Line: uint32(startLine), Character: uint32(startChar)},
-		End:   protocol.Position{Line: uint32(startLine), Character: uint32(endChar)},
+		Start: protocol.Position{Line: clampToUint32(startLine), Character: clampToUint32(startChar)},
+		End:   protocol.Position{Line: clampToUint32(startLine), Character: clampToUint32(endChar)},
 	}
 }
 
+// clampToUint32 converts int to uint32 while preserving valid bounds for LSP positions.
+func clampToUint32(value int) uint32 {
+	if value <= 0 {
+		return 0
+	}
+	if value > math.MaxUint32 {
+		return math.MaxUint32
+	}
+	// #nosec G115 -- value range is bounded above before conversion.
+	return uint32(value)
+}
+
 // nameOffsetForRef returns the offset for qualified references like `pkg.Name`.
-func nameOffsetForRef(meta core.Meta, name string) int {
+func nameOffsetForRef(meta core.Meta) int {
 	if meta.Text == "" {
 		return 0
 	}
@@ -229,6 +242,8 @@ func (s *Server) findEntityDefinitionAtPosition(ctx *fileContext, pos core.Posit
 }
 
 // collectRefsInFile recursively walks a file AST and collects entity references.
+//
+//nolint:gocyclo // Traversal intentionally handles all relevant AST variants in one pass.
 func collectRefsInFile(file src.File) []refOccurrence {
 	var refs []refOccurrence
 
@@ -248,6 +263,8 @@ func collectRefsInFile(file src.File) []refOccurrence {
 		}
 		if expr.Lit != nil {
 			switch expr.Lit.Type() {
+			case ts.EmptyLitType:
+				// No nested references in empty literals.
 			case ts.StructLitType:
 				for _, field := range expr.Lit.Struct {
 					visitTypeExpr(field)
@@ -388,12 +405,9 @@ func (s *Server) TextDocumentDefinition(
 	glspCtx *glsp.Context,
 	params *protocol.DefinitionParams,
 ) (any, error) {
-	locations, err := s.definitionLocations(params.TextDocument.URI, params.Position)
-	if err != nil {
-		return nil, err
-	}
+	locations := s.definitionLocations(params.TextDocument.URI, params.Position)
 	if len(locations) == 0 {
-		return nil, nil
+		return []protocol.Location{}, nil
 	}
 	return locations, nil
 }
@@ -402,47 +416,47 @@ func (s *Server) TextDocumentDefinition(
 func (s *Server) definitionLocations(
 	uri string,
 	position protocol.Position,
-) ([]protocol.Location, error) {
+) []protocol.Location {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return nil
 	}
 
 	ctx, err := s.findFile(build, uri)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
 	pos := lspToCorePosition(position)
 	if ref, _, found := s.findRefAtPosition(ctx, pos); found {
 		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
 		if !ok || resolved.filePath == "" {
-			return nil, nil
+			return nil
 		}
 		defMeta := resolved.entity.Meta()
 		if defMeta == nil {
-			return nil, nil
+			return nil
 		}
 		loc := protocol.Location{
 			URI:   pathToURI(resolved.filePath),
 			Range: rangeForName(*defMeta, resolved.name, 0),
 		}
-		return []protocol.Location{loc}, nil
+		return []protocol.Location{loc}
 	}
 
 	if name, entity, found := s.findEntityDefinitionAtPosition(ctx, pos); found {
 		meta := entity.Meta()
 		if meta == nil {
-			return nil, nil
+			return nil
 		}
 		loc := protocol.Location{
 			URI:   pathToURI(ctx.filePath),
 			Range: rangeForName(*meta, name, 0),
 		}
-		return []protocol.Location{loc}, nil
+		return []protocol.Location{loc}
 	}
 
-	return nil, nil
+	return nil
 }
 
 // TextDocumentImplementation returns definition locations as implementation fallbacks.
@@ -451,12 +465,9 @@ func (s *Server) TextDocumentImplementation(
 	params *protocol.ImplementationParams,
 ) (any, error) {
 	// Neva currently does not distinguish interface vs implementation at LSP level.
-	locations, err := s.definitionLocations(params.TextDocument.URI, params.Position)
-	if err != nil {
-		return nil, err
-	}
+	locations := s.definitionLocations(params.TextDocument.URI, params.Position)
 	if len(locations) == 0 {
-		return nil, nil
+		return []protocol.Location{}, nil
 	}
 	return locations, nil
 }
@@ -468,12 +479,12 @@ func (s *Server) TextDocumentReferences(
 ) ([]protocol.Location, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return []protocol.Location{}, nil
 	}
 
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	pos := lspToCorePosition(params.Position)
@@ -512,11 +523,11 @@ func (s *Server) TextDocumentPrepareRename(
 ) (any, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return false, nil
 	}
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	pos := lspToCorePosition(params.Position)
@@ -524,9 +535,9 @@ func (s *Server) TextDocumentPrepareRename(
 	if ref, meta, found := s.findRefAtPosition(ctx, pos); found {
 		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
 		if !ok {
-			return nil, nil
+			return false, nil
 		}
-		offset := nameOffsetForRef(*meta, resolved.name)
+		offset := nameOffsetForRef(*meta)
 		r := rangeForName(*meta, resolved.name, offset)
 		return r, nil
 	}
@@ -539,10 +550,12 @@ func (s *Server) TextDocumentPrepareRename(
 		}
 	}
 
-	return nil, nil
+	return false, nil
 }
 
 // TextDocumentRename rewrites references and declaration for the target symbol.
+//
+//nolint:nilnil // LSP allows a nil result when no rename target can be resolved.
 func (s *Server) TextDocumentRename(
 	glspCtx *glsp.Context,
 	params *protocol.RenameParams,
@@ -553,7 +566,7 @@ func (s *Server) TextDocumentRename(
 	}
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	pos := lspToCorePosition(params.Position)
@@ -603,7 +616,7 @@ func (s *Server) TextDocumentRename(
 					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
 						continue
 					}
-					offset := nameOffsetForRef(ref.meta, resolved.name)
+					offset := nameOffsetForRef(ref.meta)
 					r := rangeForName(ref.meta, resolved.name, offset)
 					edits[pathToURI(locPath)] = append(edits[pathToURI(locPath)], protocol.TextEdit{
 						Range:   r,
@@ -652,7 +665,7 @@ func (s *Server) referencesForEntity(build *src.Build, target *resolvedEntity) [
 					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
 						continue
 					}
-					nameOffset := nameOffsetForRef(ref.meta, resolved.name)
+					nameOffset := nameOffsetForRef(ref.meta)
 					locations = append(locations, protocol.Location{
 						URI:   pathToURI(locPath),
 						Range: rangeForName(ref.meta, resolved.name, nameOffset),
@@ -680,6 +693,8 @@ func (s *Server) appendDeclarationLocation(
 }
 
 // TextDocumentHover renders contextual markdown for the symbol under cursor.
+//
+//nolint:nilnil // LSP allows a nil result when hover content is unavailable.
 func (s *Server) TextDocumentHover(
 	glspCtx *glsp.Context,
 	params *protocol.HoverParams,
@@ -690,7 +705,7 @@ func (s *Server) TextDocumentHover(
 	}
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	pos := lspToCorePosition(params.Position)
@@ -701,7 +716,7 @@ func (s *Server) TextDocumentHover(
 		resolved, ok := s.resolveEntityRef(build, ctx, *ref)
 		if ok {
 			target = resolved
-			offset := nameOffsetForRef(*meta, resolved.name)
+			offset := nameOffsetForRef(*meta)
 			r := rangeForName(*meta, resolved.name, offset)
 			hoverRange = &r
 		}
@@ -734,7 +749,9 @@ func (s *Server) TextDocumentHover(
 func formatEntityHover(target *resolvedEntity) string {
 	switch target.entity.Kind {
 	case src.ConstEntity:
-		return fmt.Sprintf("```neva\nconst %s %s = %s\n```", target.name, target.entity.Const.TypeExpr.String(), target.entity.Const.Value.String())
+		constType := target.entity.Const.TypeExpr.String()
+		constValue := target.entity.Const.Value.String()
+		return fmt.Sprintf("```neva\nconst %s %s = %s\n```", target.name, constType, constValue)
 	case src.TypeEntity:
 		if target.entity.Type.BodyExpr == nil {
 			return fmt.Sprintf("```neva\ntype %s\n```", target.name)
@@ -751,8 +768,8 @@ func formatEntityHover(target *resolvedEntity) string {
 
 // formatInterfaceSignature formats `(in) (out)` interface signatures for hovers.
 func formatInterfaceSignature(iface src.Interface) string {
-	inParts := []string{}
-	outParts := []string{}
+	inParts := make([]string, 0, len(iface.IO.In))
+	outParts := make([]string, 0, len(iface.IO.Out))
 
 	for name, port := range iface.IO.In {
 		label := name
@@ -779,14 +796,14 @@ func (s *Server) TextDocumentDocumentSymbol(
 ) (any, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return []protocol.DocumentSymbol{}, nil
 	}
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var symbols []protocol.DocumentSymbol
+	symbols := make([]protocol.DocumentSymbol, 0, len(ctx.file.Entities))
 	for name, entity := range ctx.file.Entities {
 		meta := entity.Meta()
 		if meta == nil {

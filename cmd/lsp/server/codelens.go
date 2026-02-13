@@ -24,15 +24,15 @@ func (s *Server) TextDocumentCodeLens(
 ) ([]protocol.CodeLens, error) {
 	build, ok := s.getBuild()
 	if !ok {
-		return nil, nil
+		return []protocol.CodeLens{}, nil
 	}
 
 	ctx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var lenses []protocol.CodeLens
+	lenses := make([]protocol.CodeLens, 0, len(ctx.file.Entities)*2)
 	for name, entity := range ctx.file.Entities {
 		meta := entity.Meta()
 		if meta == nil {
@@ -80,7 +80,7 @@ func (s *Server) CodeLensResolve(
 
 	ctx, err := s.findFile(build, data.URI)
 	if err != nil {
-		return lens, nil
+		return nil, err
 	}
 
 	target, ok := s.resolveEntityRef(build, ctx, core.EntityRef{Name: data.Name})
