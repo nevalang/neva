@@ -1,0 +1,42 @@
+import {
+	runtime
+	streams
+}
+
+type NumValue union {
+	Num int
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_wrap streams.Map<int, NumValue>{Wrap}
+	map_unwrap streams.Map<NumValue, int>{Unwrap}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_wrap -> map_unwrap -> wait -> :stop
+}
+
+def Wrap(data int) (res NumValue) {
+	box Union<NumValue>
+	---
+	:data -> [
+		box:data,
+		NumValue::Num -> box:tag
+	]
+	box -> :res
+}
+
+def Unwrap(data NumValue) (res int) {
+	switch Switch<NumValue>
+	panic runtime.Panic
+	---
+	:data -> [
+		switch:data,
+		NumValue::Num -> switch:case[0] -> :res
+	]
+	switch:else -> panic
+}

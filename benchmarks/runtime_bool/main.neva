@@ -1,0 +1,22 @@
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_bool streams.Map<int, bool>{IsEven}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_bool -> wait -> :stop
+}
+
+def IsEven(data int) (res bool) {
+	mod Mod
+	eq Eq<int>
+	---
+	:data -> [mod:left, 2 -> mod:right]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> :res
+}

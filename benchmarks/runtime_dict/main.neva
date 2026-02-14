@@ -1,0 +1,50 @@
+import {
+	runtime
+	streams
+}
+
+const values dict<string> = {
+	a: 'alpha',
+	b: 'beta'
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_key streams.Map<int, string>{ToKey}
+	map_lookup streams.Map<string, string>{Lookup}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_key -> map_lookup -> wait -> :stop
+}
+
+def ToKey(data int) (res string) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<string>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'a' -> pick:then,
+		'b' -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+def Lookup(data string) (res string) {
+	get Get<string>
+	panic runtime.Panic
+	---
+	:data -> [
+		get:key,
+		$values -> get:dict
+	]
+	get:res -> :res
+	get:err -> panic
+}

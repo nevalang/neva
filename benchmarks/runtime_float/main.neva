@@ -1,0 +1,48 @@
+import {
+	runtime
+	streams
+	strconv
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_text streams.Map<int, string>{ToFloatText}
+	map_float streams.Map<string, float>{ParseAndShift}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_text -> map_float -> wait -> :stop
+}
+
+def ToFloatText(data int) (res string) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<string>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'1.25' -> pick:then,
+		'2.75' -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+def ParseAndShift(data string) (res float) {
+	parse strconv.ParseFloat
+	add Add
+	panic runtime.Panic
+	---
+	:data -> [
+		parse:data,
+		64 -> parse:bits
+	]
+	parse:res -> [add:left, 0.5 -> add:right]
+	add -> :res
+	parse:err -> panic
+}

@@ -1,0 +1,50 @@
+import {
+	runtime
+	streams
+}
+
+type Number union {
+	Int int
+}
+
+type Envelope struct {
+	id int
+	boxed Number
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_pack streams.Map<int, Envelope>{Pack}
+	map_unpack streams.Map<Envelope, int>{Unpack}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_pack -> map_unpack -> wait -> :stop
+}
+
+def Pack(data int) (res Envelope) {
+	box Union<Number>
+	builder Struct<Envelope>
+	---
+	:data -> [
+		box:data,
+		Number::Int -> box:tag,
+		builder:id
+	]
+	box -> builder:boxed
+	builder -> :res
+}
+
+def Unpack(data Envelope) (res int) {
+	switch Switch<Number>
+	panic runtime.Panic
+	---
+	:data -> .boxed -> [
+		switch:data,
+		Number::Int -> switch:case[0] -> :res
+	]
+	switch:else -> panic
+}

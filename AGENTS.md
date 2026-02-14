@@ -166,6 +166,12 @@ Follow these instructions.
 - **Common patterns**: Reuse `pkg/e2e` helpers (`FindRepoRoot`, CLI build helper) inside benchmark harnesses to avoid duplicated repo-root/build logic.
 - **Common patterns**: For long-term comparable perf baselines, prefer runtime e2e benchmarks over runtime-internal microbenchmarks that may track unstable APIs.
 - **Gotchas**: `thelper` expects parameters typed as `testing.TB` to be named `tb`.
+
+### Session Notes (2026-02-14, runtime e2e suite expansion)
+
+- **Common patterns**: Model runtime perf baselines as sub-benchmarks over multiple precompiled Neva programs (int/bool/string/float/list/dict/struct/union/combo) built once per case.
+- **Gotchas**: In Neva, constant senders in handlers must be attached to a triggering chain; standalone `const -> port` lines inside helper defs can fail analyzer checks.
+- **Architecture insights**: A single Go benchmark harness can compile each Neva package in an isolated temp module and execute only the produced `output` binary to keep focus on runtime execution latency.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
