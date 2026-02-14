@@ -1,3 +1,6 @@
+// Semantic tokens provide semantic highlighting categories beyond lexical tokenization.
+// We emit declaration/reference tokens for Neva entities plus node/port address segments
+// so editors can color symbols consistently across the current document.
 package server
 
 import (
@@ -54,22 +57,22 @@ func (s *Server) TextDocumentSemanticTokensFull(
 		return &protocol.SemanticTokens{Data: []uint32{}}, nil
 	}
 
-	ctx, err := s.findFile(build, params.TextDocument.URI)
+	fileCtx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
 
-	tokens := s.collectSemanticTokens(build, ctx)
+	tokens := s.collectSemanticTokens(build, fileCtx)
 	encodedTokenData := encodeSemanticTokens(tokens)
 	return &protocol.SemanticTokens{Data: encodedTokenData}, nil
 }
 
 // collectSemanticTokens gathers declaration, reference, and port-address tokens from a file.
-func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []semanticToken {
+func (s *Server) collectSemanticTokens(build *src.Build, fileCtx *fileContext) []semanticToken {
 	typeIndex := tokenTypeIndex()
-	tokens := make([]semanticToken, 0, len(ctx.file.Entities))
+	tokens := make([]semanticToken, 0, len(fileCtx.file.Entities))
 
-	for name, entity := range ctx.file.Entities {
+	for name, entity := range fileCtx.file.Entities {
 		meta := entity.Meta()
 		if meta == nil {
 			continue
@@ -87,9 +90,9 @@ func (s *Server) collectSemanticTokens(build *src.Build, ctx *fileContext) []sem
 		}
 	}
 
-	refs := collectRefsInFile(ctx.file)
+	refs := collectRefsInFile(fileCtx.file)
 	for _, ref := range refs {
-		resolved, ok := s.resolveEntityRef(build, ctx, ref.ref)
+		resolved, ok := s.resolveEntityRef(build, fileCtx, ref.ref)
 		if !ok {
 			continue
 		}

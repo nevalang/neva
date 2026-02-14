@@ -35,6 +35,7 @@ type Server struct {
 }
 
 // getBuild returns the latest indexed build snapshot when available.
+// Read locking is required because indexing updates s.index concurrently with LSP request handling.
 func (s *Server) getBuild() (*src.Build, bool) {
 	s.indexMutex.Lock()
 	defer s.indexMutex.Unlock()
@@ -45,6 +46,7 @@ func (s *Server) getBuild() (*src.Build, bool) {
 }
 
 // setBuild replaces the indexed build snapshot.
+// Writers share the same lock with getBuild to avoid data races on the build pointer.
 func (s *Server) setBuild(build src.Build) {
 	s.indexMutex.Lock()
 	s.index = &build

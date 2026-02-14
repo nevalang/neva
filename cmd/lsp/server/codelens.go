@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
@@ -27,7 +28,7 @@ const (
 	codeLensKindImplementations codeLensKind = "implementations"
 )
 
-// TextDocumentCodeLens emits per-entity code lenses for references and implementations.
+// TextDocumentCodeLens emits per-entity code lenses for references and, for interfaces, implementations.
 func (s *Server) TextDocumentCodeLens(
 	glspCtx *glsp.Context,
 	params *protocol.CodeLensParams,
@@ -60,7 +61,7 @@ func (s *Server) TextDocumentCodeLens(
 			},
 		})
 
-		if entity.Kind == src.ComponentEntity || entity.Kind == src.InterfaceEntity {
+		if entity.Kind == src.InterfaceEntity {
 			lenses = append(lenses, protocol.CodeLens{
 				Range: nameRange,
 				Data: codeLensData{
@@ -105,14 +106,15 @@ func (s *Server) CodeLensResolve(
 
 	switch parsedCodeLensData.Kind {
 	case codeLensKindImplementations:
-		locations := s.appendDeclarationLocation(nil, target)
+		locations := s.implementationLocationsForEntity(build, target)
 		title := fmt.Sprintf("%d implementations", len(locations))
 		lens.Command = buildShowReferencesCommand(parsedCodeLensData.URI, lens.Range.Start, locations, title)
 	case codeLensKindReferences:
-		locations := s.referencesForEntity(build, target)
+		locations := s.referenceLocationsForEntity(build, target)
 		title := fmt.Sprintf("%d references", len(locations))
 		lens.Command = buildShowReferencesCommand(parsedCodeLensData.URI, lens.Range.Start, locations, title)
 	default:
+		s.logger.Info("skipped code lens resolve for unknown kind", "kind", parsedCodeLensData.Kind, "name", parsedCodeLensData.Name)
 		return lens, nil
 	}
 
@@ -132,12 +134,138 @@ func parseCodeLensData(raw any) (codeLensData, bool) {
 	if parsedCodeLensData.URI == "" || parsedCodeLensData.Name == "" {
 		return parsedCodeLensData, false
 	}
-	switch parsedCodeLensData.Kind {
-	case codeLensKindReferences, codeLensKindImplementations:
-		return parsedCodeLensData, true
-	default:
-		return parsedCodeLensData, false
+	return parsedCodeLensData, isKnownCodeLensKind(parsedCodeLensData.Kind)
+}
+
+func isKnownCodeLensKind(kind codeLensKind) bool {
+	return kind == codeLensKindReferences || kind == codeLensKindImplementations
+}
+
+// referenceLocationsForEntity includes explicit references and interface/component relation references.
+func (s *Server) referenceLocationsForEntity(build *src.Build, target *resolvedEntity) []protocol.Location {
+	locations := s.referencesForEntity(build, target)
+	seen := make(map[protocol.Location]struct{}, len(locations))
+	for _, location := range locations {
+		seen[location] = struct{}{}
 	}
+	appendUnique := func(extra []protocol.Location) {
+		for _, location := range extra {
+			if _, ok := seen[location]; ok {
+				continue
+			}
+			seen[location] = struct{}{}
+			locations = append(locations, location)
+		}
+	}
+
+	switch target.entity.Kind {
+	case src.ComponentEntity:
+		for _, implementedInterface := range s.implementedInterfacesForComponent(build, target) {
+			appendUnique(s.referencesForEntity(build, implementedInterface))
+		}
+	case src.InterfaceEntity:
+		appendUnique(s.implementationLocationsForEntity(build, target))
+	case src.ConstEntity, src.TypeEntity:
+		// No extra relationship references for const/type entities.
+	}
+	return locations
+}
+
+// implementationLocationsForEntity returns implementation-related locations for interfaces.
+func (s *Server) implementationLocationsForEntity(build *src.Build, target *resolvedEntity) []protocol.Location {
+	if target.entity.Kind != src.InterfaceEntity {
+		return []protocol.Location{}
+	}
+	return s.implementationLocationsForInterface(build, target)
+}
+
+// implementationLocationsForInterface finds all components that structurally implement the interface.
+func (s *Server) implementationLocationsForInterface(build *src.Build, ifaceTarget *resolvedEntity) []protocol.Location {
+	interfaceDef := ifaceTarget.entity.Interface
+	locations := []protocol.Location{}
+	seen := map[protocol.Location]struct{}{}
+	s.forEachWorkspaceFile(build, func(fileCtx fileContext) bool {
+		for componentName, entity := range fileCtx.file.Entities {
+			if entity.Kind != src.ComponentEntity {
+				continue
+			}
+			for _, component := range entity.Component {
+				if !componentImplementsInterface(component.IO, interfaceDef.IO) {
+					continue
+				}
+				componentMeta := entity.Meta()
+				if componentMeta == nil {
+					continue
+				}
+				location := protocol.Location{
+					URI:   pathToURI(fileCtx.filePath),
+					Range: rangeForName(*componentMeta, componentName, 0),
+				}
+				if _, ok := seen[location]; ok {
+					continue
+				}
+				seen[location] = struct{}{}
+				locations = append(locations, location)
+			}
+		}
+		return true
+	})
+	return locations
+}
+
+// implementedInterfacesForComponent returns interfaces that are structurally implemented by a component.
+func (s *Server) implementedInterfacesForComponent(build *src.Build, componentTarget *resolvedEntity) []*resolvedEntity {
+	if componentTarget.entity.Kind != src.ComponentEntity || len(componentTarget.entity.Component) == 0 {
+		return nil
+	}
+	componentIO := componentTarget.entity.Component[0].IO
+	implementedInterfaces := []*resolvedEntity{}
+	s.forEachWorkspaceFile(build, func(fileCtx fileContext) bool {
+		for interfaceName, entity := range fileCtx.file.Entities {
+			if entity.Kind != src.InterfaceEntity {
+				continue
+			}
+			if !componentImplementsInterface(componentIO, entity.Interface.IO) {
+				continue
+			}
+			implementedInterfaces = append(implementedInterfaces, &resolvedEntity{
+				moduleRef:   fileCtx.moduleRef,
+				packageName: fileCtx.packageName,
+				name:        interfaceName,
+				filePath:    fileCtx.filePath,
+				entity:      entity,
+			})
+		}
+		return true
+	})
+	return implementedInterfaces
+}
+
+// componentImplementsInterface performs a structural port-level check for MVP interface implementation.
+func componentImplementsInterface(componentIO src.IO, interfaceIO src.IO) bool {
+	return ioContainsPorts(componentIO.In, interfaceIO.In) && ioContainsPorts(componentIO.Out, interfaceIO.Out)
+}
+
+func ioContainsPorts(componentPorts map[string]src.Port, interfacePorts map[string]src.Port) bool {
+	interfacePortNames := make([]string, 0, len(interfacePorts))
+	for name := range interfacePorts {
+		interfacePortNames = append(interfacePortNames, name)
+	}
+	slices.Sort(interfacePortNames)
+	for _, name := range interfacePortNames {
+		interfacePort := interfacePorts[name]
+		componentPort, ok := componentPorts[name]
+		if !ok {
+			return false
+		}
+		if componentPort.IsArray != interfacePort.IsArray {
+			return false
+		}
+		if componentPort.TypeExpr.String() != interfacePort.TypeExpr.String() {
+			return false
+		}
+	}
+	return true
 }
 
 // buildShowReferencesCommand creates the editor command expected by VS Code's references UI.
