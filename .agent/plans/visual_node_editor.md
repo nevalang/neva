@@ -14,27 +14,29 @@ Design and deliver a visual node editor model for Neva that:
 - Compiler flow: builder -> parser -> analyzer -> desugarer -> irgen -> backend
 - LSP server: `cmd/lsp/` with indexing over analyzed AST
 - LSP now includes core language features (definition/references/implementation/rename/hover/document symbols/semantic tokens/codelens) in `cmd/lsp/server`
-- Existing custom visual-related route/types still present: `resolve_file` and `GetFileView*` structs in `cmd/lsp/server` (and `GetFileView` is still not wired)
+- Existing custom visual-related route/types still present: `resolve_file` and `GetFileView*` structs in `cmd/lsp/server` (currently considered legacy/incomplete for this plan)
 - Runtime interception currently exposes `Sent` and `Received` events
 - Existing IR Mermaid backend exists at `internal/compiler/backend/ir/mermaid/` (useful reference for file/output shape, but not source-level semantics)
 
 Note: AST/core were extracted from `internal/compiler/*` to `pkg/*`, which makes source-model types importable by external tooling modules.
 
-Implication: visual representation should be projected from analyzed AST, while runtime overlays should map to `Sent/Received` events.
+Implication: base visual representation should be projected from raw/source AST, while semantic/runtime enrichments are layered on top when available.
 
 ## Design Principles
 
 - Compiler and runtime remain independent from UI concerns.
+- Raw AST is the base truth for visualization in v1.
 - Keep projection layer minimal: normalize only what renderers need, do not clone AST.
-- One canonical normalized graph payload shared by Mermaid and future interactive viewer.
+- One canonical normalized graph payload shared by all renderers (Mermaid preview, IDE visual view, standalone app) so graph semantics are defined once.
 - Component is the primary canvas unit to keep graphs understandable.
 - Source anchors are first-class for graph <-> code navigation.
 - Desugared synthetic nodes remain implementation detail, not primary UX.
+- Reuse existing LSP language features where possible (definition/references/rename/hover/symbols/semantic tokens) instead of reimplementing them in visual-specific APIs.
 
 ## Terminology
 
-- **Normalized graph payload (V1)**: renderer-facing schema derived from analyzed AST; intentionally thin.
-- **Projection layer**: backend module that converts analyzed AST into normalized graph payload with stable IDs and explicit connection semantics.
+- **Normalized graph payload (V1)**: renderer-facing schema derived primarily from raw/source AST; intentionally thin.
+- **Projection layer**: backend module that converts raw/source AST into normalized graph payload with stable IDs and explicit connection semantics.
 - **GraphDocument**: top-level payload for requested scope (program/package/file/component) with metadata and graphs.
 - **ComponentGraph**: graph for one component (self ports, nodes, edges, anchors).
 - **GraphNode**: component node instance with resolved interface/type metadata needed for rendering.
@@ -91,36 +93,41 @@ This keeps large modules usable while preserving drill-down.
 
 ## Phase 1: Projection Layer + Payload V1
 
-- Introduce minimal projection layer from analyzed AST -> `GraphDocument`
+- Introduce minimal projection layer from raw/source AST -> `GraphDocument`
 - Define stable IDs for nodes/ports/edges
 - Ensure Mermaid backend consumes payload, not raw AST traversal directly
 - Add golden tests for projection invariants
+- Add optional (non-blocking) semantic enrichment path that can attach analyzer-derived metadata when available
 
-## Phase 2: Stabilize Current LSP Bridge
+## Phase 2: Visual LSP API V1 (No Legacy Migration)
 
-- Implement and validate `GetFileView` for current `resolve_file`
-- Return enough analyzed AST context or projected payload references for readonly consumers
-- Add tests for response shape and failure behavior
+- Introduce explicit visual methods:
+  - `neva/getGraphDocument`
+  - `neva/getComponentGraph` (optional optimization endpoint, can be deferred)
+- Do not depend on `resolve_file` compatibility for rollout
+- Return raw-AST-based graph payload plus optional enrichment sections
+- Add tests for request/response shape and failure behavior
 - Reuse existing LSP helpers introduced for core features (file resolution, location/range conversion, indexed build access) instead of duplicating logic
 
-## Phase 3: Versioned Visual LSP Endpoints
+## Phase 3: Versioning, Capabilities, and Optional Enrichments
 
-- Add explicit visual methods, for example:
-  - `neva/getGraphDocument`: returns `version`, `capabilities`, document metadata, and projected graphs.
-  - `neva/getComponentGraph`: returns one `ComponentGraph` by component identity.
-  - `neva/getPackageOutline`: returns package entities and navigation metadata.
-- Use explicit schema versioning in payloads (`version: 1`) and additive evolution rules.
-- Keep transition compatibility with `resolve_file` until new endpoints are adopted.
-- Add compatibility tests for both old (`resolve_file`) and new (`neva/get*`) flows.
-- Prefer implementing these endpoints through the same request-routing conventions now used by merged LSP feature handlers.
+- Use explicit schema versioning in payloads (`version: 1`) and additive evolution rules
+- Add `capabilities` flags to advertise optional enrichments, e.g.:
+  - `semanticOverlay`
+  - `desugaredOverlay` (deferred / disabled in early iterations)
+  - `textGraphSync`
+- Keep base payload usable without any overlay
+- Prefer implementing visual methods through the same request-routing conventions used by merged LSP feature handlers
 
 ## Phase 4: Interactive Readonly Viewer MVP
 
-- Build interactive readonly viewer (React + graph lib is one viable option, but not mandatory in this plan)
-- Render component canvas with self-ports, selectors, constants, fan junctions
-- Add deterministic autolayout
-- Implement graph -> source and source -> graph navigation
-- No write-back/editing in this milestone
+- Add VSCode command-mode preview first (similar to Markdown preview), e.g. `Neva: Preview Mode`
+- Preview renders current file in readonly visual form:
+  - file-level view with component boxes
+  - each component box contains its graph view
+  - option to open a component in focused/fullscreen view
+- No graph editing/write-back in this milestone
+- Keep implementation compatible with later evolution to richer visual modes
 
 Note on Mermaid:
 
@@ -136,7 +143,8 @@ Note on Mermaid:
 
 ## Phase 6: Standalone Parity
 
-- Reuse the same projector and contract in standalone host (same graph semantics and payload format).
+- Standalone app depends on Neva LSP as backend transport (not VSCode-specific).
+- Reuse the same projector and contract through LSP in standalone host (same graph semantics and payload format).
 - Keep host-specific state outside canonical payload (window layout, local preferences, shortcuts, session state).
 - Parity means both hosts render the same source program consistently from the same contract.
 
@@ -144,7 +152,30 @@ Note on Mermaid:
 
 - Core LSP feature groundwork is already merged into `main`.
 - Visual-editor work should proceed immediately using this new baseline.
-- Remaining dependency is visual-specific API wiring (`resolve_file` completion and/or new `neva/get*` methods), not generic LSP capabilities.
+- Remaining dependency is visual-specific API wiring (`neva/get*` methods), not generic LSP capabilities.
+
+## IDE Integration Modes (Open UX Decision)
+
+The plan supports both IDE and standalone. Exact IDE UX architecture is intentionally left open for next iteration.
+Current committed MVP direction: command-based preview mode.
+
+Potential IDE patterns worth evaluating next:
+
+1. Custom editor (notebook-like experience)
+2. Side panel / webview synchronized with text editor
+3. Inline component visualization affordances in text view (peek/minimap/toggle)
+
+Ideas to keep for follow-up:
+
+- side panel + selection sync
+- button/code lens quick preview
+- optional full visual mode
+
+Open questions to resolve before post-MVP UX work:
+
+- Should preview become a custom editor mode, remain a command preview, or support both?
+- How should text/visual synchronization lifecycle work (cursor sync, reveal behavior, focus ownership)?
+- Which transition model is best for component focus/fullscreen (inline expand, secondary editor, dedicated panel)?
 
 ## Risks and Mitigations
 

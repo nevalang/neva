@@ -178,6 +178,13 @@ Follow these instructions.
 - **Architecture insights**: `ast` and `core` are now externalized under `pkg/` (`pkg/ast`, `pkg/core`) so other Go modules (like a split LSP repo) can import them without `internal/` restrictions.
 - **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
 - **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
+
+### Session Notes (2026-02-14, visual plan decisions)
+
+- **Architecture insights**: Visual projection should be raw-AST-first, with analyzer/desugarer data as optional overlays rather than the base graph source.
+- **Common patterns**: Prefer explicit `neva/get*` visual methods over reviving incomplete `resolve_file`/`GetFileView` bridge paths when no compatibility obligations exist.
+- **UI/UX patterns**: MVP IDE integration can start as a command-based readonly preview (Markdown-preview style) with component focus/fullscreen, while custom-editor/side-panel/inline variants stay as explicit follow-up decisions.
+- **Architecture insights**: Standalone visual app should depend on Neva LSP transport, not editor-specific APIs, so IDE and standalone consume the same graph contract.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
