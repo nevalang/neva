@@ -1,7 +1,7 @@
 package server
 
 import (
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 type GetFileViewRequest struct {

@@ -3,7 +3,7 @@ package parser
 import (
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 type CustomErrorListener struct {

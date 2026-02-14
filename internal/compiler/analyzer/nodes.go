@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	"github.com/nevalang/neva/internal/compiler/typesystem"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 type foundInterface struct {
@@ -1030,7 +1030,6 @@ type receiverSenderPair struct {
 //
 //	:start -> U::A -> switch:case[0]
 //	  => pairs: (switch:case[0] <- U::A)
-//
 func (a Analyzer) collectReceiverSenderPairs(
 	receivers []src.ConnectionReceiver,
 	senders []src.ConnectionSender,

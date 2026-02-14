@@ -13,9 +13,9 @@ import (
 
 	"github.com/nevalang/neva/internal"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	"github.com/nevalang/neva/pkg"
+	"github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/golang"
 	pkgos "github.com/nevalang/neva/pkg/os"
 )

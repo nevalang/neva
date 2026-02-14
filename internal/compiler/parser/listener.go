@@ -2,8 +2,8 @@ package parser
 
 import (
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 //nolint:govet // fieldalignment: listener fields grouped.

@@ -4,8 +4,8 @@ package typesystem_test
 import (
 	"errors"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 var ErrDefaultScope = errors.New("default scope")

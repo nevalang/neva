@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	sourcecode "github.com/nevalang/neva/internal/compiler/ast"
-	core "github.com/nevalang/neva/internal/compiler/ast/core"
+	sourcecode "github.com/nevalang/neva/pkg/ast"
+	core "github.com/nevalang/neva/pkg/core"
 )
 
 // MockScope is a mock of Scope interface.

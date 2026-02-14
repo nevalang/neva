@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
-	src "github.com/nevalang/neva/internal/compiler/ast"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 func getIRMsgBySrcRef(

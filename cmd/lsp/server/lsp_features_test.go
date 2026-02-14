@@ -4,9 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 

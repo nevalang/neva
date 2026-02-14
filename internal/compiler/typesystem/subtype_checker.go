@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 var (
@@ -33,6 +33,7 @@ type TerminatorParams struct {
 
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
+//
 //nolint:gocyclo // Subtype checking has many structural cases.
 func (s SubtypeChecker) Check(
 	expr,

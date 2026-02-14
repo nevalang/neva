@@ -171,9 +171,13 @@ Follow these instructions.
 - **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
 - **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
 - **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
-- **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
-- **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
 - **Architecture insights**: After PR #1020 merge, core LSP language features are available in `cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
+
+### Session Notes (2026-02-14, AST/Core extraction prep)
+
+- **Architecture insights**: `ast` and `core` are now externalized under `pkg/` (`pkg/ast`, `pkg/core`) so other Go modules (like a split LSP repo) can import them without `internal/` restrictions.
+- **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
+- **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

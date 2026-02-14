@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
