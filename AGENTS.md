@@ -148,7 +148,31 @@ Follow these instructions.
 
 - **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
 - **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
+### Session Notes (2026-02-13)
 
+- **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
+- **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
+- **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
+- **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
+- **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
+- **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
+- **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
+- **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
+
+### Session Notes (2026-02-14)
+
+- **Common patterns**: For LSP package-entity traversal, prefer `src.Package.Entities()` (range-func iterator) over ad-hoc flattening maps.
+- **Architecture insights**: Keep shared index snapshot lock access (`getBuild`/`setBuild`) on `Server` to avoid mutex handling drift across feature files.
+- **Common patterns**: CodeLens `Data` payload should validate explicit kind enums (`references`/`implementations`) instead of relying on default switch fallbacks.
+- **Gotchas**: `go test ./...` can hang or run very long in this repo due broad e2e/examples coverage; prioritize targeted package tests after confirming lint for quick iteration.
+- **Language semantics**: For MVP LSP, interface implementation lookup can be approximated structurally from IO port names/array flags/type strings, which is enough for actionable navigation without analyzer-level complexity.
+- **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
+- **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
+- **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
+- **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
+- **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
