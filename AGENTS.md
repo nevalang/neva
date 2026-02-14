@@ -145,6 +145,8 @@ Follow these instructions.
 - **Gotchas**: `go test ./...` can hang or run very long in this repo due broad e2e/examples coverage; prioritize targeted package tests after confirming lint for quick iteration.
 - **Language semantics**: For MVP LSP, interface implementation lookup can be approximated structurally from IO port names/array flags/type strings, which is enough for actionable navigation without analyzer-level complexity.
 - **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
+- **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
+- **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
