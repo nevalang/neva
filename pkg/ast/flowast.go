@@ -5,8 +5,8 @@ package ast
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 // Build represents all the information in source code, that must be compiled.

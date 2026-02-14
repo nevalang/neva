@@ -3,7 +3,7 @@ package analyzer
 import (
 	"fmt"
 
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 type netNodesUsage map[string]netNodeUsage

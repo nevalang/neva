@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 func TestValidator_Validate(t *testing.T) {

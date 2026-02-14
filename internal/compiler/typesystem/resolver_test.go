@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 var errTest = errors.New("oops")

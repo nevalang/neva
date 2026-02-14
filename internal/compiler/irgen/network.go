@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 // processNetwork inserts connections to result and returns metadata about the network.

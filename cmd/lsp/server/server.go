@@ -12,7 +12,7 @@ import (
 
 	"github.com/nevalang/neva/cmd/lsp/indexer"
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 //nolint:govet // fieldalignment: preserve layout for readability.
@@ -34,6 +34,25 @@ type Server struct {
 	activeFileMutex *sync.Mutex
 }
 
+// getBuild returns the latest indexed build snapshot when available.
+// Read locking is required because indexing updates s.index concurrently with LSP request handling.
+func (s *Server) getBuild() (*src.Build, bool) {
+	s.indexMutex.Lock()
+	defer s.indexMutex.Unlock()
+	if s.index == nil {
+		return nil, false
+	}
+	return s.index, true
+}
+
+// setBuild replaces the indexed build snapshot.
+// Writers share the same lock with getBuild to avoid data races on the build pointer.
+func (s *Server) setBuild(build src.Build) {
+	s.indexMutex.Lock()
+	s.index = &build
+	s.indexMutex.Unlock()
+}
+
 // indexAndNotifyProblems does full scan of the workspace
 // and sends diagnostics if there are any problems
 func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
@@ -45,9 +64,7 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 		return nil
 	}
 
-	s.indexMutex.Lock()
-	s.index = &build
-	s.indexMutex.Unlock()
+	s.setBuild(build)
 
 	if compilerErr == nil {
 		// clear problems
