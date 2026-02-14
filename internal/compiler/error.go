@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 //nolint:govet // fieldalignment: keep semantic grouping.

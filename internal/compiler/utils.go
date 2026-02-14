@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	neva "github.com/nevalang/neva/internal/compiler/utils/generated"
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 //go:generate neva build --target=go --target-go-mode=pkg --target-go-runtime-path=../runtime --output=utils/generated utils

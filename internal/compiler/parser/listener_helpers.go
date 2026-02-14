@@ -7,10 +7,10 @@ import (
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
 	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {

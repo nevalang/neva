@@ -9,7 +9,7 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 
-	ast "github.com/nevalang/neva/internal/compiler/ast"
+	ast "github.com/nevalang/neva/pkg/ast"
 )
 
 func (p Builder) getNearestManifest(wd string) (ast.ModuleManifest, string, error) {

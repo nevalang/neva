@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
 	"github.com/nevalang/neva/internal/compiler/ir"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
