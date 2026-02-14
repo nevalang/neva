@@ -153,6 +153,13 @@ Follow these instructions.
 - **Architecture insights**: `ast` and `core` are now externalized under `pkg/` (`pkg/ast`, `pkg/core`) so other Go modules (like a split LSP repo) can import them without `internal/` restrictions.
 - **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
 - **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
+
+### Session Notes (2026-02-14, runtime benchmarks baseline)
+
+- **Architecture insights**: Runtime e2e benchmarks should pre-build CLI + benchmark program once, then measure only execution of the compiled `output` binary.
+- **Common patterns**: Keep runtime benchmark fixtures self-contained by copying `benchmarks/neva.yml` and the benchmark `.neva` file into a temp module instead of relying on `chdir`.
+- **Common patterns**: Track runtime regressions with both e2e execution benchmarks and focused `internal/runtime` microbenchmarks (message operations and single-port round-trip).
+- **Gotchas**: Full `go test ./...` can run very long due e2e coverage; benchmark-only changes should still validate touched packages + benchmark smoke runs.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
