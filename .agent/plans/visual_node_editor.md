@@ -10,13 +10,15 @@ Design and deliver a visual node editor model for Neva that:
 
 ## Current Architecture Baseline
 
-- Source model: `internal/compiler/ast/flowast.go`
+- Source model: `pkg/ast/flowast.go` (with shared location/types in `pkg/core`)
 - Compiler flow: builder -> parser -> analyzer -> desugarer -> irgen -> backend
 - LSP server: `cmd/lsp/` with indexing over analyzed AST
 - LSP now includes core language features (definition/references/implementation/rename/hover/document symbols/semantic tokens/codelens) in `cmd/lsp/server`
 - Existing custom visual-related route/types still present: `resolve_file` and `GetFileView*` structs in `cmd/lsp/server` (and `GetFileView` is still not wired)
 - Runtime interception currently exposes `Sent` and `Received` events
 - Existing IR Mermaid backend exists at `internal/compiler/backend/ir/mermaid/` (useful reference for file/output shape, but not source-level semantics)
+
+Note: AST/core were extracted from `internal/compiler/*` to `pkg/*`, which makes source-model types importable by external tooling modules.
 
 Implication: visual representation should be projected from analyzed AST, while runtime overlays should map to `Sent/Received` events.
 
