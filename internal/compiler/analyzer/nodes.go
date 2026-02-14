@@ -799,6 +799,32 @@ func emptyConstraints() nodeUsageConstraints {
 	}
 }
 
+// appendUniqueType appends t to dst only if a type with the same string form is absent.
+func appendUniqueType(dst *[]typesystem.Expr, t typesystem.Expr) {
+	s := t.String()
+	for _, existing := range *dst {
+		if existing.String() == s {
+			return
+		}
+	}
+	*dst = append(*dst, t)
+}
+
+// keepSingleUnambiguousType returns a single type only when all candidates agree.
+// Empty or mixed candidate sets mean "no usable constraint" for overload filtering.
+func keepSingleUnambiguousType(candidates []typesystem.Expr) []typesystem.Expr {
+	if len(candidates) == 0 {
+		return nil
+	}
+	first := candidates[0].String()
+	for i := 1; i < len(candidates); i++ {
+		if candidates[i].String() != first {
+			return nil
+		}
+	}
+	return []typesystem.Expr{candidates[0]}
+}
+
 // deriveNodeConstraintsFromNetwork inspects the network and extracts type constraints for the given node.
 // It only uses available information (parent iface, literals, neighbor node interfaces). it does not depend on nodesIfaces.
 // It is needed only to select correct version of the overloaded component.
@@ -822,35 +848,8 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	//   x:out -> y:in  // y should not force both int and float as constraints
 	// If a neighbor contributes multiple distinct candidate types, we drop it
 	// from overload constraints and let other edges disambiguate.
-	filterAmbiguous := func(types []typesystem.Expr) []typesystem.Expr {
-		if len(types) == 0 {
-			// No inferred neighbor type means "no constraint", not a mismatch.
-			return nil
-		}
-		seen := make(map[string]typesystem.Expr, len(types))
-		for _, t := range types {
-			seen[t.String()] = t
-		}
-		if len(seen) != 1 {
-			return nil
-		}
-		out := make([]typesystem.Expr, 0, 1)
-		for _, t := range seen {
-			out = append(out, t)
-		}
-		return out
-	}
-
-	// helper to append unique types (by String) to a slice
-	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
-		s := t.String()
-		for _, e := range *dst {
-			if e.String() == s {
-				return
-			}
-		}
-		*dst = append(*dst, t)
-	}
+	// Empty candidate sets are also treated as "no constraint".
+	filterAmbiguous := keepSingleUnambiguousType
 
 	// resolve parent param frame once
 	_, parentFrame, err := a.resolver.ResolveParams(
@@ -876,7 +875,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 					if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
 						if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
 							list := c.outgoing[port]
-							appendUnique(&list, resolved)
+							appendUniqueType(&list, resolved)
 							c.outgoing[port] = list
 						}
 					}
@@ -890,7 +889,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 				// get possible inport types across overloads
 				for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 					list := c.outgoing[port]
-					appendUnique(&list, t)
+					appendUniqueType(&list, t)
 					c.outgoing[port] = list
 				}
 			}
@@ -906,7 +905,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 							if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
 								if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
 									list := c.outgoing[port]
-									appendUnique(&list, resolved)
+									appendUniqueType(&list, resolved)
 									c.outgoing[port] = list
 								}
 							}
@@ -920,7 +919,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 						// get possible inport types across overloads
 						for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 							list := c.outgoing[port]
-							appendUnique(&list, t)
+							appendUniqueType(&list, t)
 							c.outgoing[port] = list
 						}
 					}
@@ -953,12 +952,13 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 								resolvedParentIface,
 								nodes,
 								outerSender,
+								// Outer senders are chain heads here, so there is no previous link context.
 								nil,
 								net,
 							)
 							for _, t := range types {
 								list := c.incoming[inPort]
-								appendUnique(&list, t)
+								appendUniqueType(&list, t)
 								c.incoming[inPort] = list
 							}
 						}
@@ -971,7 +971,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 								if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
 									if resolved, err := a.resolver.ResolveExprWithFrame(p.TypeExpr, parentFrame, scope); err == nil {
 										list := c.outgoing[port]
-										appendUnique(&list, resolved)
+										appendUniqueType(&list, resolved)
 										c.outgoing[port] = list
 									}
 								}
@@ -983,7 +983,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 							}
 							for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
 								list := c.outgoing[port]
-								appendUnique(&list, t)
+								appendUniqueType(&list, t)
 								c.outgoing[port] = list
 							}
 						}
@@ -1016,7 +1016,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 				)
 				for _, t := range types {
 					list := c.incoming[port]
-					appendUnique(&list, t)
+					appendUniqueType(&list, t)
 					c.incoming[port] = list
 				}
 			}
@@ -1057,9 +1057,37 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 }
 
 type receiverSenderPair struct {
-	portAddr      src.PortAddr
-	senders       []src.ConnectionSender
+	portAddr src.PortAddr
+	senders  []src.ConnectionSender
+	// prevChainLink preserves the sender list from the parent link in a chain.
+	// Selector senders in child links (".field") use it to infer their base type.
 	prevChainLink []src.ConnectionSender
+}
+
+// collectReceiverSenderPairsRec recursively appends receiver/sender pairs.
+func collectReceiverSenderPairsRec(
+	pairs *[]receiverSenderPair,
+	recs []src.ConnectionReceiver,
+	snd []src.ConnectionSender,
+	prevChainLink []src.ConnectionSender,
+) {
+	for _, r := range recs {
+		if r.PortAddr != nil {
+			*pairs = append(*pairs, receiverSenderPair{
+				portAddr:      *r.PortAddr,
+				senders:       snd,
+				prevChainLink: prevChainLink,
+			})
+		}
+		if r.ChainedConnection != nil {
+			collectReceiverSenderPairsRec(
+				pairs,
+				r.ChainedConnection.Receivers,
+				r.ChainedConnection.Senders,
+				snd,
+			)
+		}
+	}
 }
 
 // collectReceiverSenderPairs maps each receiver port to the senders that feed it.
@@ -1077,38 +1105,15 @@ func (a Analyzer) collectReceiverSenderPairs(
 	senders []src.ConnectionSender,
 ) []receiverSenderPair {
 	var pairs []receiverSenderPair
-	// Inline recursion keeps the accumulator local and avoids extra allocations/signatures.
-	var visit func(
-		recs []src.ConnectionReceiver,
-		snd []src.ConnectionSender,
-		prevChainLink []src.ConnectionSender,
-	)
-	visit = func(
-		recs []src.ConnectionReceiver,
-		snd []src.ConnectionSender,
-		prevChainLink []src.ConnectionSender,
-	) {
-		for _, r := range recs {
-			if r.PortAddr != nil {
-				pairs = append(pairs, receiverSenderPair{
-					portAddr:      *r.PortAddr,
-					senders:       snd,
-					prevChainLink: prevChainLink,
-				})
-			}
-			if r.ChainedConnection != nil {
-				visit(r.ChainedConnection.Receivers, r.ChainedConnection.Senders, snd)
-			}
-		}
-	}
-	visit(receivers, senders, nil)
+	collectReceiverSenderPairsRec(&pairs, receivers, senders, nil)
 	return pairs
 }
 
 // getPossibleSenderTypes is needed to derive node constraints from the network.
 // It's part of the overloading implementation.
 // It returns a set of possible types produced by a given sender without requiring resolved node interfaces.
-//nolint:gocyclo // Sender type derivation must cover const/selector/port forms in one path.
+// This function is intentionally best-effort: unresolved pieces return no constraint
+// and full validation later reports user-facing diagnostics.
 func (a Analyzer) getPossibleSenderTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
@@ -1118,18 +1123,6 @@ func (a Analyzer) getPossibleSenderTypes(
 	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
 ) []typesystem.Expr {
-	// FIXME: looks like we ignore errors here (and in some lower-level functions we call)
-
-	appendUnique := func(dst *[]typesystem.Expr, t typesystem.Expr) {
-		s := t.String()
-		for _, existing := range *dst {
-			if existing.String() == s {
-				return
-			}
-		}
-		*dst = append(*dst, t)
-	}
-
 	// const sender
 	if sender.Const != nil {
 		// for type constraint collection, we need to get the resolved type without validation
@@ -1148,6 +1141,9 @@ func (a Analyzer) getPossibleSenderTypes(
 
 	// struct selector sender in a chain (e.g. :state -> .rate -> mul:left)
 	if len(sender.StructSelector) > 0 {
+		// Standalone selector senders are invalid in Neva semantics.
+		// For overload filtering, treat it as "no constraint" and let regular
+		// sender validation report the concrete diagnostic.
 		if len(prevChainLink) == 0 {
 			return nil
 		}
@@ -1168,23 +1164,11 @@ func (a Analyzer) getPossibleSenderTypes(
 				if err != nil {
 					continue
 				}
-				appendUnique(&selectorTypes, resolvedSelectorType)
+				appendUniqueType(&selectorTypes, resolvedSelectorType)
 			}
 		}
 
-		seen := make(map[string]typesystem.Expr, len(selectorTypes))
-		for _, t := range selectorTypes {
-			seen[t.String()] = t
-		}
-		if len(seen) != 1 {
-			return nil
-		}
-
-		out := make([]typesystem.Expr, 0, 1)
-		for _, t := range seen {
-			out = append(out, t)
-		}
-		return out
+		return keepSingleUnambiguousType(selectorTypes)
 	}
 
 	// port-addr
@@ -1201,7 +1185,9 @@ func (a Analyzer) getPossibleSenderTypes(
 		if isSwitchCasePort(*sender.PortAddr, nodes) {
 			typeExpr, err := a.getSwitchCaseOutportType(*sender.PortAddr, nodes, scope, net)
 			if err != nil {
-				panic(err)
+				// Do not panic during overload filtering; skip this constraint and
+				// allow the main validation path to produce a user-facing error.
+				return nil
 			}
 			return []typesystem.Expr{*typeExpr}
 		}
@@ -1233,18 +1219,7 @@ func (a Analyzer) getPossibleSenderTypes(
 		//   maybe_num SomeNode // SomeNode:out can be int OR float due to overloads
 		//   maybe_num -> add:left
 		// We only return a type here when every overload agrees on a single type.
-		seen := make(map[string]typesystem.Expr, len(types))
-		for _, t := range types {
-			seen[t.String()] = t
-		}
-		if len(seen) != 1 {
-			return nil
-		}
-		out := make([]typesystem.Expr, 0, 1)
-		for _, t := range seen {
-			out = append(out, t)
-		}
-		return out
+		return keepSingleUnambiguousType(types)
 	}
 
 	return nil
@@ -1252,6 +1227,8 @@ func (a Analyzer) getPossibleSenderTypes(
 
 // getPossibleNodePortTypes collects possible port types across all overloads of a node's component.
 // isInput determines whether we look at inports (true) or outports (false).
+// It can return an empty set when the entity/port cannot be resolved in this
+// phase or when no overload yields a resolvable type for the requested port.
 func (a Analyzer) getPossibleNodePortTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,

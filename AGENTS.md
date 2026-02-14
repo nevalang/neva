@@ -136,6 +136,13 @@ Follow these instructions.
 - **Common patterns**: For selector senders in overload-constraint collection (for example `:state -> .rate -> mul:left`), pass previous chain-link senders into sender-type derivation.
 - **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
 - **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
+
+### Session Notes (2026-02-14)
+
+- **Common patterns**: In overload-constraint collection, treat empty or ambiguous neighbor candidate type sets as "no constraint" and let other edges disambiguate overloads.
+- **Common patterns**: Reuse shared helpers for type dedupe (`appendUniqueType`) and unambiguous-single-type checks (`keepSingleUnambiguousType`) to avoid drift across analyzer paths.
+- **Architecture insights**: `getPossibleSenderTypes` is best-effort for overload filtering; errors in this path should avoid panics and defer user-facing diagnostics to regular validation.
+- **Gotchas**: Selector senders without `prevChainLink` context are invalid and must yield no inferred constraint during overload filtering.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
