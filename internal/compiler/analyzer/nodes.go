@@ -799,7 +799,9 @@ func emptyConstraints() nodeUsageConstraints {
 	}
 }
 
-// appendUniqueType appends t to dst only if a type with the same string form is absent.
+// appendUniqueType appends t to dst only if an equivalent type is absent.
+// We use string form here because analyzer already treats typesystem.Expr.String()
+// as canonical identity (see typesMatchExactly).
 func appendUniqueType(dst *[]typesystem.Expr, t typesystem.Expr) {
 	s := t.String()
 	for _, existing := range *dst {
@@ -810,19 +812,26 @@ func appendUniqueType(dst *[]typesystem.Expr, t typesystem.Expr) {
 	*dst = append(*dst, t)
 }
 
-// keepSingleUnambiguousType returns a single type only when all candidates agree.
-// Empty or mixed candidate sets mean "no usable constraint" for overload filtering.
-func keepSingleUnambiguousType(candidates []typesystem.Expr) []typesystem.Expr {
+// singleUnambiguousType returns (type, true) only when all candidates agree.
+// Empty/mixed candidate sets mean this edge cannot provide a stable overload
+// constraint yet (for example unresolved neighbor args or overloaded neighbors).
+func singleUnambiguousType(candidates []typesystem.Expr) (typesystem.Expr, bool) {
 	if len(candidates) == 0 {
-		return nil
+		return typesystem.Expr{}, false
 	}
-	first := candidates[0].String()
+	first := candidates[0]
 	for i := 1; i < len(candidates); i++ {
-		if candidates[i].String() != first {
-			return nil
+		if !aTypesMatchExactly(first, candidates[i]) {
+			return typesystem.Expr{}, false
 		}
 	}
-	return []typesystem.Expr{candidates[0]}
+	return first, true
+}
+
+// aTypesMatchExactly keeps type equivalence logic centralized for helpers that
+// are outside Analyzer methods.
+func aTypesMatchExactly(type1, type2 typesystem.Expr) bool {
+	return type1.String() == type2.String()
 }
 
 // deriveNodeConstraintsFromNetwork inspects the network and extracts type constraints for the given node.
@@ -848,9 +857,6 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 	//   x:out -> y:in  // y should not force both int and float as constraints
 	// If a neighbor contributes multiple distinct candidate types, we drop it
 	// from overload constraints and let other edges disambiguate.
-	// Empty candidate sets are also treated as "no constraint".
-	filterAmbiguous := keepSingleUnambiguousType
-
 	// resolve parent param frame once
 	_, parentFrame, err := a.resolver.ResolveParams(
 		resolvedParentIface.TypeParams.Params, scope,
@@ -886,8 +892,10 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 				if !ok {
 					continue
 				}
-				// get possible inport types across overloads
-				for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
+				// Keep only unambiguous neighbor inport type across overloads.
+				if t, ok := singleUnambiguousType(
+					a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port),
+				); ok {
 					list := c.outgoing[port]
 					appendUniqueType(&list, t)
 					c.outgoing[port] = list
@@ -916,8 +924,9 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 						if !ok {
 							continue
 						}
-						// get possible inport types across overloads
-						for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
+						if t, ok := singleUnambiguousType(
+							a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port),
+						); ok {
 							list := c.outgoing[port]
 							appendUniqueType(&list, t)
 							c.outgoing[port] = list
@@ -981,7 +990,9 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork(
 							if !ok {
 								continue
 							}
-							for _, t := range filterAmbiguous(a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port)) {
+							if t, ok := singleUnambiguousType(
+								a.getPossibleNodePortTypes(scope, parentFrame, recvNode, true, rpa.Port),
+							); ok {
 								list := c.outgoing[port]
 								appendUniqueType(&list, t)
 								c.outgoing[port] = list
@@ -1109,11 +1120,12 @@ func (a Analyzer) collectReceiverSenderPairs(
 	return pairs
 }
 
-// getPossibleSenderTypes is needed to derive node constraints from the network.
-// It's part of the overloading implementation.
-// It returns a set of possible types produced by a given sender without requiring resolved node interfaces.
-// This function is intentionally best-effort: unresolved pieces return no constraint
-// and full validation later reports user-facing diagnostics.
+// getPossibleSenderTypes is used only by overload-constraint collection.
+// It is deliberately non-failing: when sender type cannot be derived at this
+// stage we return no constraint and keep evaluating overload candidates.
+// Later regular sender/receiver validation emits concrete diagnostics.
+//
+//nolint:gocyclo // This centralizes sender forms (const/selector/port) for consistent constraint derivation.
 func (a Analyzer) getPossibleSenderTypes(
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
@@ -1168,7 +1180,10 @@ func (a Analyzer) getPossibleSenderTypes(
 			}
 		}
 
-		return keepSingleUnambiguousType(selectorTypes)
+		if t, ok := singleUnambiguousType(selectorTypes); ok {
+			return []typesystem.Expr{t}
+		}
+		return nil
 	}
 
 	// port-addr
@@ -1185,8 +1200,9 @@ func (a Analyzer) getPossibleSenderTypes(
 		if isSwitchCasePort(*sender.PortAddr, nodes) {
 			typeExpr, err := a.getSwitchCaseOutportType(*sender.PortAddr, nodes, scope, net)
 			if err != nil {
-				// Do not panic during overload filtering; skip this constraint and
-				// allow the main validation path to produce a user-facing error.
+				// We do not return an error from this helper because this path is
+				// used while filtering overload candidates; failing hard here would
+				// stop candidate exploration prematurely.
 				return nil
 			}
 			return []typesystem.Expr{*typeExpr}
@@ -1211,6 +1227,8 @@ func (a Analyzer) getPossibleSenderTypes(
 
 		types := a.getPossibleNodePortTypes(scope, parentFrame, other, false, portAddr.Port)
 		if len(types) == 0 {
+			// "No possible type" here means "not derivable in this phase", not
+			// "port is semantically impossible".
 			return nil
 		}
 		// Same rule as in deriveNodeConstraintsFromNetwork: ambiguous neighbor output
@@ -1218,8 +1236,12 @@ func (a Analyzer) getPossibleSenderTypes(
 		// Example:
 		//   maybe_num SomeNode // SomeNode:out can be int OR float due to overloads
 		//   maybe_num -> add:left
-		// We only return a type here when every overload agrees on a single type.
-		return keepSingleUnambiguousType(types)
+		// Language-level overloading still requires a concrete compatible type.
+		// This helper only contributes a constraint when neighbors already agree.
+		if t, ok := singleUnambiguousType(types); ok {
+			return []typesystem.Expr{t}
+		}
+		return nil
 	}
 
 	return nil

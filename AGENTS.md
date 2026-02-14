@@ -140,9 +140,11 @@ Follow these instructions.
 ### Session Notes (2026-02-14)
 
 - **Common patterns**: In overload-constraint collection, treat empty or ambiguous neighbor candidate type sets as "no constraint" and let other edges disambiguate overloads.
-- **Common patterns**: Reuse shared helpers for type dedupe (`appendUniqueType`) and unambiguous-single-type checks (`keepSingleUnambiguousType`) to avoid drift across analyzer paths.
+- **Common patterns**: Reuse shared helpers for type dedupe (`appendUniqueType`) and unambiguous-single-type checks (`singleUnambiguousType`) to avoid drift across analyzer paths.
 - **Architecture insights**: `getPossibleSenderTypes` is best-effort for overload filtering; errors in this path should avoid panics and defer user-facing diagnostics to regular validation.
 - **Gotchas**: Selector senders without `prevChainLink` context are invalid and must yield no inferred constraint during overload filtering.
+- **Common patterns**: Prefer explicit `(type, ok)` helper return (`singleUnambiguousType`) over slice/nil signaling when representing optional constraints.
+- **Common patterns**: Avoid local function aliases in analyzer hot paths when a direct helper call keeps intent clearer (`singleUnambiguousType(...)` directly at call sites).
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
