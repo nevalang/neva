@@ -11,7 +11,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tliron/commonlog v0.2.10
-	github.com/tliron/glsp v0.2.0
+	github.com/tliron/glsp v0.2.2
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -31,7 +31,7 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect

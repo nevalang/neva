@@ -1,8 +1,8 @@
 package desugarer
 
 import (
-	src "github.com/nevalang/neva/internal/compiler/ast"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 type unusedOutportsResult struct {

@@ -4,7 +4,7 @@ import (
 	"maps"
 	"slices"
 
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 //nolint:govet // fieldalignment: keep semantic grouping.
