@@ -136,6 +136,19 @@ Follow these instructions.
 - **UI/UX patterns**: Node editors commonly offer a palette with categorized nodes and wire-splice insertion; Neva should mirror this for discoverability and fast wiring.
 - **UI/UX patterns**: Canvas annotations/notes are first-class (n8n-style), useful for comments and documentation in the visual view.
 
+### Session Notes (2026-02-13)
+
+- **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
+- **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
+- **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
+
+### Session Notes (2026-02-14)
+
+- **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
+- **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
+
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
