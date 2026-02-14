@@ -1,3 +1,5 @@
+// Benchmarks int->bool transformation across a hot stream path.
+// This stresses arithmetic/comparison runtime funcs under load.
 import { streams }
 
 def Main(start any) (stop any) {
@@ -12,6 +14,7 @@ def Main(start any) (stop any) {
 	range -> map_bool -> wait -> :stop
 }
 
+// IsEven is the bool-mapping worker used by streams.Map.
 def IsEven(data int) (res bool) {
 	mod Mod
 	eq Eq<int>

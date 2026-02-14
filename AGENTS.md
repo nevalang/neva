@@ -172,6 +172,10 @@ Follow these instructions.
 - **Common patterns**: Model runtime perf baselines as sub-benchmarks over multiple precompiled Neva programs (int/bool/string/float/list/dict/struct/union/combo) built once per case.
 - **Gotchas**: In Neva, constant senders in handlers must be attached to a triggering chain; standalone `const -> port` lines inside helper defs can fail analyzer checks.
 - **Architecture insights**: A single Go benchmark harness can compile each Neva package in an isolated temp module and execute only the produced `output` binary to keep focus on runtime execution latency.
+
+### Session Notes (2026-02-14, benchmark docs comments)
+
+- **Common patterns**: Keep short intent comments at top of each benchmark `main.neva` and helper defs so runtime benchmark purpose is obvious during review.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

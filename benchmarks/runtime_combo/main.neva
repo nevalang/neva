@@ -1,3 +1,5 @@
+// Benchmarks a composite data path: struct + union together.
+// This models realistic mixed-type runtime traffic.
 import {
 	runtime
 	streams
@@ -25,6 +27,7 @@ def Main(start any) (stop any) {
 	range -> map_pack -> map_unpack -> wait -> :stop
 }
 
+// Pack creates an envelope that contains both plain and tagged fields.
 def Pack(data int) (res Envelope) {
 	box Union<Number>
 	builder Struct<Envelope>
@@ -38,6 +41,7 @@ def Pack(data int) (res Envelope) {
 	builder -> :res
 }
 
+// Unpack extracts tagged payload from nested struct field.
 def Unpack(data Envelope) (res int) {
 	switch Switch<Number>
 	panic runtime.Panic

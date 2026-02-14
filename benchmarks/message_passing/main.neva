@@ -1,3 +1,5 @@
+// Benchmarks the core int stream path in runtime.
+// It measures steady-state stream emission + wait synchronization.
 import { streams }
 
 def Main(start any) (stop any) {

@@ -1,3 +1,5 @@
+// Benchmarks list/stream conversion path.
+// It measures list materialization and re-streaming throughput.
 import {
 	lists
 	streams

@@ -1,3 +1,5 @@
+// Benchmarks dictionary lookup in a streaming scenario.
+// Int input is mapped to key strings and resolved via Get.
 import {
 	runtime
 	streams
@@ -21,6 +23,7 @@ def Main(start any) (stop any) {
 	range -> map_key -> map_lookup -> wait -> :stop
 }
 
+// ToKey maps ints to deterministic dict keys.
 def ToKey(data int) (res string) {
 	mod Mod
 	eq Eq<int>
@@ -37,6 +40,7 @@ def ToKey(data int) (res string) {
 	pick -> :res
 }
 
+// Lookup resolves one key in a constant dictionary.
 def Lookup(data string) (res string) {
 	get Get<string>
 	panic runtime.Panic

@@ -1,3 +1,5 @@
+// Benchmarks union wrapping and tagged unwrapping.
+// This isolates runtime cost of Union + Switch over tagged data.
 import {
 	runtime
 	streams
@@ -20,6 +22,7 @@ def Main(start any) (stop any) {
 	range -> map_wrap -> map_unwrap -> wait -> :stop
 }
 
+// Wrap boxes an int into a tagged union value.
 def Wrap(data int) (res NumValue) {
 	box Union<NumValue>
 	---
@@ -30,6 +33,7 @@ def Wrap(data int) (res NumValue) {
 	box -> :res
 }
 
+// Unwrap routes the union tag and returns the payload.
 def Unwrap(data NumValue) (res int) {
 	switch Switch<NumValue>
 	panic runtime.Panic

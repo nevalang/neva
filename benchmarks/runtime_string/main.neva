@@ -1,3 +1,5 @@
+// Benchmarks string-heavy runtime flow.
+// Int input is mapped to tokens, then normalized with ToUpper.
 import {
 	streams
 	strings
@@ -16,6 +18,7 @@ def Main(start any) (stop any) {
 	range -> map_token -> map_upper -> wait -> :stop
 }
 
+// ToToken creates a deterministic low-cardinality token stream.
 def ToToken(data int) (res string) {
 	mod Mod
 	eq Eq<int>
@@ -32,6 +35,7 @@ def ToToken(data int) (res string) {
 	pick -> :res
 }
 
+// Upper benchmarks string transformation in runtime funcs.
 def Upper(data string) (res string) {
 	upper strings.ToUpper
 	---

@@ -1,3 +1,5 @@
+// Benchmarks string->float parsing and arithmetic in a streaming workload.
+// This covers parse path, numeric ops, and error branch wiring.
 import {
 	runtime
 	streams
@@ -17,6 +19,7 @@ def Main(start any) (stop any) {
 	range -> map_text -> map_float -> wait -> :stop
 }
 
+// ToFloatText maps ints to a tiny set of parseable float strings.
 def ToFloatText(data int) (res string) {
 	mod Mod
 	eq Eq<int>
@@ -33,6 +36,7 @@ def ToFloatText(data int) (res string) {
 	pick -> :res
 }
 
+// ParseAndShift parses text and applies a float addition.
 def ParseAndShift(data string) (res float) {
 	parse strconv.ParseFloat
 	add Add
