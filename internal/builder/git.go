@@ -7,7 +7,7 @@ import (
 
 	gitlib "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/pkg/core"
 	nevaGit "github.com/nevalang/neva/pkg/git"
 )
 

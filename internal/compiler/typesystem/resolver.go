@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/nevalang/neva/internal/compiler/ast/core"
+	"github.com/nevalang/neva/pkg/core"
 )
 
 var (
@@ -166,6 +166,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this:
 // for struct and union apply recursion for it's every field/element.
+//
 //nolint:gocyclo // Resolver covers many expression shapes and recursive cases.
 func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved

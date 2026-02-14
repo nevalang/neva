@@ -12,7 +12,7 @@ import (
 
 	"github.com/nevalang/neva/cmd/lsp/indexer"
 	"github.com/nevalang/neva/internal/compiler"
-	src "github.com/nevalang/neva/internal/compiler/ast"
+	src "github.com/nevalang/neva/pkg/ast"
 )
 
 //nolint:govet // fieldalignment: preserve layout for readability.
