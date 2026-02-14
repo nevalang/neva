@@ -160,6 +160,12 @@ Follow these instructions.
 - **Common patterns**: Keep runtime benchmark fixtures self-contained by copying `benchmarks/neva.yml` and the benchmark `.neva` file into a temp module instead of relying on `chdir`.
 - **Common patterns**: Track runtime regressions with both e2e execution benchmarks and focused `internal/runtime` microbenchmarks (message operations and single-port round-trip).
 - **Gotchas**: Full `go test ./...` can run very long due e2e coverage; benchmark-only changes should still validate touched packages + benchmark smoke runs.
+
+### Session Notes (2026-02-14, PR-1023 review follow-up)
+
+- **Common patterns**: Reuse `pkg/e2e` helpers (`FindRepoRoot`, CLI build helper) inside benchmark harnesses to avoid duplicated repo-root/build logic.
+- **Common patterns**: For long-term comparable perf baselines, prefer runtime e2e benchmarks over runtime-internal microbenchmarks that may track unstable APIs.
+- **Gotchas**: `thelper` expects parameters typed as `testing.TB` to be named `tb`.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

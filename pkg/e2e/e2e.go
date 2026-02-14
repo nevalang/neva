@@ -103,21 +103,28 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 }
 
 // FindRepoRoot finds the repository root using go env GOMOD.
-func FindRepoRoot(t *testing.T) string {
-	t.Helper()
+func FindRepoRoot(tb testing.TB) string {
+	tb.Helper()
 
 	// #nosec G204 -- command arguments are constant
 	cmd := exec.Command("go", "env", "GOMOD")
 	output, err := cmd.Output()
-	require.NoError(t, err, "failed to run 'go env GOMOD'")
+	require.NoError(tb, err, "failed to run 'go env GOMOD'")
 
 	gomodPath := strings.TrimSpace(string(output))
-	require.NotEmpty(t, gomodPath, "GOMOD path is empty")
+	require.NotEmpty(tb, gomodPath, "GOMOD path is empty")
 
 	repoRoot := filepath.Dir(gomodPath)
-	require.NotEmpty(t, repoRoot, "repo root is empty")
+	require.NotEmpty(tb, repoRoot, "repo root is empty")
 
 	return repoRoot
+}
+
+// BuildNevaBinary builds the neva CLI binary from repo root and returns its path.
+func BuildNevaBinary(tb testing.TB, repoRoot string) string {
+	tb.Helper()
+	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
+	return buildNevaBinary(tb, repoRoot, mainPath)
 }
 
 // getExitCode extracts the exit code from an error.
@@ -141,10 +148,10 @@ func getExitCode(err error) int {
 // buildNevaBinary builds the neva CLI from the repo root to ensure module
 // resolution works regardless of where tests execute the resulting binary.
 // It returns the path to the built binary.
-func buildNevaBinary(t *testing.T, repoRoot, mainPath string) string {
-	t.Helper()
+func buildNevaBinary(tb testing.TB, repoRoot, mainPath string) string {
+	tb.Helper()
 
-	binPath := filepath.Join(t.TempDir(), "neva")
+	binPath := filepath.Join(tb.TempDir(), "neva")
 	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
 	buildCmd.Dir = repoRoot
 
@@ -155,7 +162,7 @@ func buildNevaBinary(t *testing.T, repoRoot, mainPath string) string {
 
 	err := buildCmd.Run()
 	require.NoError(
-		t,
+		tb,
 		err,
 		"failed to build neva CLI. stdout: %q stderr: %q",
 		buildStdoutBuf.String(),

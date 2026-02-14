@@ -1,23 +1,26 @@
 package test
 
 import (
-	"bytes"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/nevalang/neva/pkg/e2e"
 )
 
 // BenchmarkMessagePassingE2E benchmarks precompiled program execution time.
 // CLI build + Neva compilation are done once outside timed iterations.
 func BenchmarkMessagePassingE2E(b *testing.B) {
+	// Build artifacts once to keep the timed loop focused on runtime execution.
 	progPath := buildProgramOnce(b)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for b.Loop() {
+		// Execute only the already-compiled benchmark binary.
 		// #nosec G204 -- benchmark executes a fixed local binary built during setup.
 		cmd := exec.Command(progPath)
 		cmd.Stdout = io.Discard
@@ -28,10 +31,12 @@ func BenchmarkMessagePassingE2E(b *testing.B) {
 	}
 }
 
+// buildProgramOnce prepares an isolated benchmark module and compiles it once.
 func buildProgramOnce(b *testing.B) string {
 	b.Helper()
 
-	repoRoot := repoRoot(b)
+	// Discover repository root and create an isolated temp module workspace.
+	repoRoot := e2e.FindRepoRoot(b)
 	tmpDir := b.TempDir()
 
 	moduleDir := filepath.Join(tmpDir, "bench-module")
@@ -40,6 +45,7 @@ func buildProgramOnce(b *testing.B) string {
 		b.Fatalf("create benchmark module dirs: %v", err)
 	}
 
+	// Copy benchmark fixture files into the isolated module.
 	copyFile(b, filepath.Join(repoRoot, "benchmarks", "neva.yml"), filepath.Join(moduleDir, "neva.yml"))
 	copyFile(
 		b,
@@ -47,12 +53,8 @@ func buildProgramOnce(b *testing.B) string {
 		filepath.Join(progDir, "main.neva"),
 	)
 
-	nevaBin := filepath.Join(tmpDir, "neva")
-	buildCLI := exec.Command("go", "build", "-o", nevaBin, "./cmd/neva")
-	buildCLI.Dir = repoRoot
-	if output, err := buildCLI.CombinedOutput(); err != nil {
-		b.Fatalf("build neva cli: %v\n%s", err, output)
-	}
+	// Build the CLI once, then compile the benchmark program once.
+	nevaBin := e2e.BuildNevaBinary(b, repoRoot)
 
 	buildProg := exec.Command(nevaBin, "build", "message_passing")
 	buildProg.Dir = moduleDir
@@ -63,6 +65,7 @@ func buildProgramOnce(b *testing.B) string {
 	return filepath.Join(moduleDir, "output")
 }
 
+// copyFile copies one fixture file into the temp benchmark module.
 func copyFile(b *testing.B, src, dst string) {
 	b.Helper()
 
@@ -75,21 +78,4 @@ func copyFile(b *testing.B, src, dst string) {
 	if err := os.WriteFile(dst, data, 0o644); err != nil {
 		b.Fatalf("write %s: %v", dst, err)
 	}
-}
-
-func repoRoot(b *testing.B) string {
-	b.Helper()
-
-	cmd := exec.Command("go", "env", "GOMOD")
-	output, err := cmd.Output()
-	if err != nil {
-		b.Fatalf("go env GOMOD: %v", err)
-	}
-
-	gomodPath := string(bytes.TrimSpace(output))
-	if gomodPath == "" {
-		b.Fatal("empty GOMOD path")
-	}
-
-	return filepath.Dir(gomodPath)
 }
