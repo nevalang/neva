@@ -12,10 +12,20 @@ import (
 )
 
 type codeLensData struct {
-	URI  string `json:"uri"`
+	// URI points to the source file where the lens was created.
+	URI string `json:"uri"`
+	// Name is the entity name lens resolution should target.
 	Name string `json:"name"`
-	Kind string `json:"kind"`
+	// Kind selects which query to run for the target entity.
+	Kind codeLensKind `json:"kind"`
 }
+
+type codeLensKind string
+
+const (
+	codeLensKindReferences      codeLensKind = "references"
+	codeLensKindImplementations codeLensKind = "implementations"
+)
 
 // TextDocumentCodeLens emits per-entity code lenses for references and implementations.
 func (s *Server) TextDocumentCodeLens(
@@ -27,37 +37,42 @@ func (s *Server) TextDocumentCodeLens(
 		return []protocol.CodeLens{}, nil
 	}
 
-	ctx, err := s.findFile(build, params.TextDocument.URI)
+	fileCtx, err := s.findFile(build, params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
 
-	lenses := make([]protocol.CodeLens, 0, len(ctx.file.Entities)*2)
-	for name, entity := range ctx.file.Entities {
+	lenses := make([]protocol.CodeLens, 0, len(fileCtx.file.Entities)*2)
+	missingMetaCount := 0
+	for name, entity := range fileCtx.file.Entities {
 		meta := entity.Meta()
 		if meta == nil {
+			missingMetaCount++
 			continue
 		}
-		rng := rangeForName(*meta, name, 0)
+		nameRange := rangeForName(*meta, name, 0)
 		lenses = append(lenses, protocol.CodeLens{
-			Range: rng,
+			Range: nameRange,
 			Data: codeLensData{
-				URI:  pathToURI(ctx.filePath),
+				URI:  pathToURI(fileCtx.filePath),
 				Name: name,
-				Kind: "references",
+				Kind: codeLensKindReferences,
 			},
 		})
 
 		if entity.Kind == src.ComponentEntity || entity.Kind == src.InterfaceEntity {
 			lenses = append(lenses, protocol.CodeLens{
-				Range: rng,
+				Range: nameRange,
 				Data: codeLensData{
-					URI:  pathToURI(ctx.filePath),
+					URI:  pathToURI(fileCtx.filePath),
 					Name: name,
-					Kind: "implementations",
+					Kind: codeLensKindImplementations,
 				},
 			})
 		}
+	}
+	if missingMetaCount > 0 {
+		s.logger.Info("skipped code lenses for entities without metadata", "count", missingMetaCount, "file", fileCtx.filePath)
 	}
 
 	return lenses, nil
@@ -68,7 +83,7 @@ func (s *Server) CodeLensResolve(
 	glspCtx *glsp.Context,
 	lens *protocol.CodeLens,
 ) (*protocol.CodeLens, error) {
-	data, ok := parseCodeLensData(lens.Data)
+	parsedCodeLensData, ok := parseCodeLensData(lens.Data)
 	if !ok {
 		return lens, nil
 	}
@@ -78,25 +93,27 @@ func (s *Server) CodeLensResolve(
 		return lens, nil
 	}
 
-	ctx, err := s.findFile(build, data.URI)
+	fileCtx, err := s.findFile(build, parsedCodeLensData.URI)
 	if err != nil {
 		return nil, err
 	}
 
-	target, ok := s.resolveEntityRef(build, ctx, core.EntityRef{Name: data.Name})
+	target, ok := s.resolveEntityRef(build, fileCtx, core.EntityRef{Name: parsedCodeLensData.Name})
 	if !ok {
 		return lens, nil
 	}
 
-	switch data.Kind {
-	case "implementations":
+	switch parsedCodeLensData.Kind {
+	case codeLensKindImplementations:
 		locations := s.appendDeclarationLocation(nil, target)
 		title := fmt.Sprintf("%d implementations", len(locations))
-		lens.Command = buildShowReferencesCommand(data.URI, lens.Range.Start, locations, title)
-	default:
+		lens.Command = buildShowReferencesCommand(parsedCodeLensData.URI, lens.Range.Start, locations, title)
+	case codeLensKindReferences:
 		locations := s.referencesForEntity(build, target)
 		title := fmt.Sprintf("%d references", len(locations))
-		lens.Command = buildShowReferencesCommand(data.URI, lens.Range.Start, locations, title)
+		lens.Command = buildShowReferencesCommand(parsedCodeLensData.URI, lens.Range.Start, locations, title)
+	default:
+		return lens, nil
 	}
 
 	return lens, nil
@@ -104,18 +121,23 @@ func (s *Server) CodeLensResolve(
 
 // parseCodeLensData decodes strongly-typed lens metadata from LSP's generic data field.
 func parseCodeLensData(raw any) (codeLensData, bool) {
-	data := codeLensData{}
-	bytes, err := json.Marshal(raw)
+	parsedCodeLensData := codeLensData{}
+	rawJSON, err := json.Marshal(raw)
 	if err != nil {
-		return data, false
+		return parsedCodeLensData, false
 	}
-	if err := json.Unmarshal(bytes, &data); err != nil {
-		return data, false
+	if err := json.Unmarshal(rawJSON, &parsedCodeLensData); err != nil {
+		return parsedCodeLensData, false
 	}
-	if data.URI == "" || data.Name == "" {
-		return data, false
+	if parsedCodeLensData.URI == "" || parsedCodeLensData.Name == "" {
+		return parsedCodeLensData, false
 	}
-	return data, true
+	switch parsedCodeLensData.Kind {
+	case codeLensKindReferences, codeLensKindImplementations:
+		return parsedCodeLensData, true
+	default:
+		return parsedCodeLensData, false
+	}
 }
 
 // buildShowReferencesCommand creates the editor command expected by VS Code's references UI.

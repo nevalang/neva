@@ -58,11 +58,11 @@ var (
 
 // readLineAt reads one source line by zero-based line index.
 func readLineAt(path string, line int) (string, error) {
-	data, err := os.ReadFile(path)
+	fileBytes, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
-	lines := strings.Split(string(data), "\n")
+	lines := strings.Split(string(fileBytes), "\n")
 	if line < 0 || line >= len(lines) {
 		return "", nil
 	}
@@ -185,29 +185,18 @@ func (s *Server) packageCompletions(
 	}
 
 	items := []protocol.CompletionItem{}
-	for entityName, entity := range collectPackageEntities(pkg) {
-		if namePrefix != "" && !strings.HasPrefix(entityName, namePrefix) {
+	for entityResult := range pkg.Entities() {
+		if namePrefix != "" && !strings.HasPrefix(entityResult.EntityName, namePrefix) {
 			continue
 		}
 		items = append(items, protocol.CompletionItem{
-			Label:  entityName,
-			Kind:   completionKind(entityCompletionKind(entity.Kind)),
-			Detail: completionDetail(fmt.Sprintf("%s.%s", pkgAlias, entityName)),
+			Label:  entityResult.EntityName,
+			Kind:   completionKind(entityCompletionKind(entityResult.Entity.Kind)),
+			Detail: completionDetail(fmt.Sprintf("%s.%s", pkgAlias, entityResult.EntityName)),
 		})
 	}
 
 	return items, true
-}
-
-// collectPackageEntities flattens all entities from package files into a single map.
-func collectPackageEntities(pkg src.Package) map[string]src.Entity {
-	result := map[string]src.Entity{}
-	for _, file := range pkg {
-		for name, entity := range file.Entities {
-			result[name] = entity
-		}
-	}
-	return result
 }
 
 // generalCompletions provides fallback keyword, local, package, and import suggestions.
@@ -236,10 +225,10 @@ func (s *Server) generalCompletions(
 
 	mod := build.Modules[ctx.moduleRef]
 	if pkg, ok := mod.Packages[ctx.packageName]; ok {
-		for name, entity := range collectPackageEntities(pkg) {
+		for entityResult := range pkg.Entities() {
 			items = append(items, protocol.CompletionItem{
-				Label: name,
-				Kind:  completionKind(entityCompletionKind(entity.Kind)),
+				Label: entityResult.EntityName,
+				Kind:  completionKind(entityCompletionKind(entityResult.Entity.Kind)),
 			})
 		}
 	}

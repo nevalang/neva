@@ -60,8 +60,8 @@ func (s *Server) TextDocumentSemanticTokensFull(
 	}
 
 	tokens := s.collectSemanticTokens(build, ctx)
-	data := encodeSemanticTokens(tokens)
-	return &protocol.SemanticTokens{Data: data}, nil
+	encodedTokenData := encodeSemanticTokens(tokens)
+	return &protocol.SemanticTokens{Data: encodedTokenData}, nil
 }
 
 // collectSemanticTokens gathers declaration, reference, and port-address tokens from a file.
@@ -202,7 +202,7 @@ func portAddrTokens(addr src.PortAddr, index map[string]int) []semanticToken {
 
 // encodeSemanticTokens converts absolute tokens to LSP delta-encoded payload format.
 func encodeSemanticTokens(tokens []semanticToken) []uint32 {
-	data := make([]uint32, 0, len(tokens)*5)
+	encodedData := make([]uint32, 0, len(tokens)*5)
 	lastLine := 0
 	lastStart := 0
 
@@ -234,13 +234,13 @@ func encodeSemanticTokens(tokens []semanticToken) []uint32 {
 			continue
 		}
 
-		data = append(data, deltaLine32, deltaStart32, length32, tokenType32, modifiers32)
+		encodedData = append(encodedData, deltaLine32, deltaStart32, length32, tokenType32, modifiers32)
 
 		lastLine = token.line
 		lastStart = token.start
 	}
 
-	return data
+	return encodedData
 }
 
 // intToUint32 safely converts a non-negative int that fits into uint32.

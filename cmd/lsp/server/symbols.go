@@ -1,3 +1,6 @@
+// Package server symbol helpers implement definition/reference/rename/hover/symbol lookups.
+// The core idea is: resolve cursor position to an entity reference, then map it back to
+// declaration and usage ranges across all workspace-resolved files.
 package server
 
 import (
@@ -23,6 +26,7 @@ type fileContext struct {
 	filePath    string
 }
 
+// resolvedEntity stores a fully-resolved entity target used by multiple LSP handlers.
 type resolvedEntity struct {
 	moduleRef   core.ModuleRef
 	packageName string
@@ -31,24 +35,16 @@ type resolvedEntity struct {
 	entity      src.Entity
 }
 
+// refOccurrence records one textual reference with the source metadata span.
 type refOccurrence struct {
 	ref  core.EntityRef
 	meta core.Meta
 }
 
+// componentContext captures the innermost component for position-sensitive completions.
 type componentContext struct {
 	name      string
 	component src.Component
-}
-
-// getBuild returns the latest indexed build snapshot when available.
-func (s *Server) getBuild() (*src.Build, bool) {
-	s.indexMutex.Lock()
-	defer s.indexMutex.Unlock()
-	if s.index == nil {
-		return nil, false
-	}
-	return s.index, true
 }
 
 // uriToPath converts a file URI to a local path.
@@ -69,14 +65,8 @@ func pathToURI(path string) string {
 	return u.String()
 }
 
-// findFile resolves an LSP document URI to compiler file context.
-func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
-	filePath, err := uriToPath(uri)
-	if err != nil {
-		return nil, err
-	}
-	filePath = filepath.Clean(filePath)
-
+// forEachWorkspaceFile iterates files that can be mapped to a workspace path.
+func (s *Server) forEachWorkspaceFile(build *src.Build, visit func(fileContext) bool) {
 	for modRef, mod := range build.Modules {
 		for pkgName, pkg := range mod.Packages {
 			for fileName, file := range pkg {
@@ -85,21 +75,42 @@ func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
 					Package:  pkgName,
 					Filename: fileName,
 				}
-				resolvedPath := s.pathForLocation(loc)
-				if resolvedPath == "" {
+				filePath := s.pathForLocation(loc)
+				if filePath == "" {
 					continue
 				}
-				if filepath.Clean(resolvedPath) == filePath {
-					return &fileContext{
-						moduleRef:   modRef,
-						packageName: pkgName,
-						fileName:    fileName,
-						filePath:    resolvedPath,
-						file:        file,
-					}, nil
+				if !visit(fileContext{
+					file:        file,
+					moduleRef:   modRef,
+					packageName: pkgName,
+					fileName:    fileName,
+					filePath:    filePath,
+				}) {
+					return
 				}
 			}
 		}
+	}
+}
+
+// findFile resolves an LSP document URI to compiler file context.
+func (s *Server) findFile(build *src.Build, uri string) (*fileContext, error) {
+	filePath, err := uriToPath(uri)
+	if err != nil {
+		return nil, err
+	}
+	filePath = filepath.Clean(filePath)
+
+	var matchedCtx *fileContext
+	s.forEachWorkspaceFile(build, func(candidate fileContext) bool {
+		if filepath.Clean(candidate.filePath) == filePath {
+			matchedCtx = &candidate
+			return false
+		}
+		return true
+	})
+	if matchedCtx != nil {
+		return matchedCtx, nil
 	}
 
 	return nil, fmt.Errorf("file not found in build: %s", uri)
@@ -593,39 +604,25 @@ func (s *Server) TextDocumentRename(
 	edits := map[string][]protocol.TextEdit{}
 
 	// Collect edits across all workspace-resolved files.
-	for modRef, mod := range build.Modules {
-		for pkgName, pkg := range mod.Packages {
-			for fileName, file := range pkg {
-				locPath := s.pathForLocation(core.Location{ModRef: modRef, Package: pkgName, Filename: fileName})
-				if locPath == "" {
-					continue
-				}
-				fileCtx := fileContext{
-					moduleRef:   modRef,
-					packageName: pkgName,
-					fileName:    fileName,
-					filePath:    locPath,
-					file:        file,
-				}
-				refs := collectRefsInFile(file)
-				for _, ref := range refs {
-					resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
-					if !ok {
-						continue
-					}
-					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
-						continue
-					}
-					offset := nameOffsetForRef(ref.meta)
-					r := rangeForName(ref.meta, resolved.name, offset)
-					edits[pathToURI(locPath)] = append(edits[pathToURI(locPath)], protocol.TextEdit{
-						Range:   r,
-						NewText: params.NewName,
-					})
-				}
+	s.forEachWorkspaceFile(build, func(fileCtx fileContext) bool {
+		refs := collectRefsInFile(fileCtx.file)
+		for _, ref := range refs {
+			resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
+			if !ok {
+				continue
 			}
+			if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
+				continue
+			}
+			offset := nameOffsetForRef(ref.meta)
+			r := rangeForName(ref.meta, resolved.name, offset)
+			edits[pathToURI(fileCtx.filePath)] = append(edits[pathToURI(fileCtx.filePath)], protocol.TextEdit{
+				Range:   r,
+				NewText: params.NewName,
+			})
 		}
-	}
+		return true
+	})
 
 	// Rename definition
 	if meta := target.entity.Meta(); meta != nil {
@@ -642,38 +639,24 @@ func (s *Server) TextDocumentRename(
 // referencesForEntity collects all locations that resolve to the target entity.
 func (s *Server) referencesForEntity(build *src.Build, target *resolvedEntity) []protocol.Location {
 	var locations []protocol.Location
-	for modRef, mod := range build.Modules {
-		for pkgName, pkg := range mod.Packages {
-			for fileName, file := range pkg {
-				locPath := s.pathForLocation(core.Location{ModRef: modRef, Package: pkgName, Filename: fileName})
-				if locPath == "" {
-					continue
-				}
-				fileCtx := fileContext{
-					moduleRef:   modRef,
-					packageName: pkgName,
-					fileName:    fileName,
-					filePath:    locPath,
-					file:        file,
-				}
-				refs := collectRefsInFile(file)
-				for _, ref := range refs {
-					resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
-					if !ok {
-						continue
-					}
-					if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
-						continue
-					}
-					nameOffset := nameOffsetForRef(ref.meta)
-					locations = append(locations, protocol.Location{
-						URI:   pathToURI(locPath),
-						Range: rangeForName(ref.meta, resolved.name, nameOffset),
-					})
-				}
+	s.forEachWorkspaceFile(build, func(fileCtx fileContext) bool {
+		refs := collectRefsInFile(fileCtx.file)
+		for _, ref := range refs {
+			resolved, ok := s.resolveEntityRef(build, &fileCtx, ref.ref)
+			if !ok {
+				continue
 			}
+			if resolved.moduleRef.Path != target.moduleRef.Path || resolved.packageName != target.packageName || resolved.name != target.name {
+				continue
+			}
+			nameOffset := nameOffsetForRef(ref.meta)
+			locations = append(locations, protocol.Location{
+				URI:   pathToURI(fileCtx.filePath),
+				Range: rangeForName(ref.meta, resolved.name, nameOffset),
+			})
 		}
-	}
+		return true
+	})
 	return locations
 }
 

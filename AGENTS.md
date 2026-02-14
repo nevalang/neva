@@ -136,6 +136,13 @@ Follow these instructions.
 - **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
 - **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
 - **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
+
+### Session Notes (2026-02-14)
+
+- **Common patterns**: For LSP package-entity traversal, prefer `src.Package.Entities()` (range-func iterator) over ad-hoc flattening maps.
+- **Architecture insights**: Keep shared index snapshot lock access (`getBuild`/`setBuild`) on `Server` to avoid mutex handling drift across feature files.
+- **Common patterns**: CodeLens `Data` payload should validate explicit kind enums (`references`/`implementations`) instead of relying on default switch fallbacks.
+- **Gotchas**: `go test ./...` can hang or run very long in this repo due broad e2e/examples coverage; prioritize targeted package tests after confirming lint for quick iteration.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
