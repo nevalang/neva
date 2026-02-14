@@ -13,7 +13,8 @@ Design and deliver a visual node editor model for Neva that:
 - Source model: `internal/compiler/ast/flowast.go`
 - Compiler flow: builder -> parser -> analyzer -> desugarer -> irgen -> backend
 - LSP server: `cmd/lsp/` with indexing over analyzed AST
-- Existing custom LSP route/types: `resolve_file` and `GetFileView*` structs in `cmd/lsp/server`
+- LSP now includes core language features (definition/references/implementation/rename/hover/document symbols/semantic tokens/codelens) in `cmd/lsp/server`
+- Existing custom visual-related route/types still present: `resolve_file` and `GetFileView*` structs in `cmd/lsp/server` (and `GetFileView` is still not wired)
 - Runtime interception currently exposes `Sent` and `Received` events
 - Existing IR Mermaid backend exists at `internal/compiler/backend/ir/mermaid/` (useful reference for file/output shape, but not source-level semantics)
 
@@ -98,6 +99,7 @@ This keeps large modules usable while preserving drill-down.
 - Implement and validate `GetFileView` for current `resolve_file`
 - Return enough analyzed AST context or projected payload references for readonly consumers
 - Add tests for response shape and failure behavior
+- Reuse existing LSP helpers introduced for core features (file resolution, location/range conversion, indexed build access) instead of duplicating logic
 
 ## Phase 3: Versioned Visual LSP Endpoints
 
@@ -108,6 +110,7 @@ This keeps large modules usable while preserving drill-down.
 - Use explicit schema versioning in payloads (`version: 1`) and additive evolution rules.
 - Keep transition compatibility with `resolve_file` until new endpoints are adopted.
 - Add compatibility tests for both old (`resolve_file`) and new (`neva/get*`) flows.
+- Prefer implementing these endpoints through the same request-routing conventions now used by merged LSP feature handlers.
 
 ## Phase 4: Interactive Readonly Viewer MVP
 
@@ -135,13 +138,11 @@ Note on Mermaid:
 - Keep host-specific state outside canonical payload (window layout, local preferences, shortcuts, session state).
 - Parity means both hosts render the same source program consistently from the same contract.
 
-## Dependency Note: Current LSP PR
+## Dependency Note: LSP Baseline
 
-- Ongoing LSP feature work (for language features) is useful but not a blocker for Phases 0-1.
-- Recommended execution:
-  - Start immediately with Mermaid backend + projection layer.
-  - If convenient, allow up to ~1 day for PR landing before finalizing Phase 3 endpoint wiring.
-  - Do not block core model/projection work on that PR.
+- Core LSP feature groundwork is already merged into `main`.
+- Visual-editor work should proceed immediately using this new baseline.
+- Remaining dependency is visual-specific API wiring (`resolve_file` completion and/or new `neva/get*` methods), not generic LSP capabilities.
 
 ## Risks and Mitigations
 

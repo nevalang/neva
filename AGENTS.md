@@ -173,6 +173,7 @@ Follow these instructions.
 - **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
 - **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
 - **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
+- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
