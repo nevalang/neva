@@ -14,19 +14,21 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
+// Indexer performs workspace scans and returns analyzed source build snapshots.
 type Indexer struct {
 	fe       compiler.Frontend
 	analyzer analyzer.Analyzer
 	logger   commonlog.Logger
 }
 
+// FullScan processes and analyzes a Neva workspace.
 func (i Indexer) FullScan(
 	ctx context.Context,
 	workspacePath string,
-) (src.Build, bool, *compiler.Error) {
+) (src.Build, bool, *Error) {
 	feResult, err := i.fe.Process(ctx, workspacePath)
 	if err != nil {
-		return src.Build{}, false, err
+		return src.Build{}, false, wrapCompilerError(err)
 	}
 
 	if isParentPath(workspacePath, feResult.Path) {
@@ -41,7 +43,7 @@ func (i Indexer) FullScan(
 
 	aBuild, err := i.analyzer.Analyze(feResult.ParsedBuild, feResult.MainPkg)
 	if err != nil {
-		return src.Build{}, true, err.Unwrap() // use only deepest compiler error for now
+		return src.Build{}, true, wrapCompilerError(err)
 	}
 
 	return aBuild, true, nil
@@ -62,6 +64,7 @@ func isParentPath(parent, child string) bool {
 	return !strings.HasPrefix(rel, "..")
 }
 
+// New constructs Indexer from compiler frontend dependencies.
 func New(
 	builder builder.Builder,
 	parser parser.Parser,

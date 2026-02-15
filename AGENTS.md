@@ -153,6 +153,12 @@ Follow these instructions.
 - **Architecture insights**: `ast` and `core` are now externalized under `pkg/` (`pkg/ast`, `pkg/core`) so other Go modules (like a split LSP repo) can import them without `internal/` restrictions.
 - **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
 - **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
+
+### Session Notes (2026-02-15)
+
+- **Architecture insights**: LSP workspace scanning moved into `pkg/indexer` as an explicit intermediate extraction step for splitting LSP out of the main repository.
+- **Common patterns**: Expose tooling-facing errors via a package-local adapter (`indexer.Error`) that wraps `compiler.Error` but stabilizes surfaced fields (`Message`, `Meta`) and behavior (`Error()`, `Unwrap()`).
+- **Gotchas**: LSP diagnostics code must guard `Meta == nil` when deriving URIs/ranges from indexer errors to avoid nil-pointer crashes.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
