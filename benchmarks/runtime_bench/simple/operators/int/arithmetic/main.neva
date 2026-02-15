@@ -1,0 +1,63 @@
+// Benchmarks simple integer arithmetic operator variants.
+// Covers Add, Sub, Mul, Div, Mod, and Pow via separate map stages.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_add streams.Map<int, int>{AddOne}
+	map_sub streams.Map<int, int>{SubOne}
+	map_mul streams.Map<int, int>{MulTwo}
+	map_div streams.Map<int, int>{DivTwo}
+	map_mod streams.Map<int, int>{ModSeven}
+	map_pow streams.Map<int, int>{PowTwo}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_add -> map_sub -> map_mul -> map_div -> map_mod
+	map_mod -> map_pow -> wait -> :stop
+}
+
+def AddOne(data int) (res int) {
+	add Add
+	---
+	:data -> [add:left, 1 -> add:right]
+	add -> :res
+}
+
+def SubOne(data int) (res int) {
+	sub Sub
+	---
+	:data -> [sub:left, 1 -> sub:right]
+	sub -> :res
+}
+
+def MulTwo(data int) (res int) {
+	mul Mul
+	---
+	:data -> [mul:left, 2 -> mul:right]
+	mul -> :res
+}
+
+def DivTwo(data int) (res int) {
+	div Div
+	---
+	:data -> [div:left, 2 -> div:right]
+	div -> :res
+}
+
+def ModSeven(data int) (res int) {
+	mod Mod
+	---
+	:data -> [mod:left, 7 -> mod:right]
+	mod -> :res
+}
+
+def PowTwo(data int) (res int) {
+	pow Pow
+	---
+	:data -> [pow:left, 2 -> pow:right]
+	pow -> :res
+}

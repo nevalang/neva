@@ -1,0 +1,50 @@
+// Benchmarks selector-style mapping components.
+// Covers Ternary, Match, and Select in one mapping path.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_sel streams.Map<int, int>{SelectorOps}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		10000 -> range:to
+	]
+	range -> map_sel -> wait -> :stop
+}
+
+def SelectorOps(data int) (res int) {
+	mod Mod
+	eq Eq<int>
+	tern Ternary<int>
+	match Match<int>
+	switch Switch<int>
+	select Select<int>
+	add Add
+	---
+	:data -> [
+		mod:left,
+		switch:data,
+		2 -> mod:right,
+		10 -> tern:then,
+		20 -> tern:else,
+		10 -> match:if[0],
+		20 -> match:if[1],
+		100 -> match:then[0],
+		200 -> match:then[1],
+		300 -> match:else,
+		1 -> switch:case[0] -> select:if[0],
+		2 -> switch:case[1] -> select:if[1],
+		1000 -> select:then[0],
+		2000 -> select:then[1],
+		3000 -> select:then[2]
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> tern:if
+	tern -> match:data
+	switch:else -> select:if[2]
+	match -> add:left
+	select -> add:right
+	add -> :res
+}

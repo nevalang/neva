@@ -1,0 +1,54 @@
+// Benchmarks string comparison operators.
+// Covers Eq, Ne, Gt, and Lt with low-cardinality tokens.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_cmp streams.Map<int, bool>{StringCompare}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_cmp -> wait -> :stop
+}
+
+def StringCompare(data int) (res bool) {
+	mod Mod
+	eq_int Eq<int>
+	pick Ternary<string>
+	eq Eq<string>
+	ne Ne<string>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'alpha' -> pick:then,
+		'beta' -> pick:else
+	]
+	mod -> [eq_int:left, 0 -> eq_int:right]
+	eq_int -> pick:if
+	pick -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		'alpha' -> eq:right,
+		'alpha' -> ne:right,
+		'a' -> gt:right,
+		'z' -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}

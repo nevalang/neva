@@ -176,6 +176,12 @@ Follow these instructions.
 ### Session Notes (2026-02-14, benchmark docs comments)
 
 - **Common patterns**: Keep short intent comments at top of each benchmark `main.neva` and helper defs so runtime benchmark purpose is obvious during review.
+
+### Session Notes (2026-02-15, runtime benchmark stabilization)
+
+- **Gotchas**: `Select` consumes all `then[*]` inputs for each `if` trigger; wiring multiple trigger sources per iteration can deadlock benchmarks.
+- **Common patterns**: For heavy router/selector e2e runtime benchmarks, keep workload lower (e.g. `Range:to = 10000`) so local smoke runs stay under execution timeout.
+- **Gotchas**: Naming a benchmark package root `runtime` can collide with stdlib import resolution; use a distinct root like `runtime_bench`.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
