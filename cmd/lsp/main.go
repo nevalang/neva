@@ -7,12 +7,12 @@ import (
 	_ "github.com/tliron/commonlog/simple"
 	"github.com/tliron/glsp/server"
 
-	"github.com/nevalang/neva/cmd/lsp/indexer"
 	lspServer "github.com/nevalang/neva/cmd/lsp/server"
 	builder "github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler/analyzer"
 	"github.com/nevalang/neva/internal/compiler/parser"
 	"github.com/nevalang/neva/internal/compiler/typesystem"
+	"github.com/nevalang/neva/pkg/indexer"
 )
 
 func main() {
