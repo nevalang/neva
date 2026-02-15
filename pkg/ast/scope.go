@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/core"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 // NewScope returns a new scope with a given location
