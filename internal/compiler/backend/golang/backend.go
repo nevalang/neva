@@ -145,7 +145,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		// getMsgFromGo generates Go code that converts a raw Go value (passed from outside)
 		// into a runtime.Msg which is understandable by Neva runtime.
 		// For example, if we have a Go int variable "x", we want to generate "runtime.NewIntMsg(x)".
-		// If the type is not a primitive, we assume it's already a runtime.Msg (e.g. StructMsg, ListMsg)
+		// If the type is not a primitive, we assume it's already a runtime.Msg.
 		// and perform a type assertion.
 		"getMsgFromGo": func(prefix, field, typeName string) string {
 			switch typeName {
@@ -157,8 +157,16 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("runtime.NewBoolMsg(%s.%s)", prefix, field)
 			case "float64":
 				return fmt.Sprintf("runtime.NewFloatMsg(%s.%s)", prefix, field)
+			case "[]runtime.Msg":
+				return fmt.Sprintf("runtime.NewListMsg(%s.%s)", prefix, field)
+			case "map[string]runtime.Msg":
+				return fmt.Sprintf("runtime.NewDictMsg(%s.%s)", prefix, field)
+			case "runtime.StructMsg":
+				return fmt.Sprintf("%s.%s.Msg()", prefix, field)
+			case "runtime.UnionMsg":
+				return fmt.Sprintf("%s.%s.Msg()", prefix, field)
 			default:
-				return fmt.Sprintf("%s.%s.(runtime.Msg)", prefix, field)
+				return fmt.Sprintf("%s.%s", prefix, field)
 			}
 		},
 		// getGoFromMsg generates Go code that converts a runtime.Msg (received from Neva runtime)
@@ -176,6 +184,14 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("%s.Bool()", msgVar)
 			case "float64":
 				return fmt.Sprintf("%s.Float()", msgVar)
+			case "[]runtime.Msg":
+				return fmt.Sprintf("%s.List()", msgVar)
+			case "map[string]runtime.Msg":
+				return fmt.Sprintf("%s.Dict()", msgVar)
+			case "runtime.StructMsg":
+				return fmt.Sprintf("%s.Struct()", msgVar)
+			case "runtime.UnionMsg":
+				return fmt.Sprintf("%s.Union()", msgVar)
 			default:
 				return msgVar
 			}
@@ -240,7 +256,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 	fields := make([]fieldTemplateData, 0, len(ports))
 	for name, port := range ports {
-		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
+		goType := "runtime.Msg" // Default to runtime.Msg for complex types
 		if port.TypeExpr.Inst != nil {
 			switch port.TypeExpr.Inst.Ref.Name {
 			case "int":
@@ -398,7 +414,7 @@ func (b Backend) buildFuncCalls(
 			)
 		}
 
-		config := "nil"
+		config := "runtime.Msg{}"
 		if call.Msg != nil {
 			var err error
 			config, err = b.getMessageString(call.Msg)
@@ -432,7 +448,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
 	case ir.MsgTypeUnion:
 		if msg.Union.Data == nil {
-			return fmt.Sprintf(`runtime.NewUnionMsg(%q, nil)`, msg.Union.Tag), nil
+			return fmt.Sprintf(`runtime.NewUnionMsgNoData(%q)`, msg.Union.Tag), nil
 		}
 		payload, err := b.getMessageString(msg.Union.Data)
 		if err != nil {

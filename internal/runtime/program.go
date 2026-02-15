@@ -15,9 +15,9 @@ type Program struct {
 }
 
 type FuncCall struct {
-	Config Msg
-	IO     IO
 	Ref    string
+	IO     IO
+	Config Msg
 }
 
 type IO struct {
@@ -93,7 +93,7 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	var msg Msg
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return Msg{}, false
 	case v := <-s.ch:
 		msg = v.Msg
 	}
@@ -150,7 +150,7 @@ func NewArrayInport(
 func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return Msg{}, false
 	case v := <-a.chans[idx]:
 		index := Uint8Index(idx)
 		msg := a.interceptor.Received(

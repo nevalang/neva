@@ -66,7 +66,7 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 	}, nil
 }
 
-func respMsg(statusCode int, body []byte) runtime.StructMsg {
+func respMsg(statusCode int, body []byte) runtime.Msg {
 	return runtime.NewStructMsg([]runtime.StructField{
 		runtime.NewStructField("body", runtime.NewStringMsg(string(body))),
 		runtime.NewStructField("statusCode", runtime.NewIntMsg(int64(statusCode))),

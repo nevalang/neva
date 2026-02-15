@@ -49,7 +49,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
 		cancel()
-		return nil, err
+		return Msg{}, err
 	}
 
 	funcsFinished := make(chan struct{})

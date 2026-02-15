@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	neva "github.com/nevalang/neva/internal/compiler/utils/generated"
-	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/pkg/core"
 )
 
@@ -25,10 +24,10 @@ func ParseEntityRef(ctx context.Context, ref string) (core.EntityRef, error) {
 	}
 
 	// Unmarshal the result
-	msg, ok := out.Res.(runtime.StructMsg)
-	if !ok {
+	if !out.Res.IsStruct() {
 		return core.EntityRef{}, fmt.Errorf("expected struct msg, got %T", out.Res)
 	}
+	msg := out.Res.Struct()
 
 	return core.EntityRef{
 		Pkg:  msg.Get("pkg").Str(),

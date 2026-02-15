@@ -52,7 +52,7 @@ func (a atoi) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 func (a atoi) stringToRuntimeInt(str string) (runtime.Msg, error) {
 	v, err := strconv.Atoi(str) // equivalent to ParseInt(s, 10, 0)
 	if err != nil {
-		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
+		return runtime.Msg{}, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 	}
 	return runtime.NewIntMsg(int64(v)), nil
 }

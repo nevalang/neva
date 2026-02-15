@@ -21,12 +21,12 @@ func (fanIn) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, ok := data.Select(ctx)
+			selectedMsg, ok := data.Select(ctx)
 			if !ok {
 				return
 			}
 
-			if !resOut.Send(ctx, dataMsg) {
+			if !resOut.Send(ctx, selectedMsg.Msg) {
 				return
 			}
 		}

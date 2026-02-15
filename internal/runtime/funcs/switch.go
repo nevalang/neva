@@ -88,16 +88,3 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 		}
 	}, nil
 }
-
-func tryToUnboxIfUnion(dataMsg runtime.Msg) runtime.Msg {
-	u, ok := dataMsg.(runtime.UnionMsg)
-	if !ok {
-		return dataMsg
-	}
-
-	if u.Data() == nil {
-		return u
-	}
-
-	return u.Data()
-}
