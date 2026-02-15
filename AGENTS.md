@@ -92,6 +92,7 @@ Follow these instructions.
 
 ### Session Notes (2026-02-01)
 
+- **Gotchas**: Overload resolution can fail when constraints are collected from neighboring overloaded nodes; treat ambiguous neighbor port types as non-constraints to avoid eliminating all candidates.
 - **Language semantics**: Array-bypass now uses `[*]` on both sides of a normal connection; index `255` is reserved for the wildcard.
 - **Architecture insights**: Array-bypass is handled as a normal connection with a sentinel slot index (`ArrayBypassIdx`) instead of a dedicated AST connection type.
 - **Gotchas**: Using `[255]` directly is now a parser error; always use `[*]` for array-bypass.
@@ -131,6 +132,11 @@ Follow these instructions.
 
 ### Session Notes (2026-02-13)
 
+- **Language semantics**: Receiver/sender pairing for chained connections must recurse even when a chain head has a concrete `PortAddr`, otherwise downstream receivers lose constraints.
+- **Common patterns**: For selector senders in overload-constraint collection (for example `:state -> .rate -> mul:left`), pass previous chain-link senders into sender-type derivation.
+- **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
+- **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
+
 - **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
 - **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
 - **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
@@ -139,6 +145,12 @@ Follow these instructions.
 
 ### Session Notes (2026-02-14)
 
+- **Common patterns**: In overload-constraint collection, treat empty or ambiguous neighbor candidate type sets as "no constraint" and let other edges disambiguate overloads.
+- **Common patterns**: Reuse shared helpers for type dedupe (`appendUniqueType`) and unambiguous-single-type checks (`singleUnambiguousType`) to avoid drift across analyzer paths.
+- **Architecture insights**: `getPossibleSenderTypes` is best-effort for overload filtering; errors in this path should avoid panics and defer user-facing diagnostics to regular validation.
+- **Gotchas**: Selector senders without `prevChainLink` context are invalid and must yield no inferred constraint during overload filtering.
+- **Common patterns**: Prefer explicit `(type, ok)` helper return (`singleUnambiguousType`) over slice/nil signaling when representing optional constraints.
+- **Common patterns**: Avoid local function aliases in analyzer hot paths when a direct helper call keeps intent clearer (`singleUnambiguousType(...)` directly at call sites).
 - **Common patterns**: For LSP package-entity traversal, prefer `src.Package.Entities()` (range-func iterator) over ad-hoc flattening maps.
 - **Architecture insights**: Keep shared index snapshot lock access (`getBuild`/`setBuild`) on `Server` to avoid mutex handling drift across feature files.
 - **Common patterns**: CodeLens `Data` payload should validate explicit kind enums (`references`/`implementations`) instead of relying on default switch fallbacks.
