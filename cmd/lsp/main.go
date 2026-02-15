@@ -8,10 +8,6 @@ import (
 	"github.com/tliron/glsp/server"
 
 	lspServer "github.com/nevalang/neva/cmd/lsp/server"
-	builder "github.com/nevalang/neva/internal/builder"
-	"github.com/nevalang/neva/internal/compiler/analyzer"
-	"github.com/nevalang/neva/internal/compiler/parser"
-	"github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/nevalang/neva/pkg/indexer"
 )
 
@@ -29,14 +25,7 @@ func main() {
 	commonlog.Configure(loglvl, nil)
 	logger := commonlog.GetLoggerf("%s.server", serverName)
 
-	p := parser.New()
-
-	terminator := typesystem.Terminator{}
-	checker := typesystem.MustNewSubtypeChecker(terminator)
-	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
-	builder := builder.MustNew(p)
-
-	indexer := indexer.New(builder, p, analyzer.MustNew(resolver), logger)
+	indexer := indexer.MustNewDefault(logger)
 
 	handler := lspServer.BuildHandler(logger, serverName, indexer)
 

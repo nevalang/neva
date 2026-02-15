@@ -159,6 +159,8 @@ Follow these instructions.
 - **Architecture insights**: LSP workspace scanning moved into `pkg/indexer` as an explicit intermediate extraction step for splitting LSP out of the main repository.
 - **Common patterns**: Expose tooling-facing errors via a package-local adapter (`indexer.Error`) that wraps `compiler.Error` but stabilizes surfaced fields (`Message`, `Meta`) and behavior (`Error()`, `Unwrap()`).
 - **Gotchas**: LSP diagnostics code must guard `Meta == nil` when deriving URIs/ranges from indexer errors to avoid nil-pointer crashes.
+- **Architecture insights**: `pkg/indexer.NewDefault` centralizes default parser/builder/analyzer wiring, so LSP binaries can initialize indexing without importing `internal/*`.
+- **Architecture insights**: `pkg/typesystem` now re-exports core type-system types for tooling, allowing LSP code to stop importing `internal/compiler/typesystem` directly.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
