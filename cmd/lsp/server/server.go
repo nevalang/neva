@@ -10,7 +10,6 @@ import (
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/indexer"
 )
@@ -136,13 +135,17 @@ func (s *Server) createDiagnostics(
 		Diagnostics: []protocol.Diagnostic{
 			{
 				Range:    startStopRange,
-				Severity: compiler.Pointer(protocol.DiagnosticSeverityError),
-				Source:   compiler.Pointer("compiler"),
+				Severity: ptr(protocol.DiagnosticSeverityError),
+				Source:   ptr("compiler"),
 				Message:  indexerErr.Message, // we don't use Error() because it will duplicate location
 				Data:     time.Now(),
 			},
 		},
 	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }
 
 func toUint32(value int) uint32 {
