@@ -92,6 +92,7 @@ Follow these instructions.
 
 ### Session Notes (2026-02-01)
 
+- **Gotchas**: Overload resolution can fail when constraints are collected from neighboring overloaded nodes; treat ambiguous neighbor port types as non-constraints to avoid eliminating all candidates.
 - **Language semantics**: Array-bypass now uses `[*]` on both sides of a normal connection; index `255` is reserved for the wildcard.
 - **Architecture insights**: Array-bypass is handled as a normal connection with a sentinel slot index (`ArrayBypassIdx`) instead of a dedicated AST connection type.
 - **Gotchas**: Using `[255]` directly is now a parser error; always use `[*]` for array-bypass.
@@ -129,16 +130,51 @@ Follow these instructions.
 - **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
 - **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
 
+### Session Notes (2026-02-10)
+
+- **Common patterns**: Visual editor should preserve 1:1 mapping between text and graph; avoid hidden nodes/edges that break this invariant.
+- **Common patterns**: IR visualization backends (DOT/Mermaid/ThreeJS) already group ports by component path; reuse this hierarchy for visual editor clustering.
+- **UI/UX patterns**: Node editors commonly offer a palette with categorized nodes and wire-splice insertion; Neva should mirror this for discoverability and fast wiring.
+- **UI/UX patterns**: Canvas annotations/notes are first-class (n8n-style), useful for comments and documentation in the visual view.
+
 ### Session Notes (2026-02-13)
+
+- **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
+- **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
+- **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
+
+### Session Notes (2026-02-14)
+
+- **Common patterns**: Keep planning docs in plain Markdown without agent-specific frontmatter so they stay readable and transferable across tools.
+- **Common patterns**: In architecture plans, define abstract payload/model names (e.g., `VisualDocument`) in a terminology section to avoid conflating them with LSP method names.
+### Session Notes (2026-02-13)
+
+- **Language semantics**: Receiver/sender pairing for chained connections must recurse even when a chain head has a concrete `PortAddr`, otherwise downstream receivers lose constraints.
+- **Common patterns**: For selector senders in overload-constraint collection (for example `:state -> .rate -> mul:left`), pass previous chain-link senders into sender-type derivation.
+- **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
+- **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
 
 - **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
 - **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
 - **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
 - **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
 - **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
+- **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
+- **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
+- **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
 
 ### Session Notes (2026-02-14)
 
+- **Common patterns**: In overload-constraint collection, treat empty or ambiguous neighbor candidate type sets as "no constraint" and let other edges disambiguate overloads.
+- **Common patterns**: Reuse shared helpers for type dedupe (`appendUniqueType`) and unambiguous-single-type checks (`singleUnambiguousType`) to avoid drift across analyzer paths.
+- **Architecture insights**: `getPossibleSenderTypes` is best-effort for overload filtering; errors in this path should avoid panics and defer user-facing diagnostics to regular validation.
+- **Gotchas**: Selector senders without `prevChainLink` context are invalid and must yield no inferred constraint during overload filtering.
+- **Common patterns**: Prefer explicit `(type, ok)` helper return (`singleUnambiguousType`) over slice/nil signaling when representing optional constraints.
+- **Common patterns**: Avoid local function aliases in analyzer hot paths when a direct helper call keeps intent clearer (`singleUnambiguousType(...)` directly at call sites).
 - **Common patterns**: For LSP package-entity traversal, prefer `src.Package.Entities()` (range-func iterator) over ad-hoc flattening maps.
 - **Architecture insights**: Keep shared index snapshot lock access (`getBuild`/`setBuild`) on `Server` to avoid mutex handling drift across feature files.
 - **Common patterns**: CodeLens `Data` payload should validate explicit kind enums (`references`/`implementations`) instead of relying on default switch fallbacks.
@@ -147,6 +183,7 @@ Follow these instructions.
 - **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
 - **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
 - **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
+- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
 
 ### Session Notes (2026-02-14, AST/Core extraction prep)
 
@@ -182,6 +219,21 @@ Follow these instructions.
 - **Gotchas**: `Select` consumes all `then[*]` inputs for each `if` trigger; wiring multiple trigger sources per iteration can deadlock benchmarks.
 - **Common patterns**: For heavy router/selector e2e runtime benchmarks, keep workload lower (e.g. `Range:to = 10000`) so local smoke runs stay under execution timeout.
 - **Gotchas**: Naming a benchmark package root `runtime` can collide with stdlib import resolution; use a distinct root like `runtime_bench`.
+
+### Session Notes (2026-02-15)
+
+- **Architecture insights**: LSP workspace scanning moved into `pkg/indexer` as an explicit intermediate extraction step for splitting LSP out of the main repository.
+- **Common patterns**: Expose tooling-facing errors via a package-local adapter (`indexer.Error`) that wraps `compiler.Error` but stabilizes surfaced fields (`Message`, `Meta`) and behavior (`Error()`, `Unwrap()`).
+- **Gotchas**: LSP diagnostics code must guard `Meta == nil` when deriving URIs/ranges from indexer errors to avoid nil-pointer crashes.
+- **Architecture insights**: `pkg/indexer.NewDefault` centralizes default parser/builder/analyzer wiring, so LSP binaries can initialize indexing without importing `internal/*`.
+- **Architecture insights**: `pkg/typesystem` now re-exports core type-system types for tooling, allowing LSP code to stop importing `internal/compiler/typesystem` directly.
+
+### Session Notes (2026-02-14, visual plan decisions)
+
+- **Architecture insights**: Visual projection should be raw-AST-first, with analyzer/desugarer data as optional overlays rather than the base graph source.
+- **Common patterns**: Prefer explicit `neva/get*` visual methods over reviving incomplete `resolve_file`/`GetFileView` bridge paths when no compatibility obligations exist.
+- **UI/UX patterns**: MVP IDE integration can start as a command-based readonly preview (Markdown-preview style) with component focus/fullscreen, while custom-editor/side-panel/inline variants stay as explicit follow-up decisions.
+- **Architecture insights**: Standalone visual app should depend on Neva LSP transport, not editor-specific APIs, so IDE and standalone consume the same graph contract.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

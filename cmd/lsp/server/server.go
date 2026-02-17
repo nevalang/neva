@@ -10,9 +10,8 @@ import (
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 
-	"github.com/nevalang/neva/cmd/lsp/indexer"
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/ast"
+	"github.com/nevalang/neva/pkg/indexer"
 )
 
 //nolint:govet // fieldalignment: preserve layout for readability.
@@ -86,7 +85,10 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 
 	// remember problem and send diagnostic
 	s.problemsMutex.Lock()
-	uri := filepath.Join(s.workspacePath, compilerErr.Meta.Location.String()) // we assume compilerErr is deepest child (for now)
+	uri := s.workspacePath
+	if compilerErr.Meta != nil {
+		uri = filepath.Join(s.workspacePath, compilerErr.Meta.Location.String())
+	}
 	s.problemFiles[uri] = struct{}{}
 	notify(
 		protocol.ServerTextDocumentPublishDiagnostics,
@@ -99,25 +101,27 @@ func (s *Server) indexAndNotifyProblems(notify glsp.NotifyFunc) error {
 }
 
 func (s *Server) createDiagnostics(
-	compilerErr compiler.Error, // deepest child (for now) compiler error
+	indexerErr indexer.Error,
 	uri string,
 ) protocol.PublishDiagnosticsParams {
 	var startStopRange protocol.Range
-	if compilerErr.Meta != nil {
+	if indexerErr.Meta != nil {
 		// If stop is 0 0, set it to the same as start but with character incremented by 1
-		if compilerErr.Meta.Stop.Line == 0 && compilerErr.Meta.Stop.Column == 0 {
-			compilerErr.Meta.Stop = compilerErr.Meta.Start
-			compilerErr.Meta.Stop.Column++
+		start := indexerErr.Meta.Start
+		stop := indexerErr.Meta.Stop
+		if stop.Line == 0 && stop.Column == 0 {
+			stop = start
+			stop.Column++
 		}
 
 		startStopRange = protocol.Range{
 			Start: protocol.Position{
-				Line:      toUint32(compilerErr.Meta.Start.Line),
-				Character: toUint32(compilerErr.Meta.Start.Column),
+				Line:      toUint32(start.Line),
+				Character: toUint32(start.Column),
 			},
 			End: protocol.Position{
-				Line:      toUint32(compilerErr.Meta.Stop.Line),
-				Character: toUint32(compilerErr.Meta.Stop.Column),
+				Line:      toUint32(stop.Line),
+				Character: toUint32(stop.Column),
 			},
 		}
 
@@ -131,13 +135,17 @@ func (s *Server) createDiagnostics(
 		Diagnostics: []protocol.Diagnostic{
 			{
 				Range:    startStopRange,
-				Severity: compiler.Pointer(protocol.DiagnosticSeverityError),
-				Source:   compiler.Pointer("compiler"),
-				Message:  compilerErr.Message, // we don't use Error() because it will duplicate location
+				Severity: ptr(protocol.DiagnosticSeverityError),
+				Source:   ptr("compiler"),
+				Message:  indexerErr.Message, // we don't use Error() because it will duplicate location
 				Data:     time.Now(),
 			},
 		},
 	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }
 
 func toUint32(value int) uint32 {

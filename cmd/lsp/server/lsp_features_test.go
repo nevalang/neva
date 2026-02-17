@@ -4,9 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
