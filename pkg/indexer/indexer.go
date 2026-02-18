@@ -41,6 +41,10 @@ func (i Indexer) FullScan(
 
 	i.logger.Debug("nevalang module found in workspace", "path", feResult.Path)
 
+	// Frontend derives feResult.MainPkg from the input path (often "." for module
+	// root scans). For workspace indexing we intentionally analyze as library
+	// (empty main package) so LSP build snapshots are not coupled to executable
+	// Main-package validation.
 	aBuild, err := i.analyzer.Analyze(feResult.ParsedBuild, "")
 	if err != nil {
 		return src.Build{}, true, wrapCompilerError(err)

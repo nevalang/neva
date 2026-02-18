@@ -2,20 +2,26 @@ package indexer
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	neva "github.com/nevalang/neva/pkg"
 	"github.com/stretchr/testify/require"
 	"github.com/tliron/commonlog"
 )
 
+// TestFullScan_workspace_without_main_package_uses_workspace_mode_analysis ensures
+// module-root scans work when Neva code lives in subpackages, e.g.:
+//
+//	neva.yml
+//	pkg/main.neva
 func TestFullScan_workspace_without_main_package_uses_workspace_mode_analysis(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
-		"neva.yml": `neva: 0.34.0
-`,
+		"neva.yml": manifestYAML(),
 		"pkg/main.neva": `def Echo(input any) (output any) { :input -> :output }
 `,
 	})
@@ -39,12 +45,13 @@ func TestFullScan_workspace_without_main_package_uses_workspace_mode_analysis(t 
 	require.Contains(t, entryMod.Packages, "pkg")
 }
 
+// TestFullScan_workspace_with_main_package_is_still_successful verifies workspace
+// mode still returns a valid build when root package defines Main.
 func TestFullScan_workspace_with_main_package_is_still_successful(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
-		"neva.yml": `neva: 0.34.0
-`,
+		"neva.yml": manifestYAML(),
 		"main.neva": `def Main(start any) (stop any) { :start -> :stop }
 `,
 	})
@@ -68,12 +75,13 @@ func TestFullScan_workspace_with_main_package_is_still_successful(t *testing.T) 
 	require.Contains(t, entryMod.Packages, ".")
 }
 
+// TestFullScan_workspace_without_main_package_does_not_mask_fatal_analyzer_errors
+// verifies workspace mode still fails on real semantic/type errors.
 func TestFullScan_workspace_without_main_package_does_not_mask_fatal_analyzer_errors(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
-		"neva.yml": `neva: 0.34.0
-`,
+		"neva.yml": manifestYAML(),
 		"pkg/broken.neva": `def Broken(start UnknownType) (stop any) { :start -> :stop }
 `,
 	})
@@ -87,12 +95,13 @@ func TestFullScan_workspace_without_main_package_does_not_mask_fatal_analyzer_er
 	require.Empty(t, build.Modules)
 }
 
+// TestFullScan_workspace_without_main_package_does_not_mask_fatal_parser_errors
+// verifies parser failures are still returned as fatal scan errors.
 func TestFullScan_workspace_without_main_package_does_not_mask_fatal_parser_errors(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
-		"neva.yml": `neva: 0.34.0
-`,
+		"neva.yml": manifestYAML(),
 		"pkg/broken.neva": `def Broken(
 `,
 	})
@@ -127,4 +136,8 @@ func writeWorkspace(t *testing.T, files map[string]string) string {
 	}
 
 	return workspace
+}
+
+func manifestYAML() string {
+	return fmt.Sprintf("neva: %s\n", neva.Version)
 }
