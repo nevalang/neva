@@ -140,7 +140,7 @@ Follow these instructions.
 ### Session Notes (2026-02-13)
 
 - **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
-- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `nevalang/neva-lsp/cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
 - **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
 - **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
 - **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
@@ -156,13 +156,13 @@ Follow these instructions.
 - **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
 - **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
 
-- **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
+- **Common patterns**: New LSP features in `nevalang/neva-lsp/cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
 - **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
 - **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
 - **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
 - **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
 - **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
-- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `nevalang/neva-lsp/cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
 - **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
 - **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
 - **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
@@ -183,7 +183,7 @@ Follow these instructions.
 - **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
 - **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
 - **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
-- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
+- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `nevalang/neva-lsp/cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
 
 ### Session Notes (2026-02-14, AST/Core extraction prep)
 
@@ -212,6 +212,12 @@ Follow these instructions.
 - **Common patterns**: Prefer explicit `neva/get*` visual methods over reviving incomplete `resolve_file`/`GetFileView` bridge paths when no compatibility obligations exist.
 - **UI/UX patterns**: MVP IDE integration can start as a command-based readonly preview (Markdown-preview style) with component focus/fullscreen, while custom-editor/side-panel/inline variants stay as explicit follow-up decisions.
 - **Architecture insights**: Standalone visual app should depend on Neva LSP transport, not editor-specific APIs, so IDE and standalone consume the same graph contract.
+
+### Session Notes (2026-02-18)
+
+- **Architecture insights**: `cmd/lsp` is removed from this repository; canonical LSP source now lives in `nevalang/neva-lsp`.
+- **Common patterns**: Before deleting mirrored code, normalize module import paths and diff against the extracted repo to verify functional parity.
+- **Gotchas**: Removing `cmd/lsp` requires cleaning `Makefile` `build-lsp*` targets and running `go mod tidy` to drop stale `glsp` module dependencies.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
