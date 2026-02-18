@@ -200,6 +200,12 @@ Follow these instructions.
 - **Architecture insights**: `pkg/indexer.NewDefault` centralizes default parser/builder/analyzer wiring, so LSP binaries can initialize indexing without importing `internal/*`.
 - **Architecture insights**: `pkg/typesystem` now re-exports core type-system types for tooling, allowing LSP code to stop importing `internal/compiler/typesystem` directly.
 
+### Session Notes (2026-02-18)
+
+- **Architecture insights**: `pkg/indexer.FullScan` now always analyzes workspace snapshots in library mode (`mainPkgName == ""`) so LSP is independent from runnable-entry assumptions.
+- **Common patterns**: Keep workspace indexing semantics library-first in `pkg/indexer`; executable-specific `Main` validation belongs to CLI/compiler executable flow.
+- **Gotchas**: Passing executable `MainPkg` into workspace scans can surface `main package not found` and then cascade into LSP `file not found in build`.
+
 ### Session Notes (2026-02-14, visual plan decisions)
 
 - **Architecture insights**: Visual projection should be raw-AST-first, with analyzer/desugarer data as optional overlays rather than the base graph source.
