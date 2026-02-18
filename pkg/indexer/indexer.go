@@ -49,27 +49,21 @@ func (i Indexer) FullScan(
 			return src.Build{}, true, wrapCompilerError(err)
 		}
 
-		// Workspace indexing should remain useful even when the workspace root
-		// is not itself a runnable entry package.
-		i.logger.Info(
-			"main package not found; falling back to workspace library analysis",
+		// Module roots often contain subpackages and do not necessarily define
+		// a runnable package at the root path.
+		i.logger.Debug(
+			"main package not found; retrying analysis in workspace mode",
 			"mainPkg", feResult.MainPkg,
 			"workspacePath", workspacePath,
 		)
 
 		fallbackBuild, fallbackErr := i.analyzer.Analyze(feResult.ParsedBuild, "")
 		if fallbackErr != nil {
-			i.logger.Warning(
-				"workspace fallback analysis failed",
-				"mainPkg", feResult.MainPkg,
-				"workspacePath", workspacePath,
-				"err", fallbackErr,
-			)
 			return src.Build{}, true, wrapCompilerError(fallbackErr)
 		}
 
-		i.logger.Info(
-			"workspace fallback analysis succeeded",
+		i.logger.Debug(
+			"workspace mode analysis succeeded",
 			"mainPkg", feResult.MainPkg,
 			"workspacePath", workspacePath,
 		)
