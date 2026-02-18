@@ -14,8 +14,6 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
-const mainPackageNotFoundMessage = "main package not found"
-
 // Indexer performs workspace scans and returns analyzed source build snapshots.
 type Indexer struct {
 	fe       compiler.Frontend
@@ -43,41 +41,12 @@ func (i Indexer) FullScan(
 
 	i.logger.Debug("nevalang module found in workspace", "path", feResult.Path)
 
-	aBuild, err := i.analyzer.Analyze(feResult.ParsedBuild, feResult.MainPkg)
+	aBuild, err := i.analyzer.Analyze(feResult.ParsedBuild, "")
 	if err != nil {
-		if !isMainPackageNotFoundError(err) {
-			return src.Build{}, true, wrapCompilerError(err)
-		}
-
-		// Module roots often contain subpackages and do not necessarily define
-		// a runnable package at the root path.
-		i.logger.Debug(
-			"main package not found; retrying analysis in workspace mode",
-			"mainPkg", feResult.MainPkg,
-			"workspacePath", workspacePath,
-		)
-
-		fallbackBuild, fallbackErr := i.analyzer.Analyze(feResult.ParsedBuild, "")
-		if fallbackErr != nil {
-			return src.Build{}, true, wrapCompilerError(fallbackErr)
-		}
-
-		i.logger.Debug(
-			"workspace mode analysis succeeded",
-			"mainPkg", feResult.MainPkg,
-			"workspacePath", workspacePath,
-		)
-		return fallbackBuild, true, nil
+		return src.Build{}, true, wrapCompilerError(err)
 	}
 
 	return aBuild, true, nil
-}
-
-func isMainPackageNotFoundError(err *compiler.Error) bool {
-	if err == nil {
-		return false
-	}
-	return err.Unwrap().Message == mainPackageNotFoundMessage
 }
 
 func isParentPath(parent, child string) bool {

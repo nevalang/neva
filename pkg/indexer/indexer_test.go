@@ -10,7 +10,7 @@ import (
 	"github.com/tliron/commonlog"
 )
 
-func TestFullScan_workspace_without_main_package_uses_library_fallback(t *testing.T) {
+func TestFullScan_workspace_without_main_package_uses_workspace_mode_analysis(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
@@ -39,7 +39,7 @@ func TestFullScan_workspace_without_main_package_uses_library_fallback(t *testin
 	require.Contains(t, entryMod.Packages, "pkg")
 }
 
-func TestFullScan_workspace_with_main_package_keeps_executable_analysis(t *testing.T) {
+func TestFullScan_workspace_with_main_package_is_still_successful(t *testing.T) {
 	t.Parallel()
 
 	workspace := writeWorkspace(t, map[string]string{
@@ -83,7 +83,7 @@ func TestFullScan_workspace_without_main_package_does_not_mask_fatal_analyzer_er
 
 	require.True(t, found)
 	require.Error(t, err)
-	require.NotEqual(t, mainPackageNotFoundMessage, err.Message)
+	require.NotEmpty(t, err.Message)
 	require.Empty(t, build.Modules)
 }
 
@@ -102,7 +102,7 @@ func TestFullScan_workspace_without_main_package_does_not_mask_fatal_parser_erro
 
 	require.False(t, found)
 	require.Error(t, err)
-	require.NotEqual(t, mainPackageNotFoundMessage, err.Message)
+	require.NotEmpty(t, err.Message)
 	require.Empty(t, build.Modules)
 }
 

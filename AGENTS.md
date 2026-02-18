@@ -202,9 +202,9 @@ Follow these instructions.
 
 ### Session Notes (2026-02-18)
 
-- **Architecture insights**: `pkg/indexer.FullScan` now treats analyzer `main package not found` as a recoverable workspace case and retries analysis in library mode (`mainPkgName == ""`).
-- **Common patterns**: Keep fallback scope narrow: only downgrade `main package not found`; all other analyzer/parser/frontend errors remain fatal for the scan.
-- **Gotchas**: Without this fallback, LSP may keep reporting `file not found in build` for valid workspace files when the opened module root is not itself runnable.
+- **Architecture insights**: `pkg/indexer.FullScan` now always analyzes workspace snapshots in library mode (`mainPkgName == ""`) so LSP is independent from runnable-entry assumptions.
+- **Common patterns**: Keep workspace indexing semantics library-first in `pkg/indexer`; executable-specific `Main` validation belongs to CLI/compiler executable flow.
+- **Gotchas**: Passing executable `MainPkg` into workspace scans can surface `main package not found` and then cascade into LSP `file not found in build`.
 
 ### Session Notes (2026-02-14, visual plan decisions)
 
