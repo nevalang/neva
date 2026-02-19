@@ -33,6 +33,7 @@ func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDef
 	return ts.Def{
 		Params:   resolvedParams,
 		BodyExpr: def.BodyExpr,
+		Meta:     def.Meta,
 	}, nil
 }
 
