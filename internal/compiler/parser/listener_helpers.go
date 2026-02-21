@@ -549,6 +549,8 @@ func (s *treeShapeListener) parseNodes(
 		}
 
 		id := node.IDENTIFIER()
+		// Root-level nodes must be explicit to avoid implicit-name ambiguity in networks.
+		// DI blocks keep anonymous shorthand (empty key) for existing higher-order component patterns.
 		if id == nil && isRootLevel {
 			return nil, &compiler.Error{
 				Message: "node alias is required",
