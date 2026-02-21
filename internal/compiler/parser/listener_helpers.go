@@ -554,10 +554,10 @@ func (s *treeShapeListener) parseNodes(
 		if id != nil {
 			nodeName = id.GetText()
 		} else if isRootLevel {
-			// Keep parser permissive: analyzer reports missing aliases as semantic errors.
+			// Keep parser permissive: analyzer reports missing node names as semantic errors.
 			// Use component-scoped placeholder names to avoid map key collisions between unnamed nodes.
 			missingAliasCounter++
-			nodeName = src.MissingAliasNodeName(missingAliasCounter)
+			nodeName = src.MissingNodeName(missingAliasCounter)
 		}
 
 		result[nodeName] = src.Node{

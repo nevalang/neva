@@ -93,9 +93,9 @@ func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
 	return expr
 }
 
-func TestIsMissingAliasNodeName(t *testing.T) {
+func TestIsMissingNodeName(t *testing.T) {
 	t.Parallel()
 
-	require.True(t, isMissingAliasNodeName(src.MissingAliasNodeName(1)))
-	require.False(t, isMissingAliasNodeName("handler"))
+	require.True(t, isMissingNodeName(src.MissingNodeName(1)))
+	require.False(t, isMissingNodeName("handler"))
 }

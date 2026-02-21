@@ -331,10 +331,10 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 
 	nodes := got.Entities["C1"].Component[0].Nodes
 
-	_, hasScannerPlaceholder := nodes[src.MissingAliasNodeName(1)]
+	_, hasScannerPlaceholder := nodes[src.MissingNodeName(1)]
 	require.Equal(t, true, hasScannerPlaceholder)
 
-	_, hasPrinterPlaceholder := nodes[src.MissingAliasNodeName(2)]
+	_, hasPrinterPlaceholder := nodes[src.MissingNodeName(2)]
 	require.Equal(t, true, hasPrinterPlaceholder)
 }
 

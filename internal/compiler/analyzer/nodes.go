@@ -32,7 +32,7 @@ func (a Analyzer) analyzeNodes(
 	hasErrGuard := false
 
 	for nodeName, node := range nodes {
-		if isMissingAliasNodeName(nodeName) {
+		if isMissingNodeName(nodeName) {
 			return nil, nil, false, &compiler.Error{
 				Message: "node name is required",
 				Meta:    &node.Meta,
@@ -67,8 +67,8 @@ func (a Analyzer) analyzeNodes(
 
 // Parser may store unnamed top-level nodes as placeholder names.
 // Analyzer treats them as semantic validation errors for users.
-func isMissingAliasNodeName(nodeName string) bool {
-	return strings.HasPrefix(nodeName, src.MissingAliasNodeNamePrefix)
+func isMissingNodeName(nodeName string) bool {
+	return strings.HasPrefix(nodeName, src.MissingNodeNamePrefix)
 }
 
 //nolint:gocyclo // Analyzer node handling is a high-branch routine.
