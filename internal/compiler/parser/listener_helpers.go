@@ -549,28 +549,13 @@ func (s *treeShapeListener) parseNodes(
 		}
 
 		id := node.IDENTIFIER()
-		// Root-level nodes must be explicit to avoid implicit-name ambiguity in networks.
-		// DI blocks keep anonymous shorthand (empty key) for existing higher-order component patterns.
-		if id == nil && isRootLevel {
-			return nil, &compiler.Error{
-				Message: "node alias is required",
-				Meta: &core.Meta{
-					Text: node.GetText(),
-					Start: core.Position{
-						Line:   node.GetStart().GetLine(),
-						Column: node.GetStart().GetColumn(),
-					},
-					Stop: core.Position{
-						Line:   node.GetStop().GetLine(),
-						Column: node.GetStop().GetColumn(),
-					},
-					Location: s.loc,
-				},
-			}
-		}
 		var nodeName string
 		if id != nil {
 			nodeName = id.GetText()
+		} else if isRootLevel {
+			// Keep parser permissive and preserve all unnamed top-level nodes for analyzer validation.
+			// DI blocks intentionally keep empty key "" to represent anonymous dependency shorthand.
+			nodeName = fmt.Sprintf("__missing_alias:%d:%d", node.GetStart().GetLine(), node.GetStart().GetColumn())
 		}
 
 		result[nodeName] = src.Node{

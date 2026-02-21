@@ -221,7 +221,7 @@ Follow these instructions.
 
 ### Session Notes (2026-02-21)
 
-- **Language semantics**: Node aliases are now required for top-level component node declarations; anonymous shorthand is still accepted for DI argument node blocks.
+- **Language semantics**: Node aliases are required for top-level component node declarations (validated in analyzer); anonymous shorthand is still accepted for DI argument node blocks.
 - **Gotchas**: DI argument aliases are semantic (must match dependency node names like `handler`/`predicate`/`reducer`); arbitrary renames can break IR generation.
 ## 3. ⚡ Core Concepts
 

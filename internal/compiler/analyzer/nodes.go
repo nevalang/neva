@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/typesystem"
@@ -30,6 +31,10 @@ func (a Analyzer) analyzeNodes(
 	nodesInterfaces := make(map[string]foundInterface, len(nodes))
 	hasErrGuard := false
 
+	if err := a.validateTopLevelNodeAliases(nodes); err != nil {
+		return nil, nil, false, err
+	}
+
 	for nodeName, node := range nodes {
 		if node.ErrGuard {
 			hasErrGuard = true
@@ -55,6 +60,22 @@ func (a Analyzer) analyzeNodes(
 	}
 
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
+}
+
+// validateTopLevelNodeAliases rejects implicit top-level node names.
+// Parser may store unnamed top-level nodes as internal placeholders so analyzer
+// can report this as a semantic validation error with source metadata.
+func (a Analyzer) validateTopLevelNodeAliases(nodes map[string]src.Node) *compiler.Error {
+	for nodeName, node := range nodes {
+		if strings.HasPrefix(nodeName, "__missing_alias:") {
+			return &compiler.Error{
+				Message: "node alias is required",
+				Meta:    &node.Meta,
+			}
+		}
+	}
+
+	return nil
 }
 
 //nolint:gocyclo // Analyzer node handling is a high-branch routine.
