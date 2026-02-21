@@ -221,6 +221,9 @@ Follow these instructions.
 
 ### Session Notes (2026-02-21)
 
+- **Gotchas**: Post-processing JSON via global `strings.ReplaceAll` (`:` / `,`) corrupts string payloads (for example `"a:b,c"` becomes `"a: b, c"`).
+- **Common patterns**: Keep readable one-line JSON spacing by scanning marshaled bytes and adding spaces only outside JSON strings (track quote/escape state).
+- **Common patterns**: For union string formatting, marshal `data` to JSON first (for correct quoting/escaping) and then apply spacing policy to preserve readability.
 - **Language semantics**: Node aliases are required for top-level component node declarations (validated in analyzer); anonymous shorthand is still accepted for DI argument node blocks.
 - **Gotchas**: DI argument aliases are semantic (must match dependency node names like `handler`/`predicate`/`reducer`); arbitrary renames can break IR generation.
 ## 3. ⚡ Core Concepts

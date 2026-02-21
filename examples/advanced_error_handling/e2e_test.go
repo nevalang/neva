@@ -11,7 +11,7 @@ func Test(t *testing.T) {
 	_, stderr := e2e.Run(t, []string{"run", "."})
 	require.Equal(
 		t,
-		`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\":  unsupported protocol scheme \"\""}
+		`panic: {"text": "Get \"definitely%20not%20a%20valid%20URL\": unsupported protocol scheme \"\""}
 `,
 		stderr,
 	)
