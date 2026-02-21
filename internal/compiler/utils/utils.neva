@@ -56,7 +56,7 @@ pub def ParseEntityRef(ref string) (res EntityRef) {
     // If 1 part
     cond:else -> [lock_empty_pkg:sig, at_name_1:data]
     
-    lock_empty_pkg:data -> fan_in_pkg:data[1]
+    lock_empty_pkg:res -> fan_in_pkg:data[1]
     
     at_name_1:res -> fan_in_name:data[1]
     

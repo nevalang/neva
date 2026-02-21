@@ -50,7 +50,7 @@ Neva supports infinite nesting for streams, but nested streams aren't used to re
 
 ## How to work with components that expect `T` when you have `stream<T>`?
 
-Use `Map/Filter/Reduce` for data transformations and `For` for side-effects. For complex cases, access `.data` on stream item directly.
+Use `Map/Filter/Reduce` for data transformations and `ForEach` for side-effects. For complex cases, access `.data` on stream item directly.
 
 ## Why isn't `Main:stop` of `int` type?
 
@@ -82,11 +82,17 @@ For consistency with other type syntax and to avoid confusion with different syn
 
 ## Why is there inconsistent naming in stdlib?
 
-Some basic components follow naming conventions from other languages for familiarity.
+Historically, stdlib mixed multiple naming styles while the language and APIs were evolving. The current direction is to standardize on clear port roles: `res` for primary output, `err` for failures, and `data` only as a generic input placeholder.
 
 ## What's the reasoning behind Neva's naming conventions?
 
-Names are chosen to be familiar to most programmers, easing the paradigm shift.
+Naming follows three heuristics:
+
+1. Semantic clarity in local context (`url`, `filename`, `left`, `right`).
+2. Stable control/dataflow conventions (`sig`, `res`, `err`, `then`, `else`).
+3. Familiarity with common ecosystems (for example Go stdlib) when it does not reduce clarity.
+
+When heuristics conflict, semantic clarity wins.
 
 ## Why do `struct` and `dict` literals require `:` and `,` while struct declarations don't?
 

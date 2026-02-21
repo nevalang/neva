@@ -20,7 +20,7 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				return
 			}
 
-			if !dataOut.Send(ctx, data) {
+			if !resOut.Send(ctx, data) {
 				return
 			}
 		}

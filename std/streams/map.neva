@@ -2,7 +2,7 @@
 pub interface IMapHandler<T, Y>(T) (Y)
 
 // Map maps one stream onto another.
-// Just like For, it does not block the stream. As soon as one item processed,
+// Unlike ForEach, it does not block the stream. As soon as one item processed,
 // it sends an item downstream and processes the next one.
 // It's can receive next message before previous one is processed,
 // so it must never be used with side-effects.

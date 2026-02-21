@@ -43,7 +43,7 @@ def PrintSecond(data int) (res any, err error) {
 >
 > Pro-TIP: readability is usually more important than performance, so always understand performance, yet focus on readability, until performance issues are faced. TLDR: do not pre-optimize.
 
-Thankfully both of them are part of the `PrintLines` parent-component, that is used by its parent `Main` like this: `streams.For<int>{PrintLines}`.
+Thankfully both of them are part of the `PrintLines` parent-component, that is used by its parent `Main` like this: `streams.ForEach<int>{PrintLines}`.
 
 ```neva
 def PrintLines(data int) (res any, err error) {
@@ -61,7 +61,7 @@ def PrintLines(data int) (res any, err error) {
 
 ```neva
 def Main(start any) (stop any) {
-	print_lines streams.For<int>{PrintLines}
+	print_lines streams.ForEach<int>{PrintLines}
 	range streams.Range
 	wait streams.Wait<any>
 	---

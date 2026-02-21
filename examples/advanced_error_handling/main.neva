@@ -11,15 +11,15 @@ def Main(start any) (stop any) {
 	---
 	:start -> app:sig
 	[app:err, println:err] -> panic // we only handle `:err` at this lvl
-	app:data -> println:data
+	app:res -> println:data
 	println:res -> :stop
 }
 
-def App(sig any) (data string, err error) {
+def App(sig any) (res string, err error) {
 	http_get http.Get? // '?' implicitly sends `:err` downstream
 	---
 	:sig -> 'definitely not a valid URL' -> http_get
 	// http_get output handled like it only has one outport
 	// because http_get:err is handled by the ? operator
-	http_get -> .body -> :data 
+	http_get -> .body -> :res
 }
