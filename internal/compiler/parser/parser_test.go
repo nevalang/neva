@@ -315,7 +315,7 @@ func TestParser_ParseFile_IONodes(t *testing.T) {
 	require.Equal(t, "out", receiver)
 }
 
-func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
+func TestParser_ParseFile_AnonymousNodesRejected(t *testing.T) {
 	text := []byte(`
 		def C1(start any) (stop any) {
 			Scanner
@@ -326,16 +326,9 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 
 	p := New()
 
-	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
-	require.True(t, err == nil)
-
-	nodes := got.Entities["C1"].Component[0].Nodes
-
-	_, ok := nodes["scanner"]
-	require.Equal(t, true, ok)
-
-	_, ok = nodes["printer"]
-	require.Equal(t, true, ok)
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "node alias is required")
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {

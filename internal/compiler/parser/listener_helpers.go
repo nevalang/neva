@@ -548,11 +548,27 @@ func (s *treeShapeListener) parseNodes(
 			deps = v
 		}
 
+		id := node.IDENTIFIER()
+		if id == nil && isRootLevel {
+			return nil, &compiler.Error{
+				Message: "node alias is required",
+				Meta: &core.Meta{
+					Text: node.GetText(),
+					Start: core.Position{
+						Line:   node.GetStart().GetLine(),
+						Column: node.GetStart().GetColumn(),
+					},
+					Stop: core.Position{
+						Line:   node.GetStop().GetLine(),
+						Column: node.GetStop().GetColumn(),
+					},
+					Location: s.loc,
+				},
+			}
+		}
 		var nodeName string
-		if id := node.IDENTIFIER(); id != nil {
+		if id != nil {
 			nodeName = id.GetText()
-		} else if isRootLevel {
-			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
 		}
 
 		result[nodeName] = src.Node{

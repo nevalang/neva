@@ -18,8 +18,8 @@ def Main(start any) (stop any) {
 }
 
 def Slow(data int) (res any, err error) {
-    time.Delay<int>
-    fmt.Println<int>?
+    delay time.Delay<int>
+    println fmt.Println<int>?
     ---
     :data -> [
         delay:data,

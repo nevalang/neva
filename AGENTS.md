@@ -218,6 +218,11 @@ Follow these instructions.
 - **Architecture insights**: `cmd/lsp` is removed from this repository; canonical LSP source now lives in `nevalang/neva-lsp`.
 - **Common patterns**: Before deleting mirrored code, normalize module import paths and diff against the extracted repo to verify functional parity.
 - **Gotchas**: Removing `cmd/lsp` requires cleaning `Makefile` `build-lsp*` targets and running `go mod tidy` to drop stale `glsp` module dependencies.
+
+### Session Notes (2026-02-21)
+
+- **Language semantics**: Node aliases are now required for top-level component node declarations; anonymous shorthand is still accepted for DI argument node blocks.
+- **Gotchas**: DI argument aliases are semantic (must match dependency node names like `handler`/`predicate`/`reducer`); arbitrary renames can break IR generation.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
