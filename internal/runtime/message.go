@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // OrderedMsg is a message with a chronological index.
@@ -192,14 +191,10 @@ func (msg DictMsg) Dict() map[string]Msg { return msg.v }
 func (msg DictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
+	return addJSONSpaces(jsonData), nil
 }
 func (msg DictMsg) String() string {
 	b, err := msg.MarshalJSON()
@@ -267,14 +262,10 @@ func (msg StructMsg) MarshalJSON() ([]byte, error) {
 
 	jsonData, err := json.Marshal(m)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
+	return addJSONSpaces(jsonData), nil
 }
 
 func (msg StructMsg) String() string {
@@ -355,10 +346,25 @@ func (msg UnionMsg) Data() Msg {
 }
 
 func (msg UnionMsg) String() string {
-	if msg.data == nil {
-		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
 	}
-	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+	return string(b)
+}
+
+func (msg UnionMsg) MarshalJSON() ([]byte, error) {
+	if msg.data == nil {
+		return []byte(fmt.Sprintf(`{ "tag": %q }`, msg.tag)), nil
+	}
+
+	dataJSON, err := json.Marshal(msg.data)
+	if err != nil {
+		return nil, err
+	}
+	dataJSON = addJSONSpaces(dataJSON)
+
+	return []byte(fmt.Sprintf(`{ "tag": %q, "data": %s }`, msg.tag, dataJSON)), nil
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -451,4 +457,42 @@ func Match(msg Msg, pattern Msg) bool {
 	// so we apply strict equality to the data they wrap
 	// maybe in the future we'll consider recursive matching, we'll see
 	return msgUnion.data.Equal(patternUnion.data)
+}
+
+func addJSONSpaces(jsonData []byte) []byte {
+	spaced := make([]byte, 0, len(jsonData))
+	inString := false
+	isEscaped := false
+
+	for _, b := range jsonData {
+		if inString {
+			spaced = append(spaced, b)
+			if isEscaped {
+				isEscaped = false
+				continue
+			}
+			if b == '\\' {
+				isEscaped = true
+				continue
+			}
+			if b == '"' {
+				inString = false
+			}
+			continue
+		}
+
+		switch b {
+		case '"':
+			inString = true
+			spaced = append(spaced, b)
+		case ':':
+			spaced = append(spaced, ':', ' ')
+		case ',':
+			spaced = append(spaced, ',', ' ')
+		default:
+			spaced = append(spaced, b)
+		}
+	}
+
+	return spaced
 }

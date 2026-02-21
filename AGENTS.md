@@ -218,6 +218,12 @@ Follow these instructions.
 - **Architecture insights**: `cmd/lsp` is removed from this repository; canonical LSP source now lives in `nevalang/neva-lsp`.
 - **Common patterns**: Before deleting mirrored code, normalize module import paths and diff against the extracted repo to verify functional parity.
 - **Gotchas**: Removing `cmd/lsp` requires cleaning `Makefile` `build-lsp*` targets and running `go mod tidy` to drop stale `glsp` module dependencies.
+
+### Session Notes (2026-02-21)
+
+- **Gotchas**: Post-processing JSON via global `strings.ReplaceAll` (`:` / `,`) corrupts string payloads (for example `"a:b,c"` becomes `"a: b, c"`).
+- **Common patterns**: Keep readable one-line JSON spacing by scanning marshaled bytes and adding spaces only outside JSON strings (track quote/escape state).
+- **Common patterns**: For union string formatting, marshal `data` to JSON first (for correct quoting/escaping) and then apply spacing policy to preserve readability.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
