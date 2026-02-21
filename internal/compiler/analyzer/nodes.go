@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/typesystem"
@@ -31,6 +32,13 @@ func (a Analyzer) analyzeNodes(
 	hasErrGuard := false
 
 	for nodeName, node := range nodes {
+		if isMissingNodeName(nodeName) {
+			return nil, nil, false, &compiler.Error{
+				Message: "node name is required",
+				Meta:    &node.Meta,
+			}
+		}
+
 		if node.ErrGuard {
 			hasErrGuard = true
 		}
@@ -55,6 +63,12 @@ func (a Analyzer) analyzeNodes(
 	}
 
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
+}
+
+// Parser may store unnamed top-level nodes as placeholder names.
+// Analyzer treats them as semantic validation errors for users.
+func isMissingNodeName(nodeName string) bool {
+	return strings.HasPrefix(nodeName, src.MissingNodeNamePrefix)
 }
 
 //nolint:gocyclo // Analyzer node handling is a high-branch routine.

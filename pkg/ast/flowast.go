@@ -187,6 +187,12 @@ type Node struct {
 	Meta          core.Meta            `json:"meta,omitempty"`
 }
 
+const MissingNodeNamePrefix = "__missing_node_name__"
+
+func MissingNodeName(index int) string {
+	return fmt.Sprintf("%s%d", MissingNodeNamePrefix, index)
+}
+
 func (n Node) String() string {
 	return fmt.Sprintf("%v%v", n.EntityRef.String(), n.TypeArgs.String())
 }

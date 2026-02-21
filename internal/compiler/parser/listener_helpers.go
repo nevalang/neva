@@ -500,6 +500,7 @@ func (s *treeShapeListener) parseNodes(
 	isRootLevel bool,
 ) (map[string]src.Node, *compiler.Error) {
 	result := map[string]src.Node{}
+	missingAliasCounter := 0
 
 	for _, node := range actx.AllCompNodeDef() {
 		nodeInst := node.NodeInst()
@@ -548,11 +549,15 @@ func (s *treeShapeListener) parseNodes(
 			deps = v
 		}
 
+		id := node.IDENTIFIER()
 		var nodeName string
-		if id := node.IDENTIFIER(); id != nil {
+		if id != nil {
 			nodeName = id.GetText()
 		} else if isRootLevel {
-			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
+			// Keep parser permissive: analyzer reports missing node names as semantic errors.
+			// Use component-scoped placeholder names to avoid map key collisions between unnamed nodes.
+			missingAliasCounter++
+			nodeName = src.MissingNodeName(missingAliasCounter)
 		}
 
 		result[nodeName] = src.Node{

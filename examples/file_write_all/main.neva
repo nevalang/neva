@@ -1,7 +1,7 @@
 import { io, fmt, runtime }
 
 def Main(start any) (stop any) {
-	io.WriteAll, fmt.Println, runtime.Panic
+	writeAll io.WriteAll, println fmt.Println, panic runtime.Panic
 	---
 	:start -> [
 		'file_writer_example.txt' -> writeAll:filename,

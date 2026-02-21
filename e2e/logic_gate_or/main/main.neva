@@ -4,7 +4,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-	fmt.Println<bool>, Or
+	println fmt.Println<bool>, or Or
 	panic runtime.Panic
 	---
 	:start -> [

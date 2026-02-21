@@ -24,7 +24,7 @@ def Main(start any) (stop any) {
 }
 
 def Mapper(data int) (res string) {
-    Select<string>
+    select Select<string>
     switch Switch<int>
     ---
     :data -> [

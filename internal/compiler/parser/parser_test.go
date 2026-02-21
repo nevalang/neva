@@ -331,11 +331,11 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 
 	nodes := got.Entities["C1"].Component[0].Nodes
 
-	_, ok := nodes["scanner"]
-	require.Equal(t, true, ok)
+	_, hasScannerPlaceholder := nodes[src.MissingNodeName(1)]
+	require.Equal(t, true, hasScannerPlaceholder)
 
-	_, ok = nodes["printer"]
-	require.Equal(t, true, ok)
+	_, hasPrinterPlaceholder := nodes[src.MissingNodeName(2)]
+	require.Equal(t, true, hasPrinterPlaceholder)
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {

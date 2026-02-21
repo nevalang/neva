@@ -14,7 +14,7 @@ type User struct {
 type Pet struct { name string }
 
 def Main(start any) (stop any) {
-    UserSender, fmt.Println, runtime.Panic
+    userSender UserSender, println fmt.Println, panic runtime.Panic
     ---
     :start -> userSender:sig
     userSender -> .pet.name -> println:data
