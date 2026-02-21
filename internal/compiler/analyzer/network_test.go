@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
+	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
 	"github.com/stretchr/testify/require"
 )
@@ -90,4 +91,11 @@ func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
 
 	// fallback: return the expression as-is if we can't create a union
 	return expr
+}
+
+func TestIsMissingAliasNodeName(t *testing.T) {
+	t.Parallel()
+
+	require.True(t, isMissingAliasNodeName(src.MissingAliasNodeName(1)))
+	require.False(t, isMissingAliasNodeName("handler"))
 }
