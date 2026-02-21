@@ -32,9 +32,9 @@ def NewStream(p image.Pixel) (s stream<image.Pixel>) {
 }
 
 def Main(start any) (stop any) {
-	image.New, image.Encode
-	NewPixel, NewColor, NewStream,
-	io.WriteAll, printErr fmt.Println
+	new image.New, encode image.Encode
+	newPixel NewPixel, newColor NewColor, newStream NewStream,
+	writeAll io.WriteAll, printErr fmt.Println
 	panic runtime.Panic
 	---
 	:start -> [

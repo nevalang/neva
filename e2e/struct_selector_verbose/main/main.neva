@@ -23,11 +23,11 @@ const user User = {
 const path list<string> = ['pet', 'name']
 
 def Main(start any) (stop any) {
-    fmt.Println
-    runtime.Panic
+    println fmt.Println
+    panic runtime.Panic
 
     #bind(path)
-    Field
+    field Field
 
     ---
 

@@ -1,7 +1,7 @@
 import { io, fmt, runtime }
 
 def Main(start any) (stop any) {
-	io.ReadAll, fmt.Println, runtime.Panic
+	readAll io.ReadAll, println fmt.Println, panic runtime.Panic
 	---
 	:start -> 'main.neva' -> readAll:filename
 	readAll:res -> println:data

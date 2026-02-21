@@ -1,7 +1,7 @@
 import { io }
 
 def Main(start any) (stop any) {
-	FanOut
+	fanOut FanOut
 	---
 	:start -> fanOut
 	[fanOut[0], fanOut[2]] -> :stop

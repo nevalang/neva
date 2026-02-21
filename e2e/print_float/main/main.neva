@@ -6,7 +6,7 @@ import {
 const x float = 42
 
 def Main(start any) (stop any) {
-    fmt.Println<float>
+    println fmt.Println<float>
     panic runtime.Panic
     ---
     :start -> $x -> println:data
