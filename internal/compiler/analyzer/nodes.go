@@ -34,7 +34,7 @@ func (a Analyzer) analyzeNodes(
 	for nodeName, node := range nodes {
 		if isMissingAliasNodeName(nodeName) {
 			return nil, nil, false, &compiler.Error{
-				Message: "node alias is required",
+				Message: "node name is required",
 				Meta:    &node.Meta,
 			}
 		}
