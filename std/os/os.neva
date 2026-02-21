@@ -1,5 +1,5 @@
 #extern(args)
-pub def Args(sig any) (data list<string>)
+pub def Args(sig any) (res list<string>)
 
 // Environ retrieves the current process environment variables in KEY=VALUE
 // form. It returns a list of strings (not a stream) because the runtime

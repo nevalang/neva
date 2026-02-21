@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
             lock:sig,
             $greeting -> lock:data
         ]
-        lock:data -> println:data
+        lock:res -> println:data
         println:res -> :stop
         println:err -> panic
 }

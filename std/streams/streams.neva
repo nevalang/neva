@@ -3,7 +3,7 @@
 // FromArray iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
-pub def FromArray<T>([port] T) (data stream<T>)
+pub def FromArray<T>([port] T) (res stream<T>)
 
 // FromList creates a stream from a list by sending each element as a stream item.
 #extern(list_to_stream)
@@ -53,7 +53,7 @@ pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 // then outputs stream of every combination of elements from the first stream with
 // elements from the second.
 #extern(stream_product)
-pub def Product<T, Y>(first stream<T>, second stream<Y>) (data stream<ProductResult<T, Y>>)
+pub def Product<T, Y>(first stream<T>, second stream<Y>) (res stream<ProductResult<T, Y>>)
 
 pub type ProductResult<T, Y> struct {
     first T

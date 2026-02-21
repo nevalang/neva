@@ -20,9 +20,14 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
-		return nil, err
+		// Bootstrap compatibility for generated compiler utils built
+		// against the previous Lock outport name.
+		resOut, err = io.Out.Single("data")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return func(ctx context.Context) {
@@ -45,7 +50,7 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				return
 			}
 
-			if !dataOut.Send(ctx, data) {
+			if !resOut.Send(ctx, data) {
 				return
 			}
 		}

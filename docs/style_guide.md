@@ -39,21 +39,24 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 ### Node Instantiation
 
 - Prefer giving a node the same name as the component used to instantiate it (e.g. `println fmt.Println`).
-- When wrapping a component in a higher-order component, mention both to retain clarity (e.g. `for_println For{fmt.Println}`).
+- When wrapping a component in a higher-order component, mention both to retain clarity (e.g. `for_each_println ForEach{fmt.Println}`).
 
 ## Interfaces
 
 - Use outports to separate data flows, not for destructuring.
-- Use `data` for input, `res` for output and `err` for failures.
+- Use `res` for primary output and `err` for failures.
+- Never use `data` as an outport name.
+- Use `data` as an inport name only when the input is truly generic.
+- Prefer domain names for inports when they add clarity (e.g. `url`, `filename`, `left`, `right`).
 - Outport `err` must be of type `error`.
 - Ports `data` and `res` of type `any` are interpreted as signals.
 - Use name `sig` if you have _extra_ trigger-inport.
 - Use names `then` and `else` if you implement boolean branching.
-- Use specific inport names if have more than one - e.g. `(filename, data)` for `io.WriteAll`.
+- Use specific inport names if you have more than one - e.g. `(filename, data)` for `io.WriteAll`.
 - Use type-parameters to preserve type info between input and output if needed.
 
 ## Networks
 
 - Omit port names when possible. It enables renaming of ports without updating the networks.
-- Use `?` for to propogate errors except custom error handling is needed.
+- Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and easier to scan.

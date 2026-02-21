@@ -46,7 +46,7 @@ def Main(start any) (stop any) {
 	newPixel -> newStream:p
 	newStream:s -> new
 	new:img -> encode:img
-	encode:data -> writeAll:data
+	encode:res -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr
 	[writeAll:res, printErr:res] -> :stop
 	printErr:err -> panic

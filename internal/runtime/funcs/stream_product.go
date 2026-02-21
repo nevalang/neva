@@ -23,7 +23,7 @@ func (streamProduct) Create(
 		return nil, err
 	}
 
-	seqOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (streamProduct) Create(
 
 			for i, firstMsg := range firstData {
 				for j, secondMsg := range secondData {
-					seqOut.Send(
+					resOut.Send(
 						ctx,
 						streamItem(
 							runtime.NewStructMsg([]runtime.StructField{

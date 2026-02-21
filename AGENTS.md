@@ -226,6 +226,13 @@ Follow these instructions.
 - **Common patterns**: For union string formatting, marshal `data` to JSON first (for correct quoting/escaping) and then apply spacing policy to preserve readability.
 - **Language semantics**: Node aliases are required for top-level component node declarations (validated in analyzer); anonymous shorthand is still accepted for DI argument node blocks.
 - **Gotchas**: DI argument aliases are semantic (must match dependency node names like `handler`/`predicate`/`reducer`); arbitrary renames can break IR generation.
+- **Architecture insights**: Treat `std/builtin` as two logical layers: compiler-lowering primitives (`New/Lock/Field/FanIn/FanOut/Del`) vs user-prelude ergonomics; keeping them in one namespace increases API drift and confusion.
+- **Common patterns**: Port naming works best with a two-tier rule: default to `data/res/err/sig`, but keep domain-specific single inport names for boundary APIs (`url`, `filename`) when they carry protocol meaning.
+- **Common patterns**: Stream terminal helpers like `streams.Len` are safe additions; slicing/take-style helpers should be specified together with producer-cancellation semantics (issue #666) to avoid misleading performance expectations.
+- **Gotchas**: Keep `std/* #extern(...)` names in lockstep with `internal/runtime/funcs/registry.go`; missing mappings silently create dead APIs (current gaps include `map_len`, `string_len`, `string_slice`, `list_slice`, `int_neg`, `float_neg`, and `*_is_*_or_equal` string/float variants).
+- **Gotchas**: Renaming stdlib ports can break compiler bootstrap via `internal/compiler/utils/generated`; update `internal/compiler/utils/utils.neva` and regenerate generated exports in the same change.
+- **Common patterns**: Regenerate compiler utils with the repository CLI (`go run ../../cmd/neva ...` from `internal/compiler`) to avoid stale global `neva` binaries producing incompatible generated code.
+- **Common patterns**: When stdlib API or naming conventions change (for example `For` -> `ForEach`, `data` outport -> `res`), update `docs/style_guide.md` and `docs/qna.md` in the same change to prevent documentation drift.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

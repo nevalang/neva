@@ -16,7 +16,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				}
 			}
 
-			if !dataOut.Send(
+			if !resOut.Send(
 				ctx,
 				runtime.NewStringMsg(sb.String()),
 			) {

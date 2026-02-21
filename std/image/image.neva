@@ -28,4 +28,4 @@ pub def New(pixels stream<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
-pub def Encode(img Image) (data string, err error)
+pub def Encode(img Image) (res string, err error)
