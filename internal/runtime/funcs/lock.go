@@ -22,12 +22,7 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		// Bootstrap compatibility for generated compiler utils built
-		// against the previous Lock outport name.
-		resOut, err = io.Out.Single("data")
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return func(ctx context.Context) {
