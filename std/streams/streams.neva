@@ -9,7 +9,7 @@ pub def FromArray<T>([port] T) (res stream<T>)
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
 
-pub type Entry<T> struct {
+pub type DictEntry<T> struct {
     key string
     value T
 }
@@ -17,7 +17,7 @@ pub type Entry<T> struct {
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
 #extern(dict_to_stream)
-pub def FromDict<T>(data dict<T>) (res stream<Entry<T>>)
+pub def FromDict<T>(data dict<T>) (res stream<DictEntry<T>>)
 
 // Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
