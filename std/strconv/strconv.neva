@@ -35,6 +35,7 @@ pub def FormatInt(data int, base int) (res string)
 #extern(parse_float)
 pub def ParseFloat(data string, bits int) (res float, err error)
 
-// FormatFloat formats float to canonical string form.
+// FormatFloat formats float using Go strconv.FormatFloat semantics.
+// `fmt` verbs: b, e, E, f, g, G, x, X.
 #extern(format_float)
-pub def FormatFloat(data float) (res string)
+pub def FormatFloat(data float, fmt string, prec int, bits int) (res string)

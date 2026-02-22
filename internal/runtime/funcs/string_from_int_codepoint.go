@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"unicode"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -30,18 +29,10 @@ func (stringFromIntCodepoint) Create(
 				return
 			}
 
-			res := codepointToString(data.Int())
+			res := string(rune(data.Int()))
 			if !resOut.Send(ctx, runtime.NewStringMsg(res)) {
 				return
 			}
 		}
 	}, nil
-}
-
-func codepointToString(v int64) string {
-	if v < 0 || v > unicode.MaxRune || (v >= 0xD800 && v <= 0xDFFF) {
-		return string(unicode.ReplacementChar)
-	}
-
-	return string(rune(v))
 }

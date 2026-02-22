@@ -13,6 +13,7 @@ Follow these instructions.
 7. Plan -> Review -> Execute -> Review.
 8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
 9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
+10. PR review workflow: when user asks to address PR comments, apply the requested code/doc changes first, then post a reply to each addressed comment via `gh`; do not resolve review threads unless user explicitly asks.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -250,7 +251,7 @@ Follow these instructions.
 - **Common patterns**: Keep `strconv` for canonical value conversion/parsing contracts and `fmt` for presentation/I/O formatting, even when both are deterministic.
 - **Common patterns**: `docs/qna.md` should capture stable rationale only, not open-task/status notes.
 - **Common patterns**: Go-like scalar split: total numeric casts without errors in builtin; text parsing/formatting in `std/strconv`; avoid builtin bool<->number magic.
-- **Common patterns**: Keep concrete API candidates in separate docs (e.g. `docs/scalar_converters_api_candidate.md`) and keep Q&A focused on rationale.
+- **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
 - **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
 ## 3. ⚡ Core Concepts
 
