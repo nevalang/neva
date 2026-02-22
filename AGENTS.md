@@ -253,6 +253,7 @@ Follow these instructions.
 - **Common patterns**: Go-like scalar split: total numeric casts without errors in builtin; text parsing/formatting in `std/strconv`; avoid builtin bool<->number magic.
 - **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
 - **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
+- **Common patterns**: When addressing PR review comments, apply requested changes first, then reply to each comment in GitHub; do not resolve threads unless explicitly requested.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
