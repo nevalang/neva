@@ -1,0 +1,13 @@
+// Int converts float to int.
+// Fractional part is discarded (toward zero), like in Go.
+#extern(int_from_float)
+pub def Int(data float) (res int)
+
+// Float converts int to float, like in Go.
+#extern(float_from_int)
+pub def Float(data int) (res float)
+
+// String converts int to UTF-8 string by Unicode code point value.
+// This matches Go's string(int) conversion semantics, not decimal formatting.
+#extern(string_from_int_codepoint)
+pub def String(data int) (res string)

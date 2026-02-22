@@ -1,11 +1,40 @@
+// Strconv provides pure scalar/text conversion and parsing components.
+// It has no I/O side effects and should be used when you need explicit,
+// machine-oriented value conversion (for example string -> int/float).
+// Following Go-style split, text parsing/formatting belongs here while
+// language-style casts live in builtin (including Go-like String(int) code-point cast).
+// Human-facing output and templated formatting belong to fmt components.
+
+// ParseBool returns the boolean value represented by the string.
+// It accepts Go-compatible values: 1,t,T,TRUE,true,True,0,f,F,FALSE,false,False.
+#extern(parse_bool)
+pub def ParseBool(data string) (res bool, err error)
+
+// FormatBool returns "true" or "false" according to the boolean input.
+#extern(format_bool)
+pub def FormatBool(data bool) (res string)
+
 // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
 #extern(atoi)
 pub def Atoi(data string) (res int, err error)
+
+// Itoa is equivalent to FormatInt(i, 10).
+#extern(itoa)
+pub def Itoa(data int) (res string)
 
 // ParseInt parses an integer from a string `data` with given `base` (2, 8, 10, 16).
 #extern(parse_int)
 pub def ParseInt(data string, base int, bits int) (res int, err error)
 
+// FormatInt formats integer `data` in provided `base`.
+// The base should follow Go's strconv.FormatInt rules (2 to 36).
+#extern(format_int)
+pub def FormatInt(data int, base int) (res string)
+
 // ParseFloat parses a float from a string `data` with given `bits` (32 or 64).
 #extern(parse_float)
 pub def ParseFloat(data string, bits int) (res float, err error)
+
+// FormatFloat formats float to canonical string form.
+#extern(format_float)
+pub def FormatFloat(data float) (res string)
