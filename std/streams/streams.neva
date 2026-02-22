@@ -1,3 +1,7 @@
+import {
+    @:dicts
+}
+
 // --- Sources ---
 
 // FromArray iterates over all array-inport's slots in order
@@ -8,6 +12,11 @@ pub def FromArray<T>([port] T) (res stream<T>)
 // FromList creates a stream from a list by sending each element as a stream item.
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
+
+// FromDict creates a stream of dictionary entries.
+// Dictionary iteration order is not guaranteed.
+#extern(dict_to_stream)
+pub def FromDict<T>(data dict<T>) (res stream<dicts.Entry<T>>)
 
 // Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.

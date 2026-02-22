@@ -1,0 +1,9 @@
+pub type Entry<T> struct {
+    key string
+    value T
+}
+
+// FromStream collects a stream of dictionary entries into dict.
+// If the same key appears multiple times, last value wins.
+#extern(stream_to_dict)
+pub def FromStream<T>(data stream<Entry<T>>) (res dict<T>)

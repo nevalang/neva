@@ -1,0 +1,49 @@
+import {
+    dicts
+    fmt
+    runtime
+    streams
+}
+
+const sample dict<string> = {
+    a: 'one',
+    b: 'two'
+}
+
+const entries list<dicts.Entry<string>> = [
+    {
+        key: 'dup',
+        value: 'one'
+    },
+    {
+        key: 'dup',
+        value: 'forty-two'
+    }
+]
+
+def Main(start any) (stop any) {
+    dict_to_stream streams.FromDict<string>
+    stream_to_dict dicts.FromStream<string>
+    entries_to_stream streams.FromList<dicts.Entry<string>>
+    entries_to_dict dicts.FromStream<string>
+    get_roundtrip Get<string>
+    get_dup Get<string>
+    println_roundtrip fmt.Println<string>
+    println_dup fmt.Println<string>
+    panic runtime.Panic
+    ---
+    :start -> [
+        $sample -> dict_to_stream -> stream_to_dict -> get_roundtrip:dict,
+        'a' -> get_roundtrip:key
+    ]
+    get_roundtrip:res -> println_roundtrip:data
+
+    println_roundtrip:res -> [
+        $entries -> entries_to_stream -> entries_to_dict -> get_dup:dict,
+        'dup' -> get_dup:key
+    ]
+    get_dup:res -> println_dup:data
+
+    [get_roundtrip:err, get_dup:err, println_roundtrip:err, println_dup:err] -> panic
+    println_dup:res -> :stop
+}
