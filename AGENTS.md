@@ -13,6 +13,7 @@ Follow these instructions.
 7. Plan -> Review -> Execute -> Review.
 8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
 9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
+10. PR review workflow: when user asks to address PR comments, apply the requested code/doc changes first, then post a reply to each addressed comment via `gh`; do not resolve review threads unless user explicitly asks.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -233,6 +234,26 @@ Follow these instructions.
 - **Gotchas**: Renaming stdlib ports can break compiler bootstrap via `internal/compiler/utils/generated`; update `internal/compiler/utils/utils.neva` and regenerate generated exports in the same change.
 - **Common patterns**: Regenerate compiler utils with the repository CLI (`go run ../../cmd/neva ...` from `internal/compiler`) to avoid stale global `neva` binaries producing incompatible generated code.
 - **Common patterns**: When stdlib API or naming conventions change (for example `For` -> `ForEach`, `data` outport -> `res`), update `docs/style_guide.md` and `docs/qna.md` in the same change to prevent documentation drift.
+
+### Session Notes (2026-02-21, converters brainstorm)
+
+- **Language semantics**: Neva remains strictly explicit for type conversion; operators/binary expressions do not perform implicit coercion.
+- **Common patterns**: Collection conversion idiom in stdlib is target-package + `FromSource` naming (`streams.FromList`, `lists.FromStream`, `streams.FromArray`, `lists.FromArray`).
+- **Architecture insights**: Runtime conversion funcs preserve sequencing contracts (`stream<T>` emits `idx`/`last`; array-port converters iterate slots in deterministic order).
+- **Gotchas**: Conversions with non-total semantics (parsing, narrowing) should expose `err error` and rely on `?` propagation to stay idiomatic.
+
+### Session Notes (2026-02-22)
+
+- **Common patterns**: Prefer documenting conversion policy in `docs/qna.md` as "components in stdlib, not language syntax" to preserve the explicit graph model.
+- **Architecture insights**: Treat `builtin` as language/prelude boundary for primitives and compiler-coupled contracts; put policy-heavy converters in regular std packages.
+- **Architecture insights**: `Union` is explicitly analyzer-coupled; `Struct` is coupled via `#autoports` flow/desugaring conventions, so both belong to compiler-contract surface.
+- **Language semantics**: builtin `Type` (`type Type any`) is a semantic marker for intentionally heterogeneous ports (for example `Union`/`Switch`), not a distinct runtime type.
+- **Common patterns**: Keep `strconv` for canonical value conversion/parsing contracts and `fmt` for presentation/I/O formatting, even when both are deterministic.
+- **Common patterns**: `docs/qna.md` should capture stable rationale only, not open-task/status notes.
+- **Common patterns**: Go-like scalar split: total numeric casts without errors in builtin; text parsing/formatting in `std/strconv`; avoid builtin bool<->number magic.
+- **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
+- **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
+- **Common patterns**: When addressing PR review comments, apply requested changes first, then reply to each comment in GitHub; do not resolve threads unless explicitly requested.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

@@ -76,12 +76,20 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"int_bitwise_lsh": intBitwiseLsh{},
 		"int_bitwise_rsh": intBitwiseRsh{},
 
-		"int_inc": intInc{},
-		"int_dec": intDec{},
+		"int_inc":                   intInc{},
+		"int_dec":                   intDec{},
+		"int_from_float":            intFromFloat{},
+		"float_from_int":            floatFromInt{},
+		"string_from_int_codepoint": stringFromIntCodepoint{},
 
-		"atoi":        atoi{},
-		"parse_int":   parseInt{},
-		"parse_float": parseFloat{},
+		"atoi":         atoi{},
+		"itoa":         itoa{},
+		"parse_bool":   parseBool{},
+		"parse_int":    parseInt{},
+		"parse_float":  parseFloat{},
+		"format_bool":  formatBool{},
+		"format_int":   formatInt{},
+		"format_float": formatFloat{},
 
 		"regexp_submatch": regexpSubmatch{},
 

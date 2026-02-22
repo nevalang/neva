@@ -30,9 +30,122 @@ Neva opts for simplicity with only int and float types, reducing type-conversion
 
 Separate int and float types provide better handling of large numbers, improved integer operation performance, more predictable comparisons, and enhanced type safety.
 
+## Why doesn't Neva have type-casting as a language feature?
+
+Neva intentionally keeps conversions as explicit components instead of syntax
+(`-> int ->`, `type(...)`, etc.). There are three reasons:
+
+1. Preserve the 1:1 graph model. In Neva, every computation should be visible as
+   a node and edge. Cast syntax would hide conversion nodes behind parser sugar.
+2. Keep language core small. Conversion behavior (rounding, parse policy, error
+   handling) is a library concern and can evolve in stdlib without growing the
+   compiler surface.
+3. Keep failures explicit. Many conversions are partial (for example string to
+   number parsing). Component APIs can expose `err` outports and integrate with
+   `?` propagation naturally.
+4. Keep conversions composable. As normal components, converters can be passed
+   as dependencies into HOCs/DI flows instead of being hardcoded syntax.
+
+In short: conversions exist, but they are modeled as normal components in
+stdlib, not as special language-level casts.
+
+## What is the Go-like split for scalar conversions?
+
+Use a simple split:
+
+1. `builtin`: only total scalar casts that cannot fail at runtime.
+2. `strconv`: text parsing/formatting (`string` <-> scalar), where input can be invalid.
+
+In practice, this means:
+
+- `Int(float) -> int`, `Float(int) -> float`, and `String(int) -> string` (code-point cast)
+  belong to `builtin` and have no `err` outport.
+- `string -> int/float/bool` belongs to `strconv` and should return `err` on invalid input.
+- Human-readable scalar-to-string formatting should also live in `strconv` (Go style),
+  for example `strconv.Itoa`/`FormatFloat`/`FormatBool`.
+
 ## What determines which entities are in the builtin package?
 
-Builtin package entities are frequently used or used internally by the compiler.
+Builtin is Neva's implicit prelude. Every file can reference builtin entities
+without imports, so this surface should stay small and stable.
+
+In practice, builtin is for:
+
+1. Primitive language-level types (`int`, `float`, `list<T>`, etc.)
+2. Compiler-coupled contracts (for example directives/special analyzer behavior)
+3. Very common low-level building blocks that the language model relies on
+
+If Neva later splits builtin into `core` and `prelude`, the same principle
+still applies: compiler contracts stay close to core, policy-heavy APIs stay
+outside.
+
+## Why are `Union` and `Struct` in builtin?
+
+Because they are part of compiler contracts, not just convenience utilities.
+
+- `Union` has analyzer-aware logic for tag/data compatibility and union-member
+  checks. It is not treated as a regular arbitrary helper component.
+- `Struct` is the canonical `#autoports` builder. Analyzer/desugarer flows
+  assume this pattern for deriving inports from struct type arguments.
+
+So keeping them in builtin makes their special role explicit and keeps them
+always available without import noise.
+
+Note: coupling strength differs. `Union` has stronger explicit analyzer coupling;
+`Struct` is mostly coupled through `#autoports` conventions and desugaring flow.
+If this changes in compiler architecture, this answer should be updated.
+
+## What is builtin `Type` (`type Type any`) and why does it exist?
+
+`Type` is a semantic marker alias over `any` used by compiler-aware builtin
+components such as `Union` and `Switch`:
+
+- `Union<T Type>(data Type, tag T) (res T)`
+- `Switch<T>(data T, [case] T) ([case] Type, else T)`
+
+It marks ports that may carry different concrete payload types depending on
+tag/case analysis. Runtime representation is still `any`, but the alias keeps
+signatures readable and communicates "this is intentionally heterogeneous".
+
+In short, `Type` exists because current type-system expressiveness is not enough
+to model these ports with fully precise static types while preserving today's
+ergonomic component APIs.
+
+## How is `strconv` different from `fmt`?
+
+`strconv` and `fmt` solve different problems:
+
+- `strconv`: pure value conversion/parsing contracts (`string` <-> numbers, etc.)
+- `fmt`: presentation and I/O-oriented formatting
+
+Even if both are deterministic, their compatibility promises differ. Conversion
+APIs are expected to be canonical and stable for machine-to-machine flows.
+Formatting APIs are user-facing and may prioritize readability or template
+flexibility.
+
+## Why is `string(42)` in Go not `"42"`?
+
+In Go, integer-to-string conversion in the language is a Unicode code point
+conversion, not decimal formatting:
+
+- `string(42)` is `"*"` because 42 is `U+002A`.
+- `string(1)` is a one-byte control character (`U+0001`), often shown as `"\x01"`
+  in escaped form.
+
+So this is different from "number to decimal text". Decimal formatting is done
+via `strconv`/`fmt` APIs.
+
+## Why not allow every `bool <-> number` conversion by default?
+
+Because these conversions are policy-heavy and easy to misuse when global:
+
+- `bool -> int`: should `true` always be `1` and `false` `0`? usually yes.
+- `int -> bool`: should non-zero mean `true` or only `1` mean `true`?
+- `float -> bool`: what about `0.0`, `-0.0`, `NaN`, `Inf`?
+
+Neva prefers explicitness for these cases. If such conversions are added, they
+should have narrowly named components with documented semantics and error rules,
+instead of one broad "magic cast" behavior.
 
 ## Why `New` is implemented like an infinite loop?
 
