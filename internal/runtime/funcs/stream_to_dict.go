@@ -26,19 +26,20 @@ func (streamToDict) Create(
 		dict := map[string]runtime.Msg{}
 
 		for {
-			msg, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			item := msg.Struct()
-			entry := item.Get("data").Struct()
-			key := entry.Get("key").Str()
-			value := entry.Get("value")
+			// Static typing guarantees stream payload is streams.Entry<T>.
+			streamItemMsg := dataMsg.Struct()
+			entryMsg := streamItemMsg.Get("data").Struct()
+			key := entryMsg.Get("key").Str()
+			valueMsg := entryMsg.Get("value")
 
-			dict[key] = value
+			dict[key] = valueMsg
 
-			if !item.Get("last").Bool() {
+			if !streamItemMsg.Get("last").Bool() {
 				continue
 			}
 

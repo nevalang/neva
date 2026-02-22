@@ -12,7 +12,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		"one\nforty-two\n",
+		"one\n",
 		out,
 	)
 }

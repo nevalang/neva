@@ -24,22 +24,25 @@ func (dictToStream) Create(
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			dict := data.Dict()
+			dict := dataMsg.Dict()
 			size := len(dict)
 
 			idx := 0
-			for key, value := range dict {
-				entry := runtime.NewStructMsg([]runtime.StructField{
+			for key, valueMsg := range dict {
+				entryMsg := runtime.NewStructMsg([]runtime.StructField{
 					runtime.NewStructField("key", runtime.NewStringMsg(key)),
-					runtime.NewStructField("value", value),
+					runtime.NewStructField("value", valueMsg),
 				})
 
-				if !resOut.Send(ctx, streamItem(entry, int64(idx), idx == size-1)) {
+				if !resOut.Send(
+					ctx,
+					streamItem(entryMsg, int64(idx), idx == size-1),
+				) {
 					return
 				}
 

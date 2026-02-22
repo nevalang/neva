@@ -1,7 +1,3 @@
-import {
-    @:dicts
-}
-
 // --- Sources ---
 
 // FromArray iterates over all array-inport's slots in order
@@ -13,10 +9,15 @@ pub def FromArray<T>([port] T) (res stream<T>)
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
 
+pub type Entry<T> struct {
+    key string
+    value T
+}
+
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
 #extern(dict_to_stream)
-pub def FromDict<T>(data dict<T>) (res stream<dicts.Entry<T>>)
+pub def FromDict<T>(data dict<T>) (res stream<Entry<T>>)
 
 // Range sends stream of integers starting and ending with given `from` and `to`.
 // It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.

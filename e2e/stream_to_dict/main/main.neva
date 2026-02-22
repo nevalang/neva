@@ -1,0 +1,34 @@
+import {
+    dicts
+    fmt
+    runtime
+    streams
+}
+
+const entries list<streams.Entry<string>> = [
+    {
+        key: 'dup',
+        value: 'one'
+    },
+    {
+        key: 'dup',
+        value: 'forty-two'
+    }
+]
+
+def Main(start any) (stop any) {
+    entries_to_stream streams.FromList<streams.Entry<string>>
+    entries_to_dict dicts.FromStream<string>
+    get Get<string>
+    println fmt.Println<string>
+    panic runtime.Panic
+    ---
+    :start -> [
+        $entries -> entries_to_stream -> entries_to_dict -> get:dict,
+        'dup' -> get:key
+    ]
+
+    get:res -> println:data
+    [get:err, println:err] -> panic
+    println:res -> :stop
+}
