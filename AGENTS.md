@@ -254,6 +254,9 @@ Follow these instructions.
 - **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
 - **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
 - **Common patterns**: When addressing PR review comments, apply requested changes first, then reply to each comment in GitHub; do not resolve threads unless explicitly requested.
+- **Common patterns**: Keep collection converters in `target-package + FromSource` shape (`streams.FromDict`, `dicts.FromStream`) for consistency with existing list/stream APIs.
+- **Language semantics**: `dicts.FromStream` uses last-write-wins for duplicate keys by assigning incoming entries into the resulting dict.
+- **Gotchas**: `streams.FromDict` iterates Go maps, so output stream order is non-deterministic and should not be asserted directly in tests.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
@@ -325,6 +328,7 @@ The standard library provides components for all programs. Some are implemented 
   - TD tests: `tests := []struct{ name string ... }`
   - Test case names: `lower_snake_case`
   - KISS: simpler code > complex abstractions
+  - Runtime funcs naming: prefer `<role>Msg` for variables of type `runtime.Msg` and explicit names like `streamItemMsg`.
   - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
     - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).
 

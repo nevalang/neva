@@ -20,3 +20,7 @@ pub type stream<T> struct {
     last bool
 }
 
+pub type DictEntry<T> struct {
+    key string
+    value T
+}

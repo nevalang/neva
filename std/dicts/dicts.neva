@@ -1,0 +1,4 @@
+// FromStream collects a stream of dictionary entries into dict.
+// If the same key appears multiple times, last value wins.
+#extern(stream_to_dict)
+pub def FromStream<T>(data stream<DictEntry<T>>) (res dict<T>)

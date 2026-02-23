@@ -1,0 +1,22 @@
+import {
+    fmt
+    runtime
+    streams
+}
+
+const sample dict<string> = {
+    a: 'one'
+}
+
+def Main(start any) (stop any) {
+    dict_to_stream streams.FromDict<string>
+    for_each streams.ForEach<DictEntry<string>>{
+        fmt.Println<any>
+    }
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> $sample -> dict_to_stream -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
+}
