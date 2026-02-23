@@ -12,7 +12,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		"forty-two\n",
+		"{\"dup\": \"forty-two\"}\n",
 		out,
 	)
 }

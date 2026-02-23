@@ -5,7 +5,7 @@ import {
     streams
 }
 
-const entries list<streams.DictEntry<string>> = [
+const entries list<DictEntry<string>> = [
     {
         key: 'dup',
         value: 'one'
@@ -17,18 +17,12 @@ const entries list<streams.DictEntry<string>> = [
 ]
 
 def Main(start any) (stop any) {
-    entries_to_stream streams.FromList<streams.DictEntry<string>>
+    entries_to_stream streams.FromList<DictEntry<string>>
     entries_to_dict dicts.FromStream<string>
-    get Get<string>
-    println fmt.Println<string>
+    println fmt.Println<any>
     panic runtime.Panic
     ---
-    :start -> [
-        $entries -> entries_to_stream -> entries_to_dict -> get:dict,
-        'dup' -> get:key
-    ]
-
-    get:res -> println:data
-    [get:err, println:err] -> panic
+    :start -> $entries -> entries_to_stream -> entries_to_dict -> println:data
+    println:err -> panic
     println:res -> :stop
 }

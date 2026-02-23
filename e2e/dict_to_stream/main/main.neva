@@ -1,6 +1,5 @@
 import {
     fmt
-    lists
     runtime
     streams
 }
@@ -11,18 +10,13 @@ const sample dict<string> = {
 
 def Main(start any) (stop any) {
     dict_to_stream streams.FromDict<string>
-    map_value streams.Map<streams.DictEntry<string>, string>{
-        GetValue
+    for_each streams.ForEach<DictEntry<string>>{
+        fmt.Println<any>
     }
-    to_list lists.FromStream<string>
-    println fmt.Println<list<string>>
+    wait streams.Wait
     panic runtime.Panic
     ---
-    :start -> $sample -> dict_to_stream -> map_value -> to_list -> println:data
-    println:err -> panic
-    println:res -> :stop
-}
-
-def GetValue(data streams.DictEntry<string>) (res string) {
-    :data -> .value -> :res
+    :start -> $sample -> dict_to_stream -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
 }

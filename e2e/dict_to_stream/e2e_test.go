@@ -12,7 +12,7 @@ func Test(t *testing.T) {
 
 	require.Equal(
 		t,
-		"[\"one\"]\n",
+		"{\"key\": \"a\", \"value\": \"one\"}\n",
 		out,
 	)
 }
