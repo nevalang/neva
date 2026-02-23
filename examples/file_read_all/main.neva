@@ -1,10 +1,13 @@
-import { io, fmt, runtime }
+import { io, fmt, runtime, bytes }
 
 def Main(start any) (stop any) {
-	readAll io.ReadAll, println fmt.Println, panic runtime.Panic
+	readAll io.ReadAll
+	toString bytes.ToString
+	println fmt.Println
+	panic runtime.Panic
 	---
 	:start -> 'main.neva' -> readAll:filename
-	readAll:res -> println:data
+	readAll:res -> toString -> println:data
 	println:res -> :stop
 	[readAll:err, println:err] -> panic
 }

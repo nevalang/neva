@@ -67,3 +67,28 @@ func TestUnionMsgStringUsesNestedJSONFormatting(t *testing.T) {
 		t.Fatalf("String() = %q, want %q", got, want)
 	}
 }
+
+func TestBytesMsgMarshalJSON(t *testing.T) {
+	msg := NewBytesMsg([]byte("hello"))
+
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON() error = %v", err)
+	}
+	if got, want := string(b), `"aGVsbG8="`; got != want {
+		t.Fatalf("MarshalJSON() = %q, want %q", got, want)
+	}
+}
+
+func TestBytesMsgEqual(t *testing.T) {
+	a := NewBytesMsg([]byte{1, 2, 3})
+	b := NewBytesMsg([]byte{1, 2, 3})
+	c := NewBytesMsg([]byte{1, 2, 4})
+
+	if !a.Equal(b) {
+		t.Fatal("Equal() = false, want true")
+	}
+	if a.Equal(c) {
+		t.Fatal("Equal() = true, want false")
+	}
+}

@@ -13,11 +13,11 @@ pub type Pixel struct {
 	color RGBA
 }
 
-// Image is an RGBA represented as a string of pixels with one byte per color flow.
+// Image is an RGBA represented as bytes with one byte per color flow.
 //
 // Pixels are arranged in order such that (x, y) starts at pixels[y*width + x*4].
 pub type Image struct {
-	pixels string
+	pixels bytes
 	width int
 	height int
 }
@@ -28,4 +28,4 @@ pub def New(pixels stream<Pixel>) (img Image, err error)
 
 // Encode a PNG image or return an error.
 #extern(image_encode)
-pub def Encode(img Image) (res string, err error)
+pub def Encode(img Image) (res bytes, err error)

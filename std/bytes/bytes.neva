@@ -1,0 +1,11 @@
+// FromString converts text into raw bytes.
+//
+// This conversion is byte-preserving and does not validate UTF-8.
+#extern(bytes_from_string)
+pub def FromString(data string) (res bytes)
+
+// ToString converts raw bytes into string.
+//
+// This conversion is byte-preserving and does not validate UTF-8.
+#extern(bytes_to_string)
+pub def ToString(data bytes) (res string)

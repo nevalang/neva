@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -22,6 +23,7 @@ type Msg interface {
 	Int() int64
 	Float() float64
 	Str() string
+	Bytes() []byte
 	List() []Msg
 	Dict() map[string]Msg
 	Struct() StructMsg
@@ -39,6 +41,7 @@ func (internalMsg) Bool() bool     { panic("unexpected Bool method call on inter
 func (internalMsg) Int() int64     { panic("unexpected Int method call on internal message type") }
 func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
 func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
+func (internalMsg) Bytes() []byte  { panic("unexpected Bytes method call on internal message type") }
 func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
 func (internalMsg) Dict() map[string]Msg {
 	panic("unexpected Dict method call on internal message type")
@@ -140,6 +143,38 @@ func NewStringMsg(s string) StringMsg {
 	return StringMsg{
 		internalMsg: internalMsg{},
 		v:           s,
+	}
+}
+
+// --- BYTES ---
+type BytesMsg struct {
+	internalMsg
+	v []byte
+}
+
+func (msg BytesMsg) Bytes() []byte { return msg.v }
+
+func (msg BytesMsg) String() string {
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+func (msg BytesMsg) MarshalJSON() ([]byte, error) {
+	return json.Marshal(msg.v)
+}
+
+func (msg BytesMsg) Equal(other Msg) bool {
+	otherBytes, ok := other.(BytesMsg)
+	return ok && bytes.Equal(msg.v, otherBytes.v)
+}
+
+func NewBytesMsg(v []byte) BytesMsg {
+	return BytesMsg{
+		internalMsg: internalMsg{},
+		v:           v,
 	}
 }
 

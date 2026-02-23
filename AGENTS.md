@@ -258,6 +258,14 @@ Follow these instructions.
 - **Language semantics**: `dicts.FromStream` uses last-write-wins for duplicate keys by assigning incoming entries into the resulting dict.
 - **Gotchas**: `streams.FromDict` iterates Go maps, so output stream order is non-deterministic and should not be asserted directly in tests.
 
+### Session Notes (2026-02-23)
+
+- **Language semantics**: `bytes` is a dedicated builtin binary payload type; `string` is for text semantics.
+- **Common patterns**: Keep text/binary boundaries explicit with `bytes.FromString` / `bytes.ToString` rather than implicit coercions.
+- **Architecture insights**: Adding a new payload primitive requires synchronized changes in analyzer const validation, IR `MsgType`, irgen message lowering, runtime `Msg` variants, and backend mapping.
+- **Common patterns**: Binary stdlib boundaries (`io`, `http`, `image`) should use `bytes` to avoid repeated `string`/`[]byte` conversions.
+- **Gotchas**: Full `go test ./...` can run very long; prioritize targeted validation for touched compiler/runtime packages plus changed `examples/*` and `e2e/*`.
+
 ### Session Notes (2026-02-24)
 
 - **Common patterns**: For Go 1.26 migration, keep `go.mod` (`go` + `toolchain`) and CI `actions/setup-go` patch versions aligned to avoid toolchain skew.

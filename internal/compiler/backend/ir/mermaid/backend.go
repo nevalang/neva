@@ -191,6 +191,8 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 						n.Meta.Msg = fmt.Sprintf("%v", f.Msg.Bool)
 					case ir.MsgTypeFloat:
 						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
+					case ir.MsgTypeBytes:
+						n.Meta.Msg = `"<bytes>"`
 					case ir.MsgTypeList:
 						n.Meta.Msg = "[...]"
 					case ir.MsgTypeDict, ir.MsgTypeStruct, ir.MsgTypeUnion:

@@ -56,7 +56,7 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 				continue
 			}
 
-			if !resOut.Send(ctx, runtime.NewStringMsg(string(data))) {
+			if !resOut.Send(ctx, runtime.NewBytesMsg(data)) {
 				return
 			}
 		}

@@ -153,6 +153,8 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("runtime.NewIntMsg(int64(%s.%s))", prefix, field)
 			case "string":
 				return fmt.Sprintf("runtime.NewStringMsg(%s.%s)", prefix, field)
+			case "[]byte":
+				return fmt.Sprintf("runtime.NewBytesMsg(%s.%s)", prefix, field)
 			case "bool":
 				return fmt.Sprintf("runtime.NewBoolMsg(%s.%s)", prefix, field)
 			case "float64":
@@ -172,6 +174,8 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("int(%s.Int())", msgVar)
 			case "string":
 				return fmt.Sprintf("%s.Str()", msgVar)
+			case "[]byte":
+				return fmt.Sprintf("%s.Bytes()", msgVar)
 			case "bool":
 				return fmt.Sprintf("%s.Bool()", msgVar)
 			case "float64":
@@ -247,6 +251,8 @@ func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 				goType = "int"
 			case "string":
 				goType = "string"
+			case "bytes":
+				goType = "[]byte"
 			case "bool":
 				goType = "bool"
 			case "float":
@@ -430,6 +436,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
 		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
+	case ir.MsgTypeBytes:
+		return fmt.Sprintf("runtime.NewBytesMsg([]byte(%q))", string(msg.Bytes)), nil
 	case ir.MsgTypeUnion:
 		if msg.Union.Data == nil {
 			return fmt.Sprintf(`runtime.NewUnionMsg(%q, nil)`, msg.Union.Tag), nil

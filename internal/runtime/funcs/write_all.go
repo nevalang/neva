@@ -43,7 +43,7 @@ func (c writeAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 			}
 
 			// #nosec G306 -- file is user-controlled output
-			err := os.WriteFile(filenameMsg.Str(), []byte(dataMsg.Str()), 0o644)
+			err := os.WriteFile(filenameMsg.Str(), dataMsg.Bytes(), 0o644)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
