@@ -151,7 +151,7 @@ func (a Analyzer) analyzeConst(
 		}
 	case "bytes":
 		return src.Const{}, &compiler.Error{
-			Message: "Bytes constants are not supported, use bytes.FromString in network",
+			Message: "Bytes constants are not supported yet (no string/number byte literals), use bytes.FromString in network",
 			Meta:    &constant.Meta,
 		}
 	case "list":

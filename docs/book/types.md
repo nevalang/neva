@@ -216,6 +216,7 @@ For raw binary payloads use `bytes`.
 
 Bytes is a binary blob type for payloads such as file contents, HTTP bodies, and encoded images.
 By convention bytes are treated as immutable message values.
+Bytes currently has no direct literal syntax in source code.
 
 ### `list<T>`
 
