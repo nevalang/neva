@@ -16,6 +16,17 @@ antlr:
 betteralign-fix:
 	betteralign -fix ./...
 
+# apply gofix rewrites across the repo
+.PHONY: gofix
+gofix:
+	go fix ./...
+
+# check that gofix produces no diff (CI-friendly)
+.PHONY: gofix-check
+gofix-check:
+	go fix ./...
+	git diff --exit-code
+
 # check potential nil-derefs
 .PHONY: nilaway
 nilaway:

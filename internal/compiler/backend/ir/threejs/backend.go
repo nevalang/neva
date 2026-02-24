@@ -69,8 +69,8 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	// Helper to normalize node names
 	getNodeName := func(path string) string {
 		for _, suffix := range []string{"/in", "/out"} {
-			if strings.HasSuffix(path, suffix) {
-				return strings.TrimSuffix(path, suffix)
+			if before, ok := strings.CutSuffix(path, suffix); ok {
+				return before
 			}
 		}
 		return path

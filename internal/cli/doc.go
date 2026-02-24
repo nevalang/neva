@@ -157,10 +157,7 @@ func searchStdlib(pkgPath string, re *regexp.Regexp, context int) ([]docMatch, e
 				continue
 			}
 
-			start := i - context
-			if start < 0 {
-				start = 0
-			}
+			start := max(i-context, 0)
 			end := i + context
 			if end >= len(lines) {
 				end = len(lines) - 1

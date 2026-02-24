@@ -4,6 +4,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/pkg/core"
 	ts "github.com/nevalang/neva/pkg/typesystem"
@@ -14,13 +15,13 @@ import (
 //
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Build struct {
-	EntryModRef core.ModuleRef            `json:"entryModRef,omitempty"`
+	EntryModRef core.ModuleRef            `json:"entryModRef"`
 	Modules     map[core.ModuleRef]Module `json:"modules,omitempty"`
 }
 
 // Module is unit of distribution.
 type Module struct {
-	Manifest ModuleManifest     `json:"manifest,omitempty"`
+	Manifest ModuleManifest     `json:"manifest"`
 	Packages map[string]Package `json:"packages,omitempty"`
 }
 
@@ -88,16 +89,16 @@ type File struct {
 type Import struct {
 	Module  string    `json:"moduleName,omitempty"`
 	Package string    `json:"pkgName,omitempty"`
-	Meta    core.Meta `json:"meta,omitempty"`
+	Meta    core.Meta `json:"meta"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Entity struct {
 	IsPublic  bool        `json:"exported,omitempty"`
 	Kind      EntityKind  `json:"kind,omitempty"`
-	Const     Const       `json:"const,omitempty"`
-	Type      ts.Def      `json:"type,omitempty"`
-	Interface Interface   `json:"interface,omitempty"`
+	Const     Const       `json:"const"`
+	Type      ts.Def      `json:"type"`
+	Interface Interface   `json:"interface"`
 	Component []Component `json:"component,omitempty"` // Non-overloaded components are represented as slice of one element.
 }
 
@@ -129,11 +130,11 @@ const (
 //
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Component struct {
-	Interface  `json:"interface,omitempty"`
+	Interface  `json:"interface"`
 	Directives map[Directive]string `json:"directives,omitempty"`
 	Nodes      map[string]Node      `json:"nodes,omitempty"`
 	Net        []Connection         `json:"net,omitempty"`
-	Meta       core.Meta            `json:"meta,omitempty"`
+	Meta       core.Meta            `json:"meta"`
 }
 
 // Directive is an explicit instruction for compiler.
@@ -141,9 +142,9 @@ type Directive string
 
 // Interface describes abstract component.
 type Interface struct {
-	TypeParams TypeParams `json:"typeParams,omitempty"`
-	IO         IO         `json:"io,omitempty,"`
-	Meta       core.Meta  `json:"meta,omitempty"`
+	TypeParams TypeParams `json:"typeParams"`
+	IO         IO         `json:"io"`
+	Meta       core.Meta  `json:"meta"`
 }
 
 // TODO should we use it to typesystem package?
@@ -151,7 +152,7 @@ type Interface struct {
 //nolint:govet // fieldalignment: keep semantic grouping.
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
-	Meta   core.Meta  `json:"meta,omitempty"`
+	Meta   core.Meta  `json:"meta"`
 }
 
 func (t TypeParams) ToFrame() map[string]ts.Def {
@@ -166,25 +167,26 @@ func (t TypeParams) ToFrame() map[string]ts.Def {
 }
 
 func (t TypeParams) String() string {
-	s := "<"
+	var s strings.Builder
+	s.WriteString("<")
 	for i, param := range t.Params {
-		s += param.Name + " " + param.Constr.String()
+		s.WriteString(param.Name + " " + param.Constr.String())
 		if i < len(t.Params)-1 {
-			s += ", "
+			s.WriteString(", ")
 		}
 	}
-	return s + ">"
+	return s.String() + ">"
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Node struct {
 	Directives    map[Directive]string `json:"directives,omitempty"`
-	EntityRef     core.EntityRef       `json:"entityRef,omitempty"`
+	EntityRef     core.EntityRef       `json:"entityRef"`
 	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
 	ErrGuard      bool                 `json:"errGuard,omitempty"`      // ErrGuard explains if node is used with `?` operator.
 	DIArgs        map[string]Node      `json:"diArgs,omitempty"`        // Dependency Injection.
 	OverloadIndex *int                 `json:"overloadIndex,omitempty"` // Only for overloaded components.
-	Meta          core.Meta            `json:"meta,omitempty"`
+	Meta          core.Meta            `json:"meta"`
 }
 
 const MissingNodeNamePrefix = "__missing_node_name__"
@@ -200,27 +202,28 @@ func (n Node) String() string {
 type TypeArgs []ts.Expr
 
 func (t TypeArgs) String() string {
-	s := "<"
+	var s strings.Builder
+	s.WriteString("<")
 	for i, arg := range t {
-		s += arg.String()
+		s.WriteString(arg.String())
 		if i < len(t)-1 {
-			s += " , "
+			s.WriteString(" , ")
 		}
 	}
-	return s + ">"
+	return s.String() + ">"
 }
 
 // Const represents abstraction that allow to define reusable message value.
 type Const struct {
-	TypeExpr ts.Expr    `json:"typeExpr,omitempty"`
-	Value    ConstValue `json:"value,omitempty"`
-	Meta     core.Meta  `json:"meta,omitempty"`
+	TypeExpr ts.Expr    `json:"typeExpr"`
+	Value    ConstValue `json:"value"`
+	Meta     core.Meta  `json:"meta"`
 }
 
 type ConstValue struct {
 	Ref     *core.EntityRef `json:"ref,omitempty"`
 	Message *MsgLiteral     `json:"message,omitempty"`
-	Meta    core.Meta       `json:"meta,omitempty"`
+	Meta    core.Meta       `json:"meta"`
 }
 
 func (c ConstValue) String() string {
@@ -239,14 +242,14 @@ type MsgLiteral struct {
 	List         []ConstValue          `json:"vec,omitempty"`
 	DictOrStruct map[string]ConstValue `json:"dict,omitempty"`
 	Union        *UnionLiteral         `json:"union,omitempty"`
-	Meta         core.Meta             `json:"meta,omitempty"`
+	Meta         core.Meta             `json:"meta"`
 }
 
 type UnionLiteral struct {
-	EntityRef core.EntityRef `json:"entityRef,omitempty"`
+	EntityRef core.EntityRef `json:"entityRef"`
 	Tag       string         `json:"tag,omitempty"`
 	Data      *ConstValue    `json:"data,omitempty"`
-	Meta      core.Meta      `json:"meta,omitempty"`
+	Meta      core.Meta      `json:"meta"`
 }
 
 func (m MsgLiteral) String() string {
@@ -260,20 +263,22 @@ func (m MsgLiteral) String() string {
 	case m.Str != nil:
 		return fmt.Sprintf("%q", *m.Str)
 	case len(m.List) != 0:
-		s := "["
+		var s strings.Builder
+		s.WriteString("[")
 		for i, item := range m.List {
-			s += item.String()
+			s.WriteString(item.String())
 			if i != len(m.List)-1 {
-				s += ", "
+				s.WriteString(", ")
 			}
 		}
-		return s + "]"
+		return s.String() + "]"
 	case len(m.DictOrStruct) != 0:
-		s := "{"
+		var s strings.Builder
+		s.WriteString("{")
 		for key, value := range m.DictOrStruct {
-			s += fmt.Sprintf("%q: %v", key, value.String())
+			fmt.Fprintf(&s, "%q: %v", key, value.String())
 		}
-		return s + "}"
+		return s.String() + "}"
 	}
 	return "message"
 }
@@ -281,27 +286,27 @@ func (m MsgLiteral) String() string {
 type IO struct {
 	In   map[string]Port `json:"in,omitempty"`
 	Out  map[string]Port `json:"out,omitempty"`
-	Meta core.Meta       `json:"meta,omitempty"`
+	Meta core.Meta       `json:"meta"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Port struct {
-	TypeExpr ts.Expr   `json:"typeExpr,omitempty"`
+	TypeExpr ts.Expr   `json:"typeExpr"`
 	IsArray  bool      `json:"isArray,omitempty"`
-	Meta     core.Meta `json:"meta,omitempty"`
+	Meta     core.Meta `json:"meta"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Connection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
-	Meta      core.Meta            `json:"meta,omitempty"`
+	Meta      core.Meta            `json:"meta"`
 }
 
 type ConnectionReceiver struct {
 	PortAddr          *PortAddr   `json:"portAddr,omitempty"`
 	ChainedConnection *Connection `json:"chainedConnection,omitempty"`
-	Meta              core.Meta   `json:"meta,omitempty"`
+	Meta              core.Meta   `json:"meta"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.
@@ -314,10 +319,10 @@ type ConnectionSender struct {
 }
 
 func (s ConnectionSender) String() string {
-	selectorsString := ""
+	var selectorsString strings.Builder
 	if len(s.StructSelector) != 0 {
 		for _, selector := range s.StructSelector {
-			selectorsString += "." + selector
+			selectorsString.WriteString("." + selector)
 		}
 	}
 
@@ -329,14 +334,14 @@ func (s ConnectionSender) String() string {
 		result = s.PortAddr.String()
 	}
 
-	return result + selectorsString
+	return result + selectorsString.String()
 }
 
 type PortAddr struct {
 	Node string    `json:"node,omitempty"`
 	Port string    `json:"port,omitempty"`
 	Idx  *uint8    `json:"idx,omitempty"` // TODO use bool flag instead of pointer to avoid problems with equality
-	Meta core.Meta `json:"meta,omitempty"`
+	Meta core.Meta `json:"meta"`
 }
 
 const ArrayBypassIdx uint8 = 255

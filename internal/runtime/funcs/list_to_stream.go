@@ -31,7 +31,7 @@ func (c listToStream) Create(
 
 			list := data.List()
 
-			for idx := 0; idx < len(list); idx++ {
+			for idx := range list {
 				item := streamItem(
 					list[idx],
 					int64(idx),

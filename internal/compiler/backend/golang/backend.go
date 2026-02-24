@@ -452,7 +452,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeDict:
 		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(compiler.Pointer(v))
+			el, err := b.getMessageString(new(v))
 			if err != nil {
 				return "", err
 			}
@@ -462,7 +462,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeStruct:
 		fields := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(compiler.Pointer(v))
+			el, err := b.getMessageString(new(v))
 			if err != nil {
 				return "", err
 			}

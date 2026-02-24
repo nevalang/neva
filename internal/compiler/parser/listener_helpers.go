@@ -818,7 +818,7 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
-		msg.Bool = compiler.Pointer(boolVal == "true")
+		msg.Bool = new(boolVal == "true")
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
@@ -841,7 +841,7 @@ func (s *treeShapeListener) parseMessage(
 		if constVal.MINUS() != nil {
 			parsedInt = -parsedInt
 		}
-		msg.Int = compiler.Pointer(int(parsedInt))
+		msg.Int = new(int(parsedInt))
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -866,7 +866,7 @@ func (s *treeShapeListener) parseMessage(
 		}
 		msg.Float = &parsedFloat
 	case constVal.STRING() != nil:
-		msg.Str = compiler.Pointer(
+		msg.Str = new(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),
@@ -1000,7 +1000,7 @@ func (s *treeShapeListener) parseTypeDef(
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = compiler.Pointer(v)
+		body = new(v)
 	}
 
 	v, err := s.parseTypeParams(actx.TypeParams())

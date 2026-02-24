@@ -1,6 +1,8 @@
 package typesystem
 
 import (
+	"strings"
+
 	"github.com/nevalang/neva/pkg/core"
 )
 
@@ -20,15 +22,16 @@ func (t Trace) String() string {
 		tmp = tmp.prev
 	}
 
-	firstToLast := "["
+	var firstToLast strings.Builder
+	firstToLast.WriteString("[")
 	for i := len(lastToFirst) - 1; i >= 0; i-- {
-		firstToLast += lastToFirst[i].String()
+		firstToLast.WriteString(lastToFirst[i].String())
 		if i > 0 {
-			firstToLast += ", "
+			firstToLast.WriteString(", ")
 		}
 	}
 
-	return firstToLast + "]"
+	return firstToLast.String() + "]"
 }
 
 func NewTrace(prev *Trace, cur core.EntityRef) Trace {

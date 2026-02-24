@@ -843,7 +843,7 @@ func (d *Desugarer) desugarFanOut(
 					PortAddr: &src.PortAddr{
 						Node: nodeName,
 						Port: "data",
-						Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
+						Idx:  new(uint8(i)), // #nosec G115 -- bounds checked above
 						Meta: locOnlyMeta,
 					},
 					Meta: locOnlyMeta,
@@ -919,7 +919,7 @@ func (d *Desugarer) desugarFanIn(
 					PortAddr: &src.PortAddr{
 						Node: fanInNodeName,
 						Port: "data",
-						Idx:  compiler.Pointer(uint8(i)), // #nosec G115 -- bounds checked above
+						Idx:  new(uint8(i)), // #nosec G115 -- bounds checked above
 						Meta: locOnlyMeta,
 					},
 					Meta: locOnlyMeta,

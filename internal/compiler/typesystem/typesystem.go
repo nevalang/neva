@@ -5,6 +5,7 @@ package typesystem
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/nevalang/neva/pkg/core"
 )
@@ -16,38 +17,39 @@ type Def struct {
 	// Empty body means base type
 	BodyExpr *Expr `json:"bodyExpr,omitempty"`
 	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
-	Meta core.Meta `json:"meta,omitempty"`
+	Meta core.Meta `json:"meta"`
 }
 
 func (def Def) String() string {
-	var params string
+	var params strings.Builder
 
-	params += "<"
+	params.WriteString("<")
 	for i, param := range def.Params {
-		params += param.Name
-		params += " " + param.Constr.String()
+		params.WriteString(param.Name)
+		params.WriteString(" " + param.Constr.String())
 		if i < len(def.Params)-1 {
-			params += ", "
+			params.WriteString(", ")
 		}
 	}
-	params += ">"
+	params.WriteString(">")
 
-	return params + " = " + def.BodyExpr.String()
+	return params.String() + " = " + def.BodyExpr.String()
 }
 
 type Param struct {
-	Name   string `json:"name,omitempty"`   // Must be unique among other type's parameters
-	Constr Expr   `json:"constr,omitempty"` // Expression that must be resolved supertype of corresponding argument
+	Name   string `json:"name,omitempty"` // Must be unique among other type's parameters
+	Constr Expr   `json:"constr"`         // Expression that must be resolved supertype of corresponding argument
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
-	Meta core.Meta `json:"meta,omitempty"` // This field must be ignored by the typesystem and only used outside
+	Meta core.Meta `json:"meta"` // This field must be ignored by the typesystem and only used outside
 }
 
 // String formats expression in a TS manner
+//
 //nolint:gocyclo // String formatting covers multiple expression shapes.
 func (expr Expr) String() string {
 	if expr.Inst == nil && expr.Lit == nil {
@@ -61,60 +63,60 @@ func (expr Expr) String() string {
 		case EmptyLitType:
 			return "empty"
 		case UnionLitType:
-		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
-		count := 0
-		str += "union {"
-		// collect and sort tags for stable output
-		var tags []string
-		for tag := range expr.Lit.Union {
-			tags = append(tags, tag)
-		}
-		sort.Strings(tags)
-		for _, tag := range tags {
-			tagExpr := expr.Lit.Union[tag]
-			if count == 0 {
+			// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
+			count := 0
+			str += "union {"
+			// collect and sort tags for stable output
+			var tags []string
+			for tag := range expr.Lit.Union {
+				tags = append(tags, tag)
+			}
+			sort.Strings(tags)
+			for _, tag := range tags {
+				tagExpr := expr.Lit.Union[tag]
+				if count == 0 {
+					str += " "
+				}
+				if tagExpr != nil {
+					// check if this is a tag-only union (tag name matches type name)
+					if tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
+						str += tag
+					} else {
+						str += tag + " " + tagExpr.String()
+					}
+				} else {
+					str += tag
+				}
+				if count < len(tags)-1 {
+					str += ", "
+				}
+				count++
+			}
+			if count > 0 {
 				str += " "
 			}
-			if tagExpr != nil {
-				// check if this is a tag-only union (tag name matches type name)
-				if tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
-					str += tag
-				} else {
-					str += tag + " " + tagExpr.String()
-				}
-			} else {
-				str += tag
-			}
-			if count < len(tags)-1 {
-				str += ", "
-			}
-			count++
-		}
-		if count > 0 {
-			str += " "
-		}
-		str += "}"
+			str += "}"
 			return str
 		case StructLitType:
-		// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
-		str += "{"
-		count := 0
-		// collect and sort field names for stable output
-		var fields []string
-		for fieldName := range expr.Lit.Struct {
-			fields = append(fields, fieldName)
-		}
-		sort.Strings(fields)
-		for _, fieldName := range fields {
-			fieldExpr := expr.Lit.Struct[fieldName]
-			str += " " + fieldName + " " + fieldExpr.String()
-			if count < len(fields)-1 {
-				str += ","
-			} else {
-				str += " "
+			// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
+			str += "{"
+			count := 0
+			// collect and sort field names for stable output
+			var fields []string
+			for fieldName := range expr.Lit.Struct {
+				fields = append(fields, fieldName)
 			}
-			count++
-		}
+			sort.Strings(fields)
+			for _, fieldName := range fields {
+				fieldExpr := expr.Lit.Struct[fieldName]
+				str += " " + fieldName + " " + fieldExpr.String()
+				if count < len(fields)-1 {
+					str += ","
+				} else {
+					str += " "
+				}
+				count++
+			}
 			return str + "}"
 		}
 	}
@@ -139,7 +141,7 @@ func (expr Expr) String() string {
 
 // Instantiation expression
 type InstExpr struct {
-	Ref  core.EntityRef `json:"ref,omitempty"`  // Must be in the scope
+	Ref  core.EntityRef `json:"ref"`            // Must be in the scope
 	Args []Expr         `json:"args,omitempty"` // Every ref's parameter must have subtype argument
 }
 

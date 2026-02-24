@@ -18,13 +18,13 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Format: // module=@@ main=hello_world compiler=0.34.0
 	var modName, compilerVer string
 	if strings.HasPrefix(prog.Comment, "//") {
-		parts := strings.Fields(prog.Comment)
-		for _, p := range parts {
-			if strings.HasPrefix(p, "main=") {
-				modName = strings.TrimPrefix(p, "main=")
+		parts := strings.FieldsSeq(prog.Comment)
+		for p := range parts {
+			if after, ok := strings.CutPrefix(p, "main="); ok {
+				modName = after
 			}
-			if strings.HasPrefix(p, "compiler=") {
-				compilerVer = strings.TrimPrefix(p, "compiler=")
+			if after, ok := strings.CutPrefix(p, "compiler="); ok {
+				compilerVer = after
 			}
 		}
 	}
@@ -120,10 +120,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 
 		// Trim /in and /out from path to get component path
 		path := addr.Path
-		if strings.HasSuffix(path, "/in") {
-			path = strings.TrimSuffix(path, "/in")
-		} else if strings.HasSuffix(path, "/out") {
-			path = strings.TrimSuffix(path, "/out")
+		if before, ok := strings.CutSuffix(path, "/in"); ok {
+			path = before
+		} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+			path = before
 		}
 
 		n := getOrCreateNode(path)
@@ -149,10 +149,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		for _, addr := range f.IO.In {
 			// Try to find component path from port address
 			path := addr.Path
-			if strings.HasSuffix(path, "/in") {
-				path = strings.TrimSuffix(path, "/in")
-			} else if strings.HasSuffix(path, "/out") {
-				path = strings.TrimSuffix(path, "/out")
+			if before, ok := strings.CutSuffix(path, "/in"); ok {
+				path = before
+			} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+				path = before
 			}
 			if path != "" {
 				matchPath = path
@@ -164,10 +164,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		if matchPath == "" {
 			for _, addr := range f.IO.Out {
 				path := addr.Path
-				if strings.HasSuffix(path, "/in") {
-					path = strings.TrimSuffix(path, "/in")
-				} else if strings.HasSuffix(path, "/out") {
-					path = strings.TrimSuffix(path, "/out")
+				if before, ok := strings.CutSuffix(path, "/in"); ok {
+					path = before
+				} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+					path = before
 				}
 				if path != "" {
 					matchPath = path
@@ -348,10 +348,10 @@ func getPortID(addr ir.PortAddr) string {
 	}
 
 	path := addr.Path
-	if strings.HasSuffix(path, "/in") {
-		path = strings.TrimSuffix(path, "/in")
-	} else if strings.HasSuffix(path, "/out") {
-		path = strings.TrimSuffix(path, "/out")
+	if before, ok := strings.CutSuffix(path, "/in"); ok {
+		path = before
+	} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+		path = before
 	}
 
 	return sanitize(path) + "__" + sanitize(addr.Port)

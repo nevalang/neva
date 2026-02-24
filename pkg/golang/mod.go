@@ -28,8 +28,8 @@ func FindModulePath(dst string) (string, error) {
 				scanner := bufio.NewScanner(f)
 				for scanner.Scan() {
 					line := scanner.Text()
-					if strings.HasPrefix(line, "module ") {
-						modName := strings.TrimSpace(strings.TrimPrefix(line, "module "))
+					if after, ok := strings.CutPrefix(line, "module "); ok {
+						modName := strings.TrimSpace(after)
 						relPath, err := filepath.Rel(dir, absDst)
 						if err != nil {
 							return "", err
