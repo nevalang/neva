@@ -29,7 +29,7 @@ func (arrayPortToStream) Create(
 		l := portIn.Len()
 
 		for {
-			for idx := 0; idx < l; idx++ {
+			for idx := range l {
 				msg, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return

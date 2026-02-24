@@ -136,9 +136,7 @@ func (d *Desugarer) desugarFile(
 		desugaredEntities[entityName] = entityResult.entity
 
 		// insert virtual entities, created by desugaring of the entity
-		for name, entityToInsert := range entityResult.insert {
-			desugaredEntities[name] = entityToInsert
-		}
+		maps.Copy(desugaredEntities, entityResult.insert)
 	}
 
 	desugaredImports := maps.Clone(file.Imports)

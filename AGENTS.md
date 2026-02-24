@@ -257,6 +257,12 @@ Follow these instructions.
 - **Common patterns**: Keep collection converters in `target-package + FromSource` shape (`streams.FromDict`, `dicts.FromStream`) for consistency with existing list/stream APIs.
 - **Language semantics**: `dicts.FromStream` uses last-write-wins for duplicate keys by assigning incoming entries into the resulting dict.
 - **Gotchas**: `streams.FromDict` iterates Go maps, so output stream order is non-deterministic and should not be asserted directly in tests.
+
+### Session Notes (2026-02-24)
+
+- **Common patterns**: For Go 1.26 migration, keep `go.mod` (`go` + `toolchain`) and CI `actions/setup-go` patch versions aligned to avoid toolchain skew.
+- **Common patterns**: Integrate `go fix` as a dedicated CI check (`go fix ./...` + `git diff --exit-code`) so failures clearly signal "run gofix and commit".
+- **Gotchas**: `go fix` can apply broad modernizations in one pass; run lint/tests immediately after and fix secondary lints introduced by rewrites.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

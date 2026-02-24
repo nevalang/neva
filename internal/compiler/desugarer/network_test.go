@@ -94,7 +94,7 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 						Receivers: []src.ConnectionReceiver{
 							{
-								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: new(uint8(0))},
 							},
 						},
 					},
@@ -106,7 +106,7 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 						Receivers: []src.ConnectionReceiver{
 							{
-								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: new(uint8(1))},
 							},
 						},
 					},
@@ -170,7 +170,7 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 						Receivers: []src.ConnectionReceiver{
 							{
-								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(0))},
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: new(uint8(0))},
 							},
 						},
 					},
@@ -182,7 +182,7 @@ func TestDesugarNetwork(t *testing.T) {
 						},
 						Receivers: []src.ConnectionReceiver{
 							{
-								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: compiler.Pointer(uint8(1))},
+								PortAddr: &src.PortAddr{Node: "__fan_in__1", Port: "data", Idx: new(uint8(1))},
 							},
 						},
 					},
@@ -351,9 +351,9 @@ func TestDesugarNetwork(t *testing.T) {
 						Value: src.ConstValue{
 							Message: &src.MsgLiteral{
 								List: []src.ConstValue{
-									{Message: &src.MsgLiteral{Str: compiler.Pointer("a")}},
-									{Message: &src.MsgLiteral{Str: compiler.Pointer("b")}},
-									{Message: &src.MsgLiteral{Str: compiler.Pointer("c")}},
+									{Message: &src.MsgLiteral{Str: new("a")}},
+									{Message: &src.MsgLiteral{Str: new("b")}},
+									{Message: &src.MsgLiteral{Str: new("c")}},
 								},
 							},
 						},
@@ -392,7 +392,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 					},
 					Value: src.ConstValue{
-						Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+						Message: &src.MsgLiteral{Int: new(42)},
 					},
 				}
 				mock.
@@ -474,7 +474,7 @@ func TestDesugarNetwork(t *testing.T) {
 						Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}},
 					},
 					Value: src.ConstValue{
-						Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+						Message: &src.MsgLiteral{Int: new(42)},
 					},
 				}
 				mock.
@@ -548,7 +548,7 @@ func TestDesugarNetwork(t *testing.T) {
 												},
 											},
 											Value: src.ConstValue{
-												Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+												Message: &src.MsgLiteral{Int: new(42)},
 											},
 										},
 									},
@@ -617,7 +617,7 @@ func TestDesugarNetwork(t *testing.T) {
 							},
 						},
 						Value: src.ConstValue{
-							Message: &src.MsgLiteral{Int: compiler.Pointer(42)},
+							Message: &src.MsgLiteral{Int: new(42)},
 						},
 					},
 				},
@@ -724,7 +724,7 @@ func TestDesugarNetwork(t *testing.T) {
 											Tag:       "Int",
 											Data: &src.ConstValue{
 												Message: &src.MsgLiteral{
-													Int: compiler.Pointer(42),
+													Int: new(42),
 												},
 											},
 										},
@@ -787,7 +787,7 @@ func TestDesugarNetwork(t *testing.T) {
 									Tag:       "Int",
 									Data: &src.ConstValue{
 										Message: &src.MsgLiteral{
-											Int: compiler.Pointer(42),
+											Int: new(42),
 										},
 									},
 								},

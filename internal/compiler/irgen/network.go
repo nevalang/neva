@@ -279,7 +279,7 @@ func (g Generator) processReceiver(
 }
 
 func joinNodePath(nodePath []string, nodeName string) string {
-	newPath := make([]string, len(nodePath))
+	newPath := make([]string, len(nodePath), len(nodePath)+1)
 	copy(newPath, nodePath)
 	newPath = append(newPath, nodeName)
 	return strings.Join(newPath, "/")

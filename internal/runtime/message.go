@@ -355,7 +355,7 @@ func (msg UnionMsg) String() string {
 
 func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 	if msg.data == nil {
-		return []byte(fmt.Sprintf(`{ "tag": %q }`, msg.tag)), nil
+		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
 	}
 
 	dataJSON, err := json.Marshal(msg.data)
@@ -364,7 +364,7 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 	}
 	dataJSON = addJSONSpaces(dataJSON)
 
-	return []byte(fmt.Sprintf(`{ "tag": %q, "data": %s }`, msg.tag, dataJSON)), nil
+	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.

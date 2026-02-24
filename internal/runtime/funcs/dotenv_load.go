@@ -100,6 +100,7 @@ func (d dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 }
 
 func loadDotenvFile(path string, override bool) error {
+	// #nosec G304,G703 -- path comes from explicit component input (caller-controlled by design).
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -145,8 +146,8 @@ func parseDotenv(r io.Reader) (map[string]string, error) {
 			continue
 		}
 
-		if strings.HasPrefix(line, "export ") {
-			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		if after, ok := strings.CutPrefix(line, "export "); ok {
+			line = strings.TrimSpace(after)
 		}
 
 		key, value, err := parseDotenvEntry(line)

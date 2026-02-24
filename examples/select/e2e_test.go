@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		t.Logf("Running iteration %d", i)
 		out, _ := e2e.Run(t, []string{"run", "."})
 		require.Equal(

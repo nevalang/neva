@@ -65,12 +65,12 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	// foo[0]->
 	require.Equal(t, "foo", conn.Senders[0].PortAddr.Node)
 	require.Equal(t, "", conn.Senders[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(0)), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, new(uint8(0)), conn.Senders[0].PortAddr.Idx)
 
 	// ->bar[1]
 	require.Equal(t, "bar", conn.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(1)), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
 }
 
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {

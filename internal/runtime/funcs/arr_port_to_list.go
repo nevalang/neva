@@ -28,7 +28,7 @@ func (arrayPortToList) Create(
 
 		for {
 			list := make([]runtime.Msg, 0, l)
-			for idx := 0; idx < l; idx++ {
+			for idx := range l {
 				msg, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return

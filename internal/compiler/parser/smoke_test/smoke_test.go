@@ -28,6 +28,7 @@ type MyErrorListener interface {
 }
 
 // FileAwareErrorListener provides better error reporting with file context
+//
 //nolint:govet // fieldalignment: small helper struct.
 type FileAwareErrorListener struct {
 	filename string
@@ -42,7 +43,7 @@ func NewFileAwareErrorListener(t *testing.T, filename string) *FileAwareErrorLis
 	}
 }
 
-func (f *FileAwareErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
+func (f *FileAwareErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol any, line, column int, msg string, e antlr.RecognitionException) {
 	tokenText := "<unknown>"
 	if token, ok := offendingSymbol.(antlr.Token); ok {
 		tokenText = token.GetText()

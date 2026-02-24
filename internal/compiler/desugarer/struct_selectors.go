@@ -90,7 +90,7 @@ func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const
 	for _, selector := range senderSide.StructSelector {
 		result = append(result, src.ConstValue{
 			Message: &src.MsgLiteral{
-				Str:  compiler.Pointer(selector),
+				Str:  new(selector),
 				Meta: locOnlyMeta,
 			},
 		})

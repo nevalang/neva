@@ -1,7 +1,6 @@
 package desugarer
 
 import (
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
@@ -20,7 +19,7 @@ func (d *Desugarer) handleConst(constant src.Const) src.Const {
 		TypeExpr: constant.TypeExpr,
 		Value: src.ConstValue{
 			Message: &src.MsgLiteral{
-				Float: compiler.Pointer(float64(*constant.Value.Message.Int)),
+				Float: new(float64(*constant.Value.Message.Int)),
 				Meta:  constant.Meta,
 			},
 		},

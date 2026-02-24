@@ -6,6 +6,7 @@ import (
 )
 
 // Program is a graph where ports are vertexes and connections are edges.
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Program struct {
 	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"` // Hide from default marshaling
@@ -84,6 +85,7 @@ func (p PortAddr) MarshalYAML() (any, error) {
 }
 
 // FuncCall describes call of a runtime function.
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type FuncCall struct {
 	Ref string   `json:"ref,omitempty" yaml:"ref,omitempty"` // Reference to the function in registry.
@@ -98,6 +100,7 @@ type FuncIO struct {
 }
 
 // Message is a data that can be sent and received.
+//
 //nolint:govet // fieldalignment: keep semantic grouping.
 type Message struct {
 	Type         MsgType            `json:"type" yaml:"type"`
@@ -107,7 +110,7 @@ type Message struct {
 	String       string             `json:"str,omitempty" yaml:"str,omitempty"`
 	List         []Message          `json:"list,omitempty" yaml:"list,omitempty"`
 	DictOrStruct map[string]Message `json:"map,omitempty" yaml:"map,omitempty"`
-	Union        UnionMessage       `json:"union,omitempty" yaml:"union,omitempty"`
+	Union        UnionMessage       `json:"union" yaml:"union,omitempty"`
 }
 
 //nolint:govet // fieldalignment: keep semantic grouping.

@@ -12,7 +12,7 @@ import (
 type EntityRef struct {
 	Pkg  string `json:"pkg,omitempty"`
 	Name string `json:"name,omitempty"`
-	Meta Meta   `json:"meta,omitempty"`
+	Meta Meta   `json:"meta"`
 }
 
 func (e EntityRef) String() string {
@@ -27,15 +27,15 @@ func (e EntityRef) String() string {
 //nolint:govet // fieldalignment: keep order for readability and JSON grouping.
 type Meta struct {
 	Text  string   `json:"text,omitempty"`
-	Start Position `json:"start,omitempty"`
-	Stop  Position `json:"stop,omitempty"`
+	Start Position `json:"start"`
+	Stop  Position `json:"stop"`
 	// Location must always be present, even for virtual nodes inserted after resugaring,
 	// because irgen relies on it.
-	Location Location `json:"location,omitempty"`
+	Location Location `json:"location"`
 }
 
 type Location struct {
-	ModRef   ModuleRef `json:"module,omitempty"`
+	ModRef   ModuleRef `json:"module"`
 	Package  string    `json:"package,omitempty"`
 	Filename string    `json:"filename,omitempty"`
 }
