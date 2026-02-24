@@ -15,6 +15,8 @@ Follow these instructions.
 9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 10. PR review workflow: when user asks to address PR comments, apply the requested code/doc changes first, then post a reply to each addressed comment via `gh`; do not resolve review threads unless user explicitly asks.
 11. For generated tests, add short intent comments so the expected behavior is obvious without reverse-engineering fixtures.
+12. After making code/doc edits, always include the PR link in the user-facing response. If no PR exists yet, explicitly state that and provide the PR URL immediately after creating it.
+13. After opening/updating a PR, always `fetch` latest `main` and verify mergeability/conflicts (`gh pr view` + rebase/merge check), because AGENTS.md and process docs change frequently in parallel branches.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -366,3 +368,9 @@ The standard library provides components for all programs. Some are implemented 
 1. `make build` (Verify compilation).
 2. `golangci-lint run ./...` then `go test ./...` (Verify lint + tests).
 3. `make antlr` (Regenerate parser if `.g4` changed).
+
+### Session Notes (2026-02-25)
+
+- **Gotchas**: Stream helper fallback that coerces non-union messages to implicit `Data` masks protocol bugs and breaks `Open/Close` routing.
+- **Architecture insights**: `streams.ForEach` is more reliable when a dedicated runtime controller gates each `Data` item until side-effect completion.
+- **Common patterns**: For side-effect handlers that may emit either `res` or `err`, wire both paths into completion signaling to prevent deadlocks.

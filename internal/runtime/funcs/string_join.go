@@ -96,24 +96,21 @@ func (stringJoinStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 				hasSep = true
 			}
 
-			item := msg.Struct()
-
-			if builder.Len() > 0 {
-				builder.WriteString(sep)
+			switch {
+			case isStreamOpen(msg):
+				builder.Reset()
+			case isStreamData(msg):
+				if builder.Len() > 0 {
+					builder.WriteString(sep)
+				}
+				builder.WriteString(streamDataValue(msg).Str())
+			case isStreamClose(msg):
+				if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+					return
+				}
+				builder.Reset()
+				hasSep = false
 			}
-
-			builder.WriteString(item.Get("data").Str())
-
-			if !item.Get("last").Bool() {
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
-				return
-			}
-
-			builder.Reset()
-			hasSep = false
 		}
 	}, nil
 }

@@ -1,5 +1,10 @@
 // --- Sources ---
 
+pub type Indexed<T> struct {
+    idx int
+    data T
+}
+
 // FromArray iterates over all array-inport's slots in order
 // and produces a stream of messages.
 #extern(array_port_to_stream)
@@ -15,6 +20,9 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // must remain whole stream elements.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
+// Just creates a single-item stream.
+#extern(stream_just)
+pub def Just<T>(data T) (res stream<T>)
 
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
@@ -27,16 +35,32 @@ pub def FromDict<T>(data dict<T>) (res stream<DictEntry<T>>)
 #extern(stream_int_range)
 pub def Range(from int, to int) (res stream<int>)
 
+// Enumerate attaches a 0-based index to each Data item in a stream.
+#extern(stream_enumerate)
+pub def Enumerate<T>(data stream<T>) (res stream<Indexed<T>>)
+
+// IsData returns true when stream item has Data tag.
+#extern(stream_is_data)
+def IsData<T>(data stream<T>) (res bool)
+
+// IsClose returns true when stream item has Close tag.
+#extern(stream_is_close)
+def IsClose<T>(data stream<T>) (res bool)
+
+// UnwrapData extracts payload from stream<T>::Data item.
+#extern(stream_unwrap_data)
+def UnwrapData<T>(data stream<T>) (res T)
+
 // --- Synchronization ---
 
-// Wait blocks until last stream item arrive, then sends a signal.
+// Wait blocks until stream close item arrives, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
     del Del
-    s Switch<bool>
+    s Switch<stream<any>>
     ---
     :data -> [
-        .last -> s:data,
-        true -> s:case[0]
+        s:data,
+        stream<any>::Close -> s:case[0]
     ]
     s:case[0] -> :sig
     s:else -> del
@@ -66,11 +90,6 @@ pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 // elements from the second.
 #extern(stream_product)
 pub def Product<T, Y>(first stream<T>, second stream<Y>) (res stream<ProductResult<T, Y>>)
-
-pub type ProductResult<T, Y> struct {
-    first T
-    second Y
-}
 
 pub type ProductResult<T, Y> struct {
     first T

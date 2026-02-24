@@ -3,15 +3,13 @@
 // can be resolved by type-system, because there was a bug with it
 
 import { @:foo }
+import { streams }
 
 def Main(start any) (stop any) {
 	justFoo Struct<foo.Foo>
-	itemWithFoo Struct<stream<foo.Foo>>
+	just streams.Just<foo.Foo>
 	---
-	:start -> [
-		0 -> [justFoo:bar, itemWithFoo:idx],
-		true -> itemWithFoo:last
-	]
-	justFoo -> itemWithFoo:data
-	itemWithFoo -> :stop
+	:start -> 0 -> justFoo:bar
+	justFoo -> just:data
+	just:res -> :stop
 }

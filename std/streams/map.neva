@@ -7,13 +7,22 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // It's can receive next message before previous one is processed,
 // so it must never be used with side-effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
+    del Del
     handler IMapHandler<T, Y>
-    wrap Struct<stream<Y>>
+    open_pass Pass<stream<Y>>
+    close_pass Pass<stream<Y>>
+    sw Switch<stream<T>>
+    box Union<stream<Y>>
     ---
     :data -> [
-        .idx -> wrap:idx,
-        .last -> wrap:last,
-        .data -> handler -> wrap:data
+        sw:data,
+        stream<T>::Open -> sw:case[0] -> stream<Y>::Open -> open_pass,
+        stream<T>::Close -> sw:case[1] -> stream<Y>::Close -> close_pass,
+        stream<T>::Data -> sw:case[2] -> handler -> [
+            box:data,
+            stream<Y>::Data -> box:tag
+        ]
     ]
-    wrap -> :res
+    [open_pass, close_pass, box] -> :res
+    sw:else -> del
 }

@@ -6,12 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type listToStream struct{}
+type streamJust struct{}
 
-func (c listToStream) Create(
-	io runtime.IO,
-	_ runtime.Msg,
-) (func(ctx context.Context), error) {
+func (streamJust) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -28,18 +25,12 @@ func (c listToStream) Create(
 			if !ok {
 				return
 			}
-
-			list := data.List()
 			if !resOut.Send(ctx, streamOpen()) {
 				return
 			}
-
-			for idx := range list {
-				if !resOut.Send(ctx, streamData(list[idx])) {
-					return
-				}
+			if !resOut.Send(ctx, streamData(data)) {
+				return
 			}
-
 			if !resOut.Send(ctx, streamClose()) {
 				return
 			}

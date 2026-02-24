@@ -40,6 +40,10 @@ func (streamProduct) Create(
 			var wg sync.WaitGroup
 
 			wg.Go(func() {
+				firstOk = waitStreamOpen(ctx, firstIn)
+				if !firstOk {
+					return
+				}
 				for {
 					var firstMsg runtime.Msg
 					firstMsg, firstOk = firstIn.Receive(ctx)
@@ -47,16 +51,20 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := firstMsg.Struct()
-					firstData = append(firstData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
+					switch {
+					case isStreamData(firstMsg):
+						firstData = append(firstData, streamDataValue(firstMsg))
+					case isStreamClose(firstMsg):
 						break
 					}
 				}
 			})
 
 			wg.Go(func() {
+				secondOk = waitStreamOpen(ctx, secondIn)
+				if !secondOk {
+					return
+				}
 				for {
 					var secondMsg runtime.Msg
 					secondMsg, secondOk = secondIn.Receive(ctx)
@@ -64,10 +72,10 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := secondMsg.Struct()
-					secondData = append(secondData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
+					switch {
+					case isStreamData(secondMsg):
+						secondData = append(secondData, streamDataValue(secondMsg))
+					case isStreamClose(secondMsg):
 						break
 					}
 				}
@@ -79,20 +87,26 @@ func (streamProduct) Create(
 				return
 			}
 
-			for i, firstMsg := range firstData {
-				for j, secondMsg := range secondData {
-					resOut.Send(
+			if !resOut.Send(ctx, streamOpen()) {
+				return
+			}
+
+			for _, firstMsg := range firstData {
+				for _, secondMsg := range secondData {
+					if !resOut.Send(
 						ctx,
-						streamItem(
-							runtime.NewStructMsg([]runtime.StructField{
-								runtime.NewStructField("first", firstMsg),
-								runtime.NewStructField("second", secondMsg),
-							}),
-							int64(i*len(secondData)+j),
-							i == len(firstData)-1 && j == len(secondData)-1,
-						),
-					)
+						streamData(runtime.NewStructMsg([]runtime.StructField{
+							runtime.NewStructField("first", firstMsg),
+							runtime.NewStructField("second", secondMsg),
+						})),
+					) {
+						return
+					}
 				}
+			}
+
+			if !resOut.Send(ctx, streamClose()) {
+				return
 			}
 		}
 	}, nil

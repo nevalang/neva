@@ -36,53 +36,29 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				return
 			}
 
-			var (
-				from = fromMsg.Int()
-				to   = toMsg.Int()
+			from := fromMsg.Int()
+			to := toMsg.Int()
 
-				idx  = int64(0)
-				last = false
-				data = from
-			)
+			if !resOut.Send(ctx, streamOpen()) {
+				return
+			}
 
 			if from < to {
-				for !last {
-					if data == to-1 {
-						last = true
-					}
-
-					item := streamItem(
-						runtime.NewIntMsg(data),
-						idx,
-						last,
-					)
-
-					if !resOut.Send(ctx, item) {
+				for data := from; data < to; data++ {
+					if !resOut.Send(ctx, streamData(runtime.NewIntMsg(data))) {
 						return
 					}
-
-					idx++
-					data++
 				}
-			} else {
-				for !last {
-					if data == toMsg.Int()+1 {
-						last = true
-					}
-
-					item := streamItem(
-						runtime.NewIntMsg(data),
-						idx,
-						last,
-					)
-
-					if !resOut.Send(ctx, item) {
+			} else if from > to {
+				for data := from; data > to; data-- {
+					if !resOut.Send(ctx, streamData(runtime.NewIntMsg(data))) {
 						return
 					}
-
-					idx++
-					data--
 				}
+			}
+
+			if !resOut.Send(ctx, streamClose()) {
+				return
 			}
 		}
 	}, nil

@@ -36,7 +36,6 @@ func (streamZipMany) Create(
 			}
 
 			states := make([]streamState, streamsCount)
-			var shouldStop atomic.Bool
 			var aborted atomic.Bool
 
 			var wg sync.WaitGroup
@@ -50,6 +49,11 @@ func (streamZipMany) Create(
 
 					collected := make([]runtime.Msg, 0)
 
+					if !waitStreamOpen(ctx, dataInSlot{arr: dataIn, idx: idx}) {
+						aborted.Store(true)
+						return
+					}
+
 					for {
 						msg, ok := dataIn.Receive(ctx, idx)
 						if !ok {
@@ -57,11 +61,10 @@ func (streamZipMany) Create(
 							return
 						}
 
-						item := msg.Struct()
-						collected = append(collected, item.Get("data"))
-
-						if item.Get("last").Bool() {
-							shouldStop.Store(true)
+						switch {
+						case isStreamData(msg):
+							collected = append(collected, streamDataValue(msg))
+						case isStreamClose(msg):
 							states[idx] = streamState{data: collected}
 							return
 						}
@@ -82,27 +85,33 @@ func (streamZipMany) Create(
 				}
 			}
 
+			if !resOut.Send(ctx, streamOpen()) {
+				return
+			}
+
 			for idx := 0; idx < count; idx++ {
 				zipped := make([]runtime.Msg, streamsCount)
 				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(
-					ctx,
-					streamItem(
-						runtime.NewListMsg(zipped),
-						int64(idx),
-						idx == count-1,
-					),
-				) {
+				if !resOut.Send(ctx, streamData(runtime.NewListMsg(zipped))) {
 					return
 				}
 			}
 
-			if shouldStop.Load() || count == 0 {
+			if !resOut.Send(ctx, streamClose()) {
 				return
 			}
 		}
 	}, nil
+}
+
+type dataInSlot struct {
+	arr runtime.ArrayInport
+	idx int
+}
+
+func (d dataInSlot) Receive(ctx context.Context) (runtime.Msg, bool) {
+	return d.arr.Receive(ctx, d.idx)
 }

@@ -49,7 +49,12 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"dict_to_stream":       dictToStream{},
 		"stream_to_dict":       streamToDict{},
 
-		"stream_int_range": rangeInt{},
+		"stream_int_range":   rangeInt{},
+		"stream_just":        streamJust{},
+		"stream_enumerate":   streamEnumerate{},
+		"stream_is_data":     streamIsData{},
+		"stream_is_close":    streamIsClose{},
+		"stream_unwrap_data": streamUnwrapData{},
 
 		"stream_zip":      streamZip{},
 		"stream_zip_many": streamZipMany{},
