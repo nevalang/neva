@@ -7,12 +7,12 @@ import {
 const text string = 'aβ'
 
 def Main(start any) (stop any) {
-    from_string streams.FromString
-    for_each streams.ForEach<string>{fmt.Println<string>}
+    stream_from_string streams.FromString
+    for_each_println streams.ForEach<string>{fmt.Println<string>}
     wait streams.Wait
     panic runtime.Panic
     ---
-    :start -> $text -> from_string -> for_each
-    for_each:res -> wait -> :stop
-    for_each:err -> panic
+    :start -> $text -> stream_from_string -> for_each_println
+    for_each_println:res -> wait -> :stop
+    for_each_println:err -> panic
 }
