@@ -254,6 +254,26 @@ Follow these instructions.
 - **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
 - **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
 - **Common patterns**: When addressing PR review comments, apply requested changes first, then reply to each comment in GitHub; do not resolve threads unless explicitly requested.
+
+### Session Notes (2026-02-22, stream redesign analysis)
+
+- **Architecture insights**: Current stream implementation spans both `std/streams/*.neva` and multiple runtime funcs (`list_to_stream`, `stream_to_list`, `stream_zip*`, `stream_product`, `string_join`, `image_new`), so stream-shape changes are cross-layer migrations.
+- **Gotchas**: Moving from `last` field to explicit `Close` event changes synchronization math in `streams.ForEach`; lock-signal counts no longer line up automatically and can release data before side-effects complete if not redesigned.
+- **Common patterns**: For issue #908, treat migration as phased: first tagged-union stream representation, then optional `idx` removal after `ForEach`/`Filter` semantics are stabilized under bracket events.
+
+### Session Notes (2026-02-22, os package)
+
+- **Language semantics**: Environment/process query nodes should be signal-triggered (`sig`) when they have no natural data input, to avoid autonomous senders.
+- **Common patterns**: In `std/os`, prefer path/value-based components with typed struct outputs (`LookupEnvResult`, `FileInfo`, `DirEntry`) over file-handle APIs that do not map cleanly to message values.
+- **Gotchas**: Keep every new `std/os #extern(...)` name synchronized with `internal/runtime/funcs/registry.go`; unmapped externs compile in stdlib but fail at runtime use.
+- **Gotchas**: Full `go test ./...` can fail in unrelated CLI e2e packages due shared workspace artifacts (`mkdir src: file exists`); verify runtime changes with targeted package tests and focused e2e cases.
+
+### Session Notes (2026-02-24, numeric/bytes direction)
+
+- **Language semantics**: For numeric expansion discussions, prefer Go-style names (`int8..int64`, `uint8..uint64`, `float32/float64`) over Rust-style (`i8/u8/f32`).
+- **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
+- **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
+- **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
