@@ -9,11 +9,12 @@ Follow these instructions.
 3. Run `golangci-lint` and `go test`. Fix warnings.
 4. If uncertainty > 10%, ask user.
 5. Update this file if changes to process, architecture, or rules.
-6. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
+6. For any `*.neva` change (parser/stdlib/examples/e2e), explicitly follow `docs/style_guide.md` (node aliases `lower_snake_case`, tabs, import ordering, omit explicit port names when unambiguous). Use `go.mod` as source of truth for Go imports.
 7. Plan -> Review -> Execute -> Review.
 8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
 9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
 10. PR review workflow: when user asks to address PR comments, apply the requested code/doc changes first, then post a reply to each addressed comment via `gh`; do not resolve review threads unless user explicitly asks.
+11. For generated tests, add short intent comments so the expected behavior is obvious without reverse-engineering fixtures.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -258,6 +259,14 @@ Follow these instructions.
 - **Language semantics**: `dicts.FromStream` uses last-write-wins for duplicate keys by assigning incoming entries into the resulting dict.
 - **Gotchas**: `streams.FromDict` iterates Go maps, so output stream order is non-deterministic and should not be asserted directly in tests.
 
+### Session Notes (2026-02-23)
+
+- **Language semantics**: `bytes` is a dedicated builtin binary payload type; `string` is for text semantics.
+- **Common patterns**: Keep text/binary boundaries explicit with `bytes.FromString` / `strings.FromBytes` rather than implicit coercions.
+- **Architecture insights**: Adding a new payload primitive requires synchronized changes in IR `MsgType`, runtime `Msg` variants, backend type mapping, and stdlib/runtime extern boundaries.
+- **Common patterns**: Binary stdlib boundaries (`io`, `http`, `image`) should use `bytes` to avoid repeated `string`/`[]byte` conversions.
+- **Gotchas**: Full `go test ./...` can run very long; prioritize targeted validation for touched compiler/runtime packages plus changed `examples/*` and `e2e/*`.
+
 ### Session Notes (2026-02-24)
 
 - **Common patterns**: For Go 1.26 migration, keep `go.mod` (`go` + `toolchain`) and CI `actions/setup-go` patch versions aligned to avoid toolchain skew.
@@ -267,6 +276,10 @@ Follow these instructions.
 - **Common patterns**: Keep converter behavior contracts in both stdlib signatures and runtime func comments (order/duplication/materialization) so policy is visible at API and implementation layers.
 - **Common patterns**: When posting issue updates with code-style identifiers, use `gh ... --body-file` to avoid shell substitution on backticks.
 - **Gotchas**: `lists.FromStream` / `dicts.FromStream` remain blocking materializers and can grow memory with long streams; document this explicitly in comments/docs.
+- **Language semantics**: `bytes` has no literal/const syntax; use explicit converters (`bytes.FromString`, `strings.FromBytes`) in networks.
+- **Common patterns**: For `*.neva` edits, enforce `lower_snake_case` node aliases and verify style against `docs/style_guide.md`.
+- **Architecture insights**: `BytesMsg` is represented as `[]byte`; avoid defensive copies in runtime hot paths and treat immutability as a usage convention.
+- **Gotchas**: New e2e module manifests should use explicit language version (`0.34.0`), not shorthand aliases.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

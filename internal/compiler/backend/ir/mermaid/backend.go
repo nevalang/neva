@@ -1,6 +1,7 @@
 package mermaid
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"sort"
@@ -191,6 +192,8 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 						n.Meta.Msg = fmt.Sprintf("%v", f.Msg.Bool)
 					case ir.MsgTypeFloat:
 						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
+					case ir.MsgTypeBytes:
+						n.Meta.Msg = formatBytesPreview(f.Msg.Bytes)
 					case ir.MsgTypeList:
 						n.Meta.Msg = "[...]"
 					case ir.MsgTypeDict, ir.MsgTypeStruct, ir.MsgTypeUnion:
@@ -355,4 +358,33 @@ func getPortID(addr ir.PortAddr) string {
 	}
 
 	return sanitize(path) + "__" + sanitize(addr.Port)
+}
+
+// formatBytesPreview keeps Mermaid labels compact and deterministic.
+// Go's `%x`/`%q` would print full payloads, which can explode diagram size.
+func formatBytesPreview(data []byte) string {
+	const maxPreviewLen = 16
+
+	if len(data) == 0 {
+		return "<bytes len=0>"
+	}
+
+	preview := data
+	truncated := false
+	if len(preview) > maxPreviewLen {
+		preview = preview[:maxPreviewLen]
+		truncated = true
+	}
+
+	suffix := ""
+	if truncated {
+		suffix = "..."
+	}
+
+	return fmt.Sprintf(
+		"<bytes len=%d hex=%s%s>",
+		len(data),
+		hex.EncodeToString(preview),
+		suffix,
+	)
 }

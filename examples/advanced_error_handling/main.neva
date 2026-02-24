@@ -2,6 +2,7 @@ import {
 	fmt
 	http
 	runtime
+	strings
 }
 
 def Main(start any) (stop any) {
@@ -17,9 +18,10 @@ def Main(start any) (stop any) {
 
 def App(sig any) (res string, err error) {
 	http_get http.Get? // '?' implicitly sends `:err` downstream
+	string_from_bytes strings.FromBytes
 	---
 	:sig -> 'definitely not a valid URL' -> http_get
 	// http_get output handled like it only has one outport
 	// because http_get:err is handled by the ? operator
-	http_get -> .body -> :res
+	http_get -> .body -> string_from_bytes -> :res
 }

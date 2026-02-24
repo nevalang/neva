@@ -46,14 +46,14 @@ func (p *pixelMsg) decode(msg runtime.Msg) {
 }
 
 type imageMsg struct {
-	pixels string
+	pixels []byte
 	width  int64
 	height int64
 }
 
 func (i imageMsg) createImage() image.Image {
 	// Use pixels directly if available.
-	pix := []uint8(i.pixels)
+	pix := i.pixels
 	if len(pix) == 0 {
 		if size := i.width * i.height; size > 0 {
 			// Allocate new pixels.

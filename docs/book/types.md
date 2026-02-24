@@ -180,6 +180,7 @@ pub type bool
 pub type int
 pub type float
 pub type string
+pub type bytes
 pub type dict<T>
 pub type list<T>
 pub type maybe<T>
@@ -207,7 +208,15 @@ Float is 64-bit floating point number.
 
 ### `string`
 
-Strings are UTF-8 encoded byte arrays. They can be accessed by index (handling possible absence) and converted to streams for iteration.
+String is UTF-8 text.
+
+For raw binary payloads use `bytes`.
+
+### `bytes`
+
+Bytes is a binary blob type for payloads such as file contents, HTTP bodies, and encoded images.
+By convention bytes are treated as immutable message values.
+Bytes currently has no direct literal syntax in source code.
 
 ### `list<T>`
 

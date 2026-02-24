@@ -108,6 +108,7 @@ type Message struct {
 	Int          int64              `json:"int,omitempty" yaml:"int,omitempty"`
 	Float        float64            `json:"float,omitempty" yaml:"float,omitempty"`
 	String       string             `json:"str,omitempty" yaml:"str,omitempty"`
+	Bytes        []byte             `json:"bytes,omitempty" yaml:"bytes,omitempty"`
 	List         []Message          `json:"list,omitempty" yaml:"list,omitempty"`
 	DictOrStruct map[string]Message `json:"map,omitempty" yaml:"map,omitempty"`
 	Union        UnionMessage       `json:"union" yaml:"union,omitempty"`
@@ -127,6 +128,7 @@ const (
 	MsgTypeInt    MsgType = "int"
 	MsgTypeFloat  MsgType = "float"
 	MsgTypeString MsgType = "string"
+	MsgTypeBytes  MsgType = "bytes"
 	MsgTypeList   MsgType = "list"
 	MsgTypeDict   MsgType = "dict"
 	MsgTypeStruct MsgType = "struct"
