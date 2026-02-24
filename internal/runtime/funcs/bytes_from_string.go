@@ -26,7 +26,8 @@ func (bytesFromString) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Co
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewBytesMsg([]byte(dataMsg.Str()))) {
+			// Use a dedicated constructor to avoid an extra []byte copy.
+			if !resOut.Send(ctx, runtime.NewBytesMsgFromString(dataMsg.Str())) {
 				return
 			}
 		}

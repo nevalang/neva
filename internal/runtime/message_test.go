@@ -92,3 +92,23 @@ func TestBytesMsgEqual(t *testing.T) {
 		t.Fatal("Equal() = true, want false")
 	}
 }
+
+func TestBytesMsgCopiesInputOnCreate(t *testing.T) {
+	src := []byte("hello")
+	msg := NewBytesMsg(src)
+	src[0] = 'j'
+
+	if got, want := string(msg.Bytes()), "hello"; got != want {
+		t.Fatalf("Bytes() = %q, want %q", got, want)
+	}
+}
+
+func TestBytesMsgReturnsCopy(t *testing.T) {
+	msg := NewBytesMsg([]byte("hello"))
+	view := msg.Bytes()
+	view[0] = 'j'
+
+	if got, want := string(msg.Bytes()), "hello"; got != want {
+		t.Fatalf("Bytes() = %q, want %q", got, want)
+	}
+}

@@ -150,25 +150,9 @@ func (a Analyzer) analyzeConst(
 			}
 		}
 	case "bytes":
-		if constant.Value.Message.Str == nil {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf("Bytes value is missing in bytes contant: %v", constant),
-				Meta:    &constant.Meta,
-			}
-		}
-		if constant.Value.Message.Bool != nil ||
-			constant.Value.Message.Int != nil ||
-			constant.Value.Message.Float != nil ||
-			constant.Value.Message.List != nil ||
-			constant.Value.Message.DictOrStruct != nil ||
-			constant.Value.Message.Union != nil {
-			return src.Const{}, &compiler.Error{
-				Message: fmt.Sprintf(
-					"Constant cannot have several values at once: %v",
-					constant.Value.Message,
-				),
-				Meta: &constant.Meta,
-			}
+		return src.Const{}, &compiler.Error{
+			Message: "Bytes constants are not supported, use bytes.FromString in network",
+			Meta:    &constant.Meta,
 		}
 	case "list":
 		if constant.Value.Message.List == nil {

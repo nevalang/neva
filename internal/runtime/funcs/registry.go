@@ -85,7 +85,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"float_from_int":            floatFromInt{},
 		"string_from_int_codepoint": stringFromIntCodepoint{},
 		"bytes_from_string":         bytesFromString{},
-		"bytes_to_string":           bytesToString{},
+		"strings_from_bytes":        stringsFromBytes{},
 
 		"atoi":         atoi{},
 		"itoa":         itoa{},

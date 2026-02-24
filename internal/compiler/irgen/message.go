@@ -9,7 +9,6 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
-//nolint:gocyclo // Message lowering covers all literal variants in one switch.
 func getIRMsgBySrcRef(
 	constant src.ConstValue,
 	scope src.Scope,
@@ -40,12 +39,6 @@ func getIRMsgBySrcRef(
 			Float: *constant.Message.Float,
 		}, nil
 	case constant.Message.Str != nil:
-		if typeExpr.Inst != nil && typeExpr.Inst.Ref.Name == "bytes" {
-			return &ir.Message{
-				Type:  ir.MsgTypeBytes,
-				Bytes: []byte(*constant.Message.Str),
-			}, nil
-		}
 		return &ir.Message{
 			Type:   ir.MsgTypeString,
 			String: *constant.Message.Str,

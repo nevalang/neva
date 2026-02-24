@@ -11,3 +11,6 @@ pub def ToUpper(data string) (res string)
 
 #extern(strings_to_lower)
 pub def ToLower(data string) (res string)
+
+#extern(strings_from_bytes)
+pub def FromBytes(data bytes) (res string)

@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type bytesToString struct{}
+type stringsFromBytes struct{}
 
-func (bytesToString) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringsFromBytes) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

@@ -1,25 +1,26 @@
 import {
-    bytes
-    fmt
-    io
-    runtime
+	bytes
+	fmt
+	io
+	runtime
+	strings
 }
 
 def Main(start any) (stop any) {
-    from_string bytes.FromString
-    to_string bytes.ToString
-    write io.WriteAll
-    read io.ReadAll
-    println fmt.Println
-    panic runtime.Panic
-    ---
-    :start -> [
-        'Hello, bytes!' -> from_string,
-        'bytes_roundtrip.txt' -> write:filename
-    ]
-    from_string:res -> write:data
-    write:res -> 'bytes_roundtrip.txt' -> read:filename
-    read:res -> to_string -> println:data
-    println:res -> :stop
-    [write:err, read:err, println:err] -> panic
+	bytes_from_string bytes.FromString
+	string_from_bytes strings.FromBytes
+	write_all io.WriteAll
+	read_all io.ReadAll
+	println fmt.Println
+	panic runtime.Panic
+	---
+	:start -> [
+		'Hello, bytes!' -> bytes_from_string,
+		'bytes_roundtrip.txt' -> write_all:filename
+	]
+	bytes_from_string:res -> write_all:data
+	write_all:res -> 'bytes_roundtrip.txt' -> read_all:filename
+	read_all:res -> string_from_bytes -> println:data
+	println:res -> :stop
+	[write_all:err, read_all:err, println:err] -> panic
 }

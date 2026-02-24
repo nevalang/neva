@@ -79,17 +79,6 @@ If Neva later splits builtin into `core` and `prelude`, the same principle
 still applies: compiler contracts stay close to core, policy-heavy APIs stay
 outside.
 
-## Why both `string` and `bytes`?
-
-They represent different semantics:
-
-- `string` is text (UTF-8-oriented APIs).
-- `bytes` is raw binary payload.
-
-Historically, using `string` for binary transport caused confusion and extra
-boundary conversions around I/O/HTTP/image APIs. Keeping a dedicated `bytes`
-type makes text-vs-binary intent explicit and avoids hidden costs.
-
 ## Why are `Union` and `Struct` in builtin?
 
 Because they are part of compiler contracts, not just convenience utilities.

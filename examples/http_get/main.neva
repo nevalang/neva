@@ -1,18 +1,18 @@
 import {
-	bytes
 	fmt
 	http
 	runtime
+	strings
 }
 
 def Main(start any) (stop any) {
-	get http.Get
-	toString bytes.ToString
+	http_get http.Get
+	string_from_bytes strings.FromBytes
 	println fmt.Println
 	panic runtime.Panic
 	---
-	:start -> 'http://www.example.com' -> get
-	get:res -> .body -> toString -> println
+	:start -> 'http://www.example.com' -> http_get
+	http_get:res -> .body -> string_from_bytes -> println
 	println:res -> :stop
-	[get:err, println:err] -> panic
+	[http_get:err, println:err] -> panic
 }
