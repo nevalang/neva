@@ -23,6 +23,7 @@ func (s streamToList) Create(
 	}
 
 	return func(ctx context.Context) {
+		// Fully materializes one stream batch before emitting resulting list.
 		list := []runtime.Msg{}
 
 		for {

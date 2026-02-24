@@ -165,6 +165,25 @@ Neva supports infinite nesting for streams, but nested streams aren't used to re
 
 Use `Map/Filter/Reduce` for data transformations and `ForEach` for side-effects. For complex cases, access `.data` on stream item directly.
 
+## What are the fixed policies for collection converters?
+
+Current stdlib policy:
+
+- `streams.FromDict`: iteration order is not deterministic (Go map semantics).
+- `dicts.FromStream`: duplicate keys use last-write-wins.
+- `lists.FromStream` and `dicts.FromStream`: fully materialize the stream, block until completion, and may use unbounded memory.
+
+These are intentional compatibility contracts and should be preserved unless
+superseded by an explicit design decision.
+
+## How does `streams.FromString` split text?
+
+`streams.FromString` emits one `string` per Unicode code point
+(Go rune semantics).
+
+Open design questions like bytes vs runes vs grapheme clusters are tracked as
+separate issue work and are not silently changed in-place.
+
 ## Why isn't `Main:stop` of `int` type?
 
 Using `any` allows for more flexible exit conditions, preventing unintended behavior with union types or any outports.

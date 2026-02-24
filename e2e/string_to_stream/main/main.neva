@@ -1,0 +1,18 @@
+import {
+    fmt
+    runtime
+    streams
+}
+
+const text string = 'aβ'
+
+def Main(start any) (stop any) {
+    from_string streams.FromString
+    for_each streams.ForEach<string>{fmt.Println<string>}
+    wait streams.Wait
+    panic runtime.Panic
+    ---
+    :start -> $text -> from_string -> for_each
+    for_each:res -> wait -> :stop
+    for_each:err -> panic
+}

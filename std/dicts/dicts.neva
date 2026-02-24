@@ -1,4 +1,6 @@
 // FromStream collects a stream of dictionary entries into dict.
 // If the same key appears multiple times, last value wins.
+// It fully materializes input stream, blocks until completion,
+// and may use unbounded memory.
 #extern(stream_to_dict)
 pub def FromStream<T>(data stream<DictEntry<T>>) (res dict<T>)
