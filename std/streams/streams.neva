@@ -9,6 +9,13 @@ pub def FromArray<T>([port] T) (res stream<T>)
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
 
+// FromString creates a stream of Unicode code points from input string.
+// Each stream item is a single-code-point string (Go rune semantics).
+// This intentionally does not iterate bytes: multibyte UTF-8 characters
+// must remain whole stream elements.
+#extern(string_to_stream)
+pub def FromString(data string) (res stream<string>)
+
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
 #extern(dict_to_stream)

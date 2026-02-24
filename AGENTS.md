@@ -263,6 +263,10 @@ Follow these instructions.
 - **Common patterns**: For Go 1.26 migration, keep `go.mod` (`go` + `toolchain`) and CI `actions/setup-go` patch versions aligned to avoid toolchain skew.
 - **Common patterns**: Integrate `go fix` as a dedicated CI check (`go fix ./...` + `git diff --exit-code`) so failures clearly signal "run gofix and commit".
 - **Gotchas**: `go fix` can apply broad modernizations in one pass; run lint/tests immediately after and fix secondary lints introduced by rewrites.
+- **Language semantics**: `streams.FromString` currently emits one `string` per Unicode code point (rune semantics), not bytes or grapheme clusters.
+- **Common patterns**: Keep converter behavior contracts in both stdlib signatures and runtime func comments (order/duplication/materialization) so policy is visible at API and implementation layers.
+- **Common patterns**: When posting issue updates with code-style identifiers, use `gh ... --body-file` to avoid shell substitution on backticks.
+- **Gotchas**: `lists.FromStream` / `dicts.FromStream` remain blocking materializers and can grow memory with long streams; document this explicitly in comments/docs.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

@@ -37,6 +37,7 @@ func (streamToDict) Create(
 			key := entryMsg.Get("key").Str()
 			valueMsg := entryMsg.Get("value")
 
+			// Duplicate key policy: last message for the key wins.
 			dict[key] = valueMsg
 
 			if !streamItemMsg.Get("last").Bool() {

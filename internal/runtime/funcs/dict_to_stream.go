@@ -30,6 +30,7 @@ func (dictToStream) Create(
 			}
 
 			dict := dataMsg.Dict()
+			// Go map iteration order is intentionally non-deterministic.
 			size := len(dict)
 
 			idx := 0
