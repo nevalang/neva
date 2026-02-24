@@ -11,6 +11,7 @@ import (
 )
 
 func TestAnalyzeConstBytesLiteralRejected(t *testing.T) {
+	// bytes literals are intentionally forbidden; conversion should stay explicit in networks.
 	a := testAnalyzer(t)
 	scope := testScope(t)
 	value := "hello"
@@ -33,6 +34,7 @@ func TestAnalyzeConstBytesLiteralRejected(t *testing.T) {
 }
 
 func TestAnalyzeConstStringLiteralAllowed(t *testing.T) {
+	// control test: regular string constants are still valid.
 	a := testAnalyzer(t)
 	scope := testScope(t)
 	value := "hello"
@@ -56,6 +58,7 @@ func TestAnalyzeConstStringLiteralAllowed(t *testing.T) {
 func testAnalyzer(t *testing.T) Analyzer {
 	t.Helper()
 
+	// Match production analyzer wiring.
 	terminator := ts.Terminator{}
 	checker := ts.MustNewSubtypeChecker(terminator)
 	resolver := ts.MustNewResolver(ts.Validator{}, checker, terminator)
@@ -66,6 +69,7 @@ func testAnalyzer(t *testing.T) Analyzer {
 func testScope(t *testing.T) src.Scope {
 	t.Helper()
 
+	// Minimal scope that still resolves builtin primitive refs.
 	mainModRef := core.ModuleRef{Path: "example.com/main"}
 	stdModRef := core.ModuleRef{Path: "std", Version: pkg.Version}
 

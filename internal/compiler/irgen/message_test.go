@@ -11,6 +11,7 @@ import (
 )
 
 func TestGetIRMsgBySrcRefStringLiteralDoesNotAutoCastToBytes(t *testing.T) {
+	// Guard against reintroducing implicit string->bytes lowering in IR generation.
 	value := "hello"
 
 	msg, err := getIRMsgBySrcRef(

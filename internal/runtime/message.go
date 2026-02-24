@@ -152,7 +152,7 @@ type BytesMsg struct {
 	v []byte
 }
 
-func (msg BytesMsg) Bytes() []byte { return append([]byte(nil), msg.v...) }
+func (msg BytesMsg) Bytes() []byte { return msg.v }
 
 func (msg BytesMsg) String() string {
 	b, err := msg.MarshalJSON()
@@ -174,14 +174,7 @@ func (msg BytesMsg) Equal(other Msg) bool {
 func NewBytesMsg(v []byte) BytesMsg {
 	return BytesMsg{
 		internalMsg: internalMsg{},
-		v:           append([]byte(nil), v...),
-	}
-}
-
-func NewBytesMsgFromString(s string) BytesMsg {
-	return BytesMsg{
-		internalMsg: internalMsg{},
-		v:           []byte(s),
+		v:           v,
 	}
 }
 

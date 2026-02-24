@@ -20,7 +20,7 @@ def Main(start any) (stop any) {
 	]
 	bytes_from_string:res -> write_all:data
 	write_all:res -> 'bytes_roundtrip.txt' -> read_all:filename
-	read_all:res -> string_from_bytes -> println:data
+	read_all:res -> string_from_bytes -> println
 	println:res -> :stop
 	[write_all:err, read_all:err, println:err] -> panic
 }

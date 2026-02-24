@@ -214,8 +214,8 @@ For raw binary payloads use `bytes`.
 
 ### `bytes`
 
-Bytes is an immutable binary blob type for payloads such as file contents, HTTP bodies, and encoded images.
-Immutability keeps message-passing semantics explicit: nodes exchange values, not shared mutable buffers.
+Bytes is a binary blob type for payloads such as file contents, HTTP bodies, and encoded images.
+By convention bytes are treated as immutable message values.
 
 ### `list<T>`
 
