@@ -1,0 +1,37 @@
+import { io, fmt, runtime }
+
+def Main(start any) (stop any) {
+	startFanOut FanOut
+	create io.Create
+	writeAll io.WriteAllFile
+	closeWriter io.Close
+	open io.Open
+	readAll io.ReadAllFile
+	closeReader io.Close
+	println fmt.Println
+	panic runtime.Panic
+	---
+	:start -> startFanOut
+	startFanOut:data[0] -> 'file_handles_example.txt' -> create:filename
+	startFanOut:data[1] -> 'Hello, io.File!' -> writeAll:data
+
+	create:res -> writeAll:file
+	writeAll:res -> closeWriter:file
+
+	closeWriter:res -> 'file_handles_example.txt' -> open:filename
+	open:res -> readAll:file
+	readAll:res -> println:data
+	readAll:handle -> closeReader:file
+
+	[
+		create:err,
+		writeAll:err,
+		closeWriter:err,
+		open:err,
+		readAll:err,
+		closeReader:err,
+		println:err
+	] -> panic
+
+	[println:res, closeReader:res] -> :stop
+}

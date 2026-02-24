@@ -304,6 +304,13 @@ Follow these instructions.
 - **Language semantics**: `maybe<T>` is represented as tagged union (`Some`/`None`) and union tags should use `CamelCase`.
 - **Architecture insights**: Recursion terminator must treat builtin `maybe` as recursive-wrapper to allow valid patterns like `error` chains (`... child maybe<error>`), even though `maybe` is no longer bodyless.
 - **Architecture insights**: Runtime trace concerns are now explicitly tracked as shared primitive (`#1050`) for panic diagnostics (`#595`), debugger (`#977`), and `std/errors` formatting (`#1046`); keep process semantics (`#792`) separate from diagnostics rendering.
+
+### Session Notes (2026-02-25, io handles)
+
+- **Language semantics**: Handle-based IO is explicit: `Open/Create -> ReadAllFile/WriteAllFile -> Close`; returned handles are plain `int`-backed tokens (`io.File` alias).
+- **Common patterns**: For handle lifecycles, pass the handle through outports (`WriteAllFile:res`, `ReadAllFile:handle`) to avoid forbidden sender reuse in networks.
+- **Architecture insights**: Keep mutable runtime resource state (file descriptors map) scoped to `NewRegistry` and injected into creators, not package globals.
+- **Gotchas**: Full `go test -timeout 5m ./...` still hits known slow/flaky suites (`e2e/order_dependend_with_arr_inport`, `examples/delayed_echo`); validate scoped changes with targeted package/example tests.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
