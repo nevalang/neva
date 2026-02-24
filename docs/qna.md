@@ -147,6 +147,21 @@ Neva prefers explicitness for these cases. If such conversions are added, they
 should have narrowly named components with documented semantics and error rules,
 instead of one broad "magic cast" behavior.
 
+## Why does `bytes` have no literal syntax yet?
+
+Current `bytes` support is intentionally transport-focused (I/O, HTTP, image
+payloads) and keeps conversion explicit via stdlib components
+(`bytes.FromString`, `strings.FromBytes`).
+
+Adding literal syntax now would force language-level decisions that are coupled
+with unfinished numeric-byte design (`byte/uint8` topic), for example:
+
+- Should numeric forms exist, and with which range/overflow rules?
+- How should byte literals interact with `int` conversions?
+- Which part is syntax vs stdlib-level policy?
+
+Until those semantics are settled, Neva keeps `bytes` literal-free and explicit.
+
 ## Why `New` is implemented like an infinite loop?
 
 Const nodes are implemented as infinite loops that constantly send messages. This covers all use cases but requires locks for controlled constant message sending. Alternative designs like "trigger" semantics or changing to single-send behavior have been considered, but they introduce other complexities or limitations.
