@@ -280,6 +280,13 @@ Follow these instructions.
 - **Common patterns**: For `*.neva` edits, enforce `lower_snake_case` node aliases and verify style against `docs/style_guide.md`.
 - **Architecture insights**: `BytesMsg` is represented as `[]byte`; avoid defensive copies in runtime hot paths and treat immutability as a usage convention.
 - **Gotchas**: New e2e module manifests should use explicit language version (`0.34.0`), not shorthand aliases.
+
+### Session Notes (2026-02-24, os package)
+
+- **Language semantics**: Query-style `std/os` components without natural data input should be signal-triggered via `sig` (for example `Getwd`, `Getpid`, `TempDir`) to preserve explicit dataflow triggering.
+- **Common patterns**: For `std/os`, prioritize value-oriented APIs (`path`, `key`, `perm`) with typed struct outputs (`LookupEnvResult`, `FileInfo`, `DirEntry`) over stateful file-handle surfaces.
+- **Gotchas**: `internal/runtime/funcs/args.go` can accidentally double argv length if a slice is pre-sized and then `append` is used; use direct index assignment or a helper constructor.
+- **Common patterns**: When adding many `#extern` entries at once, add focused helper tests plus one e2e smoke package to validate registry wiring end-to-end.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

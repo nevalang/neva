@@ -21,17 +21,23 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 	}
 
 	return func(ctx context.Context) {
-		if _, ok := sigIn.Receive(ctx); !ok {
-			return
-		}
+		for {
+			if _, ok := sigIn.Receive(ctx); !ok {
+				return
+			}
 
-		result := make([]runtime.Msg, len(os.Args))
-		for i := range os.Args {
-			result = append(result, runtime.NewStringMsg(os.Args[i]))
-		}
-
-		if !resOut.Send(ctx, runtime.NewListMsg(result)) {
-			return
+			if !resOut.Send(ctx, argsListMsg(os.Args)) {
+				return
+			}
 		}
 	}, nil
+}
+
+// argsListMsg converts argv list to runtime list message.
+func argsListMsg(argv []string) runtime.ListMsg {
+	result := make([]runtime.Msg, len(argv))
+	for i := range argv {
+		result[i] = runtime.NewStringMsg(argv[i])
+	}
+	return runtime.NewListMsg(result)
 }
