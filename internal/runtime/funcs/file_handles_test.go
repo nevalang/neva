@@ -18,17 +18,13 @@ func TestFileHandleStoreLifecycle(t *testing.T) {
 	if _, err := tmpFile.WriteString("hello"); err != nil {
 		t.Fatalf("WriteString() error = %v", err)
 	}
-	if err := tmpFile.Close(); err != nil {
-		t.Fatalf("Close() error = %v", err)
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		t.Fatalf("Seek() error = %v", err)
 	}
-
-	opened, err := os.Open(tmpFile.Name())
-	if err != nil {
-		t.Fatalf("Open() error = %v", err)
-	}
+	t.Cleanup(func() { _ = tmpFile.Close() })
 
 	store := newFileHandleStore()
-	id := store.Add(opened)
+	id := store.Add(tmpFile)
 	if id != 1 {
 		t.Fatalf("Add() id = %d, want 1", id)
 	}
