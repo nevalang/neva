@@ -286,6 +286,13 @@ Follow these instructions.
 - **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
 - **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
 - **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
+
+### Session Notes (2026-02-25)
+
+- **Common patterns**: Prefer explicit stream materialization components (`strings.FromStream`) over overloads that hide blocking behavior.
+- **Language semantics**: Keep `strings.Join` list-only; convert stream-to-string explicitly before join-like text processing.
+- **Architecture insights**: Moving cast-like APIs into `std/builtin` can reuse existing runtime externs without changing conversion semantics (`bytes_from_string`, `strings_from_bytes`).
+- **Common patterns**: Name builtin cast surface file `casts.neva` when it includes both scalar and bytes/text cast-like conversions.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

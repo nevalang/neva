@@ -11,3 +11,13 @@ pub def Float(data int) (res float)
 // This matches Go's string(int) conversion semantics, not decimal formatting.
 #extern(string_from_int_codepoint)
 pub def String(data int) (res string)
+
+// Bytes converts string to raw bytes.
+// It is equivalent to Go's []byte(string) conversion.
+#extern(bytes_from_string)
+pub def Bytes(data string) (res bytes)
+
+// String converts raw bytes to string.
+// It is equivalent to Go's string([]byte) conversion.
+#extern(strings_from_bytes)
+pub def String(data bytes) (res string)
