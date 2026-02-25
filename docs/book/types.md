@@ -183,16 +183,11 @@ pub type string
 pub type bytes
 pub type dict<T>
 pub type list<T>
-pub type maybe<T>
 ```
 
 ### `any`
 
 Any is a [top-type](https://en.wikipedia.org/wiki/Top_type). All types are subtypes of `any`. You can pass anything where `any` is expected, but not vice versa. To use `any` where a specific type is needed, you must explicitly cast it, checking for errors.
-
-### `maybe<T>`
-
-Maybe is an [option-type](https://en.wikipedia.org/wiki/Option_type) representing a potentially absent value. It's an alternative to `nil`. Using `Maybe<T>` requires explicit unwrapping before use, ensuring [null-safety](https://en.wikipedia.org/wiki/Void_safety) and avoiding the [billion dollar mistake](https://en.wikipedia.org/wiki/Null_pointer).
 
 ### `bool`
 
@@ -240,20 +235,37 @@ Structures are [product types](https://en.wikipedia.org/wiki/Product_type) - com
 
 ## Non-Base Builtin Types
 
-There are 2 more types in `std/builtin` that are expressed in terms of language itself - they have bodies and therefore they are not base. Yet they are embedded into builtin package for simplicity, because they are used heavily in the language. These types are `error` and `stream<T>`.
+There are 3 more types in `std/builtin` that are expressed in terms of language itself - they have bodies and therefore they are not base. Yet they are embedded into builtin package for simplicity, because they are used heavily in the language. These types are `maybe<T>`, `error` and `stream<T>`.
+
+### `maybe<T>`
+
+`maybe<T>` is modeled as a tagged union:
+
+```neva
+pub type maybe<T> union {
+    Some T
+    None
+}
+```
+
+Use `Some` to wrap present values and `None` to represent absence.
 
 ### `error`
 
-Error type for components that can send errors. Similar to [Go's error interface](https://cs.opensource.google/go/go/+/refs/tags/go1.23.1:src/builtin/builtin.go;l=308) but as a structure, since interfaces in Nevalang are for components, not messages.
+Error type for components that can send errors. It is represented as a tagged union with simple and chained variants.
 
 ```neva
-pub type error struct {
-    text string
-    child maybe<error>
+pub type error union {
+    Text string
+    Child maybe<error>
 }
 ```
 
 Component/interface that sends error should name outport as `:err`.
+
+Note: execution-path tracing is a runtime concern and is conceptually separate
+from the `error` payload shape. Error values model failure semantics, while
+runtime tracing models graph-hop context.
 
 ### `stream<T>`
 
