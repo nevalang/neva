@@ -192,6 +192,27 @@ It reduces code, especially for mappings between records, vectors, and dictionar
 
 Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary for certain critical cases where the alternative would be an overly complicated type system.
 
+## How should errors and execution traces relate in Neva?
+
+Treat them as different layers:
+
+1. `error` value carries failure semantics (what failed).
+2. runtime trace carries execution context (where/how message moved in graph).
+
+This split avoids overloading error payloads with transport/debug metadata and
+keeps dataflow semantics explicit.
+
+Practical implications:
+
+- Keep `res` / `err` outport model and `?` error propagation idioms.
+- Use error wrapping for semantic context when needed (domain-level meaning),
+  not as the only way to reconstruct execution path.
+- Panic/debugger/error-formatting should rely on runtime trace facilities for
+  graph context.
+
+Status: tracing query/format APIs are still evolving, so behavior may be
+incremental until the runtime tracing track is fully implemented.
+
 ## Why can only primitive messages be used as "literal network senders"?
 
 It enables easier type inference and keeps networks readable.

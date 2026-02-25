@@ -291,6 +291,19 @@ Follow these instructions.
 - **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 30s) rather than relying only on global `go test -timeout`.
 - **Architecture insights**: For e2e command chains (`*.test -> neva -> generated output`), cancellation must target the whole process group on Unix (`Setpgid` + group kill) to avoid orphaned child processes.
 - **Gotchas**: Test-runner interruption/timeouts can leave `neva_run_*/output` descendants alive, which users may report as “zombies” and observe as sustained CPU heat on macOS.
+
+### Session Notes (2026-02-25)
+
+- **Common patterns**: For proposal-level language discussions, cross-link new issues to historical context (e.g. `#235`) to preserve rationale continuity.
+- **Gotchas**: In `zsh`, backticks inside double-quoted `gh issue create --title` are command substitution; avoid backticks in titles or use single quotes.
+- **Architecture insights**: Error propagation is currently compiler-coupled to `:err` outports and `?` err-guard desugaring (`node:err -> out:err`), so any union-first error model must include compatibility/desugaring strategy.
+- **Language semantics**: Baseline conventions (`res` primary output, `err error` failure output) are documented and enforced across stdlib style/docs; changing error model affects both compiler checks and stdlib API contracts.
+- **Common patterns**: Separate issue framing for error topics: language-level Result-flow changes vs internal `error` representation; do not mix them in one tracker.
+- **Common patterns**: Existing discussion for making `maybe<T>` a tagged union is tracked in `#907`; link it when planning internal error-shape changes.
+- **Common patterns**: For `error` internals, decide by invalid-state prevention and std/errors API ergonomics first; treat memory/perf claims as benchmark-required because runtime `struct` and union representations differ from source-level intuition.
+- **Language semantics**: `maybe<T>` is represented as tagged union (`Some`/`None`) and union tags should use `CamelCase`.
+- **Architecture insights**: Recursion terminator must treat builtin `maybe` as recursive-wrapper to allow valid patterns like `error` chains (`... child maybe<error>`), even though `maybe` is no longer bodyless.
+- **Architecture insights**: Runtime trace concerns are now explicitly tracked as shared primitive (`#1050`) for panic diagnostics (`#595`), debugger (`#977`), and `std/errors` formatting (`#1046`); keep process semantics (`#792`) separate from diagnostics rendering.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
