@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +23,7 @@ type config struct {
 	stdin        string
 	expectedCode int
 	wd           string
+	timeout      time.Duration
 }
 
 // WithStdin sets stdin input for the command.
@@ -44,6 +47,13 @@ func WithDir(wd string) Option {
 	}
 }
 
+// WithTimeout sets the maximum command execution time.
+func WithTimeout(timeout time.Duration) Option {
+	return func(c *config) {
+		c.timeout = timeout
+	}
+}
+
 // Run executes the neva command with the given arguments and options.
 // It returns captured stdout and stderr separately.
 // The working directory is os.Getwd() (relies on go test running each package with cwd at that package).
@@ -59,6 +69,10 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		opt(cfg)
 	}
 
+	timeout := effectiveTimeout(t, cfg.timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	repoRoot := FindRepoRoot(t)
 	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
 
@@ -67,7 +81,8 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 
 	cmdArgs := append([]string{binPath}, args...)
 	// #nosec G204 -- test helper executes commands constructed from test inputs
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	configureCommandCleanup(cmd)
 
 	// Resolve the working directory from which the CLI should be executed.
 	// This intentionally differs from the directory used to build the CLI,
@@ -92,6 +107,17 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	cmd.Stderr = &stderrBuf
 
 	err = cmd.Run()
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		require.FailNow(
+			t,
+			"neva execution timed out",
+			"timeout: %s\nargs: %v\nstdout: %q\nstderr: %q",
+			timeout,
+			args,
+			stdoutBuf.String(),
+			stderrBuf.String(),
+		)
+	}
 	actualCode := getExitCode(err)
 
 	// Always show both stdout and stderr in error messages
@@ -100,6 +126,36 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		"neva execution exit code mismatch. %s", outputMsg)
 
 	return stdoutBuf.String(), stderrBuf.String()
+}
+
+func effectiveTimeout(t *testing.T, configured time.Duration) time.Duration {
+	t.Helper()
+
+	if configured > 0 {
+		return configured
+	}
+
+	const (
+		defaultTimeout = 30 * time.Second
+		safetyMargin   = 2 * time.Second
+		minTimeout     = 5 * time.Second
+	)
+
+	deadline, ok := t.Deadline()
+	if !ok {
+		return defaultTimeout
+	}
+
+	remaining := time.Until(deadline) - safetyMargin
+	if remaining > defaultTimeout {
+		return defaultTimeout
+	}
+
+	if remaining < minTimeout {
+		return minTimeout
+	}
+
+	return remaining
 }
 
 // FindRepoRoot finds the repository root using go env GOMOD.
