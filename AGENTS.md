@@ -374,3 +374,5 @@ The standard library provides components for all programs. Some are implemented 
 - **Gotchas**: Stream helper fallback that coerces non-union messages to implicit `Data` masks protocol bugs and breaks `Open/Close` routing.
 - **Architecture insights**: `streams.ForEach` is more reliable when a dedicated runtime controller gates each `Data` item until side-effect completion.
 - **Common patterns**: For side-effect handlers that may emit either `res` or `err`, wire both paths into completion signaling to prevent deadlocks.
+- **Gotchas**: `streams.Map` can drop tail items if `Close` is forwarded before pending mapped `Data`; preserve strict `Open -> Data* -> Close` sequencing.
+- **Architecture insights**: Stream mapping/order guarantees are safest when event sequencing is enforced in runtime controller logic rather than reconstructed from parallel graph branches.
