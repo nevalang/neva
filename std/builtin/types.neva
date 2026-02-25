@@ -15,10 +15,10 @@ pub type error struct {
     child maybe<error>
 }
 
-pub type stream<T> struct {
-    data T
-    idx int
-    last bool
+pub type stream<T> union {
+    Open
+    Data T
+    Close
 }
 
 pub type DictEntry<T> struct {

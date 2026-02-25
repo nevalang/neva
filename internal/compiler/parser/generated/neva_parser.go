@@ -360,7 +360,7 @@ func nevaParserInit() {
 		50, 0, 585, 572, 1, 0, 0, 0, 585, 574, 1, 0, 0, 0, 585, 578, 1, 0, 0, 0,
 		585, 581, 1, 0, 0, 0, 585, 582, 1, 0, 0, 0, 585, 583, 1, 0, 0, 0, 585,
 		584, 1, 0, 0, 0, 586, 89, 1, 0, 0, 0, 587, 588, 7, 1, 0, 0, 588, 91, 1,
-		0, 0, 0, 589, 590, 3, 28, 14, 0, 590, 591, 5, 29, 0, 0, 591, 596, 5, 33,
+		0, 0, 0, 589, 590, 3, 50, 25, 0, 590, 591, 5, 29, 0, 0, 591, 596, 5, 33,
 		0, 0, 592, 593, 5, 16, 0, 0, 593, 594, 3, 88, 44, 0, 594, 595, 5, 17, 0,
 		0, 595, 597, 1, 0, 0, 0, 596, 592, 1, 0, 0, 0, 596, 597, 1, 0, 0, 0, 597,
 		93, 1, 0, 0, 0, 598, 602, 5, 20, 0, 0, 599, 601, 5, 38, 0, 0, 600, 599,
@@ -8407,7 +8407,7 @@ type IUnionLitContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	EntityRef() IEntityRefContext
+	TypeInstExpr() ITypeInstExprContext
 	DCOLON() antlr.TerminalNode
 	IDENTIFIER() antlr.TerminalNode
 	LPAREN() antlr.TerminalNode
@@ -8450,10 +8450,10 @@ func NewUnionLitContext(parser antlr.Parser, parent antlr.ParserRuleContext, inv
 
 func (s *UnionLitContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *UnionLitContext) EntityRef() IEntityRefContext {
+func (s *UnionLitContext) TypeInstExpr() ITypeInstExprContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IEntityRefContext); ok {
+		if _, ok := ctx.(ITypeInstExprContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -8463,7 +8463,7 @@ func (s *UnionLitContext) EntityRef() IEntityRefContext {
 		return nil
 	}
 
-	return t.(IEntityRefContext)
+	return t.(ITypeInstExprContext)
 }
 
 func (s *UnionLitContext) DCOLON() antlr.TerminalNode {
@@ -8526,7 +8526,7 @@ func (p *nevaParser) UnionLit() (localctx IUnionLitContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(589)
-		p.EntityRef()
+		p.TypeInstExpr()
 	}
 	{
 		p.SetState(590)

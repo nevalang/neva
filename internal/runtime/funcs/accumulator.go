@@ -2,7 +2,7 @@ package funcs
 
 import (
 	"context"
-	"sync"
+	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -20,7 +20,7 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 		return nil, err
 	}
 
-	lastIn, err := io.In.Single("last")
+	flushIn, err := io.In.Single("flush")
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +37,7 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 
 	return func(ctx context.Context) {
 		for {
-			var (
-				acc  runtime.Msg
-				last = false
-			)
+			var acc runtime.Msg
 
 			initMsg, initOk := initIn.Receive(ctx)
 			if !initOk {
@@ -53,37 +50,107 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 
 			acc = initMsg
 
-			for !last {
-				var dataMsg, lastMsg runtime.Msg
-				var dataOk, lastOk bool
+			cycleCtx, cancel := context.WithCancel(ctx)
+			updCh := make(chan runtime.Msg)
+			flushCh := make(chan runtime.Msg)
 
-				var wg sync.WaitGroup
-
-				wg.Go(func() {
-					dataMsg, dataOk = updIn.Receive(ctx)
-				})
-
-				wg.Go(func() {
-					lastMsg, lastOk = lastIn.Receive(ctx)
-				})
-
-				wg.Wait()
-
-				if !dataOk || !lastOk {
-					return
+			go func() {
+				defer close(updCh)
+				for {
+					msg, ok := updIn.Receive(cycleCtx)
+					if !ok {
+						return
+					}
+					select {
+					case <-cycleCtx.Done():
+						return
+					case updCh <- msg:
+					}
 				}
+			}()
 
-				if !curOut.Send(ctx, dataMsg) {
-					return
+			go func() {
+				defer close(flushCh)
+				for {
+					msg, ok := flushIn.Receive(cycleCtx)
+					if !ok {
+						return
+					}
+					select {
+					case <-cycleCtx.Done():
+						return
+					case flushCh <- msg:
+					}
 				}
+			}()
 
-				acc = dataMsg
-				last = lastMsg.Bool()
-			}
+			cycleDone := false
+			for !cycleDone {
+				select {
+				case <-ctx.Done():
+					cancel()
+					return
+				case dataMsg, ok := <-updCh:
+					if !ok {
+						cancel()
+						return
+					}
+					if !curOut.Send(ctx, dataMsg) {
+						cancel()
+						return
+					}
+					acc = dataMsg
+				case flushMsg, ok := <-flushCh:
+					if !ok {
+						cancel()
+						return
+					}
+					if !flushMsg.Bool() {
+						continue
+					}
 
-			if !resOut.Send(ctx, acc) {
-				return
+					// Close can arrive before the last reduced value is delivered to upd.
+					// Wait for a short quiet period and consume trailing upd messages.
+					drainTimer := time.NewTimer(time.Millisecond)
+					draining := true
+					for draining {
+						select {
+						case <-ctx.Done():
+							if !drainTimer.Stop() {
+								<-drainTimer.C
+							}
+							cancel()
+							return
+						case dataMsg, ok := <-updCh:
+							if !ok {
+								draining = false
+								break
+							}
+							if !curOut.Send(ctx, dataMsg) {
+								if !drainTimer.Stop() {
+									<-drainTimer.C
+								}
+								cancel()
+								return
+							}
+							acc = dataMsg
+							if !drainTimer.Stop() {
+								<-drainTimer.C
+							}
+							drainTimer.Reset(time.Millisecond)
+						case <-drainTimer.C:
+							draining = false
+						}
+					}
+
+					if !resOut.Send(ctx, acc) {
+						cancel()
+						return
+					}
+					cycleDone = true
+				}
 			}
+			cancel()
 		}
 	}, nil
 }

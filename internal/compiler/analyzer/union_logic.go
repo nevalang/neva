@@ -235,20 +235,31 @@ func (a Analyzer) resolveUnionTypeFromLiteral(
 	unionLiteral *src.UnionLiteral,
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	typeDef, _, err := scope.GetType(unionLiteral.EntityRef)
-	if err != nil {
-		return ts.Expr{}, &compiler.Error{
-			Message: fmt.Sprintf("failed to resolve union type: %v", err),
-			Meta:    &unionLiteral.Meta,
-		}
-	}
-
-	unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
+	unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(ts.Expr{
+		Inst: &ts.InstExpr{
+			Ref:  unionLiteral.EntityRef,
+			Args: unionLiteral.TypeArgs,
+		},
+		Meta: unionLiteral.Meta,
+	}, scope)
 	if analyzeExprErr != nil {
-		return ts.Expr{}, &compiler.Error{
-			Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
-			Meta:    &unionLiteral.Meta,
+		// Generic tag-only literals (for example stream<T>::Open) can appear in generic
+		// components before concrete type-argument substitution. For union-tag validation
+		// we only need member names, so unresolved argument expressions are acceptable.
+		typeDef, _, getTypeErr := scope.GetType(unionLiteral.EntityRef)
+		if getTypeErr != nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
+				Meta:    &unionLiteral.Meta,
+			}
 		}
+		if typeDef.BodyExpr == nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
+				Meta:    &unionLiteral.Meta,
+			}
+		}
+		unionTypeExpr = *typeDef.BodyExpr
 	}
 
 	if unionTypeExpr.Lit == nil || unionTypeExpr.Lit.Union == nil {

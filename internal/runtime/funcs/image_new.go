@@ -27,11 +27,16 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	return func(ctx context.Context) {
 		for {
+			if !waitStreamOpen(ctx, pixelsIn) {
+				return
+			}
+
 			im := make(map[pixelMsg]struct{})
 			var (
 				width  int64
 				height int64
 			)
+
 		stream:
 			for {
 				m, ok := pixelsIn.Receive(ctx)
@@ -39,8 +44,15 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					return
 				}
 
-				var pix pixelStreamMsg
-				pix.decode(m)
+				if isStreamClose(m) {
+					break stream
+				}
+				if !isStreamData(m) {
+					continue
+				}
+
+				var pix pixelMsg
+				pix.decode(streamDataValue(m))
 				if pix.x < 0 || pix.y < 0 {
 					if !errOut.Send(ctx, errFromString("image.New: Pixel out of bounds")) {
 						return
@@ -52,10 +64,7 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				if pix.y >= height {
 					height = pix.y + 1
 				}
-				im[pix.pixelMsg] = struct{}{}
-				if pix.last {
-					break stream
-				}
+				im[pix] = struct{}{}
 			}
 
 			img := image.NewRGBA(image.Rect(0, 0, int(width), int(height)))

@@ -767,12 +767,10 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(lit.UnionLit().EntityRef())
-		if err != nil {
-			return src.Const{}, err
-		}
-		parsedConst.TypeExpr.Inst = &ts.InstExpr{
-			Ref: parsedUnionRef,
+		parsedConst.TypeExpr.Lit = &ts.LitExpr{
+			Union: map[string]*ts.Expr{
+				lit.UnionLit().IDENTIFIER().GetText(): nil,
+			},
 		}
 	}
 
@@ -877,12 +875,13 @@ func (s *treeShapeListener) parseMessage(
 			),
 		)
 	case constVal.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(constVal.UnionLit().EntityRef())
+		parsedUnionType, err := s.parseTypeInstExpr(constVal.UnionLit().TypeInstExpr())
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
 		msg.Union = &src.UnionLiteral{
-			EntityRef: parsedUnionRef,
+			EntityRef: parsedUnionType.Inst.Ref,
+			TypeArgs:  parsedUnionType.Inst.Args,
 			Tag:       constVal.UnionLit().IDENTIFIER().GetText(),
 		}
 		if wrapped := constVal.UnionLit().ConstLit(); wrapped != nil {

@@ -247,6 +247,7 @@ type MsgLiteral struct {
 
 type UnionLiteral struct {
 	EntityRef core.EntityRef `json:"entityRef"`
+	TypeArgs  TypeArgs       `json:"typeArgs,omitempty"`
 	Tag       string         `json:"tag,omitempty"`
 	Data      *ConstValue    `json:"data,omitempty"`
 	Meta      core.Meta      `json:"meta"`
