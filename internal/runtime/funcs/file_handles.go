@@ -13,12 +13,30 @@ type fileHandleStore struct {
 	mu     sync.Mutex
 	nextID int64
 	files  map[int64]*os.File
+	stdio  map[int64]struct{}
 }
 
+const (
+	stdinFileHandleID  int64 = 0
+	stdoutFileHandleID int64 = 1
+	stderrFileHandleID int64 = 2
+)
+
 func newFileHandleStore() *fileHandleStore {
+	files := map[int64]*os.File{
+		stdinFileHandleID:  os.Stdin,
+		stdoutFileHandleID: os.Stdout,
+		stderrFileHandleID: os.Stderr,
+	}
+
 	return &fileHandleStore{
-		nextID: 1,
-		files:  make(map[int64]*os.File),
+		nextID: 3,
+		files:  files,
+		stdio: map[int64]struct{}{
+			stdinFileHandleID:  {},
+			stdoutFileHandleID: {},
+			stderrFileHandleID: {},
+		},
 	}
 }
 
@@ -47,6 +65,11 @@ func (s *fileHandleStore) Get(id int64) (*os.File, error) {
 
 func (s *fileHandleStore) Close(id int64) error {
 	s.mu.Lock()
+	if _, isStdio := s.stdio[id]; isStdio {
+		s.mu.Unlock()
+		return fmt.Errorf("cannot close stdio file handle %d", id)
+	}
+
 	file, ok := s.files[id]
 	if ok {
 		delete(s.files, id)

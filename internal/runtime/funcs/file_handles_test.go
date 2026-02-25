@@ -25,8 +25,8 @@ func TestFileHandleStoreLifecycle(t *testing.T) {
 
 	store := newFileHandleStore()
 	id := store.Add(tmpFile)
-	if id != 1 {
-		t.Fatalf("Add() id = %d, want 1", id)
+	if id <= stderrFileHandleID {
+		t.Fatalf("Add() id = %d, expected dynamic handle > %d", id, stderrFileHandleID)
 	}
 
 	gotFile, err := store.Get(id)
@@ -79,11 +79,54 @@ func TestRegistryContainsFileHandleCreators(t *testing.T) {
 		"file_close",
 		"file_read_all",
 		"file_write_all",
+		"file_stdin",
+		"file_stdout",
+		"file_stderr",
 	}
 
 	for _, key := range keys {
 		if _, ok := registry[key]; !ok {
 			t.Fatalf("NewRegistry() missing key %q", key)
 		}
+	}
+}
+
+func TestFileHandleStoreHasStdioHandles(t *testing.T) {
+	t.Parallel()
+
+	store := newFileHandleStore()
+
+	stdinFile, err := store.Get(stdinFileHandleID)
+	if err != nil {
+		t.Fatalf("Get(stdin) error = %v", err)
+	}
+	if stdinFile != os.Stdin {
+		t.Fatal("stdin handle does not point to os.Stdin")
+	}
+
+	stdoutFile, err := store.Get(stdoutFileHandleID)
+	if err != nil {
+		t.Fatalf("Get(stdout) error = %v", err)
+	}
+	if stdoutFile != os.Stdout {
+		t.Fatal("stdout handle does not point to os.Stdout")
+	}
+
+	stderrFile, err := store.Get(stderrFileHandleID)
+	if err != nil {
+		t.Fatalf("Get(stderr) error = %v", err)
+	}
+	if stderrFile != os.Stderr {
+		t.Fatal("stderr handle does not point to os.Stderr")
+	}
+
+	if err := store.Close(stdinFileHandleID); err == nil {
+		t.Fatal("Close(stdin) expected error")
+	}
+	if err := store.Close(stdoutFileHandleID); err == nil {
+		t.Fatal("Close(stdout) expected error")
+	}
+	if err := store.Close(stderrFileHandleID); err == nil {
+		t.Fatal("Close(stderr) expected error")
 	}
 }

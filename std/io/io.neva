@@ -29,6 +29,18 @@ pub def Create(filename string) (res File, err error)
 #extern(file_close)
 pub def Close(file File) (res any, err error)
 
+// Stdin returns the process stdin file handle.
+#extern(file_stdin)
+pub def Stdin(sig any) (res File)
+
+// Stdout returns the process stdout file handle.
+#extern(file_stdout)
+pub def Stdout(sig any) (res File)
+
+// Stderr returns the process stderr file handle.
+#extern(file_stderr)
+pub def Stderr(sig any) (res File)
+
 // ReadAllFile reads all bytes from a previously opened file handle.
 // It also passes the same handle further so it can be chained into Close.
 #extern(file_read_all)

@@ -43,6 +43,7 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 			data, err := io.ReadAll(f)
 			if err != nil {
+				_ = f.Close()
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}

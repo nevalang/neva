@@ -311,6 +311,12 @@ Follow these instructions.
 - **Common patterns**: For handle lifecycles, pass the handle through outports (`WriteAllFile:res`, `ReadAllFile:handle`) to avoid forbidden sender reuse in networks.
 - **Architecture insights**: Keep mutable runtime resource state (file descriptors map) scoped to `NewRegistry` and injected into creators, not package globals.
 - **Gotchas**: Full `go test -timeout 5m ./...` still hits known slow/flaky suites (`e2e/order_dependend_with_arr_inport`, `examples/delayed_echo`); validate scoped changes with targeted package/example tests.
+
+### Session Notes (2026-02-25, io stdio follow-up)
+
+- **Language semantics**: `std/io` now exposes signal-triggered stdio handle accessors (`Stdin/Stdout/Stderr`) in the same package as file-handle APIs.
+- **Architecture insights**: Runtime file-handle store reserves stable IDs for stdio handles and rejects `Close` on them to avoid accidental process stream shutdown.
+- **Gotchas**: Introducing reserved handle IDs changes initial dynamic-handle numbering; tests should assert relational bounds (e.g., `> stderrHandleID`) rather than hardcoded first IDs.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
