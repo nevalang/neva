@@ -8,6 +8,8 @@ import (
 	"syscall"
 )
 
+// configureCommandCleanup ensures context cancellation kills the whole process tree.
+// Example: `*.test -> neva -> output` is terminated as one process group.
 func configureCommandCleanup(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Cancel = func() error {

@@ -69,8 +69,9 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		opt(cfg)
 	}
 
-	timeout := effectiveTimeout(t, cfg.timeout)
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	// Respect explicit per-test override; otherwise derive a safe default.
+	runTimeout := resolveRunTimeout(t, cfg.timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), runTimeout)
 	defer cancel()
 
 	repoRoot := FindRepoRoot(t)
@@ -112,7 +113,7 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 			t,
 			"neva execution timed out",
 			"timeout: %s\nargs: %v\nstdout: %q\nstderr: %q",
-			timeout,
+			runTimeout,
 			args,
 			stdoutBuf.String(),
 			stderrBuf.String(),
@@ -128,9 +129,12 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	return stdoutBuf.String(), stderrBuf.String()
 }
 
-func effectiveTimeout(t *testing.T, configured time.Duration) time.Duration {
+// resolveRunTimeout calculates command timeout for e2e.Run.
+// Example: with `go test -timeout=5m`, each command gets at most 30s by default.
+func resolveRunTimeout(t *testing.T, configured time.Duration) time.Duration {
 	t.Helper()
 
+	// Explicit option wins (`e2e.WithTimeout(...)`).
 	if configured > 0 {
 		return configured
 	}
@@ -146,11 +150,13 @@ func effectiveTimeout(t *testing.T, configured time.Duration) time.Duration {
 		return defaultTimeout
 	}
 
+	// Keep per-run timeouts short even when overall test timeout is large.
 	remaining := time.Until(deadline) - safetyMargin
 	if remaining > defaultTimeout {
 		return defaultTimeout
 	}
 
+	// Avoid zero/negative values when the test is close to deadline.
 	if remaining < minTimeout {
 		return minTimeout
 	}

@@ -358,6 +358,7 @@ The standard library provides components for all programs. Some are implemented 
 
 - **Go Idioms**:
   - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
+  - Generated functions/helpers must always have short, simple doc comments; include a tiny example when behavior is non-obvious.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
   - Test case names: `lower_snake_case`
