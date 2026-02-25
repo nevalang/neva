@@ -280,6 +280,12 @@ Follow these instructions.
 - **Common patterns**: For `*.neva` edits, enforce `lower_snake_case` node aliases and verify style against `docs/style_guide.md`.
 - **Architecture insights**: `BytesMsg` is represented as `[]byte`; avoid defensive copies in runtime hot paths and treat immutability as a usage convention.
 - **Gotchas**: New e2e module manifests should use explicit language version (`0.34.0`), not shorthand aliases.
+### Session Notes (2026-02-24, numeric/bytes direction)
+
+- **Language semantics**: For numeric expansion discussions, prefer Go-style names (`int8..int64`, `uint8..uint64`, `float32/float64`) over Rust-style (`i8/u8/f32`).
+- **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
+- **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
+- **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
