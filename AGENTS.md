@@ -286,6 +286,11 @@ Follow these instructions.
 - **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
 - **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
 - **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
+### Session Notes (2026-02-25)
+
+- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 30s) rather than relying only on global `go test -timeout`.
+- **Architecture insights**: For e2e command chains (`*.test -> neva -> generated output`), cancellation must target the whole process group on Unix (`Setpgid` + group kill) to avoid orphaned child processes.
+- **Gotchas**: Test-runner interruption/timeouts can leave `neva_run_*/output` descendants alive, which users may report as “zombies” and observe as sustained CPU heat on macOS.
 
 ### Session Notes (2026-02-25)
 
@@ -366,6 +371,7 @@ The standard library provides components for all programs. Some are implemented 
 
 - **Go Idioms**:
   - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
+  - Generated functions/helpers must always have short, simple doc comments; include a tiny example when behavior is non-obvious.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
   - Test case names: `lower_snake_case`
