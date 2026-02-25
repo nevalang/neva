@@ -193,6 +193,34 @@ Follow these instructions.
 - **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
 - **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
 
+### Session Notes (2026-02-14, runtime benchmarks baseline)
+
+- **Architecture insights**: Runtime e2e benchmarks should pre-build CLI + benchmark program once, then measure only execution of the compiled `output` binary.
+- **Common patterns**: Keep runtime benchmark fixtures self-contained by copying `benchmarks/neva.yml` and the benchmark `.neva` file into a temp module instead of relying on `chdir`.
+- **Common patterns**: Track runtime regressions with both e2e execution benchmarks and focused `internal/runtime` microbenchmarks (message operations and single-port round-trip).
+- **Gotchas**: Full `go test ./...` can run very long due e2e coverage; benchmark-only changes should still validate touched packages + benchmark smoke runs.
+
+### Session Notes (2026-02-14, PR-1023 review follow-up)
+
+- **Common patterns**: Reuse `pkg/e2e` helpers (`FindRepoRoot`, CLI build helper) inside benchmark harnesses to avoid duplicated repo-root/build logic.
+- **Common patterns**: For long-term comparable perf baselines, prefer runtime e2e benchmarks over runtime-internal microbenchmarks that may track unstable APIs.
+- **Gotchas**: `thelper` expects parameters typed as `testing.TB` to be named `tb`.
+
+### Session Notes (2026-02-14, runtime e2e suite expansion)
+
+- **Common patterns**: Model runtime perf baselines as sub-benchmarks over multiple precompiled Neva programs (int/bool/string/float/list/dict/struct/union/combo) built once per case.
+- **Gotchas**: In Neva, constant senders in handlers must be attached to a triggering chain; standalone `const -> port` lines inside helper defs can fail analyzer checks.
+- **Architecture insights**: A single Go benchmark harness can compile each Neva package in an isolated temp module and execute only the produced `output` binary to keep focus on runtime execution latency.
+
+### Session Notes (2026-02-14, benchmark docs comments)
+
+- **Common patterns**: Keep short intent comments at top of each benchmark `main.neva` and helper defs so runtime benchmark purpose is obvious during review.
+
+### Session Notes (2026-02-15, runtime benchmark stabilization)
+
+- **Gotchas**: `Select` consumes all `then[*]` inputs for each `if` trigger; wiring multiple trigger sources per iteration can deadlock benchmarks.
+- **Common patterns**: For heavy router/selector e2e runtime benchmarks, keep workload lower (e.g. `Range:to = 10000`) so local smoke runs stay under execution timeout.
+- **Gotchas**: Naming a benchmark package root `runtime` can collide with stdlib import resolution; use a distinct root like `runtime_bench`.
 
 ### Session Notes (2026-02-15)
 

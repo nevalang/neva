@@ -1,0 +1,60 @@
+// Benchmarks float comparison operators.
+// Covers Eq, Ne, Gt, and Lt in one evaluation.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	to_float streams.Map<int, float>{ToFloat}
+	map_cmp streams.Map<float, bool>{FloatCompare}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> to_float -> map_cmp -> wait -> :stop
+}
+
+def ToFloat(data int) (res float) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<float>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		42.0 -> pick:then,
+		43.0 -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+def FloatCompare(data float) (res bool) {
+	eq Eq<float>
+	ne Ne<float>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:data -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		42.0 -> eq:right,
+		42.0 -> ne:right,
+		40.0 -> gt:right,
+		100.0 -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}

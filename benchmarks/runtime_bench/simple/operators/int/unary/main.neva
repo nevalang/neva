@@ -1,0 +1,28 @@
+// Benchmarks integer unary operator variants.
+// Covers Inc and Dec via separate map stages.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_inc streams.Map<int, int>{IncInt}
+	map_dec streams.Map<int, int>{DecInt}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_inc -> map_dec -> wait -> :stop
+}
+
+def IncInt(data int) (res int) {
+	inc Inc
+	---
+	:data -> inc -> :res
+}
+
+def DecInt(data int) (res int) {
+	dec Dec
+	---
+	:data -> dec -> :res
+}

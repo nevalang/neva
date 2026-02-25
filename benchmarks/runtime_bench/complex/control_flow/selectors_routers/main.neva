@@ -1,0 +1,66 @@
+// Benchmarks a more complex mixed control-flow workload.
+// Combines selectors, routers, and union wrapping/unwrapping.
+import {
+	runtime
+	streams
+}
+
+type Number union {
+	Int int
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_complex streams.Map<int, int>{ComplexFlow}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		10000 -> range:to
+	]
+	range -> map_complex -> wait -> :stop
+}
+
+def ComplexFlow(data int) (res int) {
+	mod Mod
+	eq Eq<int>
+	tern Ternary<int>
+	match Match<int>
+	cond Cond<int>
+	switch Switch<int>
+	select Select<int>
+	race Race<int>
+	box Union<Number>
+	unwrap Switch<Number>
+	del Del
+	panic runtime.Panic
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		10 -> tern:then,
+		20 -> tern:else,
+		10 -> match:if[0],
+		20 -> match:if[1],
+		1 -> match:then[0],
+		2 -> match:then[1],
+		1 -> match:else,
+		1 -> switch:case[0],
+		2 -> switch:case[1],
+		1000 -> select:then[0],
+		2000 -> select:then[1],
+		3000 -> select:then[2]
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> [tern:if, cond:if]
+	tern -> match:data
+	match -> [cond:data, switch:data]
+	[cond:then, cond:else] -> race:data
+	switch:case[0] -> [race:case[0], select:if[0]]
+	switch:case[1] -> [race:case[1], select:if[1]]
+	switch:else -> select:if[2]
+	select -> del
+	[race:case[0], race:case[1]] -> [box:data, Number::Int -> box:tag]
+	box -> [unwrap:data, Number::Int -> unwrap:case[0] -> :res]
+	unwrap:else -> panic
+}

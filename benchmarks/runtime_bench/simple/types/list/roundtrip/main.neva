@@ -1,0 +1,19 @@
+// Benchmarks list/stream conversion path.
+// It measures list materialization and re-streaming throughput.
+import {
+	lists
+	streams
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	to_list lists.FromStream<int>
+	to_stream streams.FromList<int>
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> to_list -> to_stream -> wait -> :stop
+}

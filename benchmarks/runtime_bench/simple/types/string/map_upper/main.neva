@@ -1,0 +1,43 @@
+// Benchmarks string-heavy runtime flow.
+// Int input is mapped to tokens, then normalized with ToUpper.
+import {
+	streams
+	strings
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_token streams.Map<int, string>{ToToken}
+	map_upper streams.Map<string, string>{Upper}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_token -> map_upper -> wait -> :stop
+}
+
+// ToToken creates a deterministic low-cardinality token stream.
+def ToToken(data int) (res string) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<string>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'alpha' -> pick:then,
+		'beta' -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+// Upper benchmarks string transformation in runtime funcs.
+def Upper(data string) (res string) {
+	upper strings.ToUpper
+	---
+	:data -> upper -> :res
+}
