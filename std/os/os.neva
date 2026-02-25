@@ -1,9 +1,121 @@
+pub type LookupEnvResult struct {
+	value string
+	exists bool
+}
+
+pub type DirEntry struct {
+	name string
+	isDir bool
+}
+
+pub type FileInfo struct {
+	name string
+	size int
+	mode int
+	modTimeUnix int
+	isDir bool
+}
+
+// Args returns command-line arguments.
 #extern(args)
 pub def Args(sig any) (res list<string>)
 
-// Environ retrieves the current process environment variables in KEY=VALUE
-// form. It returns a list of strings (not a stream) because the runtime
-// function produces a full list at once. If you need only specific values,
-// filter the returned list in your flow.
+// Environ returns all environment variables in KEY=VALUE form.
 #extern(os_environ)
 pub def Environ(sig any) (res list<string>)
+
+// Getenv returns the value of environment variable key.
+#extern(os_getenv)
+pub def Getenv(key string) (res string)
+
+// LookupEnv returns the value and existence flag for environment variable key.
+#extern(os_lookup_env)
+pub def LookupEnv(key string) (res LookupEnvResult)
+
+// Setenv sets environment variable key to value.
+#extern(os_setenv)
+pub def Setenv(key string, value string) (res any, err error)
+
+// Unsetenv unsets environment variable key.
+#extern(os_unsetenv)
+pub def Unsetenv(key string) (res any, err error)
+
+// Clearenv deletes all environment variables.
+#extern(os_clearenv)
+pub def Clearenv(sig any) (res any)
+
+// ExpandEnv replaces ${var} and $var with environment values.
+#extern(os_expand_env)
+pub def ExpandEnv(data string) (res string)
+
+// Getwd returns the current working directory.
+#extern(os_getwd)
+pub def Getwd(sig any) (res string, err error)
+
+// Chdir changes the current working directory.
+#extern(os_chdir)
+pub def Chdir(path string) (res any, err error)
+
+// Getpid returns process identifier.
+#extern(os_getpid)
+pub def Getpid(sig any) (res int)
+
+// Getppid returns parent process identifier.
+#extern(os_getppid)
+pub def Getppid(sig any) (res int)
+
+// Hostname returns the host name.
+#extern(os_hostname)
+pub def Hostname(sig any) (res string, err error)
+
+// Executable returns path of the running executable.
+#extern(os_executable)
+pub def Executable(sig any) (res string, err error)
+
+// Mkdir creates a directory with provided permissions.
+#extern(os_mkdir)
+pub def Mkdir(path string, perm int) (res any, err error)
+
+// MkdirAll creates a directory path and parents with provided permissions.
+#extern(os_mkdir_all)
+pub def MkdirAll(path string, perm int) (res any, err error)
+
+// ReadDir reads directory entries sorted by filename.
+#extern(os_read_dir)
+pub def ReadDir(path string) (res list<DirEntry>, err error)
+
+// Remove removes path.
+#extern(os_remove)
+pub def Remove(path string) (res any, err error)
+
+// RemoveAll removes path and all children recursively.
+#extern(os_remove_all)
+pub def RemoveAll(path string) (res any, err error)
+
+// Rename renames or moves oldPath to newPath.
+#extern(os_rename)
+pub def Rename(oldPath string, newPath string) (res any, err error)
+
+// Stat returns file information for path.
+#extern(os_stat)
+pub def Stat(path string) (res FileInfo, err error)
+
+// Lstat returns file information for path without following symlinks.
+#extern(os_lstat)
+pub def Lstat(path string) (res FileInfo, err error)
+
+// Truncate changes size of the named file.
+#extern(os_truncate)
+pub def Truncate(path string, size int) (res any, err error)
+
+// TempDir returns default directory for temporary files.
+#extern(os_temp_dir)
+pub def TempDir(sig any) (res string)
+
+// MkdirTemp creates a new temporary directory.
+#extern(os_mkdir_temp)
+pub def MkdirTemp(dir string, pattern string) (res string, err error)
+
+// CreateTemp creates a new temporary file and returns its name.
+#extern(os_create_temp)
+pub def CreateTemp(dir string, pattern string) (res string, err error)
