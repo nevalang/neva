@@ -16,6 +16,8 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
     fan_non_data FanOut<stream<T>>
     is_data IsData<T>
     unwrap UnwrapData<T>
+    pass_then_route Pass<stream<T>>
+    pass_else_route Pass<stream<T>>
     predicate IPredicate<T>
     ---
     :data -> [cond_data:data, is_data]
@@ -25,9 +27,12 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
     unwrap -> predicate
     predicate -> cond_pred:if
 
+    cond_pred:then -> pass_then_route
+    cond_pred:else -> pass_else_route
+
     cond_data:else -> fan_non_data
-    [cond_pred:then, fan_non_data:data[0]] -> :then
-    [cond_pred:else, fan_non_data:data[1]] -> :else
+    [pass_then_route, fan_non_data:data[0]] -> :then
+    [pass_else_route, fan_non_data:data[1]] -> :else
 }
 
 // IPredicate represents a logic that determines if a value satisfies a condition.

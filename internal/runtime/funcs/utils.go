@@ -1,6 +1,10 @@
 package funcs
 
-import "github.com/nevalang/neva/internal/runtime"
+import (
+	"fmt"
+
+	"github.com/nevalang/neva/internal/runtime"
+)
 
 func errFromErr(err error) runtime.StructMsg {
 	return runtime.NewStructMsg([]runtime.StructField{
@@ -33,13 +37,13 @@ func streamClose() runtime.UnionMsg {
 }
 
 func streamUnion(msg runtime.Msg) runtime.UnionMsg {
-	u, ok := msg.(runtime.UnionMsg)
-	if ok {
-		return u
-	}
-	// Compatibility fallback during stream migration:
-	// treat non-union payload as a Data item.
-	return streamData(msg)
+	defer func() {
+		if recover() != nil {
+			panic(fmt.Sprintf("runtime: expected stream union message, got %T", msg))
+		}
+	}()
+
+	return msg.Union()
 }
 
 func isStreamOpen(msg runtime.Msg) bool {

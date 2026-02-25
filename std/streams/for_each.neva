@@ -1,17 +1,21 @@
 // ForEach applies a handler to each Data item in a stream to produce side-effects.
-// It forwards the original stream unchanged.
+// It forwards the original stream unchanged and preserves item order.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-    del Del
-    sw Switch<stream<T>>
+    controller ForEachController<T>
     handler ISideEffector<T>
+    fan_err FanOut<error>
     ---
-    :data -> [
-        :res,
-        sw:data,
-        stream<T>::Data -> sw:case[0] -> handler
-    ]
-    handler:err -> :err
-    sw:else -> del
+    :data -> controller:data
+    controller:item -> handler
+
+    handler:err -> fan_err
+    fan_err:data[0] -> :err
+
+    [handler:res, fan_err:data[1]] -> controller:done
+    controller:res -> :res
 }
 
 pub interface ISideEffector<T>(T) (res any, err error)
+
+#extern(stream_for_each_controller)
+def ForEachController<T>(data stream<T>, done any) (item T, res stream<T>)
