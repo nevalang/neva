@@ -44,6 +44,7 @@ func (streamProduct) Create(
 				if !firstOk {
 					return
 				}
+			readFirst:
 				for {
 					var firstMsg runtime.Msg
 					firstMsg, firstOk = firstIn.Receive(ctx)
@@ -55,7 +56,7 @@ func (streamProduct) Create(
 					case isStreamData(firstMsg):
 						firstData = append(firstData, streamDataValue(firstMsg))
 					case isStreamClose(firstMsg):
-						break
+						break readFirst
 					}
 				}
 			})
@@ -65,6 +66,7 @@ func (streamProduct) Create(
 				if !secondOk {
 					return
 				}
+			readSecond:
 				for {
 					var secondMsg runtime.Msg
 					secondMsg, secondOk = secondIn.Receive(ctx)
@@ -76,7 +78,7 @@ func (streamProduct) Create(
 					case isStreamData(secondMsg):
 						secondData = append(secondData, streamDataValue(secondMsg))
 					case isStreamClose(secondMsg):
-						break
+						break readSecond
 					}
 				}
 			})

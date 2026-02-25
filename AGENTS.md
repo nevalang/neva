@@ -376,3 +376,4 @@ The standard library provides components for all programs. Some are implemented 
 - **Common patterns**: For side-effect handlers that may emit either `res` or `err`, wire both paths into completion signaling to prevent deadlocks.
 - **Gotchas**: `streams.Map` can drop tail items if `Close` is forwarded before pending mapped `Data`; preserve strict `Open -> Data* -> Close` sequencing.
 - **Architecture insights**: Stream mapping/order guarantees are safest when event sequencing is enforced in runtime controller logic rather than reconstructed from parallel graph branches.
+- **Gotchas**: In Go `switch`, `break` exits only the `switch`; stream readers waiting for `Close` must use labeled loop breaks to avoid infinite receive loops/timeouts.
