@@ -35,6 +35,7 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - **Components**: `CamelCase` noun
 - **Nodes**: `lower_snake_case`
 - **Ports**: `lowercase`
+- **Union Tags**: `CamelCase`
 
 ### Node Instantiation
 
