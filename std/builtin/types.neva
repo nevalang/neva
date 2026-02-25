@@ -13,9 +13,9 @@ pub type maybe<T> union {
 
 type Type any
 
-pub type error union {
-    Text string
-    Child maybe<error>
+pub type error struct {
+    text string
+    child maybe<error>
 }
 
 pub type stream<T> struct {

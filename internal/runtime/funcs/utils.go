@@ -2,12 +2,15 @@ package funcs
 
 import "github.com/nevalang/neva/internal/runtime"
 
-func errFromErr(err error) runtime.UnionMsg {
+func errFromErr(err error) runtime.StructMsg {
 	return errFromString(err.Error())
 }
 
-func errFromString(s string) runtime.UnionMsg {
-	return runtime.NewUnionMsg("Text", runtime.NewStringMsg(s))
+func errFromString(s string) runtime.StructMsg {
+	return runtime.NewStructMsg([]runtime.StructField{
+		runtime.NewStructField("text", runtime.NewStringMsg(s)),
+		runtime.NewStructField("child", runtime.NewUnionMsg("None", nil)),
+	})
 }
 
 func streamItem(data runtime.Msg, idx int64, last bool) runtime.StructMsg {

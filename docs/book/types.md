@@ -252,12 +252,13 @@ Use `Some` to wrap present values and `None` to represent absence.
 
 ### `error`
 
-Error type for components that can send errors. It is represented as a tagged union with simple and chained variants.
+Error type for components that can send errors. It is represented as a
+structure with mandatory message text and optional recursive child cause.
 
 ```neva
-pub type error union {
-    Text string
-    Child maybe<error>
+pub type error struct {
+    text string
+    child maybe<error>
 }
 ```
 
