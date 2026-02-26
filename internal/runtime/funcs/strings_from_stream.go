@@ -7,9 +7,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type stringsFromStream struct{}
+type stringFromStream struct{}
 
-func (stringsFromStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringFromStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		return nil, err

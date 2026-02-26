@@ -174,7 +174,7 @@ func (s SubtypeChecker) Check(
 			)
 		}
 		// add virtual ref "struct" to trace to avoid direct recursion
-		// e.g. error struct {child maybe<error>}
+		// e.g. recursive refs like error -> maybe<error>
 		// but only if it's not already there
 		if params.SubtypeTrace.cur.String() != "struct" &&
 			params.SupertypeTrace.String() != "struct" {

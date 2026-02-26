@@ -9,9 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	out, _ := e2e.Run(t, []string{"run", "main"})
-	require.Equal(
-		t,
-		"1\n42\n*\nHello, bytes!\n",
-		out,
-	)
+
+	// Bytes-to-string cast should decode byte content into the same text.
+	require.Equal(t, "Hello, bytes!\n", out)
 }
