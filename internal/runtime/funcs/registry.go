@@ -106,7 +106,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"time_after": timeAfter{},
 
 		"string_at":           stringAt{},
-		"strings_join_stream": stringJoinStream{},
+		"strings_from_stream": stringFromStream{},
 		"strings_join_list":   stringJoinList{},
 		"strings_split":       stringsSplit{},
 		"strings_to_upper":    stringsToUpper{},

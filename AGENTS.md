@@ -288,7 +288,14 @@ Follow these instructions.
 - **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
 ### Session Notes (2026-02-25)
 
-- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 30s) rather than relying only on global `go test -timeout`.
+- **Common patterns**: Prefer explicit stream materialization components (`strings.FromStream`) over overloads that hide blocking behavior.
+- **Language semantics**: Keep `strings.Join` list-only; convert stream-to-string explicitly before join-like text processing.
+- **Architecture insights**: Moving cast-like APIs into `std/builtin` can reuse existing runtime externs without changing conversion semantics (`bytes_from_string`, `strings_from_bytes`).
+- **Common patterns**: Name builtin cast surface file `casts.neva` when it includes both scalar and bytes/text cast-like conversions.
+
+### Session Notes (2026-02-25)
+
+- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 60s) rather than relying only on global `go test -timeout`.
 - **Architecture insights**: For e2e command chains (`*.test -> neva -> generated output`), cancellation must target the whole process group on Unix (`Setpgid` + group kill) to avoid orphaned child processes.
 - **Gotchas**: Test-runner interruption/timeouts can leave `neva_run_*/output` descendants alive, which users may report as “zombies” and observe as sustained CPU heat on macOS.
 
@@ -304,6 +311,16 @@ Follow these instructions.
 - **Language semantics**: `maybe<T>` is represented as tagged union (`Some`/`None`) and union tags should use `CamelCase`.
 - **Architecture insights**: Recursion terminator must treat builtin `maybe` as recursive-wrapper to allow valid patterns like `error` chains (`... child maybe<error>`), even though `maybe` is no longer bodyless.
 - **Architecture insights**: Runtime trace concerns are now explicitly tracked as shared primitive (`#1050`) for panic diagnostics (`#595`), debugger (`#977`), and `std/errors` formatting (`#1046`); keep process semantics (`#792`) separate from diagnostics rendering.
+
+### Session Notes (2026-02-25)
+
+- **Common patterns**: Cast coverage e2e is easier to review and maintain when split into one module per direction (for example `builtin_int_to_string_go`, `builtin_string_to_bytes_go`) instead of a single multi-cast scenario.
+- **Common patterns**: Keep stream-materialization e2e names aligned with component names (for example `strings_from_stream`) to make failures self-describing.
+
+### Session Notes (2026-02-27)
+
+- **Gotchas**: A 30s default timeout in `pkg/e2e.Run` can cause false e2e failures under heavy parallel `go test ./...` load.
+- **Common patterns**: Keep e2e per-run timeout practical (currently 60s default) to reduce timeout flakiness on busy CI/local machines.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

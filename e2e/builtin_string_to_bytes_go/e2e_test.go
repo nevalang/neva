@@ -9,5 +9,7 @@ import (
 
 func Test(t *testing.T) {
 	out, _ := e2e.Run(t, []string{"run", "main"})
-	require.Equal(t, "a, b, c\n", out)
+
+	// String-to-bytes cast should preserve byte content through roundtrip.
+	require.Equal(t, "Hello, bytes!\n", out)
 }
