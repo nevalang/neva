@@ -2,16 +2,16 @@ package funcs
 
 import (
 	"context"
-	"io"
-	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type fileReadAll struct{}
+type fileClose struct {
+	handles *fileHandleStore
+}
 
-func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	filenameIn, err := rio.In.Single("filename")
+func (c fileClose) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	fileIn, err := rio.In.Single("file")
 	if err != nil {
 		return nil, err
 	}
@@ -28,12 +28,12 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 	return func(ctx context.Context) {
 		for {
-			name, ok := filenameIn.Receive(ctx)
+			fileMsg, ok := fileIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			f, err := os.Open(name.Str())
+			id, err := fileHandleID(fileMsg)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
@@ -41,23 +41,14 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 				continue
 			}
 
-			data, err := io.ReadAll(f)
-			if err != nil {
-				_ = f.Close()
+			if err := c.handles.Close(id); err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 				continue
 			}
 
-			if err := f.Close(); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewBytesMsg(data)) {
+			if !resOut.Send(ctx, emptyStruct()) {
 				return
 			}
 		}

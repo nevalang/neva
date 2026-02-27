@@ -841,7 +841,8 @@ func (s *treeShapeListener) parseMessage(
 		if constVal.MINUS() != nil {
 			parsedInt = -parsedInt
 		}
-		msg.Int = new(int(parsedInt))
+		intVal := int(parsedInt)
+		msg.Int = &intVal
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -1000,7 +1001,7 @@ func (s *treeShapeListener) parseTypeDef(
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = new(v)
+		body = &v
 	}
 
 	v, err := s.parseTypeParams(actx.TypeParams())
