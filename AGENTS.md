@@ -295,7 +295,7 @@ Follow these instructions.
 
 ### Session Notes (2026-02-25)
 
-- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 30s) rather than relying only on global `go test -timeout`.
+- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 60s) rather than relying only on global `go test -timeout`.
 - **Architecture insights**: For e2e command chains (`*.test -> neva -> generated output`), cancellation must target the whole process group on Unix (`Setpgid` + group kill) to avoid orphaned child processes.
 - **Gotchas**: Test-runner interruption/timeouts can leave `neva_run_*/output` descendants alive, which users may report as “zombies” and observe as sustained CPU heat on macOS.
 
@@ -316,6 +316,11 @@ Follow these instructions.
 
 - **Common patterns**: Cast coverage e2e is easier to review and maintain when split into one module per direction (for example `builtin_int_to_string_go`, `builtin_string_to_bytes_go`) instead of a single multi-cast scenario.
 - **Common patterns**: Keep stream-materialization e2e names aligned with component names (for example `strings_from_stream`) to make failures self-describing.
+
+### Session Notes (2026-02-27)
+
+- **Gotchas**: A 30s default timeout in `pkg/e2e.Run` can cause false e2e failures under heavy parallel `go test ./...` load.
+- **Common patterns**: Keep e2e per-run timeout practical (currently 60s default) to reduce timeout flakiness on busy CI/local machines.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

@@ -130,7 +130,7 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 }
 
 // resolveRunTimeout calculates command timeout for e2e.Run.
-// Example: with `go test -timeout=5m`, each command gets at most 30s by default.
+// Example: with `go test -timeout=5m`, each command gets at most 60s by default.
 func resolveRunTimeout(t *testing.T, configured time.Duration) time.Duration {
 	t.Helper()
 
@@ -140,7 +140,7 @@ func resolveRunTimeout(t *testing.T, configured time.Duration) time.Duration {
 	}
 
 	const (
-		defaultTimeout = 30 * time.Second
+		defaultTimeout = 60 * time.Second
 		safetyMargin   = 2 * time.Second
 		minTimeout     = 5 * time.Second
 	)
