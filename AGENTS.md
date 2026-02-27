@@ -317,6 +317,11 @@ Follow these instructions.
 - **Language semantics**: `std/io` now exposes signal-triggered stdio handle accessors (`Stdin/Stdout/Stderr`) in the same package as file-handle APIs.
 - **Architecture insights**: Runtime file-handle store reserves stable IDs for stdio handles and rejects `Close` on them to avoid accidental process stream shutdown.
 - **Gotchas**: Introducing reserved handle IDs changes initial dynamic-handle numbering; tests should assert relational bounds (e.g., `> stderrHandleID`) rather than hardcoded first IDs.
+
+### Session Notes (2026-02-27)
+
+- **Gotchas**: Rebasing `std/io` handle APIs onto `main` with `bytes` support requires updating both `examples/file_handles` wiring and runtime handle funcs (`file_read_all`, `file_write_all`) to `bytes`; mixed `string`/`bytes` breaks `examples` compilation.
+- **Common patterns**: `go test ./...` runs `examples/*` as a shared module check, so one invalid example can cascade into many failing example packages with the same compiler error.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

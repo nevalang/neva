@@ -1,26 +1,30 @@
-import { io, fmt, runtime }
+import { bytes, io, fmt, runtime, strings }
 
 def Main(start any) (stop any) {
 	startFanOut FanOut
 	create io.Create
 	writeAll io.WriteAllFile
+	bytesFromString bytes.FromString
 	closeWriter io.Close
 	open io.Open
 	readAll io.ReadAllFile
+	stringFromBytes strings.FromBytes
 	closeReader io.Close
 	println fmt.Println
 	panic runtime.Panic
 	---
 	:start -> startFanOut
 	startFanOut:data[0] -> 'file_handles_example.txt' -> create:filename
-	startFanOut:data[1] -> 'Hello, io.File!' -> writeAll:data
+	startFanOut:data[1] -> 'Hello, io.File!' -> bytesFromString:data
+	bytesFromString:res -> writeAll:data
 
 	create:res -> writeAll:file
 	writeAll:res -> closeWriter:file
 
 	closeWriter:res -> 'file_handles_example.txt' -> open:filename
 	open:res -> readAll:file
-	readAll:res -> println:data
+	readAll:res -> stringFromBytes:data
+	stringFromBytes:res -> println:data
 	readAll:handle -> closeReader:file
 
 	[

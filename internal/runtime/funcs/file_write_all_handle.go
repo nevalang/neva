@@ -59,7 +59,7 @@ func (c fileWriteAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx cont
 				continue
 			}
 
-			if _, err := file.WriteString(dataMsg.Str()); err != nil {
+			if _, err := file.Write(dataMsg.Bytes()); err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
