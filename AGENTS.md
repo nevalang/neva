@@ -304,6 +304,12 @@ Follow these instructions.
 - **Language semantics**: `maybe<T>` is represented as tagged union (`Some`/`None`) and union tags should use `CamelCase`.
 - **Architecture insights**: Recursion terminator must treat builtin `maybe` as recursive-wrapper to allow valid patterns like `error` chains (`... child maybe<error>`), even though `maybe` is no longer bodyless.
 - **Architecture insights**: Runtime trace concerns are now explicitly tracked as shared primitive (`#1050`) for panic diagnostics (`#595`), debugger (`#977`), and `std/errors` formatting (`#1046`); keep process semantics (`#792`) separate from diagnostics rendering.
+
+### Session Notes (2026-02-28, release workflow)
+
+- **Common patterns**: Minor language releases require bumping `pkg/version.go` (for example `0.34.0 -> 0.35.0`) and tagging with `v` prefix (`v0.35.0`).
+- **Common patterns**: Release artifacts come from `make build` and keep fixed names (`neva-{darwin,linux,windows}-{amd64,arm64}` plus `neva-linux-loong64`, `.exe` for Windows).
+- **Gotchas**: Local `golangci-lint` binaries can lag toolchain support (for example Go `1.26`); run via `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0` when needed.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
