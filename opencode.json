@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/moonshotai/kimi-k2.5",
+  "default_agent": "neva-orchestrator",
+  "agent": {
+    "neva-orchestrator": {
+      "mode": "primary",
+      "description": "Routes GitHub events to the right Neva workflow and enforces safety rules.",
+      "prompt": "{file:./.opencode/prompts/orchestrator.md}"
+    },
+    "issue-triage": {
+      "mode": "primary",
+      "description": "Analyzes issues and comments; asks questions or proposes an implementation plan.",
+      "prompt": "{file:./.opencode/prompts/issue-triage.md}"
+    },
+    "pr-reviewer": {
+      "mode": "primary",
+      "description": "Reviews PR context, CI status, conflicts, and leaves actionable comments.",
+      "prompt": "{file:./.opencode/prompts/pr-review.md}"
+    },
+    "coder-fix": {
+      "mode": "primary",
+      "description": "Fixes PR review comments by committing to the same PR branch.",
+      "prompt": "{file:./.opencode/prompts/coder-fix.md}"
+    },
+    "post-merge": {
+      "mode": "primary",
+      "description": "After manual merge, comments on linked issues and closes them.",
+      "prompt": "{file:./.opencode/prompts/post-merge.md}"
+    }
+  }
+}
