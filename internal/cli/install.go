@@ -128,7 +128,16 @@ func newInstallCmd(
 				}
 			}()
 
-			cmd := exec.Command("go", "build", "-ldflags", "-s -w", "-o", targetPath, ".")
+			cmd := exec.Command(
+				"go",
+				"build",
+				"-trimpath",         // remove local filesystem paths from DWARF/panic metadata for smaller/reproducible binaries
+				"-buildvcs=false",   // skip embedding VCS metadata in installed end-user binaries
+				"-ldflags", "-s -w", // strip debug information
+				"-o",
+				targetPath,
+				".",
+			)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 

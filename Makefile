@@ -25,6 +25,9 @@ nilaway:
 
 # === Release Build ===
 
+# Release flags:
+# -trimpath removes host paths from debug metadata (smaller, reproducible artifacts)
+# -buildvcs=false skips VCS stamping to keep output deterministic and compact
 # build neva cli for all target platforms
 .PHONY: build
 build:
@@ -39,34 +42,34 @@ build:
 # build neva cli for amd64 mac
 .PHONY: build-darwin-amd64
 build-darwin-amd64:
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o neva-darwin-amd64 ./cmd/neva
+	@GOOS=darwin GOARCH=amd64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-darwin-amd64 ./cmd/neva
 
 # build neva cli for arm64 mac
 .PHONY: build-darwin-arm64
 build-darwin-arm64:
-	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o neva-darwin-arm64 ./cmd/neva
+	@GOOS=darwin GOARCH=arm64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-darwin-arm64 ./cmd/neva
 
 # build neva cli for amd64 linux
 .PHONY: build-linux-amd64
 build-linux-amd64:
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o neva-linux-amd64 ./cmd/neva
+	@GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-linux-amd64 ./cmd/neva
 
 # build neva cli for arm64 linux
 .PHONY: build-linux-arm64
 build-linux-arm64:
-	@GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o neva-linux-arm64 ./cmd/neva
+	@GOOS=linux GOARCH=arm64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-linux-arm64 ./cmd/neva
 
 # build neva cli for loong64 linux
 .PHONY: build-linux-loong64
 build-linux-loong64:
-	@GOOS=linux GOARCH=loong64 go build -ldflags="-s -w" -o neva-linux-loong64 ./cmd/neva
+	@GOOS=linux GOARCH=loong64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-linux-loong64 ./cmd/neva
 
 # build neva cli for amd64 windows
 .PHONY: build-windows-amd64
 build-windows-amd64:
-	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o neva-windows-amd64.exe ./cmd/neva
+	@GOOS=windows GOARCH=amd64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-windows-amd64.exe ./cmd/neva
 
 # build neva cli for arm64 windows
 .PHONY: build-windows-arm64
 build-windows-arm64:
-	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o neva-windows-arm64.exe ./cmd/neva
+	@GOOS=windows GOARCH=arm64 go build -trimpath -buildvcs=false -ldflags="-s -w" -o neva-windows-arm64.exe ./cmd/neva

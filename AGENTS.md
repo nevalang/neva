@@ -274,6 +274,21 @@ Follow these instructions.
 - **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
 - **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
 - **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
+### Session Notes (2026-03-01)
+
+- **Common patterns**: For release-note Neva snippets, prefer minimal examples with node declarations + `---` network only; omit component/import boilerplate unless it adds semantic value.
+- **Common patterns**: When documenting a specific release, read source files with `ref=<tag>` (for example via GitHub API) because current `main` may have already diverged from that release layout.
+- **Common patterns**: Even in shortened release snippets, keep network semantics valid (for example, use fan-out syntax for one sender to many receivers; use `?` only where error-propagation semantics are intended).
+- **Common patterns**: For pseudo-code snippets that omit wrappers, separate top-level constants from network blocks with a standalone `...` marker to signal omitted context clearly.
+
+### Session Notes (2026-03-04)
+
+- **Architecture insights**: Generated Go executables currently embed the full `internal/runtime/funcs` package and call `funcs.NewRegistry()`, so one binary pulls imports for all runtime funcs (including heavy stdlib packages) regardless of actual usage.
+- **Common patterns**: Biggest size/build-time win comes from generating a per-program minimal funcs registry plus copying only required `runtime/funcs/*.go` files for referenced `Ref` nodes.
+- **Architecture insights**: Runtime func file selection can be derived from `runtime/funcs/registry.go` + AST-based file dependency closure (top-level symbol refs), avoiding manual ref-to-file maps and keeping new std funcs auto-discoverable.
+- **Common patterns**: `-trimpath` is a safe default for release builds; in local measurement it reduced stripped binaries by ~0.5% with no runtime behavior change.
+- **Common patterns**: Add `-buildvcs=false` alongside `-trimpath` for generated/release binaries to avoid embedding VCS metadata and keep artifacts more deterministic.
+- **Gotchas**: The runtime package has no external module dependencies, but stdlib-heavy funcs (for example `http`, `image`, `regexp`) still inflate binaries when included via the global registry.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

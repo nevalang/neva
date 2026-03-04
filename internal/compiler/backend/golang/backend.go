@@ -75,7 +75,15 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 		"go.mod":  []byte("module github.com/nevalang/neva/internal\n\ngo 1.25"),
 	}
 
-	if err := b.insertRuntimeFiles(files, nil); err != nil {
+	runtimeFilesCfg, err := b.buildExecutableRuntimeFilesConfig(prog.Funcs)
+	if err != nil {
+		return err
+	}
+
+	if err := b.insertRuntimeFilesWithOptions(files, runtimeFilesCopyOptions{
+		includeFuncFiles: runtimeFilesCfg.includeFuncFiles,
+		overrideFiles:    runtimeFilesCfg.overrideFiles,
+	}); err != nil {
 		return err
 	}
 	if b.debugValidation {
@@ -474,7 +482,13 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 }
 
 func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[string]string) error {
-	return fs.WalkDir(
+	return b.insertRuntimeFilesWithOptions(files, runtimeFilesCopyOptions{
+		replacements: replacements,
+	})
+}
+
+func (b Backend) insertRuntimeFilesWithOptions(files map[string][]byte, opts runtimeFilesCopyOptions) error {
+	if err := fs.WalkDir(
 		internal.Efs,
 		"runtime",
 		func(path string, dirEntry fs.DirEntry, err error) error {
@@ -486,14 +500,20 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[st
 				return nil
 			}
 
+			if len(opts.includeFuncFiles) > 0 && strings.HasPrefix(path, "runtime/funcs/") {
+				if _, ok := opts.includeFuncFiles[path]; !ok {
+					return nil
+				}
+			}
+
 			bb, err := internal.Efs.ReadFile(path)
 			if err != nil {
 				return err
 			}
 
-			if replacements != nil {
+			if opts.replacements != nil {
 				s := string(bb)
-				for old, new := range replacements {
+				for old, new := range opts.replacements {
 					s = strings.ReplaceAll(s, old, new)
 				}
 				bb = []byte(s)
@@ -502,7 +522,15 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[st
 			files[path] = bb
 			return nil
 		},
-	)
+	); err != nil {
+		return err
+	}
+
+	for path, bb := range opts.overrideFiles {
+		files[path] = bb
+	}
+
+	return nil
 }
 
 func (b Backend) buildPortChanMap(connections map[ir.PortAddr]ir.PortAddr) (map[ir.PortAddr]string, []string) {

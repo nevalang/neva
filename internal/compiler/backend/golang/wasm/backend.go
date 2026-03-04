@@ -39,6 +39,8 @@ func buildWASM(src, dst string) error {
 	cmd := exec.Command(
 		"go",
 		"build",
+		"-trimpath",         // remove local filesystem paths from DWARF/panic metadata for smaller/reproducible binaries
+		"-buildvcs=false",   // skip embedding VCS metadata in generated end-user binaries
 		"-ldflags", "-s -w", // for optimization
 		"-o", outputPath+".wasm",
 		src,
