@@ -12,11 +12,10 @@ import (
 type Generator struct{}
 
 type (
-	//nolint:govet // fieldalignment: keep semantic grouping.
 	nodeContext struct {
+		portsUsage portsUsage
 		path       []string
 		node       src.Node
-		portsUsage portsUsage
 	}
 
 	portsUsage struct {
@@ -24,10 +23,9 @@ type (
 		out map[relPortAddr]struct{}
 	}
 
-	//nolint:govet // fieldalignment: keep semantic grouping.
 	relPortAddr struct {
-		Port string
 		Idx  *uint8
+		Port string
 	}
 )
 

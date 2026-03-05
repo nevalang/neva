@@ -29,10 +29,10 @@ type MyErrorListener interface {
 
 // FileAwareErrorListener provides better error reporting with file context
 //
-//nolint:govet // fieldalignment: small helper struct.
+
 type FileAwareErrorListener struct {
-	filename string
 	t        *testing.T
+	filename string
 }
 
 func NewFileAwareErrorListener(t *testing.T, filename string) *FileAwareErrorListener {

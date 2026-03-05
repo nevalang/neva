@@ -78,9 +78,9 @@ func TestGetPortChansMap(t *testing.T) {
 }
 
 func TestChanVarNameFromPortAddr(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		addr     ir.PortAddr
+	tests := []struct {
 		expected string
+		addr     ir.PortAddr
 	}{
 		{
 			// empty

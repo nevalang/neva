@@ -12,12 +12,11 @@ import (
 
 const maxUint8 = int(^uint8(0))
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type handleNetworkResult struct {
-	desugaredConnections []src.Connection
 	constsToInsert       map[string]src.Const
 	nodesToInsert        map[string]src.Node
 	nodesPortsUsed       nodeOutportsUsed
+	desugaredConnections []src.Connection
 }
 
 func (d *Desugarer) desugarNetwork(
@@ -70,10 +69,10 @@ func (d *Desugarer) mergeImplicitFanIn(
 		hasIdx bool
 		idx    uint8
 	}
-	//nolint:govet // fieldalignment: local helper layout.
+
 	type group struct {
-		receiver src.ConnectionReceiver
 		senders  []src.ConnectionSender
+		receiver src.ConnectionReceiver
 		meta     core.Meta
 	}
 
@@ -319,8 +318,8 @@ func (d *Desugarer) desugarNormalConnection(
 }
 
 type desugarReceiverResult struct {
-	replace src.Connection
 	insert  []src.Connection
+	replace src.Connection
 }
 
 // desugarSingleReceiver expects connection without fan-out (it must be desugared before).
@@ -534,8 +533,8 @@ func (d *Desugarer) desugarChainedConnection(
 }
 
 type desugarSenderResult struct {
-	replace src.Connection   // receiver side might need desugaring
-	insert  []src.Connection // already desugared
+	insert  []src.Connection
+	replace src.Connection
 }
 
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
@@ -796,8 +795,8 @@ func (d *Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr,
 }
 
 type desugarFanOutResult struct {
-	replace src.Connection   // original sender -> fanOut receiver
-	insert  []src.Connection // fanOut sender -> original receivers
+	insert  []src.Connection
+	replace src.Connection
 }
 
 func (d *Desugarer) desugarFanOut(

@@ -156,10 +156,9 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
-	entity src.Entity
 	insert map[string]src.Entity
+	entity src.Entity
 }
 
 func (d *Desugarer) desugarEntity(

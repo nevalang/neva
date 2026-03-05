@@ -24,14 +24,12 @@ func (e EntityRef) String() string {
 
 // Meta contains meta information about the source code
 //
-//nolint:govet // fieldalignment: keep order for readability and JSON grouping.
+
 type Meta struct {
-	Text  string   `json:"text,omitempty"`
-	Start Position `json:"start"`
-	Stop  Position `json:"stop"`
-	// Location must always be present, even for virtual nodes inserted after resugaring,
-	// because irgen relies on it.
 	Location Location `json:"location"`
+	Text     string   `json:"text,omitempty"`
+	Start    Position `json:"start"`
+	Stop     Position `json:"stop"`
 }
 
 type Location struct {

@@ -10,14 +10,10 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Def struct {
-	// Body can refer to these. Must be replaced with arguments while resolving
-	Params []Param `json:"params,omitempty"`
-	// Empty body means base type
-	BodyExpr *Expr `json:"bodyExpr,omitempty"`
-	// Meta can be used to store anything that can be useful for typesystem user. It is ignored by the typesystem itself.
-	Meta core.Meta `json:"meta"`
+	BodyExpr *Expr     `json:"bodyExpr,omitempty"`
+	Params   []Param   `json:"params,omitempty"`
+	Meta     core.Meta `json:"meta"`
 }
 
 func (def Def) String() string {
@@ -141,8 +137,8 @@ func (expr Expr) String() string {
 
 // Instantiation expression
 type InstExpr struct {
-	Ref  core.EntityRef `json:"ref"`            // Must be in the scope
-	Args []Expr         `json:"args,omitempty"` // Every ref's parameter must have subtype argument
+	Args []Expr         `json:"args,omitempty"`
+	Ref  core.EntityRef `json:"ref"`
 }
 
 // Literal expression. Only one field must be initialized

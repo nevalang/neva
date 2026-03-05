@@ -1,4 +1,4 @@
-//nolint:gocritic // keep commented-out test logic for future reference.
+//nolint:gocritic // keep commented-out draft test logic for future restoration.
 package typesystem_test
 
 import (
@@ -18,16 +18,14 @@ var errTest = errors.New("oops")
 func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
-	type testcase struct { //nolint:govet // fieldalignment: test case layout.
-		expr  ts.Expr
-		scope TestScope
-
+	type testcase struct {
+		wantErr           error
+		scope             TestScope
 		prepareValidator  func(v *MockexprValidatorMockRecorder)
 		prepareChecker    func(c *MockcompatCheckerMockRecorder)
 		prepareTerminator func(t *MockrecursionTerminatorMockRecorder)
-
-		want    ts.Expr
-		wantErr error
+		expr              ts.Expr
+		want              ts.Expr
 	}
 
 	tests := map[string]func() testcase{
@@ -252,8 +250,7 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 					t1 := ts.NewTrace(nil, core.EntityRef{Name: "t1"})
 					t.ShouldTerminate(t1, scope)
 
-					// t2 := ts.NewTrace(nil, core.EntityRef{Name:"t2"})
-					// t.ShouldTerminate(t2, scope)
+					// NOTE: intentionally skipping explicit t2 trace expectation here.
 				},
 				wantErr: ts.ErrUnionUnresolvedEl,
 			}
@@ -456,10 +453,10 @@ func TestExprResolver_Resolve(t *testing.T) { //nolint:maintidx
 		// 			t1 := ts.NewTrace(nil, core.EntityRef{Name:"t1"})
 		// 			t.ShouldTerminate(t1, scope).Return(false, nil)
 
-		// 			t2 := ts.NewTrace(&t1, core.EntityRef{Name:"int"})
+		// 			NOTE: int trace expectation omitted in this archived draft case.
 		// 			t.ShouldTerminate(t2, scope).Return(false, nil)
 
-		// 			t3 := ts.NewTrace(&t1, core.EntityRef{Name:"string"})
+		// 			NOTE: string trace expectation omitted in this archived draft case.
 		// 			t.ShouldTerminate(t3, scope).Return(false, nil)
 
 		// 			t4 := ts.NewTrace(&t1, core.EntityRef{Name:"list"})
