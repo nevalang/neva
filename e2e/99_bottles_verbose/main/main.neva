@@ -13,7 +13,7 @@ def Main(start any) (stop any) {
 	panic runtime.Panic
 	---
 	:start -> [lock:sig, 99 -> lock:data]
-	[lock:data, switch:else] -> print_next_2_lines
+	[lock:res, switch:else] -> print_next_2_lines
 	print_next_2_lines:n -> [
 		switch:data,
 		-1 -> switch:case[0]
@@ -59,7 +59,7 @@ def PrintFirstLine(n int) (n int, err error) {
 		$firstLine1 -> printf:tpl
 	]
 	[p1:res, p2:res, printf:sig] -> lock:sig
-	lock:data -> :n
+	lock:res -> :n
 }
 
 // === Second Line ===
@@ -89,5 +89,5 @@ def PrintSecondLine(n int) (n int, err error) {
 		$secondLine1 -> printf:tpl
 	]
 	[p1:res, p2:res, p3:res, printf:sig] -> lock:sig
-	lock:data -> :n
+	lock:res -> :n
 }

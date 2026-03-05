@@ -20,7 +20,7 @@ def Main(start any) (stop any) {
 }
 
 def Handler(data int) (res any, err error) {
-    Match, fmt.Println?
+    match Match, println fmt.Println?
 
     ---
 

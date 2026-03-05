@@ -500,6 +500,7 @@ func (s *treeShapeListener) parseNodes(
 	isRootLevel bool,
 ) (map[string]src.Node, *compiler.Error) {
 	result := map[string]src.Node{}
+	missingAliasCounter := 0
 
 	for _, node := range actx.AllCompNodeDef() {
 		nodeInst := node.NodeInst()
@@ -548,11 +549,15 @@ func (s *treeShapeListener) parseNodes(
 			deps = v
 		}
 
+		id := node.IDENTIFIER()
 		var nodeName string
-		if id := node.IDENTIFIER(); id != nil {
+		if id != nil {
 			nodeName = id.GetText()
 		} else if isRootLevel {
-			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
+			// Keep parser permissive: analyzer reports missing node names as semantic errors.
+			// Use component-scoped placeholder names to avoid map key collisions between unnamed nodes.
+			missingAliasCounter++
+			nodeName = src.MissingNodeName(missingAliasCounter)
 		}
 
 		result[nodeName] = src.Node{
@@ -813,7 +818,7 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
-		msg.Bool = compiler.Pointer(boolVal == "true")
+		msg.Bool = new(boolVal == "true")
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
@@ -833,10 +838,11 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
+		intVal := int(parsedInt)
 		if constVal.MINUS() != nil {
-			parsedInt = -parsedInt
+			intVal = -intVal
 		}
-		msg.Int = compiler.Pointer(int(parsedInt))
+		msg.Int = &intVal
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -861,7 +867,7 @@ func (s *treeShapeListener) parseMessage(
 		}
 		msg.Float = &parsedFloat
 	case constVal.STRING() != nil:
-		msg.Str = compiler.Pointer(
+		msg.Str = new(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),
@@ -991,11 +997,11 @@ func (s *treeShapeListener) parseTypeDef(
 ) (src.Entity, *compiler.Error) {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		v, err := s.parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := s.parseTypeExpr(actx.TypeExpr())
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = compiler.Pointer(v)
+		body = &typeExpr
 	}
 
 	v, err := s.parseTypeParams(actx.TypeParams())

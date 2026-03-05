@@ -9,6 +9,6 @@ def Main(start any) (stop any) {
     :start -> [p1:data, p2:data]
     p1:res -> lock:sig
     p2:res -> lock:data
-    lock:data -> :stop
+    lock:res -> :stop
     [p1:err, p2:err] -> panic
 }

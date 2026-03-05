@@ -3,7 +3,7 @@ import { lists, fmt, runtime }
 const lst list<int> = [1, 1, 5, 112, 69, 420]
 
 def Main(start any) (stop any) {
-	lists.At<int>, fmt.Println, runtime.Panic
+	at lists.At<int>, println fmt.Println, panic runtime.Panic
 	---
 	:start -> [
 		$lst -> at:data,

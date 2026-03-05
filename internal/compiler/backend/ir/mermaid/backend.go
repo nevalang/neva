@@ -1,6 +1,7 @@
 package mermaid
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"sort"
@@ -18,13 +19,13 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// Format: // module=@@ main=hello_world compiler=0.34.0
 	var modName, compilerVer string
 	if strings.HasPrefix(prog.Comment, "//") {
-		parts := strings.Fields(prog.Comment)
-		for _, p := range parts {
-			if strings.HasPrefix(p, "main=") {
-				modName = strings.TrimPrefix(p, "main=")
+		parts := strings.FieldsSeq(prog.Comment)
+		for p := range parts {
+			if after, ok := strings.CutPrefix(p, "main="); ok {
+				modName = after
 			}
-			if strings.HasPrefix(p, "compiler=") {
-				compilerVer = strings.TrimPrefix(p, "compiler=")
+			if after, ok := strings.CutPrefix(p, "compiler="); ok {
+				compilerVer = after
 			}
 		}
 	}
@@ -120,10 +121,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 
 		// Trim /in and /out from path to get component path
 		path := addr.Path
-		if strings.HasSuffix(path, "/in") {
-			path = strings.TrimSuffix(path, "/in")
-		} else if strings.HasSuffix(path, "/out") {
-			path = strings.TrimSuffix(path, "/out")
+		if before, ok := strings.CutSuffix(path, "/in"); ok {
+			path = before
+		} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+			path = before
 		}
 
 		n := getOrCreateNode(path)
@@ -149,10 +150,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		for _, addr := range f.IO.In {
 			// Try to find component path from port address
 			path := addr.Path
-			if strings.HasSuffix(path, "/in") {
-				path = strings.TrimSuffix(path, "/in")
-			} else if strings.HasSuffix(path, "/out") {
-				path = strings.TrimSuffix(path, "/out")
+			if before, ok := strings.CutSuffix(path, "/in"); ok {
+				path = before
+			} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+				path = before
 			}
 			if path != "" {
 				matchPath = path
@@ -164,10 +165,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		if matchPath == "" {
 			for _, addr := range f.IO.Out {
 				path := addr.Path
-				if strings.HasSuffix(path, "/in") {
-					path = strings.TrimSuffix(path, "/in")
-				} else if strings.HasSuffix(path, "/out") {
-					path = strings.TrimSuffix(path, "/out")
+				if before, ok := strings.CutSuffix(path, "/in"); ok {
+					path = before
+				} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+					path = before
 				}
 				if path != "" {
 					matchPath = path
@@ -191,6 +192,8 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 						n.Meta.Msg = fmt.Sprintf("%v", f.Msg.Bool)
 					case ir.MsgTypeFloat:
 						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
+					case ir.MsgTypeBytes:
+						n.Meta.Msg = formatBytesPreview(f.Msg.Bytes)
 					case ir.MsgTypeList:
 						n.Meta.Msg = "[...]"
 					case ir.MsgTypeDict, ir.MsgTypeStruct, ir.MsgTypeUnion:
@@ -348,11 +351,40 @@ func getPortID(addr ir.PortAddr) string {
 	}
 
 	path := addr.Path
-	if strings.HasSuffix(path, "/in") {
-		path = strings.TrimSuffix(path, "/in")
-	} else if strings.HasSuffix(path, "/out") {
-		path = strings.TrimSuffix(path, "/out")
+	if before, ok := strings.CutSuffix(path, "/in"); ok {
+		path = before
+	} else if before, ok := strings.CutSuffix(path, "/out"); ok {
+		path = before
 	}
 
 	return sanitize(path) + "__" + sanitize(addr.Port)
+}
+
+// formatBytesPreview keeps Mermaid labels compact and deterministic.
+// Go's `%x`/`%q` would print full payloads, which can explode diagram size.
+func formatBytesPreview(data []byte) string {
+	const maxPreviewLen = 16
+
+	if len(data) == 0 {
+		return "<bytes len=0>"
+	}
+
+	preview := data
+	truncated := false
+	if len(preview) > maxPreviewLen {
+		preview = preview[:maxPreviewLen]
+		truncated = true
+	}
+
+	suffix := ""
+	if truncated {
+		suffix = "..."
+	}
+
+	return fmt.Sprintf(
+		"<bytes len=%d hex=%s%s>",
+		len(data),
+		hex.EncodeToString(preview),
+		suffix,
+	)
 }

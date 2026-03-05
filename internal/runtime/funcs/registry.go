@@ -44,7 +44,10 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"array_port_to_stream": arrayPortToStream{},
 		"array_port_to_list":   arrayPortToList{},
 		"list_to_stream":       listToStream{},
+		"string_to_stream":     stringToStream{},
 		"stream_to_list":       streamToList{},
+		"dict_to_stream":       dictToStream{},
+		"stream_to_dict":       streamToDict{},
 
 		"stream_int_range": rangeInt{},
 
@@ -76,12 +79,22 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"int_bitwise_lsh": intBitwiseLsh{},
 		"int_bitwise_rsh": intBitwiseRsh{},
 
-		"int_inc": intInc{},
-		"int_dec": intDec{},
+		"int_inc":                   intInc{},
+		"int_dec":                   intDec{},
+		"int_from_float":            intFromFloat{},
+		"float_from_int":            floatFromInt{},
+		"string_from_int_codepoint": stringFromIntCodepoint{},
+		"bytes_from_string":         bytesFromString{},
+		"strings_from_bytes":        stringsFromBytes{},
 
-		"atoi":        atoi{},
-		"parse_int":   parseInt{},
-		"parse_float": parseFloat{},
+		"atoi":         atoi{},
+		"itoa":         itoa{},
+		"parse_bool":   parseBool{},
+		"parse_int":    parseInt{},
+		"parse_float":  parseFloat{},
+		"format_bool":  formatBool{},
+		"format_int":   formatInt{},
+		"format_float": formatFloat{},
 
 		"regexp_submatch": regexpSubmatch{},
 

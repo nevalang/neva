@@ -7,8 +7,8 @@ import (
 
 type unusedOutportsResult struct {
 	voidNodeName       string
-	delNode            src.Node
 	virtualConnections []src.Connection
+	delNode            src.Node
 }
 
 func (Desugarer) handleUnusedOutports(

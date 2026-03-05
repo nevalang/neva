@@ -10,10 +10,10 @@ import (
 )
 
 func TestDesugarer_desugarModule(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		name    string
+	tests := []struct {
 		mod     src.Module
 		want    src.Module
+		name    string
 		wantErr bool
 	}{
 		// every output module must have std module dependency
@@ -54,10 +54,10 @@ func TestDesugarer_desugarModule(t *testing.T) {
 }
 
 func TestDesugarer_desugarFile(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		name    string
+	tests := []struct {
 		file    src.File
 		want    src.File
+		name    string
 		wantErr bool
 	}{
 		{

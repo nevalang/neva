@@ -113,7 +113,7 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 				usedArgs[argIndex] = true
 
 				// Replace the placeholder with the argument's string representation
-				result.WriteString(fmt.Sprint(args[argIndex]))
+				fmt.Fprint(&result, args[argIndex])
 
 				// Move past the current placeholder in the template
 				i = j

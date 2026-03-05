@@ -1,10 +1,10 @@
 package runtime
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // OrderedMsg is a message with a chronological index.
@@ -23,6 +23,7 @@ type Msg interface {
 	Int() int64
 	Float() float64
 	Str() string
+	Bytes() []byte
 	List() []Msg
 	Dict() map[string]Msg
 	Struct() StructMsg
@@ -40,6 +41,7 @@ func (internalMsg) Bool() bool     { panic("unexpected Bool method call on inter
 func (internalMsg) Int() int64     { panic("unexpected Int method call on internal message type") }
 func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
 func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
+func (internalMsg) Bytes() []byte  { panic("unexpected Bytes method call on internal message type") }
 func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
 func (internalMsg) Dict() map[string]Msg {
 	panic("unexpected Dict method call on internal message type")
@@ -144,6 +146,38 @@ func NewStringMsg(s string) StringMsg {
 	}
 }
 
+// --- BYTES ---
+type BytesMsg struct {
+	internalMsg
+	v []byte
+}
+
+func (msg BytesMsg) Bytes() []byte { return msg.v }
+
+func (msg BytesMsg) String() string {
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+func (msg BytesMsg) MarshalJSON() ([]byte, error) {
+	return json.Marshal(msg.v)
+}
+
+func (msg BytesMsg) Equal(other Msg) bool {
+	otherBytes, ok := other.(BytesMsg)
+	return ok && bytes.Equal(msg.v, otherBytes.v)
+}
+
+func NewBytesMsg(v []byte) BytesMsg {
+	return BytesMsg{
+		internalMsg: internalMsg{},
+		v:           v,
+	}
+}
+
 // --- LIST ---
 type ListMsg struct {
 	internalMsg
@@ -192,14 +226,10 @@ func (msg DictMsg) Dict() map[string]Msg { return msg.v }
 func (msg DictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
+	return addJSONSpaces(jsonData), nil
 }
 func (msg DictMsg) String() string {
 	b, err := msg.MarshalJSON()
@@ -267,14 +297,10 @@ func (msg StructMsg) MarshalJSON() ([]byte, error) {
 
 	jsonData, err := json.Marshal(m)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-
-	return []byte(jsonString), nil
+	return addJSONSpaces(jsonData), nil
 }
 
 func (msg StructMsg) String() string {
@@ -355,10 +381,25 @@ func (msg UnionMsg) Data() Msg {
 }
 
 func (msg UnionMsg) String() string {
-	if msg.data == nil {
-		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
 	}
-	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+	return string(b)
+}
+
+func (msg UnionMsg) MarshalJSON() ([]byte, error) {
+	if msg.data == nil {
+		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
+	}
+
+	dataJSON, err := json.Marshal(msg.data)
+	if err != nil {
+		return nil, err
+	}
+	dataJSON = addJSONSpaces(dataJSON)
+
+	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -451,4 +492,42 @@ func Match(msg Msg, pattern Msg) bool {
 	// so we apply strict equality to the data they wrap
 	// maybe in the future we'll consider recursive matching, we'll see
 	return msgUnion.data.Equal(patternUnion.data)
+}
+
+func addJSONSpaces(jsonData []byte) []byte {
+	spaced := make([]byte, 0, len(jsonData))
+	inString := false
+	isEscaped := false
+
+	for _, b := range jsonData {
+		if inString {
+			spaced = append(spaced, b)
+			if isEscaped {
+				isEscaped = false
+				continue
+			}
+			if b == '\\' {
+				isEscaped = true
+				continue
+			}
+			if b == '"' {
+				inString = false
+			}
+			continue
+		}
+
+		switch b {
+		case '"':
+			inString = true
+			spaced = append(spaced, b)
+		case ':':
+			spaced = append(spaced, ':', ' ')
+		case ',':
+			spaced = append(spaced, ',', ' ')
+		default:
+			spaced = append(spaced, b)
+		}
+	}
+
+	return spaced
 }

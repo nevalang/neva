@@ -8,7 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		t.Run("", func(t *testing.T) {
 			out, _ := e2e.Run(t, []string{"run", "main"})
 			require.Equal(

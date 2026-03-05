@@ -1,3 +1,5 @@
+// FromStream fully materializes stream into list.
+// It blocks until the stream is completed and may use unbounded memory.
 #extern(stream_to_list)
 pub def FromStream<T>(data stream<T>) (res list<T>)
 

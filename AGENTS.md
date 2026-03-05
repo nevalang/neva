@@ -9,10 +9,12 @@ Follow these instructions.
 3. Run `golangci-lint` and `go test`. Fix warnings.
 4. If uncertainty > 10%, ask user.
 5. Update this file if changes to process, architecture, or rules.
-6. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
+6. For any `*.neva` change (parser/stdlib/examples/e2e), explicitly follow `docs/style_guide.md` (node aliases `lower_snake_case`, tabs, import ordering, omit explicit port names when unambiguous). Use `go.mod` as source of truth for Go imports.
 7. Plan -> Review -> Execute -> Review.
 8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
 9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
+10. PR review workflow: when user asks to address PR comments, apply the requested code/doc changes first, then post a reply to each addressed comment via `gh`; do not resolve review threads unless user explicitly asks.
+11. For generated tests, add short intent comments so the expected behavior is obvious without reverse-engineering fixtures.
 
 ## 2. 📈 Self-Improvement Protocol
 
@@ -140,7 +142,7 @@ Follow these instructions.
 ### Session Notes (2026-02-13)
 
 - **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
-- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `nevalang/neva-lsp/cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
 - **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
 - **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
 - **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
@@ -156,13 +158,13 @@ Follow these instructions.
 - **Architecture insights**: `deriveNodeConstraintsFromNetwork` needs both direct senders and previous chain-link context to infer selector output types before desugaring.
 - **Gotchas**: Without selector-aware constraints, overloaded std operators can appear ambiguous and force typed wrapper hacks in examples.
 
-- **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
+- **Common patterns**: New LSP features in `nevalang/neva-lsp/cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
 - **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
 - **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
 - **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
 - **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
 - **Architecture insights**: Source-level model for visualization is `internal/compiler/ast/flowast.go`; older `sourcecode`/`pkg/lsp` path assumptions are stale in this repo state.
-- **Architecture insights**: LSP `resolve_file` request/response types exist in `cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
+- **Architecture insights**: LSP `resolve_file` request/response types exist in `nevalang/neva-lsp/cmd/lsp/server`, but `GetFileView` is not wired yet; treat it as a stabilization task before adding new visual endpoints.
 - **Architecture insights**: Current in-repo runtime interception exposes `Sent`/`Received` only; visual debugger overlay hooks should map to these events first.
 - **Common patterns**: Keep one canonical planning document for visual-editor architecture and mark older drafts as superseded to avoid conflicting implementation guidance.
 - **Common patterns**: Keep exactly one active plan file per task area in `.agent/plans/` to avoid drift between parallel markdown plans.
@@ -183,7 +185,7 @@ Follow these instructions.
 - **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
 - **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
 - **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
-- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
+- **Architecture insights**: After PR #1020 merge, core LSP language features are available in `nevalang/neva-lsp/cmd/lsp/server`; visual-editor planning can assume this baseline while treating `resolve_file`/visual endpoints as separate follow-up wiring.
 
 ### Session Notes (2026-02-14, AST/Core extraction prep)
 
@@ -228,12 +230,120 @@ Follow these instructions.
 - **Architecture insights**: `pkg/indexer.NewDefault` centralizes default parser/builder/analyzer wiring, so LSP binaries can initialize indexing without importing `internal/*`.
 - **Architecture insights**: `pkg/typesystem` now re-exports core type-system types for tooling, allowing LSP code to stop importing `internal/compiler/typesystem` directly.
 
+### Session Notes (2026-02-18)
+
+- **Architecture insights**: `pkg/indexer.FullScan` now always analyzes workspace snapshots in library mode (`mainPkgName == ""`) so LSP is independent from runnable-entry assumptions.
+- **Common patterns**: Keep workspace indexing semantics library-first in `pkg/indexer`; executable-specific `Main` validation belongs to CLI/compiler executable flow.
+- **Gotchas**: Passing executable `MainPkg` into workspace scans can surface `main package not found` and then cascade into LSP `file not found in build`.
+
 ### Session Notes (2026-02-14, visual plan decisions)
 
 - **Architecture insights**: Visual projection should be raw-AST-first, with analyzer/desugarer data as optional overlays rather than the base graph source.
 - **Common patterns**: Prefer explicit `neva/get*` visual methods over reviving incomplete `resolve_file`/`GetFileView` bridge paths when no compatibility obligations exist.
 - **UI/UX patterns**: MVP IDE integration can start as a command-based readonly preview (Markdown-preview style) with component focus/fullscreen, while custom-editor/side-panel/inline variants stay as explicit follow-up decisions.
 - **Architecture insights**: Standalone visual app should depend on Neva LSP transport, not editor-specific APIs, so IDE and standalone consume the same graph contract.
+
+### Session Notes (2026-02-18)
+
+- **Architecture insights**: `cmd/lsp` is removed from this repository; canonical LSP source now lives in `nevalang/neva-lsp`.
+- **Common patterns**: Before deleting mirrored code, normalize module import paths and diff against the extracted repo to verify functional parity.
+- **Gotchas**: Removing `cmd/lsp` requires cleaning `Makefile` `build-lsp*` targets and running `go mod tidy` to drop stale `glsp` module dependencies.
+
+### Session Notes (2026-02-21)
+
+- **Gotchas**: Post-processing JSON via global `strings.ReplaceAll` (`:` / `,`) corrupts string payloads (for example `"a:b,c"` becomes `"a: b, c"`).
+- **Common patterns**: Keep readable one-line JSON spacing by scanning marshaled bytes and adding spaces only outside JSON strings (track quote/escape state).
+- **Common patterns**: For union string formatting, marshal `data` to JSON first (for correct quoting/escaping) and then apply spacing policy to preserve readability.
+- **Language semantics**: Node aliases are required for top-level component node declarations (validated in analyzer); anonymous shorthand is still accepted for DI argument node blocks.
+- **Gotchas**: DI argument aliases are semantic (must match dependency node names like `handler`/`predicate`/`reducer`); arbitrary renames can break IR generation.
+- **Architecture insights**: Treat `std/builtin` as two logical layers: compiler-lowering primitives (`New/Lock/Field/FanIn/FanOut/Del`) vs user-prelude ergonomics; keeping them in one namespace increases API drift and confusion.
+- **Common patterns**: Port naming works best with a two-tier rule: default to `data/res/err/sig`, but keep domain-specific single inport names for boundary APIs (`url`, `filename`) when they carry protocol meaning.
+- **Common patterns**: Stream terminal helpers like `streams.Len` are safe additions; slicing/take-style helpers should be specified together with producer-cancellation semantics (issue #666) to avoid misleading performance expectations.
+- **Gotchas**: Keep `std/* #extern(...)` names in lockstep with `internal/runtime/funcs/registry.go`; missing mappings silently create dead APIs (current gaps include `map_len`, `string_len`, `string_slice`, `list_slice`, `int_neg`, `float_neg`, and `*_is_*_or_equal` string/float variants).
+- **Gotchas**: Renaming stdlib ports can break compiler bootstrap via `internal/compiler/utils/generated`; update `internal/compiler/utils/utils.neva` and regenerate generated exports in the same change.
+- **Common patterns**: Regenerate compiler utils with the repository CLI (`go run ../../cmd/neva ...` from `internal/compiler`) to avoid stale global `neva` binaries producing incompatible generated code.
+- **Common patterns**: When stdlib API or naming conventions change (for example `For` -> `ForEach`, `data` outport -> `res`), update `docs/style_guide.md` and `docs/qna.md` in the same change to prevent documentation drift.
+
+### Session Notes (2026-02-21, converters brainstorm)
+
+- **Language semantics**: Neva remains strictly explicit for type conversion; operators/binary expressions do not perform implicit coercion.
+- **Common patterns**: Collection conversion idiom in stdlib is target-package + `FromSource` naming (`streams.FromList`, `lists.FromStream`, `streams.FromArray`, `lists.FromArray`).
+- **Architecture insights**: Runtime conversion funcs preserve sequencing contracts (`stream<T>` emits `idx`/`last`; array-port converters iterate slots in deterministic order).
+- **Gotchas**: Conversions with non-total semantics (parsing, narrowing) should expose `err error` and rely on `?` propagation to stay idiomatic.
+
+### Session Notes (2026-02-22)
+
+- **Common patterns**: Prefer documenting conversion policy in `docs/qna.md` as "components in stdlib, not language syntax" to preserve the explicit graph model.
+- **Architecture insights**: Treat `builtin` as language/prelude boundary for primitives and compiler-coupled contracts; put policy-heavy converters in regular std packages.
+- **Architecture insights**: `Union` is explicitly analyzer-coupled; `Struct` is coupled via `#autoports` flow/desugaring conventions, so both belong to compiler-contract surface.
+- **Language semantics**: builtin `Type` (`type Type any`) is a semantic marker for intentionally heterogeneous ports (for example `Union`/`Switch`), not a distinct runtime type.
+- **Common patterns**: Keep `strconv` for canonical value conversion/parsing contracts and `fmt` for presentation/I/O formatting, even when both are deterministic.
+- **Common patterns**: `docs/qna.md` should capture stable rationale only, not open-task/status notes.
+- **Common patterns**: Go-like scalar split: total numeric casts without errors in builtin; text parsing/formatting in `std/strconv`; avoid builtin bool<->number magic.
+- **Common patterns**: Keep concrete API candidates separate from `docs/qna.md`; Q&A should contain stable rationale, not implementation drafts.
+- **Language semantics**: For strict Go parity, allow builtin `String(int)` as Unicode code-point cast; keep decimal/bool/float text formatting in `std/strconv`.
+- **Common patterns**: When addressing PR review comments, apply requested changes first, then reply to each comment in GitHub; do not resolve threads unless explicitly requested.
+- **Common patterns**: Keep collection converters in `target-package + FromSource` shape (`streams.FromDict`, `dicts.FromStream`) for consistency with existing list/stream APIs.
+- **Language semantics**: `dicts.FromStream` uses last-write-wins for duplicate keys by assigning incoming entries into the resulting dict.
+- **Gotchas**: `streams.FromDict` iterates Go maps, so output stream order is non-deterministic and should not be asserted directly in tests.
+
+### Session Notes (2026-02-23)
+
+- **Language semantics**: `bytes` is a dedicated builtin binary payload type; `string` is for text semantics.
+- **Common patterns**: Keep text/binary boundaries explicit with `bytes.FromString` / `strings.FromBytes` rather than implicit coercions.
+- **Architecture insights**: Adding a new payload primitive requires synchronized changes in IR `MsgType`, runtime `Msg` variants, backend type mapping, and stdlib/runtime extern boundaries.
+- **Common patterns**: Binary stdlib boundaries (`io`, `http`, `image`) should use `bytes` to avoid repeated `string`/`[]byte` conversions.
+- **Gotchas**: Full `go test ./...` can run very long; prioritize targeted validation for touched compiler/runtime packages plus changed `examples/*` and `e2e/*`.
+
+### Session Notes (2026-02-24)
+
+- **Common patterns**: For Go 1.26 migration, keep `go.mod` (`go` + `toolchain`) and CI `actions/setup-go` patch versions aligned to avoid toolchain skew.
+- **Common patterns**: Integrate `go fix` as a dedicated CI check (`go fix ./...` + `git diff --exit-code`) so failures clearly signal "run gofix and commit".
+- **Gotchas**: `go fix` can apply broad modernizations in one pass; run lint/tests immediately after and fix secondary lints introduced by rewrites.
+- **Language semantics**: `streams.FromString` currently emits one `string` per Unicode code point (rune semantics), not bytes or grapheme clusters.
+- **Common patterns**: Keep converter behavior contracts in both stdlib signatures and runtime func comments (order/duplication/materialization) so policy is visible at API and implementation layers.
+- **Common patterns**: When posting issue updates with code-style identifiers, use `gh ... --body-file` to avoid shell substitution on backticks.
+- **Gotchas**: `lists.FromStream` / `dicts.FromStream` remain blocking materializers and can grow memory with long streams; document this explicitly in comments/docs.
+- **Language semantics**: `bytes` has no literal/const syntax; use explicit converters (`bytes.FromString`, `strings.FromBytes`) in networks.
+- **Common patterns**: For `*.neva` edits, enforce `lower_snake_case` node aliases and verify style against `docs/style_guide.md`.
+- **Architecture insights**: `BytesMsg` is represented as `[]byte`; avoid defensive copies in runtime hot paths and treat immutability as a usage convention.
+- **Gotchas**: New e2e module manifests should use explicit language version (`0.34.0`), not shorthand aliases.
+### Session Notes (2026-02-24, numeric/bytes direction)
+
+- **Language semantics**: For numeric expansion discussions, prefer Go-style names (`int8..int64`, `uint8..uint64`, `float32/float64`) over Rust-style (`i8/u8/f32`).
+- **Language semantics**: Keep ergonomic `int`/`float` in user-facing APIs even if fixed-width families are introduced.
+- **Language semantics**: `byte` should remain an alias of `uint8`; avoid architecture-dependent `uint` semantics unless explicitly fixed and documented.
+- **Architecture insights**: Numeric-width gains are often secondary to message/container representation costs; plan #904 together with #28 (`bytes`) to realize practical low-level performance wins.
+### Session Notes (2026-02-25)
+
+- **Common patterns**: `pkg/e2e.Run` should always execute commands with an explicit per-run timeout (default 30s) rather than relying only on global `go test -timeout`.
+- **Architecture insights**: For e2e command chains (`*.test -> neva -> generated output`), cancellation must target the whole process group on Unix (`Setpgid` + group kill) to avoid orphaned child processes.
+- **Gotchas**: Test-runner interruption/timeouts can leave `neva_run_*/output` descendants alive, which users may report as “zombies” and observe as sustained CPU heat on macOS.
+
+### Session Notes (2026-02-25)
+
+- **Common patterns**: For proposal-level language discussions, cross-link new issues to historical context (e.g. `#235`) to preserve rationale continuity.
+- **Gotchas**: In `zsh`, backticks inside double-quoted `gh issue create --title` are command substitution; avoid backticks in titles or use single quotes.
+- **Architecture insights**: Error propagation is currently compiler-coupled to `:err` outports and `?` err-guard desugaring (`node:err -> out:err`), so any union-first error model must include compatibility/desugaring strategy.
+- **Language semantics**: Baseline conventions (`res` primary output, `err error` failure output) are documented and enforced across stdlib style/docs; changing error model affects both compiler checks and stdlib API contracts.
+- **Common patterns**: Separate issue framing for error topics: language-level Result-flow changes vs internal `error` representation; do not mix them in one tracker.
+- **Common patterns**: Existing discussion for making `maybe<T>` a tagged union is tracked in `#907`; link it when planning internal error-shape changes.
+- **Common patterns**: For `error` internals, decide by invalid-state prevention and std/errors API ergonomics first; treat memory/perf claims as benchmark-required because runtime `struct` and union representations differ from source-level intuition.
+- **Language semantics**: `maybe<T>` is represented as tagged union (`Some`/`None`) and union tags should use `CamelCase`.
+- **Architecture insights**: Recursion terminator must treat builtin `maybe` as recursive-wrapper to allow valid patterns like `error` chains (`... child maybe<error>`), even though `maybe` is no longer bodyless.
+- **Architecture insights**: Runtime trace concerns are now explicitly tracked as shared primitive (`#1050`) for panic diagnostics (`#595`), debugger (`#977`), and `std/errors` formatting (`#1046`); keep process semantics (`#792`) separate from diagnostics rendering.
+
+### Session Notes (2026-02-28, release workflow)
+
+- **Common patterns**: Minor language releases require bumping `pkg/version.go` (for example `0.34.0 -> 0.35.0`) and tagging with `v` prefix (`v0.35.0`).
+- **Common patterns**: Release artifacts come from `make build` and keep fixed names (`neva-{darwin,linux,windows}-{amd64,arm64}` plus `neva-linux-loong64`, `.exe` for Windows).
+- **Gotchas**: Local `golangci-lint` binaries can lag toolchain support (for example Go `1.26`); run via `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0` when needed.
+
+### Session Notes (2026-03-06, lint cleanup)
+
+- **Common patterns**: For mass `fieldalignment` cleanup, remove stale `//nolint:govet` first, then run `fieldalignment -fix` iteratively until diagnostics converge.
+- **Gotchas**: `betteralign` may not fully satisfy `govet` `fieldalignment`; prefer `golang.org/x/tools/.../fieldalignment` for authoritative fixes.
+- **Common patterns**: If `staticcheck` flags loop `break` patterns (`QF1006`), lift the condition into the `for` header instead of suppressing with `nolint`.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
@@ -301,10 +411,12 @@ The standard library provides components for all programs. Some are implemented 
 
 - **Go Idioms**:
   - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
+  - Generated functions/helpers must always have short, simple doc comments; include a tiny example when behavior is non-obvious.
   - Use `any` instead of `interface{}`.
   - TD tests: `tests := []struct{ name string ... }`
   - Test case names: `lower_snake_case`
   - KISS: simpler code > complex abstractions
+  - Runtime funcs naming: prefer `<role>Msg` for variables of type `runtime.Msg` and explicit names like `streamItemMsg`.
   - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
     - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).
 

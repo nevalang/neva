@@ -11,7 +11,7 @@ import (
 func Test(t *testing.T) {
 	// We do 100 attempts to prove that implementation is correct
 	// and order of elements is always the same.
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
 			out, _ := e2e.Run(t, []string{"run", "."})
 			require.Equal(

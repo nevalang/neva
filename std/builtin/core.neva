@@ -16,7 +16,7 @@ pub def Del(data any) ()
 
 // Lock allows to delay receiving data until a signal arrives.
 #extern(lock)
-pub def Lock<T>(sig any, data T) (data T)
+pub def Lock<T>(sig any, data T) (res T)
 
 // Gate forwards a data message only after a `true` event is received on `if`.
 //

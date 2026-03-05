@@ -136,9 +136,7 @@ func (d *Desugarer) desugarFile(
 		desugaredEntities[entityName] = entityResult.entity
 
 		// insert virtual entities, created by desugaring of the entity
-		for name, entityToInsert := range entityResult.insert {
-			desugaredEntities[name] = entityToInsert
-		}
+		maps.Copy(desugaredEntities, entityResult.insert)
 	}
 
 	desugaredImports := maps.Clone(file.Imports)
@@ -158,10 +156,9 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
-	entity src.Entity
 	insert map[string]src.Entity
+	entity src.Entity
 }
 
 func (d *Desugarer) desugarEntity(

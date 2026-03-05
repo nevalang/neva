@@ -27,13 +27,12 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	return tmpl.Execute(w, data)
 }
 
-//nolint:govet // fieldalignment: data mirrors JSON layout.
 type nodeData struct {
+	Ports map[string]portList `json:"ports"`
+	Ref   string              `json:"ref"`
 	X     int                 `json:"x"`
 	Y     int                 `json:"y"`
 	Z     int                 `json:"z"`
-	Ref   string              `json:"ref"`
-	Ports map[string]portList `json:"ports"`
 }
 
 type portList map[string]portData
@@ -69,8 +68,8 @@ func prepareData(prog *ir.Program) (templateData, error) {
 	// Helper to normalize node names
 	getNodeName := func(path string) string {
 		for _, suffix := range []string{"/in", "/out"} {
-			if strings.HasSuffix(path, suffix) {
-				return strings.TrimSuffix(path, suffix)
+			if before, ok := strings.CutSuffix(path, suffix); ok {
+				return before
 			}
 		}
 		return path

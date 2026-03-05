@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/typesystem"
@@ -10,8 +11,8 @@ import (
 )
 
 type foundInterface struct {
-	iface    src.Interface
 	location core.Location
+	iface    src.Interface
 }
 
 func (a Analyzer) analyzeNodes(
@@ -31,6 +32,13 @@ func (a Analyzer) analyzeNodes(
 	hasErrGuard := false
 
 	for nodeName, node := range nodes {
+		if isMissingNodeName(nodeName) {
+			return nil, nil, false, &compiler.Error{
+				Message: "node name is required",
+				Meta:    &node.Meta,
+			}
+		}
+
 		if node.ErrGuard {
 			hasErrGuard = true
 		}
@@ -55,6 +63,12 @@ func (a Analyzer) analyzeNodes(
 	}
 
 	return analyzedNodes, nodesInterfaces, hasErrGuard, nil
+}
+
+// Parser may store unnamed top-level nodes as placeholder names.
+// Analyzer treats them as semantic validation errors for users.
+func isMissingNodeName(nodeName string) bool {
+	return strings.HasPrefix(nodeName, src.MissingNodeNamePrefix)
 }
 
 //nolint:gocyclo // Analyzer node handling is a high-branch routine.
@@ -778,11 +792,10 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 	return nodeRefs
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type nodeRefInNet struct {
-	isOutgoing bool
-	port       string
 	arrayIdx   *uint8
+	port       string
+	isOutgoing bool
 }
 
 // nodeUsageConstraints captures incoming produced types and outgoing expected types per port.
@@ -1068,11 +1081,9 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 }
 
 type receiverSenderPair struct {
-	portAddr src.PortAddr
-	senders  []src.ConnectionSender
-	// prevChainLink preserves the sender list from the parent link in a chain.
-	// Selector senders in child links (".field") use it to infer their base type.
+	senders       []src.ConnectionSender
 	prevChainLink []src.ConnectionSender
+	portAddr      src.PortAddr
 }
 
 // collectReceiverSenderPairsRec recursively appends receiver/sender pairs.
