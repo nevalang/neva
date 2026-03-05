@@ -1,0 +1,30 @@
+// Benchmarks boolean logical operators.
+// Covers Not, And, and Or.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_bool streams.Map<int, bool>{BoolLogical}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_bool -> wait -> :stop
+}
+
+def BoolLogical(data int) (res bool) {
+	mod Mod
+	eq Eq<int>
+	not Not
+	and And
+	or Or
+	---
+	:data -> [mod:left, 2 -> mod:right]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> [not:data, and:left, or:right]
+	not -> and:right
+	and -> or:left
+	or -> :res
+}
