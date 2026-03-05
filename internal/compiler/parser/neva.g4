@@ -73,7 +73,7 @@ constLit:
 	| listLit
 	| structLit;
 bool: TRUE | FALSE;
-unionLit: entityRef DCOLON IDENTIFIER (LPAREN constLit RPAREN)?;
+unionLit: typeInstExpr DCOLON IDENTIFIER (LPAREN constLit RPAREN)?;
 listLit: LBRACK NEWLINE* listItems? RBRACK;
 listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
 compositeItem: entityRef | constLit;

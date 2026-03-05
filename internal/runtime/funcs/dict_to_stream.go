@@ -30,24 +30,21 @@ func (dictToStream) Create(
 			}
 
 			dict := dataMsg.Dict()
-			// Go map iteration order is intentionally non-deterministic.
-			size := len(dict)
-
-			idx := 0
+			if !resOut.Send(ctx, streamOpen()) {
+				return
+			}
 			for key, valueMsg := range dict {
 				entryMsg := runtime.NewStructMsg([]runtime.StructField{
 					runtime.NewStructField("key", runtime.NewStringMsg(key)),
 					runtime.NewStructField("value", valueMsg),
 				})
 
-				if !resOut.Send(
-					ctx,
-					streamItem(entryMsg, int64(idx), idx == size-1),
-				) {
+				if !resOut.Send(ctx, streamData(entryMsg)) {
 					return
 				}
-
-				idx++
+			}
+			if !resOut.Send(ctx, streamClose()) {
+				return
 			}
 		}
 	}, nil

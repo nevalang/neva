@@ -6,17 +6,27 @@ pub interface IReducer<T, Y>(left T, right T) (res Y)
 // Reduce applies a reduction component to a stream of messages, accumulating the result.
 // It takes an initial value and a stream of data, and produces a single result.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
+    del_open Del
+    del_else Del
     reducer IReducer<T, Y>
     acc Accumulate<Y>
+    sw Switch<stream<T>>
     ---
     :init -> acc:init
-    :data -> [.data -> reducer:right, .last -> acc:last]
+    :data -> [
+        sw:data,
+        stream<T>::Open -> sw:case[0],
+        stream<T>::Close -> sw:case[1] -> true -> acc:flush,
+        stream<T>::Data -> sw:case[2] -> reducer:right
+    ]
+    sw:case[0] -> del_open
+    sw:else -> del_else
     acc:cur -> reducer:left
-    reducer -> acc:upd
     acc:res -> :res
+    reducer -> acc:upd
 }
 
 // Accumulate maintains the current state of the reduction.
-// It updates its value with each new input and outputs the final result when last is true.
+// It updates its value with each new input and outputs the current result on flush.
 #extern(accumulator)
-def Accumulate<T>(init T, upd T, last bool) (cur T, res T)
+def Accumulate<T>(init T, upd T, flush any) (cur T, res T)

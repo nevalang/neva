@@ -149,8 +149,14 @@ func (s SubtypeChecker) Check(
 			if exprTagType == nil && constrTagType == nil {
 				continue
 			}
-			// if one has type and other doesn't, they're incompatible
-			if (exprTagType == nil) != (constrTagType == nil) {
+			// Allow tag-only expression element to match typed constraint element.
+			// This is needed for pattern-like union literals (for example stream<T>::Data)
+			// where sender checks only the tag.
+			if exprTagType == nil && constrTagType != nil {
+				continue
+			}
+			// Typed expression element cannot match tag-only constraint element.
+			if exprTagType != nil && constrTagType == nil {
 				return fmt.Errorf("%w: for tag %s: one has type, other doesn't", ErrUnions, tag)
 			}
 			// both have types, check compatibility

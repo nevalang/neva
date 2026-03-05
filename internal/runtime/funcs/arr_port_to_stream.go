@@ -29,21 +29,23 @@ func (arrayPortToStream) Create(
 		l := portIn.Len()
 
 		for {
+			if !resOut.Send(ctx, streamOpen()) {
+				return
+			}
+
 			for idx := range l {
 				msg, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
 				}
 
-				item := streamItem(
-					msg,
-					int64(idx),
-					idx == l-1,
-				)
-
-				if !resOut.Send(ctx, item) {
+				if !resOut.Send(ctx, streamData(msg)) {
 					return
 				}
+			}
+
+			if !resOut.Send(ctx, streamClose()) {
+				return
 			}
 		}
 	}, nil

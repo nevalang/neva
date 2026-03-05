@@ -1,27 +1,38 @@
-import { @:lists }
-
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
-// Note that the resulting stream will have its elements re-indexed to be continuous.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
     split Split<T>{predicate IPredicate<T>}
-    s2l lists.FromStream<T>
-    l2s FromList<T>
+    del Del
     ---
     :data -> split
-    split:then -> s2l -> l2s -> :res
+    split:then -> :res
+    split:else -> del
 }
 
 // Split splits a stream into two streams based on a predicate.
-// Notice that it does not modifies stream item indexes and last flag.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-    cond Cond<stream<T>>
+    cond_data Cond<stream<T>>
+    cond_pred Cond<stream<T>>
+    fan_non_data FanOut<stream<T>>
+    is_data IsData<T>
+    unwrap UnwrapData<T>
+    pass_then_route Pass<stream<T>>
+    pass_else_route Pass<stream<T>>
     predicate IPredicate<T>
     ---
-    :data -> [cond:data, .data -> predicate]
-    predicate -> cond:if
-    cond:then -> :then
-    cond:else -> :else
+    :data -> [cond_data:data, is_data]
+    is_data -> cond_data:if
+
+    cond_data:then -> [cond_pred:data, unwrap]
+    unwrap -> predicate
+    predicate -> cond_pred:if
+
+    cond_pred:then -> pass_then_route
+    cond_pred:else -> pass_else_route
+
+    cond_data:else -> fan_non_data
+    [pass_then_route, fan_non_data:data[0]] -> :then
+    [pass_else_route, fan_non_data:data[1]] -> :else
 }
 
 // IPredicate represents a logic that determines if a value satisfies a condition.

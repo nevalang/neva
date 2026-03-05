@@ -1,4 +1,4 @@
-import { io, image, fmt, runtime }
+import { io, image, fmt, runtime, streams }
 
 def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
@@ -20,20 +20,9 @@ def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 	cb -> :color
 }
 
-def NewStream(p image.Pixel) (s stream<image.Pixel>) {
-        sb Struct<stream<image.Pixel>>
-	---
-	:p -> [
-		sb:data,
-		0 -> sb:idx,
-		true -> sb:last
-	]
-	sb -> :s
-}
-
 def Main(start any) (stop any) {
-	new image.New, encode image.Encode
-	newPixel NewPixel, newColor NewColor, newStream NewStream,
+	new image.New, encode image.Encode, one streams.Just<image.Pixel>
+	newPixel NewPixel, newColor NewColor,
 	writeAll io.WriteAll, printErr fmt.Println
 	panic runtime.Panic
 	---
@@ -43,8 +32,8 @@ def Main(start any) (stop any) {
 		'minimal.png' -> writeAll:filename
 	]
 	newColor -> newPixel:c
-	newPixel -> newStream:p
-	newStream:s -> new
+	newPixel -> one:data
+	one:res -> new
 	new:img -> encode:img
 	encode:res -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr
