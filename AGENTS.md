@@ -310,6 +310,12 @@ Follow these instructions.
 - **Common patterns**: Minor language releases require bumping `pkg/version.go` (for example `0.34.0 -> 0.35.0`) and tagging with `v` prefix (`v0.35.0`).
 - **Common patterns**: Release artifacts come from `make build` and keep fixed names (`neva-{darwin,linux,windows}-{amd64,arm64}` plus `neva-linux-loong64`, `.exe` for Windows).
 - **Gotchas**: Local `golangci-lint` binaries can lag toolchain support (for example Go `1.26`); run via `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0` when needed.
+
+### Session Notes (2026-03-06, lint cleanup)
+
+- **Common patterns**: For mass `fieldalignment` cleanup, remove stale `//nolint:govet` first, then run `fieldalignment -fix` iteratively until diagnostics converge.
+- **Gotchas**: `betteralign` may not fully satisfy `govet` `fieldalignment`; prefer `golang.org/x/tools/.../fieldalignment` for authoritative fixes.
+- **Common patterns**: If `staticcheck` flags loop `break` patterns (`QF1006`), lift the condition into the `for` header instead of suppressing with `nolint`.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

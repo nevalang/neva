@@ -298,9 +298,9 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
-		idx uint8
+	type arrPortSlot struct {
 		ch  string
+		idx uint8
 	}
 
 	for _, call := range funcs {

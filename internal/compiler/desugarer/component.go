@@ -7,10 +7,9 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type handleComponentResult struct {
-	desugaredFlow   src.Component
 	virtualEntities map[string]src.Entity
+	desugaredFlow   src.Component
 }
 
 func (d *Desugarer) desugarComponent(

@@ -6,11 +6,10 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Error struct {
-	Message string
 	Meta    *core.Meta
 	child   *Error
+	Message string
 }
 
 func (e Error) Wrap(child *Error) *Error {

@@ -17,12 +17,11 @@ type Compiler struct {
 	be Backend
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type CompilerInput struct {
 	MainPkgPath   string
 	OutputPath    string
-	EmitTraceFile bool
 	Mode          Mode
+	EmitTraceFile bool
 }
 
 type Mode string

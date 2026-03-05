@@ -13,16 +13,16 @@ import (
 // Build represents all the information in source code, that must be compiled.
 // User usually don't interacts with this abstraction, but it's important for compiler.
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type Build struct {
-	EntryModRef core.ModuleRef            `json:"entryModRef"`
 	Modules     map[core.ModuleRef]Module `json:"modules,omitempty"`
+	EntryModRef core.ModuleRef            `json:"entryModRef"`
 }
 
 // Module is unit of distribution.
 type Module struct {
-	Manifest ModuleManifest     `json:"manifest"`
 	Packages map[string]Package `json:"packages,omitempty"`
+	Manifest ModuleManifest     `json:"manifest"`
 }
 
 func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
@@ -39,10 +39,9 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 	return entity, filename, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type ModuleManifest struct {
-	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
 	Deps            map[string]core.ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
+	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
 }
 
 type Package map[string]File
@@ -92,14 +91,13 @@ type Import struct {
 	Meta    core.Meta `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Entity struct {
-	IsPublic  bool        `json:"exported,omitempty"`
 	Kind      EntityKind  `json:"kind,omitempty"`
-	Const     Const       `json:"const"`
 	Type      ts.Def      `json:"type"`
+	Component []Component `json:"component,omitempty"`
 	Interface Interface   `json:"interface"`
-	Component []Component `json:"component,omitempty"` // Non-overloaded components are represented as slice of one element.
+	Const     Const       `json:"const"`
+	IsPublic  bool        `json:"exported,omitempty"`
 }
 
 func (e Entity) Meta() *core.Meta {
@@ -128,13 +126,13 @@ const (
 
 // Component is unit of computation.
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type Component struct {
-	Interface  `json:"interface"`
 	Directives map[Directive]string `json:"directives,omitempty"`
 	Nodes      map[string]Node      `json:"nodes,omitempty"`
 	Net        []Connection         `json:"net,omitempty"`
-	Meta       core.Meta            `json:"meta"`
+	Interface  `json:"interface"`
+	Meta       core.Meta `json:"meta"`
 }
 
 // Directive is an explicit instruction for compiler.
@@ -149,7 +147,7 @@ type Interface struct {
 
 // TODO should we use it to typesystem package?
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
 	Meta   core.Meta  `json:"meta"`
@@ -178,15 +176,14 @@ func (t TypeParams) String() string {
 	return s.String() + ">"
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Node struct {
 	Directives    map[Directive]string `json:"directives,omitempty"`
-	EntityRef     core.EntityRef       `json:"entityRef"`
+	DIArgs        map[string]Node      `json:"diArgs,omitempty"`
+	OverloadIndex *int                 `json:"overloadIndex,omitempty"`
 	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
-	ErrGuard      bool                 `json:"errGuard,omitempty"`      // ErrGuard explains if node is used with `?` operator.
-	DIArgs        map[string]Node      `json:"diArgs,omitempty"`        // Dependency Injection.
-	OverloadIndex *int                 `json:"overloadIndex,omitempty"` // Only for overloaded components.
+	EntityRef     core.EntityRef       `json:"entityRef"`
 	Meta          core.Meta            `json:"meta"`
+	ErrGuard      bool                 `json:"errGuard,omitempty"`
 }
 
 const MissingNodeNamePrefix = "__missing_node_name__"
@@ -233,15 +230,14 @@ func (c ConstValue) String() string {
 	return c.Message.String()
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type MsgLiteral struct {
 	Bool         *bool                 `json:"bool,omitempty"`
 	Int          *int                  `json:"int,omitempty"`
 	Float        *float64              `json:"float,omitempty"`
 	Str          *string               `json:"str,omitempty"`
-	List         []ConstValue          `json:"vec,omitempty"`
 	DictOrStruct map[string]ConstValue `json:"dict,omitempty"`
 	Union        *UnionLiteral         `json:"union,omitempty"`
+	List         []ConstValue          `json:"vec,omitempty"`
 	Meta         core.Meta             `json:"meta"`
 }
 
@@ -289,14 +285,12 @@ type IO struct {
 	Meta core.Meta       `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Port struct {
 	TypeExpr ts.Expr   `json:"typeExpr"`
-	IsArray  bool      `json:"isArray,omitempty"`
 	Meta     core.Meta `json:"meta"`
+	IsArray  bool      `json:"isArray,omitempty"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Connection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
@@ -309,11 +303,9 @@ type ConnectionReceiver struct {
 	Meta              core.Meta   `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type ConnectionSender struct {
-	PortAddr *PortAddr `json:"portAddr,omitempty"`
-	Const    *Const    `json:"const,omitempty"`
-
+	PortAddr       *PortAddr `json:"portAddr,omitempty"`
+	Const          *Const    `json:"const,omitempty"`
 	StructSelector []string  `json:"selector,omitempty"`
 	Meta           core.Meta `json:"meta"`
 }

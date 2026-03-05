@@ -15,13 +15,13 @@ import (
 // Note: some cases are hard to test this way because desugarer depends on Scope object
 // which is normally passed from top-level functions in this package.
 func TestDesugarNetwork(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		name           string
-		iface          src.Interface
+	tests := []struct {
 		mockScope      func(scope *MockScopeMockRecorder)
-		net            []src.Connection
 		nodes          map[string]src.Node
+		name           string
 		expectedResult handleNetworkResult
+		net            []src.Connection
+		iface          src.Interface
 	}{
 		{
 			// node1:out -> node2:in

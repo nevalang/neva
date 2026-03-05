@@ -27,13 +27,12 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	return tmpl.Execute(w, data)
 }
 
-//nolint:govet // fieldalignment: data mirrors JSON layout.
 type nodeData struct {
+	Ports map[string]portList `json:"ports"`
+	Ref   string              `json:"ref"`
 	X     int                 `json:"x"`
 	Y     int                 `json:"y"`
 	Z     int                 `json:"z"`
-	Ref   string              `json:"ref"`
-	Ports map[string]portList `json:"ports"`
 }
 
 type portList map[string]portData
