@@ -7,12 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	backendgolang "github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/ir"
+	"github.com/nevalang/neva/pkg/golang"
 )
 
 type Backend struct {
-	golang golang.Backend
+	golang backendgolang.Backend
 }
 
 func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error {
@@ -49,11 +50,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 	// #nosec G204 -- command args are constructed internally from known values
 	cmd := exec.Command(
 		"go",
-		"build",
-		"-ldflags", "-s -w", // strip debug information
-		"-o",
-		filepath.Join(output, fileName),
-		".",
+		golang.ReleaseBuildArgs(filepath.Join(output, fileName), ".")...,
 	)
 	cmd.Dir = gomodule
 	cmd.Stdout = os.Stdout
@@ -62,7 +59,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 	return cmd.Run()
 }
 
-func NewBackend(golangBackend golang.Backend) Backend {
+func NewBackend(golangBackend backendgolang.Backend) Backend {
 	return Backend{
 		golang: golangBackend,
 	}
