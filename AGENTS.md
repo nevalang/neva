@@ -316,6 +316,11 @@ Follow these instructions.
 - **Common patterns**: For mass `fieldalignment` cleanup, remove stale `//nolint:govet` first, then run `fieldalignment -fix` iteratively until diagnostics converge.
 - **Gotchas**: `betteralign` may not fully satisfy `govet` `fieldalignment`; prefer `golang.org/x/tools/.../fieldalignment` for authoritative fixes.
 - **Common patterns**: If `staticcheck` flags loop `break` patterns (`QF1006`), lift the condition into the `for` header instead of suppressing with `nolint`.
+
+### Session Notes (2026-03-08)
+
+- **Common patterns**: Keep build-flags/reproducibility updates in a focused PR; move cross-layer compiler/runtime optimization experiments into dedicated follow-up issues.
+- **Architecture insights**: Runtime funcs minimization via `IR ref -> registry entry -> Go file deps` can shrink binaries, but should be tracked as separate design work to avoid high-review-complexity backend diffs.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
