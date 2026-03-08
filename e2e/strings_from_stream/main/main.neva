@@ -8,18 +8,17 @@ import {
 def Main(start any) (stop any) {
         println fmt.Println<string>
         split strings.Split
-        join strings.Join
+        from_stream strings.FromStream
         panic runtime.Panic
         list_to_stream streams.FromList<string>
         ---
         :start -> [
                 'a,b,c' -> split:data,
-                ',' -> split:delim,
-                ', ' -> join:sep
+                ',' -> split:delim
         ]
         split -> list_to_stream:data
-        list_to_stream -> join:data
-        join -> println:data
+        list_to_stream -> from_stream:data
+        from_stream -> println:data
         println:res -> :stop
         println:err -> panic
 }

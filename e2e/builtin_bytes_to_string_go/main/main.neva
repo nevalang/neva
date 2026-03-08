@@ -1,0 +1,15 @@
+import {
+	fmt
+	runtime
+}
+
+def Main(start any) (stop any) {
+	to_bytes Bytes
+	to_string String
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> 'Hello, bytes!' -> to_bytes -> to_string -> println:data
+	println:res -> :stop
+	println:err -> panic
+}

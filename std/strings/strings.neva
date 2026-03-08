@@ -1,7 +1,10 @@
 #extern(strings_join_list)
 pub def Join(data list<string>, sep string) (res string)
-#extern(strings_join_stream)
-pub def Join(data stream<string>, sep string) (res string)
+
+// FromStream materializes a stream of strings into a single string.
+// It blocks until the stream item with `last=true` arrives.
+#extern(strings_from_stream)
+pub def FromStream(data stream<string>) (res string)
 
 #extern(strings_split)
 pub def Split(data string, delim string) (res list<string>)

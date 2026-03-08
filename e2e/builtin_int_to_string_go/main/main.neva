@@ -1,0 +1,14 @@
+import {
+	fmt
+	runtime
+}
+
+def Main(start any) (stop any) {
+	to_string String
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> 42 -> to_string -> println:data
+	println:res -> :stop
+	println:err -> panic
+}
