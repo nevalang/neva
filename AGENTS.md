@@ -321,6 +321,28 @@ Follow these instructions.
 
 - **Gotchas**: A 30s default timeout in `pkg/e2e.Run` can cause false e2e failures under heavy parallel `go test ./...` load.
 - **Common patterns**: Keep e2e per-run timeout practical (currently 60s default) to reduce timeout flakiness on busy CI/local machines.
+
+### Session Notes (2026-02-28, release workflow)
+
+- **Common patterns**: Minor language releases require bumping `pkg/version.go` (for example `0.34.0 -> 0.35.0`) and tagging with `v` prefix (`v0.35.0`).
+- **Common patterns**: Release artifacts come from `make build` and keep fixed names (`neva-{darwin,linux,windows}-{amd64,arm64}` plus `neva-linux-loong64`, `.exe` for Windows).
+- **Gotchas**: Local `golangci-lint` binaries can lag toolchain support (for example Go `1.26`); run via `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0` when needed.
+
+### Session Notes (2026-03-06, lint cleanup)
+
+- **Common patterns**: For mass `fieldalignment` cleanup, remove stale `//nolint:govet` first, then run `fieldalignment -fix` iteratively until diagnostics converge.
+- **Gotchas**: `betteralign` may not fully satisfy `govet` `fieldalignment`; prefer `golang.org/x/tools/.../fieldalignment` for authoritative fixes.
+- **Common patterns**: If `staticcheck` flags loop `break` patterns (`QF1006`), lift the condition into the `for` header instead of suppressing with `nolint`.
+
+### Session Notes (2026-03-08)
+
+- **Common patterns**: Keep build-flags/reproducibility updates in a focused PR; move cross-layer compiler/runtime optimization experiments into dedicated follow-up issues.
+- **Architecture insights**: Runtime funcs minimization via `IR ref -> registry entry -> Go file deps` can shrink binaries, but should be tracked as separate design work to avoid high-review-complexity backend diffs.
+
+### Session Notes (2026-03-09)
+
+- **Gotchas**: `strings.Join` now accepts `list<string>` only; wiring `streams.FromList<T>` output directly into `Join:data` causes analyzer type mismatch (`streams.Item<string>` vs `list<string>`).
+- **Common patterns**: When converting list->stream in examples, use stream-native consumers (for example `strings.FromStream`) or keep list-native pipelines direct (`split -> join`).
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.

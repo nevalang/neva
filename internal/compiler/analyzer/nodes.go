@@ -11,8 +11,8 @@ import (
 )
 
 type foundInterface struct {
-	iface    src.Interface
 	location core.Location
+	iface    src.Interface
 }
 
 func (a Analyzer) analyzeNodes(
@@ -792,11 +792,10 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 	return nodeRefs
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type nodeRefInNet struct {
-	isOutgoing bool
-	port       string
 	arrayIdx   *uint8
+	port       string
+	isOutgoing bool
 }
 
 // nodeUsageConstraints captures incoming produced types and outgoing expected types per port.
@@ -1082,11 +1081,9 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 }
 
 type receiverSenderPair struct {
-	portAddr src.PortAddr
-	senders  []src.ConnectionSender
-	// prevChainLink preserves the sender list from the parent link in a chain.
-	// Selector senders in child links (".field") use it to infer their base type.
+	senders       []src.ConnectionSender
 	prevChainLink []src.ConnectionSender
+	portAddr      src.PortAddr
 }
 
 // collectReceiverSenderPairsRec recursively appends receiver/sender pairs.

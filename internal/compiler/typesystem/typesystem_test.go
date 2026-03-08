@@ -14,9 +14,9 @@ var h ts.Helper
 func TestLiteralExpr_Empty(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct { //nolint:govet // fieldalignment
-		name string
+	tests := []struct {
 		lit  ts.LitExpr
+		name string
 		want bool
 	}{
 		{
@@ -47,9 +47,9 @@ func TestLiteralExpr_Empty(t *testing.T) {
 func TestLiteralExpr_Type(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct { //nolint:govet // fieldalignment
-		name string
+	tests := []struct {
 		lit  ts.LitExpr
+		name string
 		want ts.LiteralType
 	}{
 		{
@@ -80,8 +80,8 @@ func TestLiteralExpr_Type(t *testing.T) {
 func TestDef_String(t *testing.T) {
 	tests := []struct {
 		name string
-		def  ts.Def
 		want string
+		def  ts.Def
 	}{
 		{
 			name: "<T_int>_=_list<T>",
@@ -106,8 +106,8 @@ func TestExpr_String(t *testing.T) {
 
 	tests := []struct {
 		name string
-		expr ts.Expr
 		want string
+		expr ts.Expr
 	}{
 		// insts
 		{

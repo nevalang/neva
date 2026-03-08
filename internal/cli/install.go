@@ -11,8 +11,9 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	backendgolang "github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
+	"github.com/nevalang/neva/pkg/golang"
 )
 
 func newInstallCmd(
@@ -82,7 +83,7 @@ func newInstallCmd(
 				&desugarer,
 				analyzer,
 				irgen,
-				golang.NewBackend("", false),
+				backendgolang.NewBackend("", false),
 			)
 
 			if _, err := compilerToGo.Compile(cliCtx.Context, compiler.CompilerInput{
@@ -128,7 +129,10 @@ func newInstallCmd(
 				}
 			}()
 
-			cmd := exec.Command("go", "build", "-ldflags", "-s -w", "-o", targetPath, ".")
+			// Keep build flags centralized so CLI/install and compiler backends stay in sync.
+			// This avoids silent drift in artifact reproducibility/size behavior over time.
+			// #nosec G204 -- command args are constructed internally from known values
+			cmd := exec.Command("go", golang.ReleaseBuildArgs(targetPath, ".")...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 

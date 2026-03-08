@@ -838,10 +838,11 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
+		intVal := int(parsedInt)
 		if constVal.MINUS() != nil {
-			parsedInt = -parsedInt
+			intVal = -intVal
 		}
-		msg.Int = new(int(parsedInt))
+		msg.Int = &intVal
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -996,11 +997,11 @@ func (s *treeShapeListener) parseTypeDef(
 ) (src.Entity, *compiler.Error) {
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		v, err := s.parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := s.parseTypeExpr(actx.TypeExpr())
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = new(v)
+		body = &typeExpr
 	}
 
 	v, err := s.parseTypeParams(actx.TypeParams())

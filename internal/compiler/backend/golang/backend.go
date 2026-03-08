@@ -298,9 +298,9 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
-		idx uint8
+	type arrPortSlot struct {
 		ch  string
+		idx uint8
 	}
 
 	for _, call := range funcs {
@@ -460,7 +460,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeDict:
 		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(new(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}
@@ -470,7 +471,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeStruct:
 		fields := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(new(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}

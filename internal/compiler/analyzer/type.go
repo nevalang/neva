@@ -40,7 +40,7 @@ func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDef
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *compiler.Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
-		meta := expr.Meta //nolint:forcetypeassert
+		meta := expr.Meta
 		return ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
 			Meta:    &meta,

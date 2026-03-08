@@ -18,11 +18,10 @@ import (
 // Option configures Run behavior.
 type Option func(*config)
 
-//nolint:govet // fieldalignment: simple options struct.
 type config struct {
 	stdin        string
-	expectedCode int
 	wd           string
+	expectedCode int
 	timeout      time.Duration
 }
 

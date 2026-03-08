@@ -12,15 +12,15 @@ import (
 func TestCompatChecker_Check(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
-	tests := []struct { //nolint:govet // fieldalignment
-		name           string
-		subType        ts.Expr
-		subtypeTrace   ts.Trace
-		superType      ts.Expr
-		supertypeTrace ts.Trace
+	tests := []struct {
+		wantErr        error
 		scope          TestScope
 		terminator     func(*MockrecursionTerminatorMockRecorder)
-		wantErr        error
+		name           string
+		subtypeTrace   ts.Trace
+		supertypeTrace ts.Trace
+		subType        ts.Expr
+		superType      ts.Expr
 	}{
 		//  kinds
 		{

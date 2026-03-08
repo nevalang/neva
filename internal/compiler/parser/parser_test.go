@@ -168,10 +168,10 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "const ref in chain",
@@ -339,10 +339,10 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "simple union",
@@ -402,10 +402,10 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "union with value",
@@ -633,10 +633,10 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 }
 
 func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "direct tag-only",
