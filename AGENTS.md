@@ -321,6 +321,14 @@ Follow these instructions.
 
 - **Common patterns**: Keep build-flags/reproducibility updates in a focused PR; move cross-layer compiler/runtime optimization experiments into dedicated follow-up issues.
 - **Architecture insights**: Runtime funcs minimization via `IR ref -> registry entry -> Go file deps` can shrink binaries, but should be tracked as separate design work to avoid high-review-complexity backend diffs.
+
+### Session Notes (2026-03-09, vuln remediation)
+
+- **Common patterns**: For security sweeps, run `golangci-lint` + `go test -count=1 -p 1 ./...` + `govulncheck -json ./...` and summarize findings by `called/imported/required`.
+- **Common patterns**: Keep Go patch levels aligned across `go.mod` (`toolchain`) and CI `actions/setup-go`; stdlib CVEs are often fixed by patch bump only (for example `go1.26.0 -> go1.26.1`).
+- **Common patterns**: Upgrading `github.com/go-git/go-git/v5` to current stable (for example `v5.16.5`) also refreshes transitive `x/crypto`/`x/net` and can clear multiple GOVULN findings in one move.
+- **Gotchas**: Full e2e/examples test runs can mutate fixture files under `e2e/cli/*` and create `e2e/io_bytes_roundtrip/bytes_roundtrip.txt`; avoid staging these artifacts in dependency/security PRs unless explicitly intended.
+- **Architecture insights**: Repository-local automation can be packaged as a skill at `.agent/skills/<name>/SKILL.md` with bundled scripts for repeatable audit workflows.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
