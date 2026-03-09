@@ -12,45 +12,75 @@ Use this skill to run a repeatable repository security audit that combines:
 - runtime validation (`go test`)
 - dependency and standard-library CVE analysis (`govulncheck`)
 
-The bundled script writes raw logs and a compact summary to `.agent/reports/`.
-
-## Inputs
-
-- `repo`: repository path (default `.`)
-- `out_dir`: output directory for logs/reports (default `<repo>/.agent/reports`)
+This skill requires `golangci-lint`, `govulncheck`, and `jq` to be available in PATH.
 
 ## Quick Start
 
-- `bash .agent/skills/vuln-scan/scripts/run_vuln_scan.sh .`
-- `bash .agent/skills/vuln-scan/scripts/run_vuln_scan.sh . .agent/reports`
+```bash
+# Install required tools
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+go install golang.org/x/vuln/cmd/govulncheck@latest
+
+# Run scan
+golangci-lint run --timeout=4m ./...
+go test -count=1 -p 1 ./...
+govulncheck -json ./... | tee govulncheck.json
+
+# Summarize findings with jq
+jq -s '
+  def finding_class($f):
+    if ([$f.trace[]?.module] | index("github.com/nevalang/neva")) != null then "called"
+    elif ([$f.trace[]? | select(has("package"))] | length) > 0 then "imported"
+    else "required"
+    end;
+  (map(select(has("osv")) | .osv) | INDEX(.id)) as $osvmap |
+  (map(select(has("finding")) | .finding) | group_by(.osv) |
+    map({
+      id: .[0].osv,
+      class: (if (map(finding_class(.)) | index("called")) != null then "called" elif (map(finding_class(.)) | index("imported")) != null then "imported" else "required" end),
+      fixed_version: .[0].fixed_version,
+      found_modules: ([.[].trace[0].module] | unique),
+      summary: ($osvmap[.[0].osv].summary // "")
+    })
+  )
+' govulncheck.json > govuln-summary.json
+
+# Report reachable vulnerabilities
+jq -r '.[] | select(.class == "called") | "- \(.id) | fixed: \(.fixed_version) | module(s): \(.found_modules | join(",")) | \(.summary)"' govuln-summary.json
+```
+
+## Required Tools
+
+- `golangci-lint` v2+
+- `govulncheck` (x/vuln)
+- `jq` (for JSON processing)
 
 ## Workflow
 
-1. Ensure scanner binaries are available.
-   - Installs `govulncheck` and `golangci-lint v2` if missing.
-2. Run static checks.
-   - Executes `golangci-lint run --timeout=4m ./...`.
-3. Run tests.
-   - Executes `go test -count=1 -p 1 ./...`.
-4. Run CVE scan.
-   - Executes `govulncheck -json ./...`.
-5. Summarize findings.
-   - Classifies vulnerabilities into `called`, `imported`, `required`.
-   - Emits a concise text summary with reachable (`called`) vulnerabilities.
+1. Run static checks:
+   ```bash
+   golangci-lint run --timeout=4m ./...
+   ```
 
-## Outputs
+2. Run tests:
+   ```bash
+   go test -count=1 -p 1 ./...
+   ```
 
-The script emits timestamped files:
-- `golangci-lint-<ts>.log`
-- `go-test-<ts>.log`
-- `govulncheck-<ts>.json`
-- `govuln-summary-<ts>.json`
-- `vuln-summary-<ts>.txt`
+3. Run CVE scan:
+   ```bash
+   govulncheck -json ./...
+   ```
+
+4. Process results:
+   - Classify vulnerabilities into `called`, `imported`, `required`
+   - Extract reachable (`called`) vulnerabilities
+   - Generate human-readable summary
 
 ## Exit Behavior
 
-The script exits non-zero when any of the following is true:
-- lint failed
-- tests failed
-- `govulncheck` command failed
-- at least one `called` vulnerability was found
+Exit non-zero when:
+- lint fails
+- tests fail
+- `govulncheck` command fails
+- at least one `called` vulnerability is found
