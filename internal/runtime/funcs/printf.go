@@ -92,17 +92,17 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 		if tpl[i] == '$' {
 			// Attempt to read an argument index after the '$'
 			j := i + 1
-			argIndexStr := ""
+			var argIndexStr strings.Builder
 			for j < len(tpl) && tpl[j] >= '0' && tpl[j] <= '9' {
-				argIndexStr += string(tpl[j])
+				argIndexStr.WriteString(string(tpl[j]))
 				j++
 			}
 
-			if argIndexStr != "" {
-				argIndex, err := strconv.Atoi(argIndexStr)
+			if argIndexStr.String() != "" {
+				argIndex, err := strconv.Atoi(argIndexStr.String())
 				if err != nil {
 					// Handle the error if the conversion fails
-					return "", fmt.Errorf("invalid placeholder %s: %w", argIndexStr, err)
+					return "", fmt.Errorf("invalid placeholder %s: %w", argIndexStr.String(), err)
 				}
 
 				if argIndex < 0 || argIndex >= len(args) {
