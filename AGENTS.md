@@ -75,6 +75,7 @@ high-signal constraints:
   - `internal/runtime/funcs/**`: stdlib + `internal/runtime`
 - Prefer the repo-pinned linter command when local binary is stale:
   `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run ./...`
+- Add doc comments for new Go functions/types (including unexported helpers).
 
 ### Neva (`*.neva`)
 
