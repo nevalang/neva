@@ -133,6 +133,12 @@ func New(parser ManifestParser) (Builder, error) {
 		return Builder{}, err
 	}
 
+	release, err := acquireLockFile()
+	if err != nil {
+		return Builder{}, fmt.Errorf("acquire lock file for stdlib setup: %w", err)
+	}
+	defer release()
+
 	// Use EnsureStdlib to handle stdlib extraction with checksum validation
 	stdlibPath, err := ensureStdlib()
 	if err != nil {
