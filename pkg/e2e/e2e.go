@@ -246,7 +246,9 @@ func buildNevaBinaryPerTest(t *testing.T, repoRoot, mainPath string) string {
 	return binPath
 }
 
-// buildNevaBinaryFromCache resolves a reusable neva binary from a process-safe cache.
+// buildNevaBinaryFromCache returns a shared neva CLI binary keyed by compiler input fingerprint.
+// "Process-safe" means concurrent go test package binaries coordinate with a lock file:
+// one process builds, others wait for the artifact (up to lock timeout) and then reuse it.
 func buildNevaBinaryFromCache(repoRoot, mainPath string) (string, error) {
 	cacheRoot, err := e2eCacheRootDir()
 	if err != nil {
@@ -313,7 +315,8 @@ func buildNevaBinaryToPath(repoRoot, mainPath, binPath string) error {
 	return nil
 }
 
-// e2eCacheRootDir returns the root directory used for shared e2e build artifacts.
+// e2eCacheRootDir returns the directory for cross-process e2e build artifacts.
+// It prefers the user cache directory and falls back to the OS temp directory.
 func e2eCacheRootDir() (string, error) {
 	baseDir, err := os.UserCacheDir()
 	if err != nil {
@@ -328,7 +331,8 @@ func e2eCacheRootDir() (string, error) {
 	return cacheRoot, nil
 }
 
-// nevaBuildFingerprint computes a stable key from build-relevant file metadata.
+// nevaBuildFingerprint computes a stable cache key from local build input metadata:
+// relative path + size + mtime(ns) for each selected file.
 func nevaBuildFingerprint(repoRoot string) (string, error) {
 	files, err := compilerInputFiles(repoRoot)
 	if err != nil {
@@ -354,7 +358,8 @@ func nevaBuildFingerprint(repoRoot string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// compilerInputFiles returns local source files that affect cmd/neva build outputs.
+// compilerInputFiles returns local files that can affect `go build ./cmd/neva`.
+// It includes only repo-local package files from `go list -deps -json` plus go.mod/go.sum.
 func compilerInputFiles(repoRoot string) ([]string, error) {
 	// Use package metadata to include only files that affect cmd/neva build.
 	// External module changes are already covered by go.mod/go.sum.
@@ -428,7 +433,7 @@ func addPackageFiles(filesSet map[string]struct{}, dir string, names []string) {
 	}
 }
 
-// decodePackageDir extracts package directory info and filters out non-local packages.
+// decodePackageDir extracts package directory info and filters out stdlib/external packages.
 func decodePackageDir(payload map[string]json.RawMessage, normalizedRoot string) (dir string, include bool, err error) {
 	standard := false
 	if raw, ok := payload["Standard"]; ok && len(raw) > 0 {
@@ -476,10 +481,12 @@ func addPackageFilesFromRaw(filesSet map[string]struct{}, dir string, raw json.R
 	return nil
 }
 
-// acquireCacheLock provides a simple file lock used by concurrent test binaries.
+// acquireCacheLock acquires an exclusive lock file and returns a release function.
+// The lock is polled until timeout; the returned function must be called to close and remove the lock file.
 func acquireCacheLock(lockPath string, timeout time.Duration) (func(), error) {
 	deadline := time.Now().Add(timeout)
 
+	// Repeatedly try to become the lock owner until timeout expires.
 	for {
 		lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0o600)
 		if err == nil {
