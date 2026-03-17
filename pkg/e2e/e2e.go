@@ -333,6 +333,8 @@ func e2eCacheRootDir() (string, error) {
 
 // nevaBuildFingerprint computes a stable cache key from local build input metadata:
 // relative path + size + mtime(ns) for each selected file.
+// This path is for on-disk repo files only; stdlib extraction uses content hashing
+// because embed.FS metadata does not provide reliable mtimes.
 func nevaBuildFingerprint(repoRoot string) (string, error) {
 	files, err := compilerInputFiles(repoRoot)
 	if err != nil {

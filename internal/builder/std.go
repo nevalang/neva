@@ -20,7 +20,9 @@ func ensureStdlib() (string, error) {
 
 	path := filepath.Join(home, "neva", "std")
 
-	// Compute checksum of the embedded stdlib
+	// Keep stdlib invalidation content-based: embed.FS file metadata does not carry
+	// reliable mtimes (ModTime is zero), so metadata-only fingerprinting can miss
+	// same-size content edits.
 	embeddedChecksum, err := nevaos.ComputeChecksumForFS(std.FS)
 	if err != nil {
 		return "", fmt.Errorf("compute embedded checksum: %w", err)
