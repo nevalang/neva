@@ -31,5 +31,5 @@ jobs:
       with:
         go-version: '1.26.1'
     - name: test (e2e and examples)
-      # Start conservatively with package parallelism while issue #767 is being retired.
-      run: go test -v -p 2 ./e2e/... ./examples/...
+      # Run with default Go package parallelism; isolation hardening is tracked in #1064.
+      run: go test -v ./e2e/... ./examples/...
