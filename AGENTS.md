@@ -67,6 +67,12 @@ high-signal constraints:
 ### Go (do not invent style; follow repository policy)
 
 - Source of truth: `.golangci.yml`, `go.mod`, and existing code patterns.
+- Treat `go.mod` as the version ceiling for Go features and stdlib APIs.
+- Prefer modern Go idioms available in the target version over legacy
+  patterns. By default, favor `any`, `errors.AsType[T]`, `new(val)`,
+  `wg.Go`, `b.Loop`, `t.Context()`, `slices`/`maps`/`cmp`, `min`/`max`,
+  `SplitSeq`/`FieldsSeq` for iteration-only use, and `omitzero` when
+  zero-value JSON semantics matter.
 - Always run `gofmt` on changed Go files.
 - Respect active lints (notable strict checks include `depguard`,
   `fieldalignment`, `nil*`, `gosec`, `gochecknoglobals`, `gochecknoinits`).
