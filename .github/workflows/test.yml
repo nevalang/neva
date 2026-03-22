@@ -7,19 +7,29 @@ on:
   pull_request:
 
 jobs:
-  build_and_test:
+  unit_tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: setup go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.0'
-    - name: install
+        go-version: '1.26.1'
+    - name: test (unit and non-e2e integration)
       run: |
-        go install ./cmd/neva
-        echo "$GOPATH/bin" >> $GITHUB_PATH
-    - name: test
-      # IMPORTANT: "-p 1" is a temporary fix for https://github.com/nevalang/neva/issues/767
-      # It set's number of packages that can be run in parallel to one (sequentially)
-      run: go test -v -count=1 -p 1 ./...
+        go list ./... \
+          | grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$)' \
+          | xargs -r go test -v
+
+  e2e_tests:
+    needs: unit_tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: setup go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26.1'
+    - name: test (e2e and examples)
+      # Run with default Go package parallelism; isolation hardening is tracked in #1064.
+      run: go test -v ./e2e/... ./examples/...
