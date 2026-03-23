@@ -221,6 +221,7 @@ func CopyFile(tb testing.TB, src, dst string) {
 	require.NoError(tb, os.MkdirAll(filepath.Dir(dst), 0o755), "create %s", filepath.Dir(dst))
 
 	// #nosec G306 -- copied test fixtures should remain readable for inspection.
+	// #nosec G703 -- dst is controlled by test code and only targets isolated temp workspaces.
 	require.NoError(tb, os.WriteFile(dst, data, 0o644), "write %s", dst)
 }
 
@@ -307,12 +308,14 @@ func copyDir(src, dst string) error {
 			return os.MkdirAll(target, 0o755)
 		}
 
+		// #nosec G122 -- walk source is test-controlled fixture tree copied into temp workspace.
 		data, readErr := os.ReadFile(path)
 		if readErr != nil {
 			return readErr
 		}
 
 		// #nosec G306 -- copied test fixtures should remain readable for inspection.
+		// #nosec G703 -- target path is derived from sanitized fixture-relative path under dst.
 		return os.WriteFile(target, data, 0o644)
 	})
 }
