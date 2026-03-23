@@ -1,0 +1,68 @@
+// Benchmarks struct construction and field extraction.
+// It covers Struct<T> building plus selector access in hot paths.
+import { streams }
+
+type Payload struct {
+	id int
+	flag bool
+	label string
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_build streams.Map<int, Payload>{Build}
+	map_extract streams.Map<Payload, int>{ExtractID}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_build -> map_extract -> wait -> :stop
+}
+
+// Build assembles Payload values from derived inputs.
+def Build(data int) (res Payload) {
+	builder Struct<Payload>
+	is_even IsEven
+	to_label ToLabel
+	---
+	:data -> [
+		builder:id,
+		is_even -> builder:flag,
+		to_label -> builder:label
+	]
+	builder -> :res
+}
+
+// IsEven computes the bool field for Payload.
+def IsEven(data int) (res bool) {
+	mod Mod
+	eq Eq<int>
+	---
+	:data -> [mod:left, 2 -> mod:right]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> :res
+}
+
+// ToLabel computes the string field for Payload.
+def ToLabel(data int) (res string) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<string>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'even' -> pick:then,
+		'odd' -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+// ExtractID benchmarks field selection from struct messages.
+def ExtractID(data Payload) (res int) {
+	:data -> .id -> :res
+}

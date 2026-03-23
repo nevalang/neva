@@ -170,21 +170,69 @@ func resolveRunTimeout(t *testing.T, configured time.Duration) time.Duration {
 }
 
 // FindRepoRoot finds the repository root using go env GOMOD.
-func FindRepoRoot(t *testing.T) string {
-	t.Helper()
+func FindRepoRoot(tb testing.TB) string {
+	tb.Helper()
 
 	// #nosec G204 -- command arguments are constant
 	cmd := exec.Command("go", "env", "GOMOD")
 	output, err := cmd.Output()
-	require.NoError(t, err, "failed to run 'go env GOMOD'")
+	require.NoError(tb, err, "failed to run 'go env GOMOD'")
 
 	gomodPath := strings.TrimSpace(string(output))
-	require.NotEmpty(t, gomodPath, "GOMOD path is empty")
+	require.NotEmpty(tb, gomodPath, "GOMOD path is empty")
 
 	repoRoot := filepath.Dir(gomodPath)
-	require.NotEmpty(t, repoRoot, "repo root is empty")
+	require.NotEmpty(tb, repoRoot, "repo root is empty")
 
 	return repoRoot
+}
+
+// BuildNevaBinary builds the neva CLI binary from repo root and returns its path.
+func BuildNevaBinary(tb testing.TB, repoRoot string) string {
+	tb.Helper()
+
+	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
+	return buildNevaBinary(tb, repoRoot, mainPath)
+}
+
+// PrepareIsolatedNevaHome creates an isolated Neva home and wires the local stdlib into it.
+func PrepareIsolatedNevaHome(repoRoot, homeDir string) error {
+	nevaHome := filepath.Join(homeDir, "neva")
+	if err := os.MkdirAll(nevaHome, 0o755); err != nil {
+		return err
+	}
+
+	stdSrc := filepath.Join(repoRoot, "std")
+	stdDst := filepath.Join(nevaHome, "std")
+	if err := os.Symlink(stdSrc, stdDst); err == nil {
+		return nil
+	}
+
+	return copyDir(stdSrc, stdDst)
+}
+
+// CopyFile copies one fixture file into an isolated test workspace.
+func CopyFile(tb testing.TB, src, dst string) {
+	tb.Helper()
+
+	data, err := os.ReadFile(src)
+	require.NoError(tb, err, "read %s", src)
+
+	require.NoError(tb, os.MkdirAll(filepath.Dir(dst), 0o755), "create %s", filepath.Dir(dst))
+
+	require.NoError(
+		tb,
+		os.WriteFile(dst, data, 0o644), // #nosec G306,G703 -- fixture copy target is test-controlled and intentionally readable.
+		"write %s",
+		dst,
+	)
+}
+
+// CopyDir copies a fixture directory tree into an isolated test workspace.
+func CopyDir(tb testing.TB, src, dst string) {
+	tb.Helper()
+
+	require.NoError(tb, copyDir(src, dst), "copy %s to %s", src, dst)
 }
 
 // getExitCode extracts the exit code from an error.
@@ -208,24 +256,24 @@ func getExitCode(err error) int {
 // buildNevaBinary builds the neva CLI from the repo root to ensure module
 // resolution works regardless of where tests execute the resulting binary.
 // It returns the path to the built binary.
-func buildNevaBinary(t *testing.T, repoRoot, mainPath string) string {
-	t.Helper()
+func buildNevaBinary(tb testing.TB, repoRoot, mainPath string) string {
+	tb.Helper()
 
 	binPath, err := buildNevaBinaryFromCache(repoRoot, mainPath)
 	if err == nil {
 		return binPath
 	}
 
-	t.Logf("e2e: shared neva binary cache unavailable (%v), falling back to per-test build", err)
+	tb.Logf("e2e: shared neva binary cache unavailable (%v), falling back to per-test build", err)
 
-	return buildNevaBinaryPerTest(t, repoRoot, mainPath)
+	return buildNevaBinaryPerTest(tb, repoRoot, mainPath)
 }
 
 // buildNevaBinaryPerTest builds an isolated neva binary for a single test.
-func buildNevaBinaryPerTest(t *testing.T, repoRoot, mainPath string) string {
-	t.Helper()
+func buildNevaBinaryPerTest(tb testing.TB, repoRoot, mainPath string) string {
+	tb.Helper()
 
-	binPath := filepath.Join(t.TempDir(), "neva")
+	binPath := filepath.Join(tb.TempDir(), "neva")
 	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
 	buildCmd.Dir = repoRoot
 
@@ -236,7 +284,7 @@ func buildNevaBinaryPerTest(t *testing.T, repoRoot, mainPath string) string {
 
 	err := buildCmd.Run()
 	require.NoError(
-		t,
+		tb,
 		err,
 		"failed to build neva CLI. stdout: %q stderr: %q",
 		buildStdoutBuf.String(),
@@ -244,6 +292,33 @@ func buildNevaBinaryPerTest(t *testing.T, repoRoot, mainPath string) string {
 	)
 
 	return binPath
+}
+
+// copyDir recursively copies a fixture tree into a temporary workspace.
+func copyDir(src, dst string) error {
+	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, relErr := filepath.Rel(src, path)
+		if relErr != nil {
+			return relErr
+		}
+
+		target := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+
+		// #nosec G122 -- walk source is test-controlled fixture tree copied into temp workspace.
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+
+		return os.WriteFile(target, data, 0o644) // #nosec G306,G703 -- fixture copy target is rooted under dst and intentionally readable.
+	})
 }
 
 // buildNevaBinaryFromCache returns a shared neva CLI binary keyed by compiler input fingerprint.

@@ -1,0 +1,42 @@
+// Benchmarks router-style branching components.
+// Covers Cond, Switch, Race, and If in one deterministic mapping path.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_r streams.Map<int, int>{RouterOps}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		10000 -> range:to
+	]
+	range -> map_r -> wait -> :stop
+}
+
+def RouterOps(data int) (res int) {
+	mod Mod
+	eq Eq<int>
+	cond Cond<int>
+	switch Switch<int>
+	race Race<int>
+	if_router If<int>
+	add Add
+	---
+	:data -> [
+		cond:data,
+		mod:left,
+		2 -> mod:right,
+		0 -> eq:right,
+		0 -> switch:case[0],
+		1 -> switch:case[1]
+	]
+	mod -> [eq:left, switch:data]
+	eq -> [cond:if, if_router]
+	[cond:then, cond:else] -> race:data
+	if_router:then -> race:case[0]
+	if_router:else -> race:case[1]
+	[race:case[0], race:case[1]] -> add:left
+	[switch:case[0], switch:case[1], switch:else] -> add:right
+	add -> :res
+}

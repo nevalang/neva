@@ -1,0 +1,30 @@
+// Benchmarks integer bitwise operators.
+// Covers BitAnd, BitOr, BitXor, BitLsh, and BitRsh.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_bits streams.Map<int, int>{Bitwise}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_bits -> wait -> :stop
+}
+
+def Bitwise(data int) (res int) {
+	and BitAnd
+	or BitOr
+	xor BitXor
+	lsh BitLsh
+	rsh BitRsh
+	---
+	:data -> [and:left, 255 -> and:right]
+	and -> [or:left, 1 -> or:right]
+	or -> [xor:left, 1023 -> xor:right]
+	xor -> [lsh:left, 2 -> lsh:right]
+	lsh -> [rsh:left, 1 -> rsh:right]
+	rsh -> :res
+}
