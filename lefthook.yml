@@ -1,5 +1,7 @@
 pre-commit:
   commands:
+    gofix-check:
+      run: make gofix-check
     gofmt:
       glob: "*.go"
       run: gofmt -w {staged_files}

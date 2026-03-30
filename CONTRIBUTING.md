@@ -22,37 +22,6 @@ Not required but recommended:
 
 ## Development
 
-### Local quality checks
-
-Run fast, explicit checks locally before pushing:
-
-```bash
-make lint
-make test-unit
-make vulncheck
-```
-
-Run the combined gate:
-
-```bash
-make quality-gate
-```
-
-For CI parity on a clean tree (includes `gofix-check`):
-
-```bash
-make quality-gate-ci
-```
-
-### Optional git hooks (Go-only, no Python/Node dependency)
-
-If you want local pre-commit/pre-push automation, use Lefthook:
-
-```bash
-go install github.com/evilmartians/lefthook/v2@latest
-lefthook install
-```
-
 ## Releasing a new version
 
 Follow these steps to publish a new Nevalang release:
