@@ -1,0 +1,15 @@
+pre-commit:
+  commands:
+    gofmt:
+      glob: "*.go"
+      run: gofmt -w {staged_files}
+      stage_fixed: true
+
+pre-push:
+  commands:
+    lint:
+      run: make lint
+    test-unit:
+      run: make test-unit
+    vulncheck:
+      run: make vulncheck

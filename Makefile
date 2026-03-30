@@ -1,5 +1,8 @@
 # === Development ===
 
+GOLANGCI_LINT ?= go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
+GOVULNCHECK ?= go run golang.org/x/vuln/cmd/govulncheck@latest
+
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
 install:
@@ -12,9 +15,13 @@ antlr:
 	antlr4 -Dlanguage=Go -no-visitor -package parsing ./neva.g4 -o generated
 
 # fix struct field ordering for optimal padding/pointer data
-.PHONY: align
-betteralign-fix:
+.PHONY: align betteralign-fix
+align:
 	betteralign -fix ./...
+
+# backward-compatible alias
+betteralign-fix:
+	$(MAKE) align
 
 # apply gofix rewrites across the repo
 .PHONY: gofix
@@ -26,6 +33,33 @@ gofix:
 gofix-check:
 	go fix ./...
 	git diff --exit-code
+
+.PHONY: lint
+lint:
+	$(GOLANGCI_LINT) run ./...
+
+.PHONY: test-unit
+test-unit:
+	go list ./... \
+		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
+		| xargs -r go test -v
+
+.PHONY: vulncheck
+vulncheck:
+	$(GOVULNCHECK) ./...
+
+# local quality gate (safe on dirty tree)
+.PHONY: quality-gate
+quality-gate:
+	$(MAKE) lint
+	$(MAKE) test-unit
+	$(MAKE) vulncheck
+
+# CI quality gate (must run from clean tree)
+.PHONY: quality-gate-ci
+quality-gate-ci:
+	$(MAKE) gofix-check
+	$(MAKE) quality-gate
 
 # check potential nil-derefs
 .PHONY: nilaway

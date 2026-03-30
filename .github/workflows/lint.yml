@@ -26,3 +26,12 @@ jobs:
         with:
           version: latest
           only-new-issues: true
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: go.mod
+          output-format: text
