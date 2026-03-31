@@ -17,3 +17,9 @@ This file defines local workflow for `examples/` for both humans and machines.
 
 - `e2e/` contains focused test scenarios.
 - `examples/` should stay readable and educational first.
+
+## Local `AGENTS.md` Style
+
+- Put scenario intent and topology in local example-level `AGENTS.md`.
+- Prefer concise Mermaid diagrams for non-trivial flows.
+- Avoid duplicating exact expected output values when those assertions are already covered by tests.
