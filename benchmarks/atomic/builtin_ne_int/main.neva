@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Ne<int>` in one-shot mode.
+def Main(start any) (stop any) {
+	ne Ne<int>
+	---
+	:start -> [2 -> ne:left, 3 -> ne:right]
+	ne -> :stop
+}

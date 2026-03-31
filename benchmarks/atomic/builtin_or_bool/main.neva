@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Or` in one-shot mode.
+def Main(start any) (stop any) {
+	or Or
+	---
+	:start -> [true -> or:left, false -> or:right]
+	or -> :stop
+}

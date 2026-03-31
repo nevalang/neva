@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Mod` in one-shot mode.
+def Main(start any) (stop any) {
+	mod Mod
+	---
+	:start -> [7 -> mod:left, 3 -> mod:right]
+	mod -> :stop
+}

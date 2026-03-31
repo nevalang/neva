@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Mul` in one-shot mode.
+def Main(start any) (stop any) {
+	mul Mul
+	---
+	:start -> [3 -> mul:left, 2 -> mul:right]
+	mul -> :stop
+}

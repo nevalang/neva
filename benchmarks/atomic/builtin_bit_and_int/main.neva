@@ -1,0 +1,7 @@
+// Benchmarks builtin component `BitAnd` in one-shot mode.
+def Main(start any) (stop any) {
+	bit_and BitAnd
+	---
+	:start -> [6 -> bit_and:left, 3 -> bit_and:right]
+	bit_and -> :stop
+}
