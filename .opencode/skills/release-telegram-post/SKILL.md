@@ -9,18 +9,22 @@ Create a Telegram-ready release announcement in English for the Neva community g
 ## Workflow
 1. Read the release context from the prompt: repository, tag, release name, release URL, and release notes.
 2. Read `.opencode/shared/release-marketing.md` for positioning, CTA, and tone guidance.
-3. Produce a concise Telegram post in English with 2-3 short paragraphs:
-   - Paragraph 1: what changed in this release.
-   - Paragraph 2: why it matters for users/developers, with a strong but grounded product framing.
-   - Paragraph 3: release link and a compact CTA block.
-4. Make the post feel ambitious and clear, not dry and not hypey. Sell the direction, not just the technical properties.
-5. Include CTA at the end (short, not noisy):
+3. Produce a concise Telegram post in English using this exact high-level structure:
+   - Line 1: `Neva vX.Y — Release Title`
+   - Line 2: standalone release URL
+   - Short intro paragraph: 1-2 sentences max; state that this is a quality/reliability pass and mention whether there are language-level breaking changes
+   - `Highlights:` label
+   - 6-8 short numbered highlight lines using emoji numerals (`1️⃣`, `2️⃣`, ...)
+   - Final CTA paragraph with repo star/share/Open Collective links
+4. Keep each highlight line short, concrete, and scannable. Prefer compact phrases over long explanatory sentences.
+5. Make the post feel ambitious and clear, not dry and not hypey. Sell the direction, not just the technical properties.
+6. Include CTA at the end (short, not noisy):
    - Open Collective support link.
    - GitHub star ask.
    - Share ask with open-source motivation.
-6. Use Telegram HTML formatting only (`<b>`, `<i>`, `<code>`, `<a href=\"...\">`).
-7. Keep the message easy to scan and under 1500 characters.
-8. Save output to the exact file path requested by the caller.
+7. Use Telegram HTML formatting only (`<b>`, `<i>`, `<code>`, `<a href=\"...\">`).
+8. Keep the message easy to scan and under 1500 characters.
+9. Save output to the exact file path requested by the caller.
 
 ## Output Rules
 - Return only the final Telegram message body in the file.
@@ -30,3 +34,6 @@ Create a Telegram-ready release announcement in English for the Neva community g
 - Do not include code fences.
 - Do not include unsupported HTML tags.
 - Do not reduce the project description to a dry list of technical facts such as "statically typed" or "compiled" unless they support a stronger product point.
+- Do not bury the release URL inside the CTA paragraph; it should appear near the top as a standalone line.
+- Do not emit long prose blocks when a short intro plus numbered highlights would communicate better.
+- Prefer terse highlight wording such as `Security sweep across core dependencies;` over full sentences unless clarity requires more.
