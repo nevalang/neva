@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Not` in one-shot mode.
+def Main(start any) (stop any) {
+	not Not
+	---
+	:start -> true -> not
+	not -> :stop
+}

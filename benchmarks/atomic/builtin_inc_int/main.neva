@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Inc` in one-shot mode.
+def Main(start any) (stop any) {
+	inc Inc
+	---
+	:start -> 1 -> inc
+	inc -> :stop
+}

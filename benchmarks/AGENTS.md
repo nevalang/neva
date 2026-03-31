@@ -6,17 +6,21 @@ This file defines benchmark authoring rules for both humans and machines.
 
 - Applies to all packages under `benchmarks/`.
 - Current benchmark taxonomy has three tiers: `atomic`, `simple`, `complex`.
+- Keep directory layout flat by tier: `benchmarks/<tier>/<benchmark_pkg>/main.neva`.
+- Do not introduce deeper benchmark nesting.
 
 ## Tier Definitions
 
-- `atomic`: one primary component or operation under test.
+- `atomic`: one primary component under test.
 - `simple`: a small composition validating one focused scenario.
 - `complex`: multi-domain scenario closer to realistic pipelines.
+- Startup baseline is a deliberate `atomic` exception (`startup_noop`) used to measure process/runtime overhead.
 
 ## Naming
 
 - Benchmark package naming should be explicit and stable.
-- For `atomic`, prefer `domain_component_case` format.
+- For `atomic` builtins, prefer `builtin_<component_or_operator>_<type>` format.
+- Logical operators are separate benchmarks per operator (`And`, `Or`, `Not`), not one combined benchmark.
 - Avoid generic names like `basic`.
 
 ## Atomic Caveat

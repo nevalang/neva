@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Dec` in one-shot mode.
+def Main(start any) (stop any) {
+	dec Dec
+	---
+	:start -> 1 -> dec
+	dec -> :stop
+}

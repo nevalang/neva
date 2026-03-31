@@ -1,0 +1,7 @@
+// Benchmarks builtin component `And` in one-shot mode.
+def Main(start any) (stop any) {
+	and And
+	---
+	:start -> [true -> and:left, false -> and:right]
+	and -> :stop
+}
