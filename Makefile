@@ -45,6 +45,7 @@ vulncheck:
 .PHONY: nilaway
 nilaway:
 	nilaway \
+		-exclude-test-files \
 		-include-pkgs="github.com/nevalang/neva/internal" \
 		./...
 

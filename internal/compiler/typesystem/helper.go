@@ -82,10 +82,18 @@ type DefaultStringer string
 func (ds DefaultStringer) String() string { return string(ds) }
 
 func (h Helper) Trace(ss ...string) Trace {
-	var t *Trace
-	for _, s := range ss {
-		tmp := NewTrace(t, core.EntityRef{Name: s})
-		t = &tmp
+	if len(ss) == 0 {
+		panic("internal invariant violated: trace requires at least one element")
 	}
-	return *t
+
+	trace := &Trace{
+		cur: core.EntityRef{Name: ss[0]},
+	}
+	for _, s := range ss[1:] {
+		trace = &Trace{
+			prev: trace,
+			cur:  core.EntityRef{Name: s},
+		}
+	}
+	return *trace
 }
