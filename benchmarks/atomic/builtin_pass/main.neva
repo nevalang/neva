@@ -1,5 +1,5 @@
 def Main(start any) (stop any) {
-	pass Pass<int>
+	pass Pass<any>
 	---
-	:start -> 1 -> pass -> :stop
+	:start -> pass -> :stop
 }

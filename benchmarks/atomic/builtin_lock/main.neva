@@ -1,9 +1,6 @@
 def Main(start any) (stop any) {
-	lock Lock<int>
+	lock Lock<any>
 	---
-	:start -> [
-		lock:sig,
-		1 -> lock:data
-	]
+	:start -> [lock:sig, lock:data]
 	lock -> :stop
 }
