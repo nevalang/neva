@@ -10,6 +10,20 @@ permissions:
   pull-requests: read
 
 jobs:
+  gofix_check:
+    name: gofix-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.1'
+          cache: false
+      - name: gofix-check
+        run: |
+          go fix ./...
+          git diff --exit-code
+
   golangci:
     name: lint
     runs-on: ubuntu-latest
@@ -19,10 +33,17 @@ jobs:
         with:
           go-version: '1.26.1'
           cache: false
-      - name: gofix-check
-        run: make gofix-check
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           only-new-issues: true
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: go.mod
+          output-format: text
