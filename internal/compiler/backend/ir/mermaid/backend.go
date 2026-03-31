@@ -215,7 +215,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	for _, path := range nodePaths {
 		n := nodes[path]
 		if n == nil {
-			continue
+			panic("internal invariant violated: node map contains nil entry")
 		}
 
 		// Generate Safe ID
@@ -293,7 +293,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	for _, path := range nodePaths {
 		n := nodes[path]
 		if n == nil {
-			continue
+			panic("internal invariant violated: node map contains nil entry")
 		}
 
 		var portList []string

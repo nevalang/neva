@@ -689,10 +689,7 @@ func (a Analyzer) getResolvedSenderType(
 
 	if len(sender.StructSelector) > 0 {
 		if len(prevChainLink) == 0 {
-			return src.ConnectionSender{}, ts.Expr{}, false, &compiler.Error{
-				Message: "missing previous chain link for struct selector sender",
-				Meta:    &sender.Meta,
-			}
+			panic("internal invariant violated: struct selector sender has no previous chain link")
 		}
 
 		_, chainLinkType, _, err := a.getResolvedSenderType(

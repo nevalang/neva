@@ -83,7 +83,7 @@ func (ds DefaultStringer) String() string { return string(ds) }
 
 func (h Helper) Trace(ss ...string) Trace {
 	if len(ss) == 0 {
-		return Trace{}
+		panic("internal invariant violated: trace requires at least one element")
 	}
 
 	trace := NewTrace(nil, core.EntityRef{Name: ss[0]})
