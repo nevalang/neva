@@ -19,6 +19,9 @@ It is intentionally short and stable. Use linked docs for deep details.
 12. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
 13. `AGENTS.md` is an engineering harness artifact for both humans and machines.
 14. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
+15. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
+16. File-type authoring rules live in `.claude/rules/*.md`; if a harness does not load them automatically, inspect matching `paths` frontmatter before editing files.
+17. Avoid duplicating durable guidance across `AGENTS.md`, `.claude/rules`, and docs; keep one source of truth and make the other layers point to it.
 
 ## 2) High-Level Project Context
 
@@ -65,36 +68,10 @@ high-signal constraints:
 8. Keep compiler-contract stdlib semantics explicit (`builtin`, `Union`,
    `Struct`, `#autoports`, desugaring-sensitive behavior).
 
-## 5) Code Style
+## 5) File-Type Rules
 
-### Go (do not invent style; follow repository policy)
-
-- Source of truth: `.golangci.yml`, `go.mod`, and existing code patterns.
-- Treat `go.mod` as the version ceiling for Go features and stdlib APIs.
-- Prefer modern Go idioms available in the target version over legacy
-  patterns. By default, favor `any`, `errors.AsType[T]`, `new(val)`,
-  `wg.Go`, `b.Loop`, `t.Context()`, `slices`/`maps`/`cmp`, `min`/`max`,
-  `SplitSeq`/`FieldsSeq` for iteration-only use, and `omitzero` when
-  zero-value JSON semantics matter.
-- Always run `gofmt` on changed Go files.
-- Respect active lints (notable strict checks include `depguard`,
-  `fieldalignment`, `nil*`, `gosec`, `gochecknoglobals`, `gochecknoinits`).
-- Runtime boundary rule is strict:
-  - `internal/runtime/*.go`: stdlib imports only
-  - `internal/runtime/funcs/**`: stdlib + `internal/runtime`
-- Prefer the repo-pinned linter command when local binary is stale:
-  `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run ./...`
-- Add doc comments for new Go functions/types (including unexported helpers).
-- For newly generated Go code blocks longer than 3 lines, add a short one-line intent comment before the block when the purpose is not immediately obvious.
-
-### Neva (`*.neva`)
-
-- Source of truth: `docs/style_guide.md`.
-- Mandatory basics:
-  - tabs for indentation
-  - node aliases in `lower_snake_case`
-  - import ordering/grouping per style guide
-  - omit explicit port names when unambiguous
+- Go authoring guidance lives in `.claude/rules/go-files.md`.
+- Neva authoring guidance lives in `.claude/rules/neva-files.md`.
 
 ## 6) Validation Workflow
 
@@ -109,7 +86,7 @@ Prefer smallest meaningful scope first, then widen only if needed.
 Useful commands:
 
 ```bash
-golangci-lint run ./...
+make lint
 go test ./...
 make antlr
 make gofix

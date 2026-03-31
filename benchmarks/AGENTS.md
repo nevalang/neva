@@ -26,6 +26,14 @@ This file defines benchmark authoring rules for both humans and machines.
 - Keep support wiring minimal and document why it is required.
 - Example: `streams.Range` requires a terminal sink such as `streams.Wait`.
 
+## Iteration Policy
+
+- By default, iteration belongs to the Go benchmark harness (`testing.B.Loop`).
+- Prefer one-shot benchmark programs for builtins and small components.
+- Use internal loops inside `.neva` only for deliberate throughput-oriented benchmarks.
+- Treat those throughput cases as explicit special cases, not as the default `atomic` pattern.
+- Example: `streams_range` measures stream throughput and may legitimately keep an internal range loop.
+
 ## Review Checklist
 
 - Is the measured hot path explicit?
