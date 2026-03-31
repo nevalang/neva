@@ -2,6 +2,5 @@
 def Main(start any) (stop any) {
 	not Not
 	---
-	:start -> true -> not
-	not -> :stop
+	:start -> true -> not -> :stop
 }
