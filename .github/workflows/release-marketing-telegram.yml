@@ -3,37 +3,13 @@ name: Release Marketing Telegram
 on:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: "Override release tag for manual run"
-        required: false
-        type: string
-      release_name:
-        description: "Override release name for manual run"
-        required: false
-        type: string
-      release_notes:
-        description: "Override release notes for manual run"
-        required: false
-        type: string
-      send_to_telegram:
-        description: "Send generated text to Telegram (manual runs)"
-        required: false
-        type: boolean
-        default: false
-      opencode_model:
-        description: "OpenCode model in provider/model format"
-        required: false
-        type: string
-        default: "openrouter/moonshotai/kimi-k2.5"
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  marketing-telegram:
+  send-release-update:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -54,107 +30,32 @@ jobs:
           test -n "$OPENROUTER_API_KEY" || { echo "Missing OPENROUTER_API_KEY secret"; exit 1; }
           test -n "$TELEGRAM_BOT_API_TOKEN" || { echo "Missing TELEGRAM_BOT_API_TOKEN secret"; exit 1; }
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
-
-      - name: Resolve run context
-        id: resolve
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG_FROM_EVENT: ${{ github.event.release.tag_name }}
-          RELEASE_NAME_FROM_EVENT: ${{ github.event.release.name }}
-          RELEASE_NOTES_FROM_EVENT: ${{ github.event.release.body }}
-          RELEASE_TAG_FROM_INPUT: ${{ inputs.release_tag }}
-          RELEASE_NAME_FROM_INPUT: ${{ inputs.release_name }}
-          RELEASE_NOTES_FROM_INPUT: ${{ inputs.release_notes }}
-          SEND_FROM_INPUT: ${{ inputs.send_to_telegram }}
-          MODEL_FROM_INPUT: ${{ inputs.opencode_model }}
-        run: |
-          set -euo pipefail
-
           mkdir -p "$OUTPUT_DIR"
 
-          if [ "$EVENT_NAME" = "release" ]; then
-            SHOULD_SEND=true
-          else
-            SHOULD_SEND="${SEND_FROM_INPUT:-false}"
-          fi
-
-          RELEASE_TAG="${RELEASE_TAG_FROM_EVENT:-}"
-          RELEASE_NAME="${RELEASE_NAME_FROM_EVENT:-}"
-          RELEASE_NOTES="${RELEASE_NOTES_FROM_EVENT:-}"
-
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ -n "${RELEASE_TAG_FROM_INPUT:-}" ]; then
-              RELEASE_TAG="$RELEASE_TAG_FROM_INPUT"
-            fi
-            if [ -n "${RELEASE_NAME_FROM_INPUT:-}" ]; then
-              RELEASE_NAME="$RELEASE_NAME_FROM_INPUT"
-            fi
-            if [ -n "${RELEASE_NOTES_FROM_INPUT:-}" ]; then
-              RELEASE_NOTES="$RELEASE_NOTES_FROM_INPUT"
-            fi
-          fi
-
-          if [ -z "$RELEASE_TAG" ]; then
-            RELEASE_TAG="manual-test"
-          fi
-          if [ -z "$RELEASE_NAME" ]; then
-            RELEASE_NAME="$RELEASE_TAG"
-          fi
-          if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="No release notes provided."
-          fi
-
-          OPENCODE_MODEL="${MODEL_FROM_INPUT:-openrouter/moonshotai/kimi-k2.5}"
-
-          {
-            echo "should_send=$SHOULD_SEND"
-            echo "release_tag=$RELEASE_TAG"
-            echo "release_name=$RELEASE_NAME"
-            echo "opencode_model=$OPENCODE_MODEL"
-          } >> "$GITHUB_OUTPUT"
-
-          {
-            echo "# Release Context"
-            echo
-            echo "- Repository: ${{ github.repository }}"
-            echo "- Tag: $RELEASE_TAG"
-            echo "- Name: $RELEASE_NAME"
-            echo "- URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/$RELEASE_TAG"
-            echo
-            echo "## Release Notes"
-            echo
-            printf '%s\n' "$RELEASE_NOTES"
-          } > "$OUTPUT_DIR/release-context.md"
-
-      - name: Generate Telegram copy with OpenCode
+      - name: Generate Telegram post with OpenCode
         uses: anomalyco/opencode/github@latest
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         with:
-          model: ${{ steps.resolve.outputs.opencode_model }}
+          model: openrouter/moonshotai/kimi-k2.5
           prompt: |
-            Create a Telegram post for a Neva language release announcement.
+            Use the `release-telegram-post` skill.
 
-            Source context file:
-            `${{ env.OUTPUT_DIR }}/release-context.md`
+            Generate a Telegram release post using this release payload:
+            - Repository: ${{ github.repository }}
+            - Tag: ${{ github.event.release.tag_name }}
+            - Name: ${{ github.event.release.name }}
+            - URL: ${{ github.event.release.html_url }}
+            - Notes:
+            ${{ github.event.release.body }}
 
-            Requirements:
-            - Keep it concise and useful for developers.
-            - Write in Russian.
-            - Include 3 short sections:
-              1) What shipped
-              2) Why it matters
-              3) Links (release URL)
-            - Keep message under 1500 characters.
-            - Do not use fenced code blocks.
-            - Save final message to `${{ env.OUTPUT_DIR }}/telegram-message.md`.
-            - Overwrite file if it exists.
+            Save the final post body to `${{ env.OUTPUT_DIR }}/telegram-message.html`.
 
       - name: Ensure generated message exists
         run: |
           set -euo pipefail
-          test -s "${OUTPUT_DIR}/telegram-message.md" || {
-            echo "Missing generated file: ${OUTPUT_DIR}/telegram-message.md"
+          test -s "${OUTPUT_DIR}/telegram-message.html" || {
+            echo "Missing generated file: ${OUTPUT_DIR}/telegram-message.html"
             exit 1
           }
 
@@ -165,28 +66,28 @@ jobs:
           path: ${{ env.OUTPUT_DIR }}
 
       - name: Send Telegram message
-        if: ${{ steps.resolve.outputs.should_send == 'true' }}
         env:
           TELEGRAM_BOT_API_TOKEN: ${{ secrets.TELEGRAM_BOT_API_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           set -euo pipefail
 
-          MESSAGE="$(cat "${OUTPUT_DIR}/telegram-message.md")"
+          MESSAGE="$(cat "${OUTPUT_DIR}/telegram-message.html")"
           test -n "$MESSAGE" || { echo "Generated message is empty"; exit 1; }
 
           payload="$(
             jq -n \
               --arg chat_id "$TELEGRAM_CHAT_ID" \
               --arg text "$MESSAGE" \
-              '{chat_id: $chat_id, text: $text, disable_web_page_preview: true}'
+              '{
+                chat_id: $chat_id,
+                text: $text,
+                parse_mode: "HTML",
+                disable_web_page_preview: true
+              }'
           )"
 
           curl --fail --silent --show-error \
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_API_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             -d "$payload" >/dev/null
-
-      - name: Skip Telegram sending for manual dry-run
-        if: ${{ steps.resolve.outputs.should_send != 'true' }}
-        run: echo "Dry-run mode: generated message only, not sent to Telegram."
