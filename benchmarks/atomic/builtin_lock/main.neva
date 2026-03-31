@@ -1,20 +1,9 @@
-// Benchmarks the atomic builtin.Lock hot path.
-// Two ranges provide paired data and signal streams so Lock can release each item.
-import { streams }
-
 def Main(start any) (stop any) {
-	data_range streams.Range
-	sig_range streams.Range
-	lock Lock<stream<int>>
-	wait streams.Wait
+	lock Lock<int>
 	---
 	:start -> [
-		1 -> data_range:from,
-		100000 -> data_range:to,
-		1 -> sig_range:from,
-		100000 -> sig_range:to
+		lock:sig,
+		1 -> lock:data
 	]
-	data_range -> lock:data
-	sig_range -> lock:sig
-	lock -> wait -> :stop
+	lock -> :stop
 }

@@ -1,15 +1,5 @@
-// Benchmarks the atomic builtin.Pass hot path.
-// Range and Wait are only the source and terminal sink around Pass.
-import { streams }
-
 def Main(start any) (stop any) {
-	range streams.Range
-	pass Pass<stream<int>>
-	wait streams.Wait
+	pass Pass<int>
 	---
-	:start -> [
-		1 -> range:from,
-		100000 -> range:to
-	]
-	range -> pass -> wait -> :stop
+	:start -> 1 -> pass -> :stop
 }
