@@ -458,15 +458,35 @@ func (s *treeShapeListener) parsePorts(
 func (s *treeShapeListener) parseInterfaceDef(
 	actx generated.IInterfaceDefContext,
 ) (src.Interface, *compiler.Error) {
+	if actx == nil {
+		return src.Interface{}, &compiler.Error{
+			Message: "missing interface definition",
+		}
+	}
+
 	parsedTypeParams, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	in, err := s.parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
+
+	inPortsDef := actx.InPortsDef()
+	if inPortsDef == nil || inPortsDef.PortsDef() == nil {
+		return src.Interface{}, &compiler.Error{
+			Message: "missing in ports definition",
+		}
+	}
+	in, err := s.parsePorts(inPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	out, err := s.parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+
+	outPortsDef := actx.OutPortsDef()
+	if outPortsDef == nil || outPortsDef.PortsDef() == nil {
+		return src.Interface{}, &compiler.Error{
+			Message: "missing out ports definition",
+		}
+	}
+	out, err := s.parsePorts(outPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
@@ -995,9 +1015,15 @@ func (s *treeShapeListener) parseCompilerDirectives(
 func (s *treeShapeListener) parseTypeDef(
 	actx generated.ITypeDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		return src.Entity{}, &compiler.Error{
+			Message: "missing type definition",
+		}
+	}
+
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		typeExpr, err := s.parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := s.parseTypeExpr(expr)
 		if err != nil {
 			return src.Entity{}, err
 		}
@@ -1034,6 +1060,12 @@ func (s *treeShapeListener) parseTypeDef(
 func (s *treeShapeListener) parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		return src.Entity{}, &compiler.Error{
+			Message: "missing const definition",
+		}
+	}
+
 	constLit := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
@@ -1107,7 +1139,20 @@ func (s *treeShapeListener) parseConstDef(
 func (s *treeShapeListener) parseCompDef(
 	actx generated.ICompDefContext,
 ) (src.Component, *compiler.Error) {
-	parsedInterfaceDef, err := s.parseInterfaceDef(actx.InterfaceDef())
+	if actx == nil {
+		return src.Component{}, &compiler.Error{
+			Message: "missing component definition",
+		}
+	}
+
+	ifaceDef := actx.InterfaceDef()
+	if ifaceDef == nil {
+		return src.Component{}, &compiler.Error{
+			Message: "missing component interface definition",
+		}
+	}
+
+	parsedInterfaceDef, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		return src.Component{}, err
 	}
@@ -1135,7 +1180,7 @@ func (s *treeShapeListener) parseCompDef(
 	}
 
 	parsedConnections := []src.Connection{}
-	connections := actx.CompBody().ConnDefList()
+	connections := body.ConnDefList()
 	if connections != nil {
 		parsedNet, err := s.parseConnections(connections)
 		if err != nil {
@@ -1202,6 +1247,13 @@ func (s *treeShapeListener) parseConnDef(
 	actx generated.IConnDefContext,
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
+	if actx == nil {
+		return src.Connection{}, &compiler.Error{
+			Message: "missing connection definition",
+			Meta:    &meta,
+		}
+	}
+
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
 	if err != nil {
 		return src.Connection{}, err
@@ -1222,6 +1274,12 @@ func (s *treeShapeListener) parseConnDef(
 func (s *treeShapeListener) parseSenderSide(
 	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
+	if actx == nil {
+		return nil, &compiler.Error{
+			Message: "missing sender side",
+		}
+	}
+
 	singleSender := actx.SingleSenderSide()
 	mulSenders := actx.MultipleSenderSide()
 
@@ -1314,6 +1372,12 @@ func (s *treeShapeListener) parseChainedConnExpr(
 func (s *treeShapeListener) parseReceiverSide(
 	actx generated.IReceiverSideContext,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
+	if actx == nil {
+		return nil, &compiler.Error{
+			Message: "missing receiver side",
+		}
+	}
+
 	singleReceiverSide := actx.SingleReceiverSide()
 	multipleReceiverSide := actx.MultipleReceiverSide()
 

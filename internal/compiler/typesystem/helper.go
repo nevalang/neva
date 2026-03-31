@@ -82,10 +82,13 @@ type DefaultStringer string
 func (ds DefaultStringer) String() string { return string(ds) }
 
 func (h Helper) Trace(ss ...string) Trace {
-	var t *Trace
-	for _, s := range ss {
-		tmp := NewTrace(t, core.EntityRef{Name: s})
-		t = &tmp
+	if len(ss) == 0 {
+		return Trace{}
 	}
-	return *t
+
+	trace := NewTrace(nil, core.EntityRef{Name: ss[0]})
+	for _, s := range ss[1:] {
+		trace = NewTrace(&trace, core.EntityRef{Name: s})
+	}
+	return trace
 }

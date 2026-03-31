@@ -95,6 +95,9 @@ func (Desugarer) handleNode(
 		}
 
 		desugaredDIArgs := maps.Clone(node.DIArgs)
+		if desugaredDIArgs == nil {
+			desugaredDIArgs = make(map[string]src.Node, 1)
+		}
 		desugaredDIArgs[depName] = anonDepArg // actual desugaring
 		node = src.Node{                      // rewrite variable with desugared node
 			Directives: node.Directives,

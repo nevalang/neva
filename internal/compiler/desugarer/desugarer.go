@@ -52,6 +52,10 @@ func (d *Desugarer) desugarModule(
 
 	// copy all modules but replace manifest in current one
 	modsCopy := maps.Clone(build.Modules)
+	if modsCopy == nil {
+		modsCopy = make(map[core.ModuleRef]src.Module, 1)
+	}
+
 	modsCopy[modRef] = src.Module{
 		Manifest: desugaredManifest,
 		Packages: mod.Packages,
