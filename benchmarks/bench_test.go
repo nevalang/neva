@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/pkg/e2e"
+	nevaos "github.com/nevalang/neva/pkg/os"
 )
 
 // BenchmarkRuntimeE2E benchmarks precompiled runtime programs by data type path.
@@ -85,6 +86,8 @@ func discoverBenchmarkPkgs(repoRoot string) ([]string, error) {
 func buildProgramOnce(b *testing.B, repoRoot, nevaBin, pkgName string) string {
 	b.Helper()
 
+	// e2e.BuildNevaBinary caches the shared CLI, but each benchmark fixture still
+	// needs its own compiled output binary because the input package differs.
 	// Create an isolated temp module workspace for one benchmark package.
 	tmpDir := b.TempDir()
 	homeDir := filepath.Join(tmpDir, "home")
@@ -95,8 +98,17 @@ func buildProgramOnce(b *testing.B, repoRoot, nevaBin, pkgName string) string {
 	}
 
 	// Copy benchmark module config plus the whole benchmark package fixture tree.
-	e2e.CopyFile(b, filepath.Join(repoRoot, "benchmarks", "neva.yml"), filepath.Join(moduleDir, "neva.yml"))
-	e2e.CopyDir(b, filepath.Join(repoRoot, "benchmarks", pkgName), progDir)
+	configPath := filepath.Join(repoRoot, "benchmarks", "neva.yml")
+	configInfo, err := os.Stat(configPath)
+	if err != nil {
+		b.Fatalf("stat benchmark module config: %v", err)
+	}
+	if err := nevaos.CopyFile(configPath, filepath.Join(moduleDir, "neva.yml"), configInfo.Mode()); err != nil {
+		b.Fatalf("copy benchmark module config: %v", err)
+	}
+	if err := nevaos.CopyDir(filepath.Join(repoRoot, "benchmarks", pkgName), progDir); err != nil {
+		b.Fatalf("copy benchmark package fixture: %v", err)
+	}
 
 	// Compile the benchmark program once and return its output binary.
 	buildProg := exec.Command(nevaBin, "build", pkgName)

@@ -208,30 +208,7 @@ func PrepareIsolatedNevaHome(repoRoot, homeDir string) error {
 		return nil
 	}
 
-	return copyDir(stdSrc, stdDst)
-}
-
-// CopyFile copies one fixture file into an isolated test workspace.
-func CopyFile(tb testing.TB, src, dst string) {
-	tb.Helper()
-
-	info, err := os.Stat(src)
-	require.NoError(tb, err, "stat %s", src)
-	require.False(tb, info.IsDir(), "source %s must be a file", src)
-	require.NoError(
-		tb,
-		nevaos.CopyFile(src, dst, info.Mode()),
-		"copy %s to %s",
-		src,
-		dst,
-	)
-}
-
-// CopyDir copies a fixture directory tree into an isolated test workspace.
-func CopyDir(tb testing.TB, src, dst string) {
-	tb.Helper()
-
-	require.NoError(tb, copyDir(src, dst), "copy %s to %s", src, dst)
+	return nevaos.CopyDir(stdSrc, stdDst)
 }
 
 // getExitCode extracts the exit code from an error.
@@ -291,32 +268,6 @@ func buildNevaBinaryPerTest(tb testing.TB, repoRoot, mainPath string) string {
 	)
 
 	return binPath
-}
-
-// copyDir recursively copies a fixture tree into a temporary workspace.
-func copyDir(src, dst string) error {
-	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, relErr := filepath.Rel(src, path)
-		if relErr != nil {
-			return relErr
-		}
-
-		target := filepath.Join(dst, rel)
-		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
-		}
-
-		info, statErr := os.Stat(path)
-		if statErr != nil {
-			return statErr
-		}
-
-		return nevaos.CopyFile(path, target, info.Mode())
-	})
 }
 
 // buildNevaBinaryFromCache returns a shared neva CLI binary keyed by compiler input fingerprint.
