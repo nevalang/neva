@@ -23,5 +23,8 @@ Create a Telegram-ready release announcement in English for the Neva community g
 
 ## Output Rules
 - Return only the final Telegram message body in the file.
+- The file content is consumed as raw text in a JSON request (`jq --arg text ...`), so it must be directly sendable without edits.
+- Do not add wrappers like "Here is your post", "Result:", "Output:", or follow-up suggestions.
+- Do not add YAML frontmatter or surrounding quotes.
 - Do not include code fences.
 - Do not include unsupported HTML tags.

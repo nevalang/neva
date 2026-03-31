@@ -50,6 +50,7 @@ jobs:
             ${{ github.event.release.body }}
 
             Save the final post body to `${{ env.OUTPUT_DIR }}/telegram-message.html`.
+            Important: this file is sent as-is in Telegram API JSON `text` field; output body only, no wrappers.
 
       - name: Ensure generated message exists
         run: |
@@ -58,6 +59,21 @@ jobs:
             echo "Missing generated file: ${OUTPUT_DIR}/telegram-message.html"
             exit 1
           }
+
+      - name: Validate generated message shape
+        run: |
+          set -euo pipefail
+          FILE="${OUTPUT_DIR}/telegram-message.html"
+
+          # Reject obvious non-production LLM wrappers and markdown fences.
+          if grep -q '```' "$FILE"; then
+            echo "Generated message contains markdown code fences."
+            exit 1
+          fi
+          if head -n 1 "$FILE" | grep -Eiq "^(here( is|'s)|result:|output:|sure[,!:]?)"; then
+            echo "Generated message starts with an LLM wrapper line."
+            exit 1
+          fi
 
       - name: Upload generated marketing artifacts
         uses: actions/upload-artifact@v4
