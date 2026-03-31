@@ -32,25 +32,42 @@ jobs:
           test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
           mkdir -p "$OUTPUT_DIR"
 
+      - name: Install OpenCode CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
       - name: Generate Telegram post with OpenCode
-        uses: anomalyco/opencode/github@latest
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        with:
-          model: openrouter/moonshotai/kimi-k2.5
-          prompt: |
-            Use the `release-telegram-post` skill.
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          PROMPT_FILE="${OUTPUT_DIR}/release-prompt.txt"
 
-            Generate a Telegram release post using this release payload:
-            - Repository: ${{ github.repository }}
-            - Tag: ${{ github.event.release.tag_name }}
-            - Name: ${{ github.event.release.name }}
-            - URL: ${{ github.event.release.html_url }}
-            - Notes:
-            ${{ github.event.release.body }}
+          {
+            echo 'Use the `release-telegram-post` skill.'
+            echo
+            echo "Generate a Telegram release post using this release payload:"
+            echo "- Repository: ${RELEASE_REPOSITORY}"
+            echo "- Tag: ${RELEASE_TAG}"
+            echo "- Name: ${RELEASE_NAME}"
+            echo "- URL: ${RELEASE_URL}"
+            echo "- Notes:"
+            printf '%s\n' "${RELEASE_NOTES}"
+            echo
+            echo "Save the final post body to \`${OUTPUT_DIR}/telegram-message.html\`."
+            echo "Important: this file is sent as-is in Telegram API JSON \`text\` field; output body only, no wrappers."
+          } >"${PROMPT_FILE}"
 
-            Save the final post body to `${{ env.OUTPUT_DIR }}/telegram-message.html`.
-            Important: this file is sent as-is in Telegram API JSON `text` field; output body only, no wrappers.
+          opencode run \
+            --model openrouter/anthropic/claude-sonnet-4.6 \
+            --prompt "$(cat "${PROMPT_FILE}")"
 
       - name: Ensure generated message exists
         run: |
