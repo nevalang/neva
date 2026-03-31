@@ -1,5 +1,5 @@
-// Benchmarks the atomic builtin message-passing path for int.
-// It measures steady-state stream emission + wait synchronization.
+// Benchmarks the atomic streams.Range hot path.
+// Wait is kept only as the terminal sink for a valid standalone program.
 import { streams }
 
 def Main(start any) (stop any) {
