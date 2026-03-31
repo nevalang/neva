@@ -86,9 +86,14 @@ func (h Helper) Trace(ss ...string) Trace {
 		panic("internal invariant violated: trace requires at least one element")
 	}
 
-	trace := NewTrace(nil, core.EntityRef{Name: ss[0]})
-	for _, s := range ss[1:] {
-		trace = NewTrace(&trace, core.EntityRef{Name: s})
+	trace := &Trace{
+		cur: core.EntityRef{Name: ss[0]},
 	}
-	return trace
+	for _, s := range ss[1:] {
+		trace = &Trace{
+			prev: trace,
+			cur:  core.EntityRef{Name: s},
+		}
+	}
+	return *trace
 }
