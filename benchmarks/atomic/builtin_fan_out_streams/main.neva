@@ -1,18 +1,16 @@
-import { streams }
+import { sync }
 
 def Main(start any) (stop any) {
-	range streams.Range
-	fan_out FanOut<stream<int>>
-	left_wait streams.Wait
-	right_wait streams.Wait
-	done Lock<any>
+	fan_out FanOut<any>
+	done FanIn<any>
+	wg sync.WaitGroup
 	---
 	:start -> [
-		1 -> range:from,
-		100000 -> range:to
+		fan_out,
+		2 -> wg:count
 	]
-	range -> fan_out
-	fan_out:data[0] -> left_wait -> done:sig
-	fan_out:data[1] -> right_wait -> done:data
-	done -> :stop
+	fan_out:data[0] -> true -> done:data[0]
+	fan_out:data[1] -> true -> done:data[1]
+	done -> wg:sig
+	wg -> :stop
 }
