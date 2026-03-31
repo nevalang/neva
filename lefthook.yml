@@ -1,14 +1,21 @@
 pre-commit:
   commands:
-    gofix-check:
-      run: make gofix-check
+    gofix:
+      run: go fix ./...
+      stage_fixed: true
     gofmt:
       glob: "*.go"
       run: gofmt -w {staged_files}
       stage_fixed: true
+    golangci-fix:
+      glob: "*.go"
+      run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run --fix {staged_files}
+      stage_fixed: true
 
 pre-push:
   commands:
+    gofix-check:
+      run: make gofix-check
     lint:
       run: make lint
     test-unit:
