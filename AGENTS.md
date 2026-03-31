@@ -16,6 +16,7 @@ It is intentionally short and stable. Use linked docs for deep details.
 9. For generated tests, include short intent comments.
 10. Keep this file updated when process/architecture/rules change.
 11. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
+12. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
 
 ## 2) High-Level Project Context
 

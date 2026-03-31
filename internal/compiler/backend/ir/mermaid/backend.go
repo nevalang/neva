@@ -214,6 +214,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	// 2. Emit Nodes (Subgraphs)
 	for _, path := range nodePaths {
 		n := nodes[path]
+		if n == nil {
+			panic("internal invariant violated: node map contains nil entry")
+		}
+
 		// Generate Safe ID
 		nodeID := sanitize(n.Path)
 
@@ -288,6 +292,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	fmt.Fprintln(w, "| :--- | :--- | :--- | :--- |")
 	for _, path := range nodePaths {
 		n := nodes[path]
+		if n == nil {
+			panic("internal invariant violated: node map contains nil entry")
+		}
+
 		var portList []string
 		for p := range n.In {
 			portList = append(portList, "in:"+p)

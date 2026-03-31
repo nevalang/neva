@@ -24,6 +24,9 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	typeDef := actx.TypeDef()
+	if typeDef == nil {
+		panic("missing type definition")
+	}
 
 	parsedEntity, err := s.parseTypeDef(typeDef)
 	if err != nil {
@@ -31,12 +34,19 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	name := typeDef.IDENTIFIER().GetText()
+	nameIdent := typeDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing type identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = parsedEntity
 }
 
 func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	constDef := actx.ConstDef()
+	if constDef == nil {
+		panic("missing const definition")
+	}
 
 	parsedEntity, err := s.parseConstDef(constDef)
 	if err != nil {
@@ -44,16 +54,29 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	name := constDef.IDENTIFIER().GetText()
+	nameIdent := constDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing const identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = parsedEntity
 }
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
-	v, err := s.parseInterfaceDef(actx.InterfaceDef())
+	ifaceDef := actx.InterfaceDef()
+	if ifaceDef == nil {
+		panic("missing interface definition")
+	}
+
+	v, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		panic(err)
 	}
-	name := actx.InterfaceDef().IDENTIFIER().GetText()
+	nameIdent := ifaceDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing interface identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = src.Entity{
 		IsPublic:  actx.PUB() != nil,
 		Kind:      src.InterfaceEntity,
@@ -63,13 +86,24 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
+	if compDef == nil {
+		panic("missing component definition")
+	}
+	ifaceDef := compDef.InterfaceDef()
+	if ifaceDef == nil {
+		panic("missing component interface definition")
+	}
 
 	parsedComponent, err := s.parseCompDef(compDef)
 	if err != nil {
 		panic(err)
 	}
 
-	name := compDef.InterfaceDef().IDENTIFIER().GetText()
+	nameIdent := ifaceDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing component identifier")
+	}
+	name := nameIdent.GetText()
 
 	parsedComponent.Directives = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),

@@ -27,10 +27,25 @@ gofix-check:
 	go fix ./...
 	git diff --exit-code
 
+.PHONY: lint
+lint:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run ./...
+
+.PHONY: test-unit
+test-unit:
+	go list ./... \
+		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
+		| xargs -r go test -v
+
+.PHONY: vulncheck
+vulncheck:
+	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
 # check potential nil-derefs
 .PHONY: nilaway
 nilaway:
 	nilaway \
+		-exclude-test-files \
 		-include-pkgs="github.com/nevalang/neva/internal" \
 		./...
 

@@ -208,31 +208,7 @@ func PrepareIsolatedNevaHome(repoRoot, homeDir string) error {
 		return nil
 	}
 
-	return copyDir(stdSrc, stdDst)
-}
-
-// CopyFile copies one fixture file into an isolated test workspace.
-func CopyFile(tb testing.TB, src, dst string) {
-	tb.Helper()
-
-	data, err := os.ReadFile(src)
-	require.NoError(tb, err, "read %s", src)
-
-	require.NoError(tb, os.MkdirAll(filepath.Dir(dst), 0o755), "create %s", filepath.Dir(dst))
-
-	require.NoError(
-		tb,
-		os.WriteFile(dst, data, 0o644), // #nosec G306,G703 -- fixture copy target is test-controlled and intentionally readable.
-		"write %s",
-		dst,
-	)
-}
-
-// CopyDir copies a fixture directory tree into an isolated test workspace.
-func CopyDir(tb testing.TB, src, dst string) {
-	tb.Helper()
-
-	require.NoError(tb, copyDir(src, dst), "copy %s to %s", src, dst)
+	return nevaos.CopyDir(stdSrc, stdDst)
 }
 
 // getExitCode extracts the exit code from an error.
@@ -292,33 +268,6 @@ func buildNevaBinaryPerTest(tb testing.TB, repoRoot, mainPath string) string {
 	)
 
 	return binPath
-}
-
-// copyDir recursively copies a fixture tree into a temporary workspace.
-func copyDir(src, dst string) error {
-	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, relErr := filepath.Rel(src, path)
-		if relErr != nil {
-			return relErr
-		}
-
-		target := filepath.Join(dst, rel)
-		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
-		}
-
-		// #nosec G122 -- walk source is test-controlled fixture tree copied into temp workspace.
-		data, readErr := os.ReadFile(path)
-		if readErr != nil {
-			return readErr
-		}
-
-		return os.WriteFile(target, data, 0o644) // #nosec G306,G703 -- fixture copy target is rooted under dst and intentionally readable.
-	})
 }
 
 // buildNevaBinaryFromCache returns a shared neva CLI binary keyed by compiler input fingerprint.
