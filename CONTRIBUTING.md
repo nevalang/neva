@@ -22,6 +22,15 @@ Not required but recommended:
 
 ## Development
 
+## Engineering Harness (`AGENTS.md`)
+
+This repository uses hierarchical `AGENTS.md` files as an engineering harness
+for both humans and machines.
+
+- Root [`AGENTS.md`](./AGENTS.md) defines stable global rules.
+- Local `AGENTS.md` files define context-specific rules in subdirectories.
+- Prefer local `AGENTS.md` over local `README.md` for contributor/agent workflows.
+
 ## Releasing a new version
 
 Follow these steps to publish a new Nevalang release:

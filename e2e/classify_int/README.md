@@ -1,1 +1,0 @@
-This e2e test was added because of https://github.com/nevalang/neva/issues/816 
