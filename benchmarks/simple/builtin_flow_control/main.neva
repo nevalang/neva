@@ -1,4 +1,4 @@
-// Benchmarks core flow-control primitives.
+// Benchmarks a simple builtin flow-control composition.
 // Covers Pass, FanOut, Lock, and FanIn in one stream pipeline.
 import { streams }
 

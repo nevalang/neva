@@ -42,12 +42,12 @@ func BenchmarkRuntimeE2E(b *testing.B) {
 	}
 }
 
-// discoverBenchmarkPkgs finds all benchmark packages under benchmarks/simple and benchmarks/complex.
+// discoverBenchmarkPkgs finds all benchmark packages under benchmark tiers.
 func discoverBenchmarkPkgs(repoRoot string) ([]string, error) {
 	benchmarksRoot := filepath.Join(repoRoot, "benchmarks")
 	pkgs := make([]string, 0, 64)
 
-	for _, group := range []string{"simple", "complex"} {
+	for _, group := range []string{"atomic", "simple", "complex"} {
 		groupRoot := filepath.Join(benchmarksRoot, group)
 		if _, statErr := os.Stat(groupRoot); errors.Is(statErr, os.ErrNotExist) {
 			// Allow partial rollout where only one group is landed.

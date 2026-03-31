@@ -1,4 +1,4 @@
-// Benchmarks the core int stream path in runtime.
+// Benchmarks the atomic builtin message-passing path for int.
 // It measures steady-state stream emission + wait synchronization.
 import { streams }
 
