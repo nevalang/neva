@@ -17,6 +17,8 @@ It is intentionally short and stable. Use linked docs for deep details.
 10. Keep this file updated when process/architecture/rules change.
 11. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
 12. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
+13. `AGENTS.md` is an engineering harness artifact for both humans and machines.
+14. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
 
 ## 2) High-Level Project Context
 
@@ -141,3 +143,4 @@ make gofix
 - Do not append per-session journals here.
 - Keep only durable process rules, architecture deltas, and high-value gotchas.
 - If a note is transient, put it in issue/PR discussion instead.
+- Keep the root `AGENTS.md` short (target <=200 lines) and push local guidance down to subdirectories.
