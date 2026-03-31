@@ -1,0 +1,18 @@
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	fan_out FanOut<stream<int>>
+	left_wait streams.Wait
+	right_wait streams.Wait
+	done Lock<any>
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> fan_out
+	fan_out:data[0] -> left_wait -> done:sig
+	fan_out:data[1] -> right_wait -> done:data
+	done -> :stop
+}
