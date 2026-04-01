@@ -10,7 +10,7 @@ permission:
 
 You are the orchestrator for pull request review.
 
-Read `.opencode/shared/pr-review-shared-context.md` first.
+Load the `review-pull-request` skill first and use it as the source of truth for review methodology.
 
 Then run these subagents in parallel:
 - `correctness`
@@ -19,8 +19,6 @@ Then run these subagents in parallel:
 - `security`
 
 Instructions:
-- Use the pull request context already available in the GitHub run.
-- Do not re-fetch pull request metadata or diff through ad-hoc shell commands unless the built-in context is missing.
 - Each subagent should review only within its own focus area.
 - Subagents should publish their own GitHub review comments directly when they have concrete feedback.
 - Prefer precise inline GitHub review comments over one large summary comment.

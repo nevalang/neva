@@ -7,7 +7,7 @@ permission:
   webfetch: deny
 ---
 
-Read `.opencode/shared/pr-review-shared-context.md` first.
+Load the `review-pull-request` skill first.
 
 Your focus is performance.
 

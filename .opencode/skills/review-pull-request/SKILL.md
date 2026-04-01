@@ -1,6 +1,11 @@
-# Pull Request Review Shared Context
+---
+name: review-pull-request
+description: Review pull requests with focused subagents and prefer precise inline GitHub review comments.
+---
 
-This file defines the common review policy shared by all PR review agents.
+# Review Pull Request
+
+Use this skill when reviewing a pull request in GitHub.
 
 ## Review Goal
 - Help the author make the pull request objectively better.
@@ -20,6 +25,18 @@ This file defines the common review policy shared by all PR review agents.
 - `nit:` is optional-only feedback.
 - Use `nit:` sparingly.
 - If the comment is not worth the author's attention, do not write it.
+
+## Workflow
+1. Use the pull request context already available in the GitHub run.
+2. Do not re-fetch pull request metadata or diff through ad-hoc shell commands unless the built-in context is missing.
+3. Split review by focus area instead of mixing everything into one reviewer voice.
+4. Prefer subagents for:
+   - correctness
+   - readability
+   - performance
+   - security
+5. Let focused reviewers publish their own precise comments directly.
+6. Only leave a top-level summary comment if there is important high-level feedback that cannot be attached to a specific file or line.
 
 ## Output Quality
 - Be concrete.
