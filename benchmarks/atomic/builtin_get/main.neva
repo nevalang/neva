@@ -1,0 +1,18 @@
+import { runtime }
+
+// Benchmarks builtin component `Get` in one-shot mode.
+const value dict<string> = {
+	answer: '42'
+}
+
+def Main(start any) (stop any) {
+	get Get<string>
+	panic runtime.Panic
+	---
+	:start -> [
+		$value -> get:dict,
+		'answer' -> get:key
+	]
+	get:res -> :stop
+	get:err -> panic
+}

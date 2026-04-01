@@ -1,0 +1,10 @@
+// Benchmarks builtin component `New` in one-shot mode.
+const value int = 42
+
+def Main(start any) (stop any) {
+	#bind(value)
+	new New<int>
+	---
+	:start -> new:sig
+	new -> :stop
+}

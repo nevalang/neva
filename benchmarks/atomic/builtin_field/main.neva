@@ -1,0 +1,18 @@
+// Benchmarks builtin component `Field` in one-shot mode.
+type User struct {
+	name string
+}
+
+const value User = {
+	name: 'John'
+}
+
+const path list<string> = ['name']
+
+def Main(start any) (stop any) {
+	#bind(path)
+	field Field
+	---
+	:start -> $value -> field:data
+	field -> :stop
+}
