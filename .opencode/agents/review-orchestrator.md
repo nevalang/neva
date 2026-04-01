@@ -29,7 +29,7 @@ Shared review method:
 - `questionable` means it asks a clear, unambiguous question the author can answer directly.
 - Use `nit:` only for rare optional polish.
 - Prefer file/line comments when the GitHub integration supports them.
-- If the integration only supports a summary comment, keep it structured by file and focus area rather than blending everything into one vague blob.
+- If the integration only supports a summary comment, structure it into explicit sections for `review-correctness`, `review-readability`, `review-performance`, and `review-security`, and say clearly which subagent found each point.
 - Do not claim tooling capabilities you have not observed in the current run.
 - Do not let multiple subagents restate the same point; deduplicate overlapping findings.
 - Do not spend review budget on style-only remarks when there is no real effect on correctness, clarity, performance, or security.
