@@ -1,0 +1,7 @@
+// Benchmarks const sender path in one-shot mode.
+// Compiler lowers const sender to virtual builtin New wiring.
+const value int = 42
+
+def Main(start any) (stop any) {
+	:start -> $value -> :stop
+}
