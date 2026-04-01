@@ -26,5 +26,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: openrouter/moonshotai/kimi-k2.5
-          agent: review-pull-request
+          agent: review-orchestrator
           use_github_token: true

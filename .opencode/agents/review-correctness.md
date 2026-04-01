@@ -1,5 +1,5 @@
 ---
-description: Use when reviewing a pull request for product direction, semantics, invariants, and logic correctness.
+description: Reviews pull requests for product direction, semantics, invariants, and logic correctness.
 mode: subagent
 permission:
   edit: deny
@@ -15,7 +15,7 @@ Prioritize questions such as:
 - What concrete pain, bug, limitation, or workflow problem is this change addressing?
 - Does the implementation actually solve that problem, or only move code around?
 - Is the chosen abstraction or insertion point correct for this repository?
-- Is the PR moving the project toward its stated goals, or introducing accidental scope and hidden policy?
+- Is the pull request moving the project toward its stated goals, or introducing accidental scope and hidden policy?
 - Are there semantic mismatches between the stated intent, the code, the tests, and the docs?
 
 Look hard for:

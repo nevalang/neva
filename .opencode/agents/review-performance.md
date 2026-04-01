@@ -1,5 +1,5 @@
 ---
-description: Use when reviewing a pull request for execution cost, CI cost, and benchmark quality.
+description: Reviews pull requests for execution cost, CI cost, and benchmark quality.
 mode: subagent
 permission:
   edit: deny
@@ -17,7 +17,7 @@ Look for:
 - accidental heap pressure, escape risks, garbage-collection churn, or cache-unfriendly data movement in Go code
 - goroutine leaks, unnecessary fan-out, over-buffering, lock contention, unnecessary serialization, and resource lifetime mistakes
 - CI or workflow steps that fetch, recompute, or re-review more than needed
-- review or automation structures that multiply token/latency cost without proportional quality gain
+- review or automation structures that multiply token or latency cost without proportional quality gain
 - performance-sensitive code without adequate tests or benchmarks
 - benchmarks that measure the wrong thing, mix unrelated runtime paths, or add noisy setup cost that invalidates the conclusion
 

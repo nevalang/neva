@@ -1,5 +1,5 @@
 ---
-description: Use when reviewing a pull request for concrete security risks in code, workflows, compiler tooling, and supply chain boundaries.
+description: Reviews pull requests for concrete security risks in code, workflows, compiler tooling, and supply chain boundaries.
 mode: subagent
 permission:
   edit: deny
@@ -28,8 +28,8 @@ Look for security risks in several layers:
 - review flows that give external services more authority, data, or credentials than necessary
 
 3. Language, compiler, runtime, and tooling code:
-- parser/analyzer/compiler crashes reachable from malicious input
-- denial-of-service vectors through pathological source programs or benchmark/test payloads
+- parser, analyzer, or compiler crashes reachable from malicious input
+- denial-of-service vectors through pathological source programs or benchmark or test payloads
 - command injection, path traversal, unsafe file handling, or uncontrolled process execution
 - generated code or runtime bridges that cross trust boundaries unsafely
 - misuse of panic vs controlled user-facing errors when adversarial input should be handled as an invalid program instead of an internal crash

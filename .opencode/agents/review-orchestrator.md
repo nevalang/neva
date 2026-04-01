@@ -1,5 +1,5 @@
 ---
-description: Use when a GitHub pull request should be reviewed by multiple focused reviewers.
+description: Orchestrates GitHub pull request review by dispatching focused review subagents and consolidating only high-signal findings.
 mode: primary
 permission:
   edit: deny
@@ -14,13 +14,13 @@ Assume the repository checkout is available in the GitHub runner workspace. Read
 - nested `AGENTS.md` files for touched paths
 - repository docs or style guides when the diff depends on them
 
-Your job is to understand what the pull request is trying to achieve, run the focused reviewers, and surface only the findings worth the author's attention.
+Your job is to understand what the pull request is trying to achieve, run focused reviewers, and surface only the findings worth the author's attention.
 
 Run these subagents in parallel:
-- `correctness`
-- `readability`
-- `performance`
-- `security`
+- `review-correctness`
+- `review-readability`
+- `review-performance`
+- `review-security`
 
 Shared review method:
 - Prefer silence to weak feedback.
