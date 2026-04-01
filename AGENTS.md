@@ -108,6 +108,9 @@ make gofix
   `docs/style_guide.md` and `docs/qna.md`.
 - If compiler bootstrap utils are affected, regenerate from repo CLI
   (avoid stale global binaries).
+- Treat per-component e2e and benchmark coverage as the long-term stdlib
+  maintenance goal. Start with atomic benchmarks and add broader scenarios
+  only when they are justified by a distinct behavior or performance question.
 
 ### Tests and e2e
 
