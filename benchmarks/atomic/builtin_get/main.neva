@@ -6,13 +6,13 @@ const value dict<string> = {
 }
 
 def Main(start any) (stop any) {
-	get Get<string>
+	dict_key Get<string>
 	panic runtime.Panic
 	---
 	:start -> [
-		$value -> get:dict,
-		'answer' -> get:key
+		$value -> dict_key:dict,
+		'answer' -> dict_key:key
 	]
-	get:res -> :stop
-	get:err -> panic
+	dict_key:res -> :stop
+	dict_key:err -> panic
 }
