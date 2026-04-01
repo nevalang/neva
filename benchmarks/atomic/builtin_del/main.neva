@@ -1,0 +1,9 @@
+// Benchmarks builtin component `Del` in one-shot mode.
+def Main(start any) (stop any) {
+	del Del
+	---
+	:start -> [
+		1 -> del,
+		:stop
+	]
+}

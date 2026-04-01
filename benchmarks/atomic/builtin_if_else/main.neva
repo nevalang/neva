@@ -1,0 +1,7 @@
+// Benchmarks builtin component `If` else-path in one-shot mode.
+def Main(start any) (stop any) {
+	if_router If<any>
+	---
+	:start -> false -> if_router:data
+	if_router:else -> :stop
+}
