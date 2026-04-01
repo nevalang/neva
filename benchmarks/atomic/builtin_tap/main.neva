@@ -1,26 +1,24 @@
 // Benchmarks builtin component `Tap` in one-shot mode.
-import {
-	errors
-	runtime
+const tapHandlerValue dict<string> = {
+	ok: 'ok'
 }
 
 def Main(start any) (stop any) {
 	tap Tap<int>{Handler}
-	panic runtime.Panic
+	del Del
 	---
 	:start -> 42 -> tap:data
 	tap:res -> :stop
-	tap:err -> panic
+	tap:err -> del
 }
 
 def Handler(data int) (res any, err error) {
-	switch_router Switch<int>
-	make_err errors.New
+	dict_key Get<string>
 	---
 	:data -> [
-		switch_router:data,
-		0 -> switch_router:case[0]
+		$tapHandlerValue -> dict_key:dict,
+		'ok' -> dict_key:key
 	]
-	switch_router:else -> :res
-	switch_router:case[0] -> 'unexpected zero branch' -> make_err -> :err
+	dict_key:res -> :res
+	dict_key:err -> :err
 }
