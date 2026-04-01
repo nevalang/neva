@@ -1,0 +1,92 @@
+name: OpenCode PR Review
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OUTPUT_DIR: .opencode/context/pr-review-output
+      REVIEW_MODEL: openrouter/moonshotai/kimi-k2.5
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate required runtime configuration
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$OPENROUTER_API_KEY" || {
+            echo "Missing OPENROUTER_API_KEY secret"
+            exit 1
+          }
+          mkdir -p "$OUTPUT_DIR"
+
+      - name: Install OpenCode CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
+      - name: Collect pull request context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,files,url > "${OUTPUT_DIR}/pr.json"
+          gh pr diff "$PR_NUMBER" > "${OUTPUT_DIR}/pr.diff"
+
+      - name: Generate PR review with OpenCode
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          PROMPT_FILE="${OUTPUT_DIR}/prompt.txt"
+          REVIEW_FILE="${OUTPUT_DIR}/review.md"
+
+          {
+            echo 'Use the `review-pull-request` skill.'
+            echo
+            echo "Review this pull request: ${PR_URL}"
+            echo
+            echo "Use these files as input:"
+            echo "- Metadata JSON: ${OUTPUT_DIR}/pr.json"
+            echo "- Diff: ${OUTPUT_DIR}/pr.diff"
+            echo
+            echo "Focus on correctness and regression risk first."
+            echo "When possible, reference concrete file paths and lines from the diff."
+            echo
+            echo "Save the final review report to \`${REVIEW_FILE}\`."
+          } > "${PROMPT_FILE}"
+
+          opencode run \
+            --model "${REVIEW_MODEL}" \
+            --prompt "$(cat "${PROMPT_FILE}")"
+
+      - name: Ensure review output exists
+        run: |
+          set -euo pipefail
+          test -s "${OUTPUT_DIR}/review.md" || {
+            echo "Missing generated review file: ${OUTPUT_DIR}/review.md"
+            exit 1
+          }
+
+      - name: Publish review comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --body-file "${OUTPUT_DIR}/review.md"
