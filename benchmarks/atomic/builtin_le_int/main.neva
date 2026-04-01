@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Le` in one-shot mode.
+def Main(start any) (stop any) {
+	le Le
+	---
+	:start -> [3 -> le:left, 3 -> le:right]
+	le -> :stop
+}

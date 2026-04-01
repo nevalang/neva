@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Pow` in one-shot mode.
+def Main(start any) (stop any) {
+	pow Pow
+	---
+	:start -> [2 -> pow:left, 3 -> pow:right]
+	pow -> :stop
+}
