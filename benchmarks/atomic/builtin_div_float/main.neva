@@ -1,7 +1,0 @@
-// Benchmarks builtin component `Div` in one-shot mode.
-def Main(start any) (stop any) {
-	div Div
-	---
-	:start -> [6.0 -> div:left, 2.0 -> div:right]
-	div -> :stop
-}

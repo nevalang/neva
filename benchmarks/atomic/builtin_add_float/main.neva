@@ -1,7 +1,0 @@
-// Benchmarks builtin component `Add` in one-shot mode.
-def Main(start any) (stop any) {
-	add Add
-	---
-	:start -> [1.0 -> add:left, 2.0 -> add:right]
-	add -> :stop
-}
