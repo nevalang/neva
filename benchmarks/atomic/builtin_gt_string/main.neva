@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Gt` in one-shot mode.
+def Main(start any) (stop any) {
+	gt Gt
+	---
+	:start -> ['b' -> gt:left, 'a' -> gt:right]
+	gt -> :stop
+}

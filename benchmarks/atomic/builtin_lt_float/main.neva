@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Lt` in one-shot mode.
+def Main(start any) (stop any) {
+	lt Lt
+	---
+	:start -> [2.0 -> lt:left, 3.0 -> lt:right]
+	lt -> :stop
+}

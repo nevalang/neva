@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Sub` in one-shot mode.
+def Main(start any) (stop any) {
+	sub Sub
+	---
+	:start -> [3.0 -> sub:left, 1.0 -> sub:right]
+	sub -> :stop
+}
