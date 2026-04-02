@@ -23,7 +23,7 @@ def Main(start any) (stop any) {
 		4 -> w4,
 		5 -> w5,
 		'World' -> w6,
-		6 -> wg:count
+		7 -> wg:count
 	]
 	[w1, w2, w3, w4, w5, w6, println] -> wg:sig
 	wg -> :stop
