@@ -1,0 +1,55 @@
+// Benchmarks integer comparison operators.
+// Covers Eq, Ne, Gt, Lt, Ge, and Le in one evaluation.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_cmp streams.Map<int, bool>{IntCompare}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_cmp -> wait -> :stop
+}
+
+def IntCompare(data int) (res bool) {
+	eq Eq<int>
+	ne Ne<int>
+	gt Gt
+	lt Lt
+	ge Ge
+	le Le
+	and_a And
+	and_b And
+	and_c And
+	or_ab Or
+	or_abc Or
+	---
+	:data -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		ge:left,
+		le:left,
+		42 -> eq:right,
+		42 -> ne:right,
+		10 -> gt:right,
+		100001 -> lt:right,
+		1 -> ge:right,
+		100000 -> le:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	ge -> and_c:left
+	le -> and_c:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> or_abc:left
+	and_c -> or_abc:right
+	or_abc -> :res
+}

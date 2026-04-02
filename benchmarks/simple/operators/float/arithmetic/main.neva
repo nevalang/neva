@@ -1,0 +1,64 @@
+// Benchmarks float arithmetic operator variants.
+// Covers Add, Sub, Mul, and Div via separate map stages.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	to_float streams.Map<int, float>{ToFloat}
+	map_add streams.Map<float, float>{AddOnePointFive}
+	map_sub streams.Map<float, float>{SubHalf}
+	map_mul streams.Map<float, float>{MulOnePointFive}
+	map_div streams.Map<float, float>{DivOnePointFive}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> to_float -> map_add -> map_sub -> map_mul -> map_div
+	map_div -> wait -> :stop
+}
+
+def ToFloat(data int) (res float) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<float>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		1.25 -> pick:then,
+		2.75 -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> :res
+}
+
+def AddOnePointFive(data float) (res float) {
+	add Add
+	---
+	:data -> [add:left, 1.5 -> add:right]
+	add -> :res
+}
+
+def SubHalf(data float) (res float) {
+	sub Sub
+	---
+	:data -> [sub:left, 0.5 -> sub:right]
+	sub -> :res
+}
+
+def MulOnePointFive(data float) (res float) {
+	mul Mul
+	---
+	:data -> [mul:left, 1.5 -> mul:right]
+	mul -> :res
+}
+
+def DivOnePointFive(data float) (res float) {
+	div Div
+	---
+	:data -> [div:left, 1.5 -> div:right]
+	div -> :res
+}
