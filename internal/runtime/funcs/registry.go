@@ -81,6 +81,8 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"int_inc":                   intInc{},
 		"int_dec":                   intDec{},
+		"int_neg":                   intNeg{},
+		"float_neg":                 floatNeg{},
 		"int_from_float":            intFromFloat{},
 		"float_from_int":            floatFromInt{},
 		"string_from_int_codepoint": stringFromIntCodepoint{},
@@ -98,14 +100,16 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"regexp_submatch": regexpSubmatch{},
 
-		"list_at":   listAt{},
-		"list_len":  listlen{},
-		"list_push": listPush{},
+		"list_at":    listAt{},
+		"list_len":   listlen{},
+		"list_slice": listSlice{},
+		"list_push":  listPush{},
 
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},
 
 		"string_at":           stringAt{},
+		"string_slice":        stringSlice{},
 		"strings_join_stream": stringJoinStream{},
 		"strings_join_list":   stringJoinList{},
 		"strings_split":       stringsSplit{},
