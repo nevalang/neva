@@ -18,13 +18,19 @@ func TestSliceStringUsesNormalizedBounds(t *testing.T) {
 
 	data := "abcdef"
 
-	// The cases verify Python-like normalization over string slices.
+	// The cases cover both basic in-range slicing and normalized bounds behavior.
 	testCases := []struct {
+		expect string
 		name   string
 		from   int64
 		to     int64
-		expect string
 	}{
+		{
+			name:   "in_range",
+			from:   1,
+			to:     4,
+			expect: "bcd",
+		},
 		{
 			name:   "negative_bounds",
 			from:   -4,
@@ -46,7 +52,6 @@ func TestSliceStringUsesNormalizedBounds(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := sliceString(data, tc.from, tc.to); got != tc.expect {

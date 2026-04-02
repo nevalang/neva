@@ -9,12 +9,12 @@ import (
 func TestSliceListUsesNormalizedBounds(t *testing.T) {
 	t.Parallel()
 
-	// The cases verify Python-like normalization over list inputs.
+	// The cases cover both basic in-range slicing and normalized bounds behavior.
 	testCases := []struct {
 		name   string
+		expect []int64
 		from   int64
 		to     int64
-		expect []int64
 	}{
 		{
 			name:   "in_range",
@@ -51,7 +51,6 @@ func TestSliceListUsesNormalizedBounds(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 

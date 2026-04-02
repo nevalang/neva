@@ -5,7 +5,7 @@ import "testing"
 func TestNormalizeSliceBounds(t *testing.T) {
 	t.Parallel()
 
-	// Each case validates one normalization rule: negative indexes, clamping, or empty range.
+	// The cases cover normal in-range slicing plus normalization rules such as clamping and empty ranges.
 	testCases := []struct {
 		name         string
 		from         int64
@@ -73,7 +73,6 @@ func TestNormalizeSliceBounds(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
