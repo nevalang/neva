@@ -1,0 +1,33 @@
+// Benchmarks string addition operator.
+// Covers Add(string, string) in steady-state mapping.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_add streams.Map<int, string>{StringAdd}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_add -> wait -> :stop
+}
+
+def StringAdd(data int) (res string) {
+	mod Mod
+	eq Eq<int>
+	pick Ternary<string>
+	add Add
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'alpha' -> pick:then,
+		'beta' -> pick:else
+	]
+	mod -> [eq:left, 0 -> eq:right]
+	eq -> pick:if
+	pick -> [add:left, '_tail' -> add:right]
+	add -> :res
+}

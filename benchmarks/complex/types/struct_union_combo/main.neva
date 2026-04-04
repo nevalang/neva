@@ -1,0 +1,54 @@
+// Benchmarks a composite data path: struct + union together.
+// This models realistic mixed-type runtime traffic.
+import {
+	runtime
+	streams
+}
+
+type Number union {
+	Int int
+}
+
+type Envelope struct {
+	id int
+	boxed Number
+}
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_pack streams.Map<int, Envelope>{Pack}
+	map_unpack streams.Map<Envelope, int>{Unpack}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_pack -> map_unpack -> wait -> :stop
+}
+
+// Pack creates an envelope that contains both plain and tagged fields.
+def Pack(data int) (res Envelope) {
+	box Union<Number>
+	builder Struct<Envelope>
+	---
+	:data -> [
+		box:data,
+		Number::Int -> box:tag,
+		builder:id
+	]
+	box -> builder:boxed
+	builder -> :res
+}
+
+// Unpack extracts tagged payload from nested struct field.
+def Unpack(data Envelope) (res int) {
+	switch Switch<Number>
+	panic runtime.Panic
+	---
+	:data -> .boxed -> [
+		switch:data,
+		Number::Int -> switch:case[0] -> :res
+	]
+	switch:else -> panic
+}
