@@ -1,0 +1,18 @@
+// Benchmarks the atomic streams.Map hot path with a neutral pass-through handler.
+// FromList and FromStream are kept only as the minimal support wiring for a valid stream.
+import { lists }
+import { streams }
+
+const input list<int> = [1]
+
+def Main(start any) (stop any) {
+	to_stream streams.FromList<int>
+	map_passthrough streams.Map<int, int>{Identity}
+	to_list lists.FromStream<int>
+	---
+	:start -> $input -> to_stream -> map_passthrough -> to_list -> :stop
+}
+
+def Identity(data int) (res int) {
+	:data -> :res
+}
