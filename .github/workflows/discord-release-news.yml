@@ -3,182 +3,123 @@ name: Discord Release News
 on:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: Release tag (for example v0.35.0)
-        required: true
-        type: string
-      release_name:
-        description: Optional release title override
-        required: false
-        default: ""
-        type: string
-      release_url:
-        description: Public release URL
-        required: true
-        type: string
-      release_body:
-        description: Release notes markdown/body
-        required: false
-        default: ""
-        type: string
-      dry_run:
-        description: Generate preview only without posting to Discord
-        required: false
-        default: true
-        type: boolean
 
 permissions:
   contents: read
 
 concurrency:
-  group: discord-release-news-${{ github.event.release.tag_name || inputs.tag_name || github.run_id }}
+  group: discord-release-news-${{ github.event.release.tag_name }}
   cancel-in-progress: false
 
 jobs:
-  discord-release-news:
+  send-discord-news:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OUTPUT_DIR: .opencode/context/release-discord-output
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          persist-credentials: false
 
-      - name: Prepare release context
+      - name: Validate required runtime configuration
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag_name }}
-          RELEASE_NAME: ${{ github.event.release.name || inputs.release_name }}
-          RELEASE_URL: ${{ github.event.release.html_url || inputs.release_url }}
-          RELEASE_BODY: ${{ github.event.release.body || inputs.release_body }}
-          RELEASE_TARGET: ${{ github.event.release.target_commitish || github.ref_name }}
-          RELEASE_AUTHOR: ${{ github.event.release.author.login || github.actor }}
-          RELEASE_PRERELEASE: ${{ github.event.release.prerelease || false }}
-        run: |
-          set -euo pipefail
-          mkdir -p .tmp-release
-          python3 <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          payload = {
-              "event_name": os.environ["EVENT_NAME"],
-              "tag_name": os.environ["RELEASE_TAG"],
-              "release_name": os.environ["RELEASE_NAME"],
-              "release_url": os.environ["RELEASE_URL"],
-              "release_body": os.environ["RELEASE_BODY"],
-              "target_commitish": os.environ["RELEASE_TARGET"],
-              "author": os.environ["RELEASE_AUTHOR"],
-              "prerelease": os.environ["RELEASE_PRERELEASE"].lower() == "true",
-          }
-          Path(".tmp-release/release.json").write_text(
-              json.dumps(payload, ensure_ascii=False, indent=2),
-              encoding="utf-8",
-          )
-          PY
-
-      - name: Install OpenCode CLI
-        run: curl -fsSL https://opencode.ai/install | bash
-
-      - name: Add OpenCode to PATH
-        run: echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
-
-      - name: Generate Discord post with OpenCode
-        env:
+          DISCORD_NEWS_WEBHOOK_URL: ${{ secrets.DISCORD_NEWS_WEBHOOK_URL }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           set -euo pipefail
-          cat > .tmp-release/discord-prompt.txt <<'EOF'
-          You are writing a Discord announcement for the official Nevalang server news channel.
+          test -n "$OPENROUTER_API_KEY" || { echo "Missing OPENROUTER_API_KEY secret"; exit 1; }
+          test -n "$DISCORD_NEWS_WEBHOOK_URL" || { echo "Missing DISCORD_NEWS_WEBHOOK_URL secret"; exit 1; }
+          mkdir -p "$OUTPUT_DIR"
 
-          Read the attached release metadata file and generate exactly one final Discord message.
-
-          Requirements:
-          - Output plain text only.
-          - No code fences.
-          - No markdown headings.
-          - Max 1800 characters.
-          - Open with the release tag or release title.
-          - Summarize 2 to 5 high-signal changes from the provided release notes.
-          - Preserve only claims supported by the provided release metadata.
-          - If release notes are sparse, stay conservative and do not invent features.
-          - End with a short call to action and the release URL.
-          - Write in English.
-          - Style should fit Discord news: concise, readable, mildly energetic, not corporate, not Telegram-like.
-          EOF
-          opencode run \
-            --model openrouter/moonshotai/kimi-k2.5 \
-            --format json \
-            --file .tmp-release/release.json \
-            "$(cat .tmp-release/discord-prompt.txt)" \
-            > .tmp-release/opencode-events.jsonl
-
-      - name: Extract generated post
+      - name: Install OpenCode CLI
         run: |
           set -euo pipefail
-          python3 <<'PY'
-          import json
-          import sys
-          from pathlib import Path
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
-          chunks: list[str] = []
-          for line in Path(".tmp-release/opencode-events.jsonl").read_text(encoding="utf-8").splitlines():
-              if not line.strip():
-                  continue
-              event = json.loads(line)
-              if event.get("type") != "text":
-                  continue
-              part = event.get("part", {})
-              text = str(part.get("text", ""))
-              if text:
-                  chunks.append(text)
-
-          message = "".join(chunks).strip()
-          if not message:
-              print("OpenCode did not produce a Discord post", file=sys.stderr)
-              sys.exit(1)
-          if len(message) > 1800:
-              print(f"Discord post is too long: {len(message)} chars", file=sys.stderr)
-              sys.exit(1)
-
-          Path(".tmp-release/discord-post.txt").write_text(message + "\n", encoding="utf-8")
-          print(message)
-          PY
-
-      - name: Post preview
+      - name: Generate Discord post with OpenCode
+        env:
+          DISCORD_CHANNEL_NAME: news
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_NOTES: ${{ github.event.release.body }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
         run: |
-          echo "Generated Discord post:"
-          echo "----------------------------------------"
-          cat .tmp-release/discord-post.txt
-          echo "----------------------------------------"
+          set -euo pipefail
+          PROMPT_FILE="${OUTPUT_DIR}/release-prompt.txt"
 
-      - name: Send to Discord News webhook
-        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
+          {
+            echo 'Use the `release-discord-post` skill.'
+            echo
+            echo "Generate a Discord release post for the official Neva Discord #${DISCORD_CHANNEL_NAME} channel using this release payload:"
+            echo "- Repository: ${RELEASE_REPOSITORY}"
+            echo "- Tag: ${RELEASE_TAG}"
+            echo "- Name: ${RELEASE_NAME}"
+            echo "- URL: ${RELEASE_URL}"
+            echo "- Notes:"
+            printf '%s\n' "${RELEASE_NOTES}"
+            echo
+            echo "Save the final post body to \`${OUTPUT_DIR}/discord-message.txt\`."
+            echo "Important: this file is sent as-is in Discord webhook JSON \`content\` field; output body only, no wrappers."
+          } >"${PROMPT_FILE}"
+
+          opencode run \
+            --model openrouter/anthropic/claude-sonnet-4.6 \
+            --prompt "$(cat "${PROMPT_FILE}")"
+
+      - name: Ensure generated message exists
+        run: |
+          set -euo pipefail
+          test -s "${OUTPUT_DIR}/discord-message.txt" || {
+            echo "Missing generated file: ${OUTPUT_DIR}/discord-message.txt"
+            exit 1
+          }
+
+      - name: Validate generated message shape
+        run: |
+          set -euo pipefail
+          FILE="${OUTPUT_DIR}/discord-message.txt"
+          LENGTH="$(wc -m <"$FILE" | tr -d ' ')"
+
+          if grep -q '```' "$FILE"; then
+            echo "Generated message contains markdown code fences."
+            exit 1
+          fi
+          if head -n 1 "$FILE" | grep -Eiq "^(here( is|'s)|result:|output:|sure[,!:]?)"; then
+            echo "Generated message starts with an LLM wrapper line."
+            exit 1
+          fi
+          if [ "$LENGTH" -gt 1800 ]; then
+            echo "Generated message is too long for Discord comfort: ${LENGTH} characters."
+            exit 1
+          fi
+
+      - name: Upload generated marketing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-discord-output
+          path: ${{ env.OUTPUT_DIR }}
+
+      - name: Send Discord message
         env:
           DISCORD_NEWS_WEBHOOK_URL: ${{ secrets.DISCORD_NEWS_WEBHOOK_URL }}
         run: |
           set -euo pipefail
-          if [ -z "${DISCORD_NEWS_WEBHOOK_URL}" ]; then
-            echo "DISCORD_NEWS_WEBHOOK_URL secret is not configured"
-            exit 1
-          fi
-          python3 <<'PY'
-          import json
-          import os
-          import urllib.request
-          from pathlib import Path
 
-          content = Path(".tmp-release/discord-post.txt").read_text(encoding="utf-8").strip()
-          payload = json.dumps({"content": content}).encode("utf-8")
-          request = urllib.request.Request(
-              os.environ["DISCORD_NEWS_WEBHOOK_URL"],
-              data=payload,
-              headers={"Content-Type": "application/json"},
-              method="POST",
-          )
-          with urllib.request.urlopen(request) as response:
-              if response.status != 204:
-                  raise RuntimeError(f"Unexpected Discord webhook status: {response.status}")
-          PY
+          MESSAGE="$(cat "${OUTPUT_DIR}/discord-message.txt")"
+          test -n "$MESSAGE" || { echo "Generated message is empty"; exit 1; }
+
+          payload="$(
+            jq -n \
+              --arg content "$MESSAGE" \
+              '{content: $content}'
+          )"
+
+          curl --fail --silent --show-error \
+            -X POST "${DISCORD_NEWS_WEBHOOK_URL}" \
+            -H "Content-Type: application/json" \
+            -d "$payload" >/dev/null

@@ -122,6 +122,9 @@ make gofix
 
 - For OpenCode-driven release announcements, use headless `opencode run`.
   `anomalyco/opencode/github@latest` is limited to GitHub comment/review events.
+- Prefer thin release workflows that delegate wording/format rules to
+  repository-local `.opencode/skills/*` prompts instead of embedding large
+  generation logic in YAML.
 
 ## 8) Keep AGENTS.md Lean
 
