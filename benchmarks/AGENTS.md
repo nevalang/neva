@@ -21,7 +21,8 @@ This file defines benchmark authoring rules for both humans and machines.
 - Benchmark package naming should be explicit and stable.
 - For `atomic` builtins, prefer `<pkg>_<component>` with optional `_<context>` when needed.
 - Do not add `_<type>` suffixes by default.
-- Add type/context suffix only when a benchmark intentionally targets a distinct runtime path.
+- Add type/context suffix only when a benchmark intentionally targets a distinct Neva runtime path or semantic mechanism.
+- Do not split benchmarks by surface type when the difference would only re-measure native Go operators instead of a distinct Neva path.
 - Avoid generic names like `basic`.
 
 ## Atomic Caveat
