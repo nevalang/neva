@@ -118,6 +118,11 @@ make gofix
 - `e2e/` contains separate modules with Go harness tests.
 - Keep e2e runs time-bounded; avoid orphaned long-running subprocess chains.
 
+### Release delivery automation
+
+- For OpenCode-driven release announcements, use headless `opencode run`.
+  `anomalyco/opencode/github@latest` is limited to GitHub comment/review events.
+
 ## 8) Keep AGENTS.md Lean
 
 - Do not append per-session journals here.
