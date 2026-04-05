@@ -289,6 +289,11 @@ Follow these instructions.
 - **Common patterns**: `-trimpath` is a safe default for release builds; in local measurement it reduced stripped binaries by ~0.5% with no runtime behavior change.
 - **Common patterns**: Add `-buildvcs=false` alongside `-trimpath` for generated/release binaries to avoid embedding VCS metadata and keep artifacts more deterministic.
 - **Gotchas**: The runtime package has no external module dependencies, but stdlib-heavy funcs (for example `http`, `image`, `regexp`) still inflate binaries when included via the global registry.
+
+### Session Notes (2026-04-05)
+
+- **Common patterns**: When a task references delivery automations (for example Telegram/Discord release posting), first verify that the integration actually lives in the current repository; if not, treat the work as cross-repo and ask for the owning repo/path before implementation.
+- **Gotchas**: `anomalyco/opencode/github@latest` is limited to GitHub comment/review events; for `release` workflows use headless `opencode run` in a normal Actions step instead of the GitHub-event wrapper.
 ## 3. ⚡ Core Concepts
 
 - **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
