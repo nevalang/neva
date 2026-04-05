@@ -1,0 +1,118 @@
+// Benchmarks comparison operators as one simple family scenario.
+// Evaluates integer, float, and string comparison paths inside one package.
+def Main(start any) (stop any) {
+	compare CompareFamily
+	---
+	:start -> compare -> :stop
+}
+
+def CompareFamily(start any) (res any) {
+	int_ok IntCompare
+	float_ok FloatCompare
+	string_ok StringCompare
+	and_a And
+	and_b And
+	---
+	:start -> [int_ok, float_ok, string_ok]
+	int_ok -> and_a:left
+	float_ok -> and_a:right
+	and_a -> and_b:left
+	string_ok -> and_b:right
+	and_b -> true -> :res
+}
+
+def IntCompare(start any) (res bool) {
+	eq Eq<int>
+	ne Ne<int>
+	gt Gt
+	lt Lt
+	ge Ge
+	le Le
+	and_a And
+	and_b And
+	and_c And
+	or_ab Or
+	or_abc Or
+	---
+	:start -> [
+		42 -> eq:left,
+		42 -> ne:left,
+		42 -> gt:left,
+		42 -> lt:left,
+		42 -> ge:left,
+		42 -> le:left,
+		42 -> eq:right,
+		42 -> ne:right,
+		10 -> gt:right,
+		100001 -> lt:right,
+		1 -> ge:right,
+		100000 -> le:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	ge -> and_c:left
+	le -> and_c:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> or_abc:left
+	and_c -> or_abc:right
+	or_abc -> :res
+}
+
+def FloatCompare(start any) (res bool) {
+	eq Eq<float>
+	ne Ne<float>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:start -> [
+		42.0 -> eq:left,
+		42.0 -> ne:left,
+		42.0 -> gt:left,
+		42.0 -> lt:left,
+		42.0 -> eq:right,
+		42.0 -> ne:right,
+		40.0 -> gt:right,
+		100.0 -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}
+
+def StringCompare(start any) (res bool) {
+	eq Eq<string>
+	ne Ne<string>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:start -> [
+		'alpha' -> eq:left,
+		'alpha' -> ne:left,
+		'alpha' -> gt:left,
+		'alpha' -> lt:left,
+		'alpha' -> eq:right,
+		'alpha' -> ne:right,
+		'a' -> gt:right,
+		'z' -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}
