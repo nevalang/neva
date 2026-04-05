@@ -1,5 +1,6 @@
 // Benchmarks the atomic streams.Map hot path with a neutral pass-through handler.
-// FromList and FromStream are kept only as the minimal support wiring for a valid stream.
+// FromList and FromStream are kept only as the minimal support wiring for a
+// valid standalone stream program.
 import { lists }
 import { streams }
 

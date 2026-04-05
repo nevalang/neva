@@ -1,23 +1,24 @@
 // Benchmarks arithmetic operators as one simple family scenario.
 // Keeps type-specific paths inside the program instead of the package name.
-import { streams }
+import { sync }
 
 def Main(start any) (stop any) {
-	range streams.Range
-	int_ops streams.Map<int, int>{IntArithmetic}
-	float_ops streams.Map<int, float>{FloatArithmetic}
-	string_ops streams.Map<int, string>{StringArithmetic}
-	wait streams.Wait
+	int_ops IntArithmetic
+	float_ops FloatArithmetic
+	string_ops StringArithmetic
+	wg sync.WaitGroup
 	---
 	:start -> [
-		1 -> range:from,
-		100000 -> range:to
+		int_ops,
+		float_ops,
+		string_ops,
+		3 -> wg:count
 	]
-	range -> [int_ops, float_ops, string_ops]
-	[int_ops, float_ops, string_ops] -> wait -> :stop
+	[int_ops, float_ops, string_ops] -> wg:sig
+	wg -> :stop
 }
 
-def IntArithmetic(data int) (res int) {
+def IntArithmetic(start any) (sig any) {
 	add Add
 	sub Sub
 	mul Mul
@@ -25,16 +26,16 @@ def IntArithmetic(data int) (res int) {
 	mod Mod
 	pow Pow
 	---
-	:data -> [add:left, 1 -> add:right]
+	:start -> [1 -> add:left, 1 -> add:right]
 	add -> [sub:left, 1 -> sub:right]
 	sub -> [mul:left, 2 -> mul:right]
 	mul -> [div:left, 2 -> div:right]
 	div -> [mod:left, 7 -> mod:right]
 	mod -> [pow:left, 2 -> pow:right]
-	pow -> :res
+	pow -> true -> :sig
 }
 
-def FloatArithmetic(data int) (res float) {
+def FloatArithmetic(start any) (sig any) {
 	mod Mod
 	eq Eq<int>
 	pick Ternary<float>
@@ -43,8 +44,8 @@ def FloatArithmetic(data int) (res float) {
 	mul Mul
 	div Div
 	---
-	:data -> [
-		mod:left,
+	:start -> [
+		1 -> mod:left,
 		2 -> mod:right,
 		1.25 -> pick:then,
 		2.75 -> pick:else
@@ -55,17 +56,17 @@ def FloatArithmetic(data int) (res float) {
 	add -> [sub:left, 0.5 -> sub:right]
 	sub -> [mul:left, 1.5 -> mul:right]
 	mul -> [div:left, 1.5 -> div:right]
-	div -> :res
+	div -> true -> :sig
 }
 
-def StringArithmetic(data int) (res string) {
+def StringArithmetic(start any) (sig any) {
 	mod Mod
 	eq Eq<int>
 	pick Ternary<string>
 	add Add
 	---
-	:data -> [
-		mod:left,
+	:start -> [
+		1 -> mod:left,
 		2 -> mod:right,
 		'alpha' -> pick:then,
 		'beta' -> pick:else
@@ -73,5 +74,5 @@ def StringArithmetic(data int) (res string) {
 	mod -> [eq:left, 0 -> eq:right]
 	eq -> pick:if
 	pick -> [add:left, '_tail' -> add:right]
-	add -> :res
+	add -> true -> :sig
 }
