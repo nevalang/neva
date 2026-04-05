@@ -11,7 +11,9 @@ It is intentionally short and stable. Use linked docs for deep details.
 4. If uncertainty is >10% and local context cannot resolve it safely, ask user.
 5. Refactor proactively when it clearly improves clarity/maintainability.
 6. Run targeted checks with ~5m cap unless user requests longer runs.
-7. Run `golangci-lint` and `go test` for touched scope; fix issues you introduce.
+7. Run `golangci-lint` and `go test` only for touched system parts; fix issues you introduce.
+   - Language/compiler/runtime/stdlib changes: run targeted lint/tests for those packages and semantics.
+   - CI/workflow/prompt/docs-only changes: run only checks relevant to those files; skip unrelated language/runtime test suites.
 8. For PR comment tasks: apply changes first, then reply to each addressed review comment via `gh`; do not resolve threads unless user asks.
 9. For generated tests, include short intent comments.
 10. Keep this file updated when process/architecture/rules change.
