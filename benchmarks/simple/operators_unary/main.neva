@@ -1,0 +1,22 @@
+// Benchmarks unary operator paths as one simple family scenario.
+// Keeps the family-level package name while exercising the integer unary flow.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_unary streams.Map<int, int>{UnaryInt}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_unary -> wait -> :stop
+}
+
+def UnaryInt(data int) (res int) {
+	inc Inc
+	dec Dec
+	---
+	:data -> inc -> dec -> :res
+}

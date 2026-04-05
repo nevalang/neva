@@ -1,4 +1,4 @@
-// Benchmarks boolean logical operators.
+// Benchmarks logical operators as one simple family scenario.
 // Covers Not, And, and Or.
 import { streams }
 

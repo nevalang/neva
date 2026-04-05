@@ -1,0 +1,148 @@
+// Benchmarks comparison operators as one simple family scenario.
+// Evaluates integer, float, and string comparison paths inside one package.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	compare streams.Map<int, bool>{CompareFamily}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> compare -> wait -> :stop
+}
+
+def CompareFamily(data int) (res bool) {
+	int_ok IntCompare
+	float_ok FloatCompare
+	string_ok StringCompare
+	and_a And
+	and_b And
+	---
+	:data -> [int_ok, float_ok, string_ok]
+	int_ok -> and_a:left
+	float_ok -> and_a:right
+	and_a -> and_b:left
+	string_ok -> and_b:right
+	and_b -> :res
+}
+
+def IntCompare(data int) (res bool) {
+	eq Eq<int>
+	ne Ne<int>
+	gt Gt
+	lt Lt
+	ge Ge
+	le Le
+	and_a And
+	and_b And
+	and_c And
+	or_ab Or
+	or_abc Or
+	---
+	:data -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		ge:left,
+		le:left,
+		42 -> eq:right,
+		42 -> ne:right,
+		10 -> gt:right,
+		100001 -> lt:right,
+		1 -> ge:right,
+		100000 -> le:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	ge -> and_c:left
+	le -> and_c:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> or_abc:left
+	and_c -> or_abc:right
+	or_abc -> :res
+}
+
+def FloatCompare(data int) (res bool) {
+	mod Mod
+	eq_int Eq<int>
+	pick Ternary<float>
+	eq Eq<float>
+	ne Ne<float>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		42.0 -> pick:then,
+		43.0 -> pick:else
+	]
+	mod -> [eq_int:left, 0 -> eq_int:right]
+	eq_int -> pick:if
+	pick -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		42.0 -> eq:right,
+		42.0 -> ne:right,
+		40.0 -> gt:right,
+		100.0 -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}
+
+def StringCompare(data int) (res bool) {
+	mod Mod
+	eq_int Eq<int>
+	pick Ternary<string>
+	eq Eq<string>
+	ne Ne<string>
+	gt Gt
+	lt Lt
+	and_a And
+	and_b And
+	or_ab Or
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+		'alpha' -> pick:then,
+		'beta' -> pick:else
+	]
+	mod -> [eq_int:left, 0 -> eq_int:right]
+	eq_int -> pick:if
+	pick -> [
+		eq:left,
+		ne:left,
+		gt:left,
+		lt:left,
+		'alpha' -> eq:right,
+		'alpha' -> ne:right,
+		'a' -> gt:right,
+		'z' -> lt:right
+	]
+	eq -> and_a:left
+	ne -> and_a:right
+	gt -> and_b:left
+	lt -> and_b:right
+	and_a -> or_ab:left
+	and_b -> or_ab:right
+	or_ab -> :res
+}

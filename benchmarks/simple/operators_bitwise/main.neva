@@ -1,5 +1,4 @@
-// Benchmarks integer bitwise operators.
-// Covers BitAnd, BitOr, BitXor, BitLsh, and BitRsh.
+// Benchmarks integer bitwise operators as one simple family scenario.
 import { streams }
 
 def Main(start any) (stop any) {
