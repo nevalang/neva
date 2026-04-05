@@ -31,6 +31,10 @@ jobs:
           set -euo pipefail
           test -n "$OPENROUTER_API_KEY" || { echo "Missing OPENROUTER_API_KEY secret"; exit 1; }
           test -n "$DISCORD_NEWS_WEBHOOK_URL" || { echo "Missing DISCORD_NEWS_WEBHOOK_URL secret"; exit 1; }
+          printf '%s' "$DISCORD_NEWS_WEBHOOK_URL" | grep -Eq '^https://(discord|discordapp)\.com/api/webhooks/[0-9]+/[^[:space:]]+$' || {
+            echo "DISCORD_NEWS_WEBHOOK_URL does not look like a valid Discord webhook URL"
+            exit 1
+          }
           mkdir -p "$OUTPUT_DIR"
 
       - name: Install OpenCode CLI
@@ -55,8 +59,9 @@ jobs:
           {
             echo 'Use the `release-discord-post` skill.'
             echo
-            echo "Generate a Discord release post for the official Neva Discord #${DISCORD_CHANNEL_NAME} channel using this release payload:"
+            echo "Generate a Discord release post for the official Neva Discord channel #${DISCORD_CHANNEL_NAME} using this release payload:"
             echo "- Repository: ${RELEASE_REPOSITORY}"
+            echo "- Target channel: #${DISCORD_CHANNEL_NAME}"
             echo "- Tag: ${RELEASE_TAG}"
             echo "- Name: ${RELEASE_NAME}"
             echo "- URL: ${RELEASE_URL}"
