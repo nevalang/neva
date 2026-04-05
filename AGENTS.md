@@ -15,6 +15,7 @@ It is intentionally short and stable. Use linked docs for deep details.
    - Language/compiler/runtime/stdlib changes: run targeted lint/tests for those packages and semantics.
    - CI/workflow/prompt/docs-only changes: run only checks relevant to those files; skip unrelated language/runtime test suites.
 8. For PR comment tasks: apply changes first, then reply to each addressed review comment via `gh`; do not resolve threads unless user asks.
+   - Automated PR review output must contain only required changes; omit praise/approval text and post exactly `Все ок.` when there are no meaningful findings.
 9. For generated tests, include short intent comments.
 10. Keep this file updated when process/architecture/rules change.
 11. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
