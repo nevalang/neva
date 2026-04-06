@@ -1,10 +1,11 @@
 ---
+name: "deep-refactoring"
 description: A systematic approach to refactoring complex codebases.
 ---
 
-# Deep Refactoring Workflow
+# Deep Refactoring Skill
 
-Use this workflow when a component has become too complex to understand or modify safely, or when architectural flaws (e.g. duplicated logic) are identified.
+Use this skill when a component has become too complex to understand or modify safely, or when architectural flaws (e.g. duplicated logic) are identified.
 
 ## 1. Phase 1: Knowledge Mapping
 

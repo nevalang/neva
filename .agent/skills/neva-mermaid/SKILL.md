@@ -1,10 +1,11 @@
 ---
+name: "neva-mermaid"
 description: Convert Neva programs to valid Mermaid diagrams
 ---
 
 # Neva to Mermaid Skill
 
-Use this workflow to convert any Neva source code into a Mermaid flowchart.
+Use this skill to convert any Neva source code into a Mermaid flowchart.
 
 ## Instructions
 
