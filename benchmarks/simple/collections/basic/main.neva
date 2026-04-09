@@ -1,0 +1,24 @@
+// Benchmarks collection helpers from builtin package.
+// Covers Len over list constants.
+import { streams }
+
+const nums list<int> = [1, 2, 3, 4, 5]
+
+def Main(start any) (stop any) {
+	range streams.Range
+	map_col streams.Map<int, int>{CollectionOps}
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> map_col -> wait -> :stop
+}
+
+def CollectionOps(data int) (res int) {
+	len_list Len
+	---
+	:data -> $nums -> len_list:data
+	len_list -> :res
+}
