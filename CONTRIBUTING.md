@@ -22,6 +22,14 @@ Not required but recommended:
 
 ## Development
 
+### Runtime Benchmarks
+
+The runtime baseline suite lives in [`benchmarks/`](./benchmarks/).
+
+- Run `make bench-runtime` for the full atomic/simple/complex benchmark suite.
+- Run `make bench-runtime-routing-complex` when iterating on the final routing/complex slice from `#1023`.
+- CI uploads raw benchmark artifacts via [`.github/workflows/runtime-benchmarks.yml`](./.github/workflows/runtime-benchmarks.yml); compare two runs locally with `benchstat`.
+
 ## Engineering Harness (`AGENTS.md`)
 
 This repository uses hierarchical `AGENTS.md` files as an engineering harness
