@@ -1,0 +1,22 @@
+// Benchmarks core flow-control primitives.
+// Covers Pass, FanOut, Lock, and FanIn in one stream pipeline.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	pass Pass<stream<int>>
+	fan_out FanOut<stream<int>>
+	lock Lock<stream<int>>
+	fan_in FanIn<stream<int>>
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> pass -> fan_out
+	fan_out:data[0] -> [lock:data, fan_in:data[1]]
+	fan_out:data[1] -> lock:sig
+	lock -> fan_in:data[0]
+	fan_in -> wait -> :stop
+}
