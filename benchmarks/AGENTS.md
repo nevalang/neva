@@ -6,10 +6,8 @@ This file defines benchmark authoring rules for both humans and machines.
 
 - Applies to all packages under `benchmarks/`.
 - Current benchmark taxonomy has three tiers: `atomic`, `simple`, `complex`.
-- Keep benchmark package paths shallow and stable.
-- Prefer `benchmarks/<tier>/<pkg>/main.neva` for new work.
-- Use one scoped prefix only when it carries real scenario meaning (for example `complex/control_flow/selectors_routers`).
-- Do not reintroduce old taxonomy trees such as `benchmarks/simple/operators/<type>/...`.
+- Keep directory layout flat by tier: `benchmarks/<tier>/<pkg>_<component>[_<context>]/main.neva`.
+- Do not introduce deeper benchmark nesting.
 
 ## Tier Definitions
 
@@ -22,7 +20,6 @@ This file defines benchmark authoring rules for both humans and machines.
 
 - Benchmark package naming should be explicit and stable.
 - For `atomic` builtins, prefer `<pkg>_<component>` with optional `_<context>` when needed.
-- For `simple` and `complex`, prefer scenario names that describe the measured behavior, not implementation detail buckets.
 - Do not add `_<type>` suffixes by default.
 - Add type/context suffix only when a benchmark intentionally targets a distinct Neva runtime path or semantic mechanism.
 - Do not split benchmarks by surface type when the difference would only re-measure native Go operators instead of a distinct Neva path.
