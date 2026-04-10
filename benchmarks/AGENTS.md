@@ -8,7 +8,7 @@ This file defines benchmark authoring rules for both humans and machines.
 - Current benchmark taxonomy has three tiers: `atomic`, `simple`, `complex`.
 - Keep benchmark package paths shallow and stable.
 - Prefer `benchmarks/<tier>/<pkg>/main.neva` for new work.
-- Use one scoped prefix only when it carries real scenario meaning (for example `complex/control_flow/selectors_routers`).
+- Keep each tier flat: use exactly one package segment after `atomic`, `simple`, or `complex`.
 - Do not reintroduce old taxonomy trees such as `benchmarks/simple/operators/<type>/...`.
 
 ## Tier Definitions

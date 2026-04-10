@@ -55,7 +55,7 @@ bench-runtime:
 
 .PHONY: bench-runtime-routing-complex
 bench-runtime-routing-complex:
-	go test ./benchmarks -run=^$$ -bench '^BenchmarkRuntimeE2E/(simple_routers_basic|simple_selectors_basic|complex_)' -benchtime=1x -count=1
+	go test ./benchmarks -run=^$$ -bench '^BenchmarkRuntimeE2E/(simple_routers|simple_selectors|complex_)' -benchtime=1x -count=1
 
 # === Release Build ===
 
