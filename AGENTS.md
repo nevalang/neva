@@ -15,15 +15,16 @@ It is intentionally short and stable. Use linked docs for deep details.
    - Language/compiler/runtime/stdlib changes: run targeted lint/tests for those packages and semantics.
    - CI/workflow/prompt/docs-only changes: run only checks relevant to those files; skip unrelated language/runtime test suites.
 8. For PR comment tasks: apply changes first, then reply to each addressed review comment via `gh`; do not resolve threads unless user asks.
-9. For generated tests, include short intent comments.
-10. Keep this file updated when process/architecture/rules change.
-11. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
-12. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
-13. `AGENTS.md` is an engineering harness artifact for both humans and machines.
-14. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
-15. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
-16. File-type authoring rules live in `.claude/rules/*.md`; if a harness does not load them automatically, inspect matching `paths` frontmatter before editing files.
-17. Avoid duplicating durable guidance across `AGENTS.md`, `.claude/rules`, and docs; keep one source of truth and make the other layers point to it.
+9. Never merge a PR, enable auto-merge, or close a review PR as “done” unless the user gives a direct explicit command in that conversation.
+10. For generated tests, include short intent comments.
+11. Keep this file updated when process/architecture/rules change.
+12. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
+13. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
+14. `AGENTS.md` is an engineering harness artifact for both humans and machines.
+15. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
+16. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
+17. File-type authoring rules live in `.claude/rules/*.md`; if a harness does not load them automatically, inspect matching `paths` frontmatter before editing files.
+18. Avoid duplicating durable guidance across `AGENTS.md`, `.claude/rules`, and docs; keep one source of truth and make the other layers point to it.
 
 ## 2) High-Level Project Context
 

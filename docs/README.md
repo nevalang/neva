@@ -8,4 +8,3 @@ Welcome to Nevalang documentation!
 - **[Style Guide](./style_guide.md)** - Best practices to follow.
 - **[Questions and Answers](./qna.md)** - If you curious why things exactly the way they are.
 - **[The Book](./book/README.md)** - A deep dive into the language and how it works. Make sure you've read tutorial!
-- **[Runtime Benchmarks](../benchmarks/README.md)** - Baseline suite for runtime comparisons and benchmark workflow usage.
