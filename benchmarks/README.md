@@ -21,10 +21,4 @@ To run the suite locally:
 make bench-runtime
 ```
 
-To run the routing/complex slice used when reviewing the final `#1023` extraction:
-
-```bash
-make bench-runtime-routing-complex
-```
-
 Use this suite as the baseline for future runtime work, including comparisons against `#1004`.

@@ -53,10 +53,6 @@ nilaway:
 bench-runtime:
 	go test ./benchmarks -run=^$$ -bench BenchmarkRuntimeE2E -benchtime=1x -count=1
 
-.PHONY: bench-runtime-routing-complex
-bench-runtime-routing-complex:
-	go test ./benchmarks -run=^$$ -bench '^BenchmarkRuntimeE2E/(simple_routers|simple_selectors|complex_)' -benchtime=1x -count=1
-
 # === Release Build ===
 
 # Release flags:
