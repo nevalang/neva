@@ -1,0 +1,14 @@
+// Benchmarks the core int stream path in runtime.
+// It measures steady-state stream emission + wait synchronization.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> wait -> :stop
+}
