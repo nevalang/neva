@@ -5,15 +5,18 @@ import {
 	streams
 }
 
+// Number defines benchmark data used by this scenario.
 type Number union {
 	Int int
 }
 
+// Envelope defines benchmark data used by this scenario.
 type Envelope struct {
 	id int
 	boxed Number
 }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	range streams.Range
 	map_pack streams.Map<int, Envelope>{Pack}

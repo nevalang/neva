@@ -3,6 +3,7 @@ const tapHandlerValue dict<string> = {
 	ok: 'ok'
 }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	tap Tap<int>{Handler}
 	del Del
@@ -12,6 +13,7 @@ def Main(start any) (stop any) {
 	tap:err -> del
 }
 
+// Handler implements a benchmark component in this scenario.
 def Handler(data int) (res any, err error) {
 	dict_key Get<string>
 	---

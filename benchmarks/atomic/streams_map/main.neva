@@ -6,6 +6,7 @@ import { streams }
 
 const input list<int> = [1]
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	to_stream streams.FromList<int>
 	map_passthrough streams.Map<int, int>{Identity}
@@ -14,6 +15,7 @@ def Main(start any) (stop any) {
 	:start -> $input -> to_stream -> map_passthrough -> to_list -> :stop
 }
 
+// Identity implements a benchmark component in this scenario.
 def Identity(data int) (res int) {
 	:data -> :res
 }

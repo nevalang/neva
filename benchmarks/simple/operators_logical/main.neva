@@ -6,6 +6,7 @@ def Main(start any) (stop any) {
 	:start -> logic -> :stop
 }
 
+// BoolLogical implements a benchmark component in this scenario.
 def BoolLogical(start any) (res any) {
 	not Not
 	and And

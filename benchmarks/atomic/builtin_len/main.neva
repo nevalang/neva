@@ -1,6 +1,7 @@
 // Benchmarks builtin component `Len` in one-shot mode.
 const value list<int> = [1, 2, 3, 4]
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	len Len
 	---

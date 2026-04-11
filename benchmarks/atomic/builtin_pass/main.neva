@@ -1,3 +1,4 @@
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	pass Pass<any>
 	---

@@ -2,6 +2,7 @@
 // Covers Ternary, Match, and Select in one mapping path.
 import { streams }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	range streams.Range
 	map_sel streams.Map<int, int>{SelectorOps}
@@ -14,6 +15,7 @@ def Main(start any) (stop any) {
 	range -> map_sel -> wait -> :stop
 }
 
+// SelectorOps implements a benchmark component in this scenario.
 def SelectorOps(data int) (res int) {
 	mod Mod
 	eq Eq<int>

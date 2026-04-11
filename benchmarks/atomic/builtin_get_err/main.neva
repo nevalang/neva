@@ -3,6 +3,7 @@ const value dict<string> = {
 	answer: '42'
 }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	dict_key Get<string>
 	del Del

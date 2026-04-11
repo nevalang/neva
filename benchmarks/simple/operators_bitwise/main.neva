@@ -5,6 +5,7 @@ def Main(start any) (stop any) {
 	:start -> bits -> :stop
 }
 
+// Bitwise implements a benchmark component in this scenario.
 def Bitwise(start any) (res any) {
 	and BitAnd
 	or BitOr

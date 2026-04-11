@@ -1,5 +1,6 @@
 import { sync }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	fan_out FanOut<any>
 	fan_in FanIn<any>

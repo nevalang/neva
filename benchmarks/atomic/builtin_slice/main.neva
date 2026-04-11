@@ -1,6 +1,7 @@
 // Benchmarks builtin component `Slice` in one-shot mode.
 const value string = 'abcd'
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	slice Slice
 	---

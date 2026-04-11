@@ -4,6 +4,7 @@ type MaybeInt union {
 	None
 }
 
+// Main runs the benchmark scenario.
 def Main(start any) (stop any) {
 	box Union<MaybeInt>
 	---
