@@ -49,15 +49,6 @@ nilaway:
 		-include-pkgs="github.com/nevalang/neva/internal" \
 		./...
 
-.PHONY: bench-runtime
-# Bench suite runner:
-# - `./benchmarks/...` keeps scope limited to benchmark harness packages.
-# - `-run=^$$` skips unit tests and executes only benchmark functions.
-# - `-benchtime=1x` runs each benchmark exactly once (external process workload).
-# - `-count=1` disables repeat runs to keep CI/runtime snapshots deterministic.
-bench-runtime:
-	go test ./benchmarks/... -run=^$$ -bench BenchmarkRuntimeE2E -benchtime=1x -count=1
-
 # === Release Build ===
 
 # Release flags:
