@@ -2,6 +2,7 @@
 // Keeps the family-level package name while exercising the integer unary flow.
 import { sync }
 
+// Main drives Inc and Dec from identical seeds and waits for both unary paths.
 def Main(start any) (stop any) {
 	inc Inc
 	dec Dec

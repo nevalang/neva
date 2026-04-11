@@ -1,5 +1,6 @@
 import { sync }
 
+// Main fans one signal into two branches, rejoins them, and waits for both completions.
 def Main(start any) (stop any) {
 	fan_out FanOut<any>
 	fan_in FanIn<any>

@@ -8,6 +8,7 @@ const value User = {
 	name: 'John'
 }
 
+// Main projects `.name` from a constant struct, exercising compiler-lowered Field access.
 def Main(start any) (stop any) {
 	:start -> $value -> .name -> :stop
 }

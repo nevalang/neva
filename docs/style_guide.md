@@ -42,6 +42,12 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Prefer giving a node the same name as the component used to instantiate it (e.g. `println fmt.Println`).
 - When wrapping a component in a higher-order component, mention both to retain clarity (e.g. `for_each_println ForEach{fmt.Println}`).
 
+### Component Doc Comments
+
+- For components with more than 3 nodes or more than 3 connections, add at least one single-line doc comment explaining what the component does.
+- This guidance improves intent clarity and does not replace good naming.
+- Keep comments specific to behavior or intent; avoid placeholder phrasing that repeats the obvious.
+
 ## Interfaces
 
 - Use outports to separate data flows, not for destructuring.

@@ -2,6 +2,7 @@
 // Compiler lowers const sender to virtual builtin New wiring.
 const value int = 42
 
+// Main emits a const int sender, exercising compiler-lowered virtual New behavior.
 def Main(start any) (stop any) {
 	:start -> $value -> :stop
 }

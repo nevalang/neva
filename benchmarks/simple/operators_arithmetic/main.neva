@@ -2,6 +2,7 @@
 // Keeps type-specific paths inside the program instead of the package name.
 import { sync }
 
+// Main runs int, float, and string arithmetic chains in parallel and waits for all to finish.
 def Main(start any) (stop any) {
 	int_ops IntArithmetic
 	float_ops FloatArithmetic
@@ -18,6 +19,7 @@ def Main(start any) (stop any) {
 	wg -> :stop
 }
 
+// IntArithmetic executes Add/Sub/Mul/Div/Mod/Pow to cover integer arithmetic flow end-to-end.
 def IntArithmetic(start any) (sig any) {
 	add Add
 	sub Sub
@@ -35,6 +37,7 @@ def IntArithmetic(start any) (sig any) {
 	pow -> true -> :sig
 }
 
+// FloatArithmetic selects a seed via ternary, then runs Add/Sub/Mul/Div on float values.
 def FloatArithmetic(start any) (sig any) {
 	mod Mod
 	eq Eq<int>
@@ -59,6 +62,7 @@ def FloatArithmetic(start any) (sig any) {
 	div -> true -> :sig
 }
 
+// StringArithmetic selects a string branch and concatenates a suffix to benchmark string Add.
 def StringArithmetic(start any) (sig any) {
 	mod Mod
 	eq Eq<int>

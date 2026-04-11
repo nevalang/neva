@@ -49,6 +49,16 @@ nilaway:
 		-include-pkgs="github.com/nevalang/neva/internal" \
 		./...
 
+.PHONY: benchmarks
+# Bench suite runner:
+# - discovers benchmark functions in repository packages, excluding `e2e` and `examples` modules.
+# - `-run=^$$` skips regular tests and executes only benchmarks.
+# - `-benchtime=1x` runs each benchmark case once for stable harness-level snapshots.
+# - `-count=1` keeps CI benchmark runs single-pass and predictable.
+benchmarks:
+	go list ./... \
+		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
+		| xargs -r go test -run=^$$ -bench . -benchtime=1x -count=1
 # === Release Build ===
 
 # Release flags:

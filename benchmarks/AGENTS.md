@@ -6,8 +6,13 @@ This file defines benchmark authoring rules for both humans and machines.
 
 - Applies to all packages under `benchmarks/`.
 - Current benchmark taxonomy has three tiers: `atomic`, `simple`, `complex`.
-- Keep directory layout flat by tier: `benchmarks/<tier>/<pkg>_<component>[_<context>]/main.neva`.
-- Do not introduce deeper benchmark nesting.
+- Keep benchmark package paths shallow and stable.
+- Prefer `benchmarks/<tier>/<pkg>/main.neva` for new work.
+- Keep each tier flat: use exactly one package segment after `atomic`, `simple`, or `complex`.
+- Do not reintroduce old taxonomy trees such as `benchmarks/simple/operators/<type>/...`.
+- Keep durable benchmark guidance in this `AGENTS.md`; avoid subdirectory `README.md` files when an `AGENTS.md` already exists.
+- For new or AI-generated benchmark entities, include at least one single-line doc comment that states what the entity does.
+- Doc comments must be behavior-specific and useful: mention the concrete path/flow being measured, not tautologies like "Main runs the benchmark scenario."
 
 ## Tier Definitions
 

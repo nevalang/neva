@@ -6,6 +6,7 @@ def Main(start any) (stop any) {
 	:start -> logic -> :stop
 }
 
+// BoolLogical composes Not, And, and Or in one dataflow chain with mixed constants.
 def BoolLogical(start any) (res any) {
 	not Not
 	and And

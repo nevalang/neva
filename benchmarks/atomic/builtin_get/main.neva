@@ -5,6 +5,7 @@ const value dict<string> = {
 	answer: '42'
 }
 
+// Main performs a successful dict lookup (`answer`) and panics on unexpected errors.
 def Main(start any) (stop any) {
 	dict_key Get<string>
 	panic runtime.Panic

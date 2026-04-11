@@ -1,6 +1,7 @@
 // Benchmarks builtin component `Slice` in one-shot mode.
 const value string = 'abcd'
 
+// Main slices constant string data with explicit bounds to benchmark Slice wiring.
 def Main(start any) (stop any) {
 	slice Slice
 	---

@@ -5,6 +5,7 @@ def Main(start any) (stop any) {
 	:start -> bits -> :stop
 }
 
+// Bitwise executes And/Or/Xor/Lsh/Rsh sequentially to stress integer bitwise chaining.
 def Bitwise(start any) (res any) {
 	and BitAnd
 	or BitOr
