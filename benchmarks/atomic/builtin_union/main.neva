@@ -4,7 +4,7 @@ type MaybeInt union {
 	None
 }
 
-// Main runs the benchmark scenario.
+// Main boxes an int into MaybeInt::Some, exercising tagged-union construction.
 def Main(start any) (stop any) {
 	box Union<MaybeInt>
 	---

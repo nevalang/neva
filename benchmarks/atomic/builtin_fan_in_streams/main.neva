@@ -1,6 +1,6 @@
 import { sync }
 
-// Main runs the benchmark scenario.
+// Main sends one start signal into both fan_in inports and waits for both arrivals.
 def Main(start any) (stop any) {
 	fan_in FanIn<any>
 	wg sync.WaitGroup

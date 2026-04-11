@@ -5,18 +5,18 @@ import {
 	streams
 }
 
-// Number defines benchmark data used by this scenario.
+// Number is a one-tag union used to exercise explicit tagged payload wrapping.
 type Number union {
 	Int int
 }
 
-// Envelope defines benchmark data used by this scenario.
+// Envelope combines scalar and union fields to force Struct+Union interaction in one payload.
 type Envelope struct {
 	id int
 	boxed Number
 }
 
-// Main runs the benchmark scenario.
+// Main maps a range through Pack then Unpack, measuring struct+union round-trip cost.
 def Main(start any) (stop any) {
 	range streams.Range
 	map_pack streams.Map<int, Envelope>{Pack}

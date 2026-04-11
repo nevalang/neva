@@ -46,6 +46,7 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 
 - For components with more than 3 nodes or more than 3 connections, add at least one single-line doc comment explaining what the component does.
 - This guidance improves intent clarity and does not replace good naming.
+- Keep comments specific to behavior or intent; avoid placeholder phrasing that repeats the obvious.
 
 ## Interfaces
 

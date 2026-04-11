@@ -2,7 +2,7 @@
 // Wait is kept only as the terminal sink for a valid standalone program.
 import { streams }
 
-// Main runs the benchmark scenario.
+// Main emits a large Range into Wait to benchmark sustained stream production.
 def Main(start any) (stop any) {
 	range streams.Range
 	wait streams.Wait

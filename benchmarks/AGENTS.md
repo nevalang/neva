@@ -12,6 +12,7 @@ This file defines benchmark authoring rules for both humans and machines.
 - Do not reintroduce old taxonomy trees such as `benchmarks/simple/operators/<type>/...`.
 - Keep durable benchmark guidance in this `AGENTS.md`; avoid subdirectory `README.md` files when an `AGENTS.md` already exists.
 - For new or AI-generated benchmark entities, include at least one single-line doc comment that states what the entity does.
+- Doc comments must be behavior-specific and useful: mention the concrete path/flow being measured, not tautologies like "Main runs the benchmark scenario."
 
 ## Tier Definitions
 

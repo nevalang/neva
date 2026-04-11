@@ -2,7 +2,7 @@
 // Covers Cond, Switch, Race, and If in one deterministic mapping path.
 import { streams }
 
-// Main runs the benchmark scenario.
+// Main maps a range through RouterOps so each item traverses router components.
 def Main(start any) (stop any) {
 	range streams.Range
 	map_r streams.Map<int, int>{RouterOps}
@@ -15,7 +15,7 @@ def Main(start any) (stop any) {
 	range -> map_r -> wait -> :stop
 }
 
-// RouterOps implements a benchmark component in this scenario.
+// RouterOps branches via Cond/Switch/If/Race and rejoins branches with deterministic Add.
 def RouterOps(data int) (res int) {
 	mod Mod
 	eq Eq<int>

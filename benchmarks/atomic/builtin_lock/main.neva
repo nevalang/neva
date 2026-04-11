@@ -1,4 +1,4 @@
-// Main runs the benchmark scenario.
+// Main drives both Lock inports from one start signal to benchmark lock-step handoff.
 def Main(start any) (stop any) {
 	lock Lock<any>
 	---

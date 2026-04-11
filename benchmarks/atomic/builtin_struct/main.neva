@@ -4,7 +4,7 @@ type User struct {
 	age int
 }
 
-// Main runs the benchmark scenario.
+// Main builds User via Struct<User> field ports to benchmark typed struct assembly.
 def Main(start any) (stop any) {
 	builder Struct<User>
 	---

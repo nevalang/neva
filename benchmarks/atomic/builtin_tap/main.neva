@@ -3,7 +3,7 @@ const tapHandlerValue dict<string> = {
 	ok: 'ok'
 }
 
-// Main runs the benchmark scenario.
+// Main routes int payload through Tap while Handler performs side work and preserves output.
 def Main(start any) (stop any) {
 	tap Tap<int>{Handler}
 	del Del
@@ -13,7 +13,7 @@ def Main(start any) (stop any) {
 	tap:err -> del
 }
 
-// Handler implements a benchmark component in this scenario.
+// Handler does a deterministic dict lookup to exercise Tap handler error/result wiring.
 def Handler(data int) (res any, err error) {
 	dict_key Get<string>
 	---

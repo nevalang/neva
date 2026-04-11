@@ -1,4 +1,4 @@
-// Main runs the benchmark scenario.
+// Main forwards start through Pass<any> unchanged to isolate pass-through overhead.
 def Main(start any) (stop any) {
 	pass Pass<any>
 	---

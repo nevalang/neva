@@ -3,7 +3,7 @@ const value dict<string> = {
 	answer: '42'
 }
 
-// Main runs the benchmark scenario.
+// Main requests a missing key to benchmark Get's error outport under deterministic input.
 def Main(start any) (stop any) {
 	dict_key Get<string>
 	del Del
