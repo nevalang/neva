@@ -643,6 +643,8 @@ func marshalStructFieldsWithSpaces(fields []StructField) ([]byte, error) {
 
 func marshalNestedJSON(msg Msg) ([]byte, error) {
 	switch msg.Kind() {
+	case MsgKindInvalid, MsgKindBool, MsgKindInt, MsgKindFloat, MsgKindString, MsgKindBytes:
+		return msg.MarshalJSON()
 	case MsgKindList:
 		return marshalNestedListWithSpaces(msg.List())
 	case MsgKindDict:
@@ -652,7 +654,7 @@ func marshalNestedJSON(msg Msg) ([]byte, error) {
 	case MsgKindUnion:
 		return marshalNestedUnionCompact(msg.Union())
 	default:
-		return msg.MarshalJSON()
+		panic(fmt.Sprintf("unexpected nested JSON marshal for unknown message kind: %d", msg.Kind()))
 	}
 }
 
