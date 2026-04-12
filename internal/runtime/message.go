@@ -349,17 +349,7 @@ func (msg StructMsg) MarshalJSON() ([]byte, error) {
 		return fields[i].name < fields[j].name
 	})
 
-	m := make(map[string]Msg, len(fields))
-	for i := range fields {
-		m[fields[i].name] = fields[i].value
-	}
-
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return addJSONSpaces(jsonData), nil
+	return marshalStructFieldsWithSpaces(fields)
 }
 
 func (msg StructMsg) String() string {
@@ -477,11 +467,10 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
 	}
 
-	dataJSON, err := json.Marshal(msg.data)
+	dataJSON, err := msg.data.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
-	dataJSON = addJSONSpaces(dataJSON)
 
 	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
@@ -591,48 +580,112 @@ func equalMsgDicts(left map[string]Msg, right map[string]Msg) bool {
 }
 
 func marshalMapWithSpaces(m map[string]Msg) ([]byte, error) {
-	jsonData, err := json.Marshal(m)
+	if len(m) == 0 {
+		return []byte("{}"), nil
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	out := make([]byte, 0, len(m)*16+2)
+	out = append(out, '{')
+	for i := range keys {
+		if i > 0 {
+			out = append(out, ',', ' ')
+		}
+
+		keyJSON, err := json.Marshal(keys[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, keyJSON...)
+		out = append(out, ':', ' ')
+
+		valueJSON, err := marshalNestedJSON(m[keys[i]])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, valueJSON...)
+	}
+	out = append(out, '}')
+
+	return out, nil
+}
+
+func marshalStructFieldsWithSpaces(fields []StructField) ([]byte, error) {
+	out := make([]byte, 0, len(fields)*16+2)
+	out = append(out, '{')
+	for i := range fields {
+		if i > 0 {
+			out = append(out, ',', ' ')
+		}
+
+		keyJSON, err := json.Marshal(fields[i].name)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, keyJSON...)
+		out = append(out, ':', ' ')
+
+		valueJSON, err := marshalNestedJSON(fields[i].value)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, valueJSON...)
+	}
+	out = append(out, '}')
+
+	return out, nil
+}
+
+func marshalNestedJSON(msg Msg) ([]byte, error) {
+	switch msg.Kind() {
+	case MsgKindList:
+		return marshalNestedListWithSpaces(msg.List())
+	case MsgKindDict:
+		return marshalMapWithSpaces(msg.Dict())
+	case MsgKindStruct:
+		return marshalStructFieldsWithSpaces(msg.Struct().fields)
+	case MsgKindUnion:
+		return marshalNestedUnionCompact(msg.Union())
+	default:
+		return msg.MarshalJSON()
+	}
+}
+
+func marshalNestedListWithSpaces(list []Msg) ([]byte, error) {
+	if len(list) == 0 {
+		return []byte("[]"), nil
+	}
+
+	var out []byte
+	out = append(out, '[')
+	for i := range list {
+		if i > 0 {
+			out = append(out, ',', ' ')
+		}
+		itemJSON, err := marshalNestedJSON(list[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, itemJSON...)
+	}
+	out = append(out, ']')
+
+	return out, nil
+}
+
+func marshalNestedUnionCompact(msg UnionMsg) ([]byte, error) {
+	if !msg.hasData {
+		return fmt.Appendf(nil, `{"tag": %q}`, msg.tag), nil
+	}
+
+	dataJSON, err := marshalNestedJSON(msg.data)
 	if err != nil {
 		return nil, err
 	}
-
-	return addJSONSpaces(jsonData), nil
-}
-
-func addJSONSpaces(jsonData []byte) []byte {
-	spaced := make([]byte, 0, len(jsonData))
-	inString := false
-	isEscaped := false
-
-	for _, b := range jsonData {
-		if inString {
-			spaced = append(spaced, b)
-			if isEscaped {
-				isEscaped = false
-				continue
-			}
-			if b == '\\' {
-				isEscaped = true
-				continue
-			}
-			if b == '"' {
-				inString = false
-			}
-			continue
-		}
-
-		switch b {
-		case '"':
-			inString = true
-			spaced = append(spaced, b)
-		case ':':
-			spaced = append(spaced, ':', ' ')
-		case ',':
-			spaced = append(spaced, ',', ' ')
-		default:
-			spaced = append(spaced, b)
-		}
-	}
-
-	return spaced
+	return fmt.Appendf(nil, `{"tag": %q, "data": %s}`, msg.tag, dataJSON), nil
 }

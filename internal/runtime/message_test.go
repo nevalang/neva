@@ -158,6 +158,17 @@ func TestUnionMsgStringUsesNestedJSONFormatting(t *testing.T) {
 	}
 }
 
+func TestUnionMsgStringPreservesEscapedPayloadBytes(t *testing.T) {
+	payload := `quote:\" backslash:\\ commas:, colons: braces:{}`
+	msg := NewUnionMsg("Payload", NewDictMsg(map[string]Msg{
+		"text": NewStringMsg(payload),
+	}))
+
+	if got, want := msg.String(), `{ "tag": "Payload", "data": {"text": "quote:\\\" backslash:\\\\ commas:, colons: braces:{}"} }`; got != want {
+		t.Fatalf("String() = %q, want %q", got, want)
+	}
+}
+
 func TestBytesMsgMarshalJSON(t *testing.T) {
 	msg := NewBytesMsg([]byte("hello"))
 
