@@ -40,8 +40,7 @@ Required summary format when findings exist (strict):
 1. Start with `# Review Summary`.
 2. Include only non-empty sections from this list (in order):
    - `## Critical Issues (Blocking)`
-   - `## Design Issues`
-   - `## Minor Suggestions`
+   - `## Non-critical Issues`
 3. Under each section, include only concrete required changes. No positive observations.
 4. End with `## Conclusion` only when it states merge gates or blocking conditions.
 5. Do not emit any extra top-level sections.
