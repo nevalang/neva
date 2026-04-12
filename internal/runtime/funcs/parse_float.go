@@ -65,7 +65,7 @@ func (p parseFloat) stringToRuntimeFloat(
 ) (runtime.Msg, error) {
 	v, err := strconv.ParseFloat(data.Str(), int(bits.Int()))
 	if err != nil {
-		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.ParseFloat: "))
+		return runtime.Msg{}, errors.New(strings.TrimPrefix(err.Error(), "strconv.ParseFloat: "))
 	}
 	return runtime.NewFloatMsg(float64(v)), nil
 }
