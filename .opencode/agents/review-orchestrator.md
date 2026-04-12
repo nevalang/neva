@@ -28,18 +28,29 @@ Run these subagents in parallel:
 Output contract (strict):
 - Never include praise, strengths, approval language, or "what is good".
 - Never include sections like "Overall Assessment", "Strengths", "Validation", or "Conclusion" unless they contain required changes.
+- Never include sections named "Positive Aspects", "What Went Well", "Good Parts", "Wins", or equivalent.
+- Never add preambles such as "Based on my analysis", separators like `---`, or summary prose that does not request a change.
 - Publish only:
   - `actionable` findings (concrete defects, risks, contradictions, or explicit change requests)
   - `questionable` findings (clear, unambiguous blocking questions the author must answer)
 - If findings are few, keep the comment short.
 - If there are no meaningful findings, post exactly: `Все ок.`
 
+Required summary format when findings exist (strict):
+1. Start with `# Review Summary`.
+2. Include only non-empty sections from this list (in order):
+   - `## Critical Issues (Blocking)`
+   - `## Non-critical Issues`
+3. Under each section, include only concrete required changes. No positive observations.
+4. End with `## Conclusion` only when it states merge gates or blocking conditions.
+5. Do not emit any extra top-level sections.
+
 Shared review method:
 - Prefer silence in subagent outputs to weak feedback.
 - A comment must be either `actionable` or `questionable`.
 - Use `nit:` only for rare optional polish, and only when it still implies a concrete change worth making.
 - Prefer file/line comments when the GitHub integration supports them.
-- If the integration only supports a summary comment, list only required changes grouped by subagent (`review-correctness`, `review-readability`, `review-performance`, `review-security`) and omit groups with no findings.
+- If the integration only supports a summary comment, list only required changes grouped by severity sections from the required summary format; omit empty sections.
 - Do not claim tooling capabilities you have not observed in the current run.
 - Do not let multiple subagents restate the same point; deduplicate overlapping findings.
 - Do not spend review budget on style-only remarks when there is no real effect on correctness, clarity, performance, or security.
