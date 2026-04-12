@@ -69,7 +69,7 @@ func BenchmarkMsgEqualList(b *testing.B) {
 
 func BenchmarkMsgStructGet(b *testing.B) {
 	fields := make([]StructField, 0, 32)
-	for i := 0; i < 32; i++ {
+	for i := range 32 {
 		fields = append(fields, NewStructField("f"+strconv.Itoa(i), NewIntMsg(int64(i))))
 	}
 	msg := NewStructMsg(fields)
