@@ -72,17 +72,15 @@ func newDocCmd() *cli.Command {
 	}
 }
 
-//nolint:govet // fieldalignment: small helper struct.
 type docMatch struct {
 	file    string
-	line    int
 	context []docContextLine
+	line    int
 }
 
-//nolint:govet // fieldalignment: small helper struct.
 type docContextLine struct {
-	line int
 	text string
+	line int
 }
 
 func parseDocArgs(args cli.Args) (string, string, error) {
@@ -157,10 +155,7 @@ func searchStdlib(pkgPath string, re *regexp.Regexp, context int) ([]docMatch, e
 				continue
 			}
 
-			start := i - context
-			if start < 0 {
-				start = 0
-			}
+			start := max(i-context, 0)
 			end := i + context
 			if end >= len(lines) {
 				end = len(lines) - 1

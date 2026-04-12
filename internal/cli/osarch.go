@@ -23,8 +23,8 @@ func newOSArchCmd() *cli.Command {
 			fmt.Println("(use these values for --target-os and --target-arch flags when cross-compiling)")
 			fmt.Println()
 
-			platforms := strings.Split(strings.TrimSpace(string(output)), "\n")
-			for _, platform := range platforms {
+			platforms := strings.SplitSeq(strings.TrimSpace(string(output)), "\n")
+			for platform := range platforms {
 				fmt.Println(platform)
 			}
 

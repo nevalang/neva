@@ -31,3 +31,29 @@ func CopyFile(src, dst string, mode fs.FileMode) error {
 
 	return dstFile.Close()
 }
+
+// CopyDir recursively copies a directory tree preserving file modes.
+func CopyDir(src, dst string) error {
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, relErr := filepath.Rel(src, path)
+		if relErr != nil {
+			return relErr
+		}
+
+		target := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return stdos.MkdirAll(target, 0o755)
+		}
+
+		info, statErr := d.Info()
+		if statErr != nil {
+			return statErr
+		}
+
+		return CopyFile(path, target, info.Mode())
+	})
+}

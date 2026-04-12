@@ -18,10 +18,10 @@ type (
 	Builder interface {
 		Build(ctx context.Context, workdir string) (RawBuild, string, *Error)
 	}
-	//nolint:govet // fieldalignment: keep semantic grouping.
+
 	RawBuild struct {
-		EntryModRef core.ModuleRef
 		Modules     map[core.ModuleRef]RawModule
+		EntryModRef core.ModuleRef
 	}
 )
 
@@ -30,8 +30,8 @@ type (
 		ParseModules(rawMods map[core.ModuleRef]RawModule) (map[core.ModuleRef]src.Module, *Error)
 	}
 	RawModule struct {
-		Manifest src.ModuleManifest    // Manifest must be parsed by builder before passing into compiler
-		Packages map[string]RawPackage // Packages themselves on the other hand can be parsed by compiler
+		Packages map[string]RawPackage
+		Manifest src.ModuleManifest
 	}
 	RawPackage map[string][]byte
 )
@@ -54,9 +54,8 @@ type Backend interface {
 	EmitLibrary(dst string, exports []LibraryExport, trace bool) error
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type LibraryExport struct {
+	Program   *ir.Program
 	Name      string
 	Component src.Component
-	Program   *ir.Program
 }

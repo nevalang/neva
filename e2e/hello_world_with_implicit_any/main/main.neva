@@ -4,7 +4,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-	fmt.Println<any>
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> 'Hello, World!' -> println:data

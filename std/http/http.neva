@@ -1,6 +1,6 @@
 pub type Response struct {
 	statusCode int
-	body string
+	body bytes
 }
 
 #extern(http_get)

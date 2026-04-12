@@ -36,10 +36,10 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 
 	// Get prev ref's CanBeUsedForRecursiveDefinitions if it exists.
 	// Note that we don't care if it's not found. Not all types are in the scope, some of them are in the frame.
-	var canBeUsedForRecursiveDefinitions bool
+	canBeUsedForRecursiveDefinitions := isRecursiveWrapper(cur.prev.cur)
 	if prevRef, _, err := scope.GetType(cur.prev.cur); err == nil {
 		// we don't have to check if prev has params, it has because we're here
-		canBeUsedForRecursiveDefinitions = prevRef.BodyExpr == nil
+		canBeUsedForRecursiveDefinitions = prevRef.BodyExpr == nil || isRecursiveWrapper(cur.prev.cur)
 	}
 
 	prev := cur.prev
@@ -80,4 +80,8 @@ func sameRefs(cur, prev core.EntityRef) bool {
 	a := cur.String()
 	b := prev.String()
 	return a == b
+}
+
+func isRecursiveWrapper(ref core.EntityRef) bool {
+	return ref.Name == "maybe" && (ref.Pkg == "" || ref.Pkg == "builtin")
 }

@@ -1,12 +1,12 @@
 package runtime
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 // OrderedMsg is a message with a chronological index.
@@ -28,6 +28,7 @@ const (
 	MsgKindInt
 	MsgKindFloat
 	MsgKindString
+	MsgKindBytes
 	MsgKindList
 	MsgKindDict
 	MsgKindStruct
@@ -67,6 +68,10 @@ func (msg Msg) IsString() bool {
 	return msg.kind == MsgKindString
 }
 
+func (msg Msg) IsBytes() bool {
+	return msg.kind == MsgKindBytes
+}
+
 func (msg Msg) IsList() bool {
 	return msg.kind == MsgKindList
 }
@@ -102,6 +107,15 @@ func (msg Msg) Float() float64 {
 func (msg Msg) Str() string {
 	msg.mustKind(MsgKindString, "Str")
 	return msg.str
+}
+
+func (msg Msg) Bytes() []byte {
+	msg.mustKind(MsgKindBytes, "Bytes")
+	value, ok := msg.val.([]byte)
+	if !ok {
+		panic("unexpected Bytes value type")
+	}
+	return value
 }
 
 func (msg Msg) List() []Msg {
@@ -152,14 +166,12 @@ func (msg Msg) String() string {
 		return strconv.FormatFloat(msg.Float(), 'g', -1, 64)
 	case MsgKindString:
 		return msg.Str()
-	case MsgKindList, MsgKindDict, MsgKindStruct:
+	case MsgKindBytes, MsgKindList, MsgKindDict, MsgKindStruct, MsgKindUnion:
 		b, err := msg.MarshalJSON()
 		if err != nil {
 			panic(err)
 		}
 		return string(b)
-	case MsgKindUnion:
-		return msg.Union().String()
 	default:
 		panic(fmt.Sprintf("unexpected String call on unknown message kind: %d", msg.kind))
 	}
@@ -177,6 +189,8 @@ func (msg Msg) MarshalJSON() ([]byte, error) {
 		return []byte(strconv.FormatFloat(msg.Float(), 'g', -1, 64)), nil
 	case MsgKindString:
 		return json.Marshal(msg.Str())
+	case MsgKindBytes:
+		return json.Marshal(msg.Bytes())
 	case MsgKindList:
 		return json.Marshal(msg.List())
 	case MsgKindDict:
@@ -203,6 +217,8 @@ func (msg Msg) Equal(other Msg) bool {
 		return msg.Float() == other.Float()
 	case MsgKindString:
 		return msg.str == other.str
+	case MsgKindBytes:
+		return bytes.Equal(msg.Bytes(), other.Bytes())
 	case MsgKindList:
 		return equalMsgLists(msg.List(), other.List())
 	case MsgKindDict:
@@ -234,6 +250,8 @@ func (kind MsgKind) String() string {
 		return "float"
 	case MsgKindString:
 		return "string"
+	case MsgKindBytes:
+		return "bytes"
 	case MsgKindList:
 		return "list"
 	case MsgKindDict:
@@ -275,6 +293,11 @@ func NewStringMsg(s string) Msg {
 	return Msg{kind: MsgKindString, str: s}
 }
 
+// --- BYTES ---
+func NewBytesMsg(v []byte) Msg {
+	return Msg{kind: MsgKindBytes, val: v}
+}
+
 // --- LIST ---
 func NewListMsg(v []Msg) Msg {
 	return Msg{kind: MsgKindList, val: v}
@@ -292,9 +315,9 @@ type StructMsg struct {
 
 func (msg StructMsg) Struct() StructMsg { return msg }
 
-// get returns the value of a field by name.
-// it panics if the field is not found.
-// it uses linear scan to find the field.
+// Get returns the value of a field by name.
+// It panics if the field is not found.
+// It uses linear scan to find the field.
 func (msg StructMsg) Get(name string) Msg {
 	if field, ok := msg.get(name); ok {
 		return field
@@ -326,36 +349,17 @@ func (msg StructMsg) MarshalJSON() ([]byte, error) {
 		return fields[i].name < fields[j].name
 	})
 
-	var bb strings.Builder
-	bb.Grow(2 + len(msg.fields)*8)
-	bb.WriteByte('{')
-
+	m := make(map[string]Msg, len(fields))
 	for i := range fields {
-		if i > 0 {
-			bb.WriteByte(',')
-		}
-
-		nameJSON, err := json.Marshal(fields[i].name)
-		if err != nil {
-			return nil, err
-		}
-
-		valueJSON, err := json.Marshal(fields[i].value)
-		if err != nil {
-			return nil, err
-		}
-
-		bb.Write(nameJSON)
-		bb.WriteByte(':')
-		bb.Write(valueJSON)
+		m[fields[i].name] = fields[i].value
 	}
 
-	bb.WriteByte('}')
+	jsonData, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
 
-	jsonString := bb.String()
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
-	return []byte(jsonString), nil
+	return addJSONSpaces(jsonData), nil
 }
 
 func (msg StructMsg) String() string {
@@ -400,7 +404,7 @@ func newStructMsg(fields []StructField) StructMsg {
 	}
 }
 
-// structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
+// StructField is a helper to construct structs via runtime.newstruct api without exposing fields.
 type StructField struct {
 	name  string
 	value Msg
@@ -414,13 +418,13 @@ func (field StructField) Value() Msg {
 	return field.value
 }
 
-// newstructfield constructs a structfield with provided name and value.
+// NewStructField constructs a StructField with provided name and value.
 func NewStructField(name string, value Msg) StructField {
 	return StructField{name: name, value: value}
 }
 
-// newstruct builds a struct message from a slice of structfield.
-// underlying struct representation remains unchanged for now.
+// NewStructMsg builds a struct message from a slice of StructField.
+// Underlying struct representation remains unchanged for now.
 func NewStructMsg(fields []StructField) Msg { return newStructMsg(fields).Msg() }
 
 func NewStructValue(fields []StructField) StructMsg { return newStructMsg(fields) }
@@ -449,10 +453,11 @@ func (msg UnionMsg) Data() Msg {
 }
 
 func (msg UnionMsg) String() string {
-	if !msg.hasData {
-		return fmt.Sprintf(`{ "tag": %q }`, msg.tag)
+	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
 	}
-	return fmt.Sprintf(`{ "tag": %q, "data": %v }`, msg.tag, msg.data)
+	return string(b)
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -469,20 +474,23 @@ func Uint8Index(idx int) uint8 {
 
 func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 	if !msg.hasData {
-		return []byte(fmt.Sprintf(`{ "tag": %q }`, msg.tag)), nil
+		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
 	}
-	payload, err := json.Marshal(msg.data)
+
+	dataJSON, err := json.Marshal(msg.data)
 	if err != nil {
 		return nil, err
 	}
-	return []byte(fmt.Sprintf(`{ "tag": %q, "data": %s }`, msg.tag, payload)), nil
+	dataJSON = addJSONSpaces(dataJSON)
+
+	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
 
 // Equal implements strict equality for UnionMsg messages.
 // If one union has data and another doesn't, it returns false.
 // It returns false if tags are different.
 // It returns false if data is different.
-// Tags are compared as Go strings and data is compared recursevely using Equal method.
+// Tags are compared as Go strings and data is compared recursively using Equal method.
 func (msg UnionMsg) Equal(other UnionMsg) bool {
 	if msg.hasData != other.hasData {
 		return false
@@ -513,7 +521,7 @@ func NewUnionMsg(tag string, data Msg) Msg {
 }
 
 func NewUnionMsgNoData(tag string) Msg {
-	return UnionMsg{tag: tag}.Msg()
+	return UnionMsg{tag: tag, hasData: false}.Msg()
 }
 
 func NewUnionValue(tag string, data Msg) UnionMsg {
@@ -521,12 +529,12 @@ func NewUnionValue(tag string, data Msg) UnionMsg {
 }
 
 func NewUnionValueNoData(tag string) UnionMsg {
-	return UnionMsg{tag: tag}
+	return UnionMsg{tag: tag, hasData: false}
 }
 
 // --- OPERATIONS ---
 
-// Match compares two messages and return true if they matches and false otherwise.
+// Match compares two messages and returns true if they match, false otherwise.
 // Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
 	if !msg.IsUnion() || !pattern.IsUnion() {
@@ -588,9 +596,43 @@ func marshalMapWithSpaces(m map[string]Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	jsonString := string(jsonData)
-	jsonString = strings.ReplaceAll(jsonString, ":", ": ")
-	jsonString = strings.ReplaceAll(jsonString, ",", ", ")
+	return addJSONSpaces(jsonData), nil
+}
 
-	return []byte(jsonString), nil
+func addJSONSpaces(jsonData []byte) []byte {
+	spaced := make([]byte, 0, len(jsonData))
+	inString := false
+	isEscaped := false
+
+	for _, b := range jsonData {
+		if inString {
+			spaced = append(spaced, b)
+			if isEscaped {
+				isEscaped = false
+				continue
+			}
+			if b == '\\' {
+				isEscaped = true
+				continue
+			}
+			if b == '"' {
+				inString = false
+			}
+			continue
+		}
+
+		switch b {
+		case '"':
+			inString = true
+			spaced = append(spaced, b)
+		case ':':
+			spaced = append(spaced, ':', ' ')
+		case ',':
+			spaced = append(spaced, ',', ' ')
+		default:
+			spaced = append(spaced, b)
+		}
+	}
+
+	return spaced
 }

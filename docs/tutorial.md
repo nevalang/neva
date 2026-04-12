@@ -206,7 +206,7 @@ def Main(start any) (stop any) {
 }
 ```
 
-We sent `'Hello, World!'` to the `println` node. This is a string message literal, one of Nevalang's 4 basic types.
+We sent `'Hello, World!'` to the `println` node. This is a string message literal, one of Nevalang's basic literal types.
 
 ```neva
 // `bool` - Boolean values: true or false
@@ -228,6 +228,8 @@ false -> println  // prints: false
 ```
 
 These primitive types are the basis for sending messages between nodes. We'll cover complex types later.
+
+For raw binary payloads, Nevalang also has `bytes` type. It has no direct literal syntax; use explicit converters (for example `bytes.FromString`) when needed.
 
 ### Constants
 

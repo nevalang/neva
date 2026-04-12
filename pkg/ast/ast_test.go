@@ -3,8 +3,8 @@ package ast
 import (
 	"testing"
 
-	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/nevalang/neva/pkg/core"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 func TestPackage_GetInteropableComponents(t *testing.T) {

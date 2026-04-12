@@ -3,9 +3,13 @@ pub type bool
 pub type int
 pub type float
 pub type string
+pub type bytes
 pub type dict<T>
 pub type list<T>
-pub type maybe<T>
+pub type maybe<T> union {
+    Some T
+    None
+}
 
 type Type any
 
@@ -20,3 +24,7 @@ pub type stream<T> struct {
     last bool
 }
 
+pub type DictEntry<T> struct {
+    key string
+    value T
+}

@@ -40,6 +40,10 @@ func (d *Desugarer) desugarModule(
 	build src.Build,
 	modRef core.ModuleRef,
 ) (src.Module, error) {
+	if build.Modules == nil {
+		panic("internal invariant violated: desugarer got build with nil modules map")
+	}
+
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
@@ -51,7 +55,9 @@ func (d *Desugarer) desugarModule(
 	desugaredManifest.Deps["std"] = core.ModuleRef{Path: "std", Version: pkg.Version}
 
 	// copy all modules but replace manifest in current one
-	modsCopy := maps.Clone(build.Modules)
+	modsCopy := make(map[core.ModuleRef]src.Module, len(build.Modules))
+	maps.Copy(modsCopy, build.Modules)
+
 	modsCopy[modRef] = src.Module{
 		Manifest: desugaredManifest,
 		Packages: mod.Packages,
@@ -136,9 +142,7 @@ func (d *Desugarer) desugarFile(
 		desugaredEntities[entityName] = entityResult.entity
 
 		// insert virtual entities, created by desugaring of the entity
-		for name, entityToInsert := range entityResult.insert {
-			desugaredEntities[name] = entityToInsert
-		}
+		maps.Copy(desugaredEntities, entityResult.insert)
 	}
 
 	desugaredImports := maps.Clone(file.Imports)
@@ -158,10 +162,9 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
-	entity src.Entity
 	insert map[string]src.Entity
+	entity src.Entity
 }
 
 func (d *Desugarer) desugarEntity(

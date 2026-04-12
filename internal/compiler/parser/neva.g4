@@ -91,6 +91,8 @@ compBody:
 // Nodes
 compNodesDef: compNodesDefBody NEWLINE+ DASH3;
 compNodesDefBody: ((compNodeDef (COMMA)? | COMMENT) NEWLINE*)+;
+// Alias stays optional in grammar to support anonymous DI args in `{ ... }`.
+// Top-level component nodes are validated in analyzer and must have explicit aliases.
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
 nodeInst: entityRef NEWLINE* typeArgs? NEWLINE* nodeDIArgs? errGuard?;
 errGuard: QUEST;

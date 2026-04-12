@@ -33,13 +33,14 @@ func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDef
 	return ts.Def{
 		Params:   resolvedParams,
 		BodyExpr: def.BodyExpr,
+		Meta:     def.Meta,
 	}, nil
 }
 
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *compiler.Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
-		meta := expr.Meta //nolint:forcetypeassert
+		meta := expr.Meta
 		return ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
 			Meta:    &meta,

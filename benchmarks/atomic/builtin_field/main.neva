@@ -1,0 +1,13 @@
+// Benchmarks struct field access in one-shot mode.
+// Dot selector syntax is lowered by compiler into builtin Field wiring.
+type User struct {
+	name string
+}
+
+const value User = {
+	name: 'John'
+}
+
+def Main(start any) (stop any) {
+	:start -> $value -> .name -> :stop
+}

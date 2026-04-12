@@ -188,7 +188,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"sig":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "sig"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
-					"data": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "lock_empty_pkg/out", Port: "data"}, interceptor, lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1), nil),
+					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "lock_empty_pkg/out", Port: "res"}, interceptor, lock_empty_pkg_out_data_to_fan_in_pkg_in_data_1), nil),
 				}),
 			},
 			Config: runtime.Msg{},

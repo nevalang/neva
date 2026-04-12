@@ -70,15 +70,31 @@ In Nevalang, structural typing eliminates this problem. For example, in web apps
 
 #### Builtin Tracing
 
-Every message in Nevalang has a path that updates as it moves from one place to another. This provides comprehensive tracing capabilities, similar to stack traces in exception-based languages, but for all messages, not just errors.
+Nevalang treats execution tracing as a runtime capability of the dataflow
+engine. Conceptually, every message can be traced through graph hops
+(`send`/`receive` events), but this trace context is not part of the
+user-visible error payload itself.
+
+This separation keeps responsibilities clean:
+
+- error value = failure semantics;
+- runtime trace = execution context.
 
 ### Improved Error Handling
 
-Neva combines Go's "errors are values" approach with Rust-like `?` operator, reducing `if err != nil` boilerplate. It also eliminates the need for manual error wrapping - every message, including errors, contains a trace, simplifying debugging by providing context when logged.
+Neva combines Go's "errors are values" approach with Rust-like `?` operator,
+reducing `if err != nil` boilerplate in dataflow networks.
+
+The long-term direction is to avoid mandatory manual wrapping only for context
+reconstruction. Execution context should come from runtime tracing facilities,
+while error payloads remain focused on domain semantics.
 
 #### Next-Generation Debugging (WIP)
 
-The combination of dataflow architecture and advanced tracing enables powerful debugging tools. Developers can set visual breakpoints on specific connections in the network graph, observe messages, and even update their values during runtime.
+The combination of dataflow architecture and runtime tracing enables powerful
+debugging tools. Developers can set visual breakpoints on specific connections
+in the network graph, observe messages, and inspect their paths through the
+execution graph.
 
 By combining these features, Nevalang strives to offer a more efficient and intuitive programming experience, pushing the boundaries of what's possible in language design.
 

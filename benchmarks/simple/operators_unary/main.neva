@@ -1,0 +1,17 @@
+// Benchmarks unary operator paths as one simple family scenario.
+// Keeps the family-level package name while exercising the integer unary flow.
+import { sync }
+
+def Main(start any) (stop any) {
+	inc Inc
+	dec Dec
+	wg sync.WaitGroup
+	---
+	:start -> [
+		42 -> inc,
+		42 -> dec,
+		2 -> wg:count
+	]
+	[inc, dec] -> true -> wg:sig
+	wg -> :stop
+}

@@ -65,12 +65,12 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	// foo[0]->
 	require.Equal(t, "foo", conn.Senders[0].PortAddr.Node)
 	require.Equal(t, "", conn.Senders[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(0)), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, new(uint8(0)), conn.Senders[0].PortAddr.Idx)
 
 	// ->bar[1]
 	require.Equal(t, "bar", conn.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-	require.Equal(t, compiler.Pointer(uint8(1)), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
 }
 
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
@@ -168,10 +168,10 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "const ref in chain",
@@ -331,18 +331,18 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 
 	nodes := got.Entities["C1"].Component[0].Nodes
 
-	_, ok := nodes["scanner"]
-	require.Equal(t, true, ok)
+	_, hasScannerPlaceholder := nodes[src.MissingNodeName(1)]
+	require.Equal(t, true, hasScannerPlaceholder)
 
-	_, ok = nodes["printer"]
-	require.Equal(t, true, ok)
+	_, hasPrinterPlaceholder := nodes[src.MissingNodeName(2)]
+	require.Equal(t, true, hasPrinterPlaceholder)
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "simple union",
@@ -402,10 +402,10 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "union with value",
@@ -633,10 +633,10 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 }
 
 func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "direct tag-only",

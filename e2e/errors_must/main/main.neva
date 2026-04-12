@@ -1,4 +1,5 @@
 import {
+    bytes
     io
     fmt
     errors
@@ -19,10 +20,12 @@ def Main(start any) (stop any) {
 // Handler have error outport.
 def Handler(data string) (res any, err error) {
     write_all io.WriteAll?
+    from_string bytes.FromString
     ---
     :data -> [
         write_all:filename,
-        'Hello, io.WriteAll!' -> write_all:data
+        'Hello, io.WriteAll!' -> from_string
     ]
+    from_string:res -> write_all:data
     write_all:res -> :res
 }

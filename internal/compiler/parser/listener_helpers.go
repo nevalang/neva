@@ -458,15 +458,29 @@ func (s *treeShapeListener) parsePorts(
 func (s *treeShapeListener) parseInterfaceDef(
 	actx generated.IInterfaceDefContext,
 ) (src.Interface, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing interface definition context")
+	}
+
 	parsedTypeParams, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	in, err := s.parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
+
+	inPortsDef := actx.InPortsDef()
+	if inPortsDef == nil || inPortsDef.PortsDef() == nil {
+		panic("internal invariant violated: missing in ports definition in interface")
+	}
+	in, err := s.parsePorts(inPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	out, err := s.parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+
+	outPortsDef := actx.OutPortsDef()
+	if outPortsDef == nil || outPortsDef.PortsDef() == nil {
+		panic("internal invariant violated: missing out ports definition in interface")
+	}
+	out, err := s.parsePorts(outPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
@@ -500,6 +514,7 @@ func (s *treeShapeListener) parseNodes(
 	isRootLevel bool,
 ) (map[string]src.Node, *compiler.Error) {
 	result := map[string]src.Node{}
+	missingAliasCounter := 0
 
 	for _, node := range actx.AllCompNodeDef() {
 		nodeInst := node.NodeInst()
@@ -548,11 +563,15 @@ func (s *treeShapeListener) parseNodes(
 			deps = v
 		}
 
+		id := node.IDENTIFIER()
 		var nodeName string
-		if id := node.IDENTIFIER(); id != nil {
+		if id != nil {
 			nodeName = id.GetText()
 		} else if isRootLevel {
-			nodeName = strings.ToLower(string(parsedRef.Name[0])) + parsedRef.Name[1:]
+			// Keep parser permissive: analyzer reports missing node names as semantic errors.
+			// Use component-scoped placeholder names to avoid map key collisions between unnamed nodes.
+			missingAliasCounter++
+			nodeName = src.MissingNodeName(missingAliasCounter)
 		}
 
 		result[nodeName] = src.Node{
@@ -813,7 +832,7 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
-		msg.Bool = compiler.Pointer(boolVal == "true")
+		msg.Bool = new(boolVal == "true")
 	case constVal.INT() != nil:
 		parsedInt, err := strconv.ParseInt(constVal.INT().GetText(), 10, 64)
 		if err != nil {
@@ -833,10 +852,11 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
+		intVal := int(parsedInt)
 		if constVal.MINUS() != nil {
-			parsedInt = -parsedInt
+			intVal = -intVal
 		}
-		msg.Int = compiler.Pointer(int(parsedInt))
+		msg.Int = &intVal
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
 		if err != nil {
@@ -861,7 +881,7 @@ func (s *treeShapeListener) parseMessage(
 		}
 		msg.Float = &parsedFloat
 	case constVal.STRING() != nil:
-		msg.Str = compiler.Pointer(
+		msg.Str = new(
 			strings.Trim(
 				strings.ReplaceAll(
 					constVal.STRING().GetText(),
@@ -989,13 +1009,17 @@ func (s *treeShapeListener) parseCompilerDirectives(
 func (s *treeShapeListener) parseTypeDef(
 	actx generated.ITypeDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing type definition context")
+	}
+
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		v, err := s.parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := s.parseTypeExpr(expr)
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = compiler.Pointer(v)
+		body = &typeExpr
 	}
 
 	v, err := s.parseTypeParams(actx.TypeParams())
@@ -1028,6 +1052,10 @@ func (s *treeShapeListener) parseTypeDef(
 func (s *treeShapeListener) parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing const definition context")
+	}
+
 	constLit := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
@@ -1101,7 +1129,16 @@ func (s *treeShapeListener) parseConstDef(
 func (s *treeShapeListener) parseCompDef(
 	actx generated.ICompDefContext,
 ) (src.Component, *compiler.Error) {
-	parsedInterfaceDef, err := s.parseInterfaceDef(actx.InterfaceDef())
+	if actx == nil {
+		panic("internal invariant violated: missing component definition context")
+	}
+
+	ifaceDef := actx.InterfaceDef()
+	if ifaceDef == nil {
+		panic("internal invariant violated: missing component interface definition")
+	}
+
+	parsedInterfaceDef, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		return src.Component{}, err
 	}
@@ -1129,7 +1166,7 @@ func (s *treeShapeListener) parseCompDef(
 	}
 
 	parsedConnections := []src.Connection{}
-	connections := actx.CompBody().ConnDefList()
+	connections := body.ConnDefList()
 	if connections != nil {
 		parsedNet, err := s.parseConnections(connections)
 		if err != nil {
@@ -1196,6 +1233,10 @@ func (s *treeShapeListener) parseConnDef(
 	actx generated.IConnDefContext,
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing connection definition context")
+	}
+
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
 	if err != nil {
 		return src.Connection{}, err
@@ -1216,6 +1257,10 @@ func (s *treeShapeListener) parseConnDef(
 func (s *treeShapeListener) parseSenderSide(
 	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing sender side context")
+	}
+
 	singleSender := actx.SingleSenderSide()
 	mulSenders := actx.MultipleSenderSide()
 
@@ -1308,6 +1353,10 @@ func (s *treeShapeListener) parseChainedConnExpr(
 func (s *treeShapeListener) parseReceiverSide(
 	actx generated.IReceiverSideContext,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing receiver side context")
+	}
+
 	singleReceiverSide := actx.SingleReceiverSide()
 	multipleReceiverSide := actx.MultipleReceiverSide()
 

@@ -1,0 +1,14 @@
+// Benchmarks the atomic streams.Range hot path.
+// Wait is kept only as the terminal sink for a valid standalone program.
+import { streams }
+
+def Main(start any) (stop any) {
+	range streams.Range
+	wait streams.Wait
+	---
+	:start -> [
+		1 -> range:from,
+		100000 -> range:to
+	]
+	range -> wait -> :stop
+}

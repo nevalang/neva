@@ -1,235 +1,137 @@
 # AGENTS.md
 
-Follow these instructions.
+This file is a compact operating guide for coding agents in this repository.
+It is intentionally short and stable. Use linked docs for deep details.
 
-## 1. 🤖 Operating Protocol
+## 1) Operating Protocol
 
-1. Use `context7` MCP server (when available) to fetch libraries API documentation.
-2. For GitHub context, try `gh` (GitHub CLI) first; if unavailable or insufficient, fall back to `curl` (e.g., issues/PR descriptions/comments).
-3. Run `golangci-lint` and `go test`. Fix warnings.
-4. If uncertainty > 10%, ask user.
-5. Update this file if changes to process, architecture, or rules.
-6. Examples and parser for `.neva` changes. `go.mod` for Go imports. `docs/style_guide.md` for naming/formatting rules (check when writing `*.neva` code).
-7. Plan -> Review -> Execute -> Review.
-8. Refactor: Actively identify and resolve unnecessary complexity or duplication. Prioritize code clarity and long-term maintainability over chasing theoretical perfection.
-9. Use targeted tests and cap long-running commands to ~5 minutes unless explicitly requested otherwise.
+1. Plan -> Review -> Execute -> Review.
+2. Use `context7` MCP (when available) for library API docs.
+3. For GitHub context, use `gh` first; fall back to `curl` only if needed.
+4. If uncertainty is >10% and local context cannot resolve it safely, ask user.
+5. Refactor proactively when it clearly improves clarity/maintainability.
+6. Run targeted checks with ~5m cap unless user requests longer runs.
+7. Run `golangci-lint` and `go test` only for touched system parts; fix issues you introduce.
+   - Language/compiler/runtime/stdlib changes: run targeted lint/tests for those packages and semantics.
+   - CI/workflow/prompt/docs-only changes: run only checks relevant to those files; skip unrelated language/runtime test suites.
+8. For PR comment tasks: apply changes first, then reply to each addressed review comment via `gh`; do not resolve threads unless user asks.
+9. Never merge a PR, enable auto-merge, or close a review PR as “done” unless the user gives a direct explicit command in that conversation.
+10. For generated tests, include short intent comments.
+11. Keep this file updated when process/architecture/rules change.
+12. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
+13. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
+14. `AGENTS.md` is an engineering harness artifact for both humans and machines.
+15. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
+16. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
+17. File-type authoring rules live in `.claude/rules/*.md`; if a harness does not load them automatically, inspect matching `paths` frontmatter before editing files.
+18. Avoid duplicating durable guidance across `AGENTS.md`, `.claude/rules`, and docs; keep one source of truth and make the other layers point to it.
 
-## 2. 📈 Self-Improvement Protocol
+## 2) High-Level Project Context
 
-**After each session** (bug fix, feature, brainstorm), update this file (`AGENTS.md`) with:
+- Neva is a statically typed, compiled **dataflow** language.
+- Programs are explicit node/edge graphs; implicit parallelism is default.
+- Compiler pipeline: parser -> analyzer -> desugarer -> IR gen -> backend.
+- Runtime executes generated Go with message passing primitives.
+- Standard library mixes pure Neva components and `#extern` runtime-backed components.
+- LSP source is externalized (`nevalang/neva-lsp`), not under `cmd/lsp` in this repo.
 
-- **Language semantics** learned (e.g., how connections work, port behavior).
-- **Common patterns** discovered (e.g., typical error causes, debugging approaches).
-- **Architecture insights** gained (e.g., how compiler phases interact).
-- **Gotchas** encountered (e.g., edge cases, non-obvious behaviors).
+## 3) Documentation Router
 
-**Balance**: Keep it concise. Every line must earn its place. Remove outdated info. Split into workflows/rules if sections grow large.
+- Project overview and quick start: [README.md](./README.md)
+- Architecture map: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Contributor workflow and release basics: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Documentation index: [docs/README.md](./docs/README.md)
+- Language rationale and design decisions: [docs/qna.md](./docs/qna.md)
+- Neva style rules: [docs/style_guide.md](./docs/style_guide.md)
+- Language deep dive: [docs/book/README.md](./docs/book/README.md)
+- Build/test/dev commands: [Makefile](./Makefile)
+- Go lint policy (source of truth): [.golangci.yml](./.golangci.yml)
 
-**Goal**: Build perfect context so future sessions start smarter.
+## 4) Stable Language/Architecture Invariants
 
-### Session Notes (2026-01-23)
+These are distilled from long-term session notes and should be treated as
+high-signal constraints:
 
-- **Language semantics**: Chained connections nest; receiver type constraints must use the sender from the same chain link (not the outer sender).
-- **Language semantics**: Network senders now parse any `constLit`; only primitives/union literals get a type expr without additional analyzer inference.
-- **Language semantics**: Union tag/type compatibility relies on structural union checks via normal sender/receiver subtype validation.
-- **Common patterns**: Overload/generic resolution relies on `deriveNodeConstraintsFromNetwork`; nested chains need explicit sender-to-receiver pairing to avoid union/any leakage.
-- **Architecture insights**: Switch case output type inference is used in analyzer (before desugaring) for both overload resolution and network type checks.
-- **Architecture insights**: Union node tag/data validation is driven by `buildUnionTagInfos` + `validateUnionDataReceivers` to keep Union<T> wiring consistent.
-- **Gotchas**: Portless outports require explicit port names when multiple outports exist; generic std nodes like `fmt.Println` need explicit type args if type inference is unavailable.
+1. Preserve 1:1 mapping between text and graph. Prefer explicit stdlib nodes
+   over hidden control-flow sugar.
+2. `Main` must have exactly one `start` inport and one `stop` outport
+   (both `any`, non-array).
+3. Literal/const senders are constrained:
+   - valid only in signal-triggered chains (e.g. `:start -> ...`)
+   - primitive/union literals are allowed; bytes literal is not
+4. Array-bypass uses `[*]` on both sides of a single connection.
+   - index `255` is reserved for wildcard (`[*]`)
+   - do not mix bypass and indexed usage on same port
+5. Error flow convention is stable: `res` for primary result, `err error`
+   for failures, `?` for propagation when custom handling is unnecessary.
+6. Conversions are explicit stdlib components (no implicit cast syntax).
+   - policy split: builtin (total casts) vs `std/strconv` (parse/format)
+7. `bytes` is transport-focused and currently has no literal syntax.
+   Use explicit converters (`bytes.FromString`, `strings.FromBytes`).
+8. Keep compiler-contract stdlib semantics explicit (`builtin`, `Union`,
+   `Struct`, `#autoports`, desugaring-sensitive behavior).
 
-### Session Notes (2026-01-26)
+## 5) File-Type Rules
 
-- **Language semantics**: Union:tag currently assumes a single sender; fan-in is explicitly rejected to keep wiring semantics unambiguous.
-- **Common patterns**: Avoid extra union-type equivalence checks at tag-binding time; rely on standard subtype validation for compatibility.
-- **Gotchas**: In sender position, `[...]` is parsed as fan-in (multiple senders), so list literals should not be used as senders without explicit disambiguation.
-- **Gotchas**: Literal senders are limited to primitives/union literals; list/dict/struct literals are rejected for now (use const refs).
+- Go authoring guidance lives in `.claude/rules/go-files.md`.
+- Neva authoring guidance lives in `.claude/rules/neva-files.md`.
 
-### Session Notes (2026-01-27)
+## 6) Validation Workflow
 
-- **Language semantics**: Literal senders must be in a chain triggered by a signal (e.g. `:start -> true -> ...`).
-- **Language semantics**: Fan-out (`-> [...]`) can contain chained connections, but the chain head is the sender before the fan-out (e.g. `:start -> [foo, bar -> baz]`).
-- **Language semantics**: `std/core.New<T>` now requires a `sig` inport; explicit uses must be triggered (e.g. `:start -> new:sig`).
-- **Common patterns**: Stdlib Switch setups should seed case values via `:start` to avoid autonomous constant senders.
-- **Architecture insights**: `analyzeSender` rejects const senders when `prevChainLink` is empty (analyzer enforces the rule).
-- **Gotchas**: Stdlib modules can fail compilation after analyzer rule changes; update `std/*` constants accordingly.
+Prefer smallest meaningful scope first, then widen only if needed.
 
-### Session Notes (2026-01-28)
+1. Lint changed scope (`golangci-lint`).
+2. Run targeted tests for touched packages/components.
+3. For parser/grammar work, run parser smoke tests and regenerate parser.
+4. Run broader `go test ./...` only when appropriate; it can be long due to
+   `examples/` + `e2e/`.
 
-- **Common patterns**: Enabling `govet`'s `fieldalignment` in golangci-lint surfaces many existing struct-order warnings; plan for a staged rollout (only-new-issues) or bulk field reordering.
-- **Common patterns**: `betteralign` is best run as a separate make target with `-fix` since it cannot integrate into golangci-lint.
-- **Gotchas**: `Select` waits for all `then` array inputs on each `if`; if any `then` slot is only sent conditionally it can deadlock.
-- **Common patterns**: golangci-lint v2.5.0 no longer exposes `gosimple`, `stylecheck`, or `tenv` as standalone linters; rely on `staticcheck` instead.
-- **Gotchas**: `nolintlint` flags stale `//nolint:golint`; replace with a real doc comment or an active linter name.
-- **Common patterns**: `gosec` G115 still flags checked conversions; use a guard plus `// #nosec G115` on the cast line.
-- **Common patterns**: `gosec` G306 expects 0600 perms; for readable artifacts, keep 0644 and add `// #nosec G306` with rationale.
-- **Architecture insights**: Runtime cancellation now flows via a typed context key helper to avoid raw string keys.
-- **Common patterns**: `gocritic`'s commentedOutCode flags comments that resemble code; remove them instead of paraphrasing.
-- **Common patterns**: `golangci-lint` thelper prefers `t.Helper()` inside helper constructors used in tests.
-- **Common patterns**: `govet` fieldalignment warnings can be suppressed with `//nolint:govet` on struct or inline struct literal lines when reordering is too invasive.
-- **Common patterns**: `gocyclo` can be temporarily suppressed with `//nolint:gocyclo` and a short rationale, but consider later refactor.
+Useful commands:
 
-### Session Notes (2026-01-29)
+```bash
+make lint
+go test ./...
+make antlr
+make gofix
+```
 
-- **Common patterns**: `copyloopvar` flags redundant loop-var shadowing (`name := name`) in Go 1.22; remove the copy unless needed for older versions.
-- **Gotchas**: Runtime now panics on invalid array/case indices (negative or uint8 overflow) to surface compiler bugs early.
-- **Common patterns**: Resolve union elements in deterministic key order to avoid nondeterministic error paths in tests.
-- **Common patterns**: `golangci-lint` config uses a strict allowlist with targeted test/go:generate exclusions; tune `tparallel`/`gocyclo` per package if flakiness or complexity hotspots appear.
-- **Common patterns**: Consider opt-in linters like `depguard`, `gofumpt`, `goimports`, `gochecknoglobals`, `gochecknoinits`, `wrapcheck`, and `forbidigo` based on team appetite; add them gradually to avoid noisy rollouts.
-- **Common patterns**: `govet` fieldalignment can be satisfied by moving pointer-heavy fields before strings to reduce pointer bytes and GC scan range.
-- **Common patterns**: `depguard` can enforce stdlib-only boundaries with separate rules for `internal/runtime/*.go` and `internal/runtime/funcs/**` when funcs may import `internal/runtime`.
-- **Gotchas**: `gochecknoglobals` will flag template strings, expected outputs in tests, and shared helpers; plan exclusions or refactors before enabling widely.
-- **Common patterns**: To satisfy `gochecknoglobals`, switch static template vars to `const`, and move shared values into helper funcs; use per-program counters instead of package globals.
-- **Common patterns**: If performance trumps `gochecknoglobals`, allow a scoped global counter with `//nolint:gochecknoglobals` rather than threading it through every outport.
+## 7) Change-Specific Checklists
 
-### Session Notes (2026-01-31)
+### Grammar / parser / analyzer changes
 
-- **Language semantics**: Import blocks now allow inline comments; struct literals accept trailing commas.
-- **Language semantics**: Const/literal senders are only valid when chained from a triggering signal.
-- **Language semantics**: `Main` must have exactly one `start` inport and one `stop` outport, both `any` and non-array.
-- **Common patterns**: Use explicit stdlib components (`operators`, `routers.Switch`, `streams.Range`, `Union`) instead of composite sender syntax.
-- **Architecture insights**: Debug runtime validation code is generated by the Go backend only when the CLI flag is enabled.
-- **Gotchas**: Dotenv loaders are signal-style and do not return dictionaries; use `os.Environ` to read environment values.
+- Update grammar/parser artifacts when needed (`make antlr`).
+- Re-run parser smoke tests and touched analyzer tests.
+- Preserve documented core semantics (array-bypass, sender rules, `Main` rules).
 
-### Session Notes (2026-02-01)
+### Stdlib / runtime extern changes
 
-- **Language semantics**: Array-bypass now uses `[*]` on both sides of a normal connection; index `255` is reserved for the wildcard.
-- **Architecture insights**: Array-bypass is handled as a normal connection with a sentinel slot index (`ArrayBypassIdx`) instead of a dedicated AST connection type.
-- **Gotchas**: Using `[255]` directly is now a parser error; always use `[*]` for array-bypass.
-- **Common patterns**: Stream/list conversions use `streams.FromList<T>` and `lists.FromStream<T>`; `StreamToList`/`ListToStream` were removed.
-- **Architecture insights**: Stream helpers live under `std/streams` (map/filter/reduce in dedicated files; `ForEach` in `std/streams/for_each.neva`).
-- **Gotchas**: `std/time` only provides delays/durations; there is no wall-clock date/time source, so pass timestamps/durations into components that need "today."
-- **Common patterns**: `lists.FromArray<T>` builds a list by chaining `streams.FromArray<T>` into `lists.FromStream<T>`.
-- **Common patterns**: README community CTAs use shields.io badges for Open Collective links to keep style consistent.
-- **Common patterns**: `e2e/` tests are separate Neva modules with Go e2e tests; `examples/` is a single Neva module where all examples must compile together.
-- **Gotchas**: `e2e/` includes verbose mirror variants that can duplicate `examples/` coverage; keep them only when they assert distinct semantics.
-- **Architecture insights**: Avoid composite/control-flow syntax to preserve 1:1 visual/text graph mapping; express control flow via explicit stdlib nodes.
-- **Common patterns**: Use HOCs and stdlib components for looping/branching since Neva is static and code is not data.
-- **Gotchas**: Composite senders collided with chain-only sender/type-system rules; explicit node wiring avoids those conflicts.
+- Keep `std/* #extern(...)` names synchronized with
+  `internal/runtime/funcs/registry.go`.
+- If stdlib naming/conventions change, update docs in same PR:
+  `docs/style_guide.md` and `docs/qna.md`.
+- If compiler bootstrap utils are affected, regenerate from repo CLI
+  (avoid stale global binaries).
+- Treat per-component e2e and benchmark coverage as the long-term stdlib
+  maintenance goal. Start with atomic benchmarks and add broader scenarios
+  only when they are justified by a distinct behavior or performance question.
 
-### Session Notes (2026-02-02)
+### Tests and e2e
 
-- **Common patterns**: `go fix ./...` in Go 1.25 updates build tags to `//go:build` when needed; check for removed legacy `+build` lines in tests.
-- **Common patterns**: Prefer adding a `toolchain` line in `go.mod` to pin the Go patch version for consistent local builds.
-- **Common patterns**: Align CI `go-version` with the `toolchain` patch level to avoid mismatched builds.
-- **Common patterns**: Full `go test ./...` can exceed 5 minutes; rerun with a higher timeout or target slower `e2e/` packages.
-- **Common patterns**: In CI, combine `go test -race` with `-count=1` and `-shuffle=on` to surface concurrency flakiness earlier.
-- **Common patterns**: Use targeted benchmark jobs (`go test -run=^$ -bench=. -benchmem`) to catch CPU/memory regressions without slowing the main test lane.
-- **Gotchas**: `go test ./...` can exceed 5 minutes when e2e packages dominate; split jobs or shard packages to keep CI timeouts stable.
-- **Common patterns**: Runtime must remain stdlib-only; use build tags to keep leak-detection helpers/test deps out of runtime packages.
-- **Architecture insights**: E2E tests that invoke `go run` exercise compiler + runtime; add `go test`-driven e2e using built binaries for runtime-only coverage.
-- **Language semantics**: Connection AST now uses `Connection` directly; `NormalConnection` wrapper was removed (chained/deferred connections reuse the same struct).
-- **Architecture insights**: Parser `connDef` now directly parses sender/receiver; `chainedNormConn` points to `connDef` (no intermediate rule).
-- **Common patterns**: Array-bypass detection lives in analyzer; desugarer/irgen treat `[*]` connections as validated 1:1 wiring.
-- **Gotchas**: Array-bypass consumes the whole port; mixing `[*]` with other slot usage is rejected; index 255 remains reserved (max index 254).
-- **Gotchas**: Desugaring anonymous DI args must preserve `ErrGuard`/`OverloadIndex`; dropping `ErrGuard` makes portless senders pick `err`, creating implicit fan-out and flaky emit errors.
+- `examples/` is one module (all examples must compile together).
+- `e2e/` contains separate modules with Go harness tests.
+- Keep e2e runs time-bounded; avoid orphaned long-running subprocess chains.
 
-### Session Notes (2026-02-04)
+### Release delivery automation
 
-- **Architecture insights**: Deferred connections were pure syntax sugar implemented in parser/analyzer/desugarer and lowered to `builtin.Lock`.
-- **Common patterns**: Replace `a -> { b -> c }` with explicit lock wiring: `a -> lock:sig`, `b -> lock:data`, `lock:data -> c`.
-- **Gotchas**: Deferred syntax usage lived in parser smoke tests and `e2e/simple_fan_out`; both must be migrated when removing the feature.
+- For OpenCode-driven release announcements, use headless `opencode run`.
+  `anomalyco/opencode/github@latest` is limited to GitHub comment/review events.
+- Prefer thin release workflows that delegate wording/format rules to
+  repository-local `.opencode/skills/*` prompts instead of embedding large
+  generation logic in YAML.
 
-### Session Notes (2026-02-13)
+## 8) Keep AGENTS.md Lean
 
-- **Common patterns**: New LSP features in `cmd/lsp/server` should include short function doc comments plus targeted inline comments for recursive AST traversal/encoding code.
-- **Common patterns**: For LSP handlers returning `any`, prefer typed empty results (e.g., empty completion/symbol/location lists) or `false` for `PrepareRename` fallback instead of `nil, nil` to satisfy `nilnil`.
-- **Common patterns**: For LSP file lookup failures (`findFile`), propagate the error rather than returning success with nil payload to avoid `nilerr`.
-- **Common patterns**: `gosec` G115 in LSP token/range encoding should use explicit int bounds checks plus `// #nosec G115` on checked casts.
-- **Gotchas**: `nilnil` can be intentionally valid for LSP nullable results (e.g., hover/rename); use narrowly scoped `//nolint:nilnil` with a protocol rationale when required.
-
-### Session Notes (2026-02-14)
-
-- **Common patterns**: For LSP package-entity traversal, prefer `src.Package.Entities()` (range-func iterator) over ad-hoc flattening maps.
-- **Architecture insights**: Keep shared index snapshot lock access (`getBuild`/`setBuild`) on `Server` to avoid mutex handling drift across feature files.
-- **Common patterns**: CodeLens `Data` payload should validate explicit kind enums (`references`/`implementations`) instead of relying on default switch fallbacks.
-- **Gotchas**: `go test ./...` can hang or run very long in this repo due broad e2e/examples coverage; prioritize targeted package tests after confirming lint for quick iteration.
-- **Language semantics**: For MVP LSP, interface implementation lookup can be approximated structurally from IO port names/array flags/type strings, which is enough for actionable navigation without analyzer-level complexity.
-- **Common patterns**: Keep `implementations` codelenses interface-only; component lenses stay on `references` and can include references to interfaces they structurally implement.
-- **Architecture insights**: VS Code TextMate grammar (`vscode-neva/syntaxes`) coexists with LSP semantic tokens; no mandatory grammar removal is needed for MVP rollout.
-- **Common patterns**: LSP tests are easiest to scale with small in-memory build fixtures plus focused handler-level assertions (`TextDocumentCodeLens`, `CodeLensResolve`) instead of end-to-end editor wiring.
-
-### Session Notes (2026-02-14, AST/Core extraction prep)
-
-- **Architecture insights**: `ast` and `core` are now externalized under `pkg/` (`pkg/ast`, `pkg/core`) so other Go modules (like a split LSP repo) can import them without `internal/` restrictions.
-- **Common patterns**: For large package moves, do physical file moves first, then repo-wide import rewrites, then trim formatting-only churn to keep PR review focused.
-- **Gotchas**: Broad `gofmt` runs can introduce noisy doc-comment/newline changes in unrelated files; revert those hunks unless they are intentional.
-- **Gotchas**: `runtime.Msg` is a concrete struct; prefer `IsStruct()`/`Struct()` helpers over type assertions on values like `out.Res`.
-## 3. ⚡ Core Concepts
-
-- **Dataflow**: Programs are graphs. Nodes process data; edges transport it.
-- **Implicit Parallelism**: Every node runs in parallel.
-- **Type System**: Static, structural, with generics and tagged-unions.
-- **Visibility**: Entities are private by default. Export with `pub`.
-- **Entities**:
-  - **Components**: Logic containers, node blueprints.
-  - **Interfaces**: Port definitions, abstract components.
-  - **Types**: Type definitions.
-  - **Constants**: Fixed values.
-- **Program Hierarchy**:
-  - **Module**: Root unit (has `neva.yml`).
-  - **Package**: Directory with `*.neva` files.
-  - **Component**: The building block.
-
-## 4. 🧠 Architecture
-
-### Compiler (`internal/compiler/`)
-
-1. **Parser**: ANTLR4 -> Raw AST.
-2. **Analyzer**: Semantics & Type checking.
-3. **Desugaring**: Syntactic sugar -> Canonical AST.
-4. **IR Gen**: Canonical AST -> IR.
-5. **Backend**: IR -> Target Code.
-
-### Runtime (`internal/runtime/`)
-
-The runtime is a library embedded into every compiled program.
-
-- **FuncRunner**: Executes "native components" (runtime functions).
-- **Connector**: Manages message passing.
-- **Extensibility**:
-  - **Native Functions**: `internal/runtime/funcs`.
-  - **Func Registry**: `internal/runtime/funcs/registry.go`.
-  - **Func Interface**: `runtime.Func` & `FuncCreator`.
-
-### Standard Library (`std/`)
-
-The standard library provides components for all programs. Some are implemented in Neva, some use runtime functions written in Go via `#extern`.
-
-## 5. 🛠️ Debugging Tips
-
-**Debug Compiler Output**:
-
-- **IR**: `neva run --target ir <pkg>`
-- **Trace**: `neva run --emit-trace <pkg>`
-- **Runtime validation**: `neva run --debug-runtime-validation <pkg>` or `neva build --debug-runtime-validation <pkg>` (compiler-only check that prints unconnected senders/receivers to validate runtime wiring; intended for language developers inspecting compiler output)
-
-**Debug the CLI/Compiler**:
-
-- **Logs**: Use `fmt.Printf`, remove before finishing.
-- **Tests**: `go test ./...`
-
-## 6. 🗺️ Key Locations
-
-- `cmd/neva/`: CLI Entry point.
-- `internal/cli/`: CLI implementation.
-- `internal/compiler/parser/neva.g4`: Grammar Definition.
-- `e2e/`: End-to-End Tests.
-- `examples/`: Example programs.
-- `pkg/`: Shared utilities.
-
-## 7. 🎨 Coding Standards
-
-- **Go Idioms**:
-  - Comments: Every function should have a short doc comment. If it relates to Neva semantics, include a tiny Neva example when helpful.
-  - Use `any` instead of `interface{}`.
-  - TD tests: `tests := []struct{ name string ... }`
-  - Test case names: `lower_snake_case`
-  - KISS: simpler code > complex abstractions
-  - Utils: `pkg/` for shared utils (EXCEPT `runtime`)
-    - If duplicated in 3+ places, move it to `pkg/` (except `runtime`).
-
-**Workflow**:
-
-1. `make build` (Verify compilation).
-2. `golangci-lint run ./...` then `go test ./...` (Verify lint + tests).
-3. `make antlr` (Regenerate parser if `.g4` changed).
+- Do not append per-session journals here.
+- Keep only durable process rules, architecture deltas, and high-value gotchas.
+- If a note is transient, put it in issue/PR discussion instead.
+- Keep the root `AGENTS.md` short (target <=200 lines) and push local guidance down to subdirectories.

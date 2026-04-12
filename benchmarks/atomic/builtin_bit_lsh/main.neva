@@ -1,0 +1,7 @@
+// Benchmarks builtin component `BitLsh` in one-shot mode.
+def Main(start any) (stop any) {
+	bit_lsh BitLsh
+	---
+	:start -> [1 -> bit_lsh:left, 3 -> bit_lsh:right]
+	bit_lsh -> :stop
+}

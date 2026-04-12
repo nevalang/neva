@@ -1,0 +1,7 @@
+// Benchmarks builtin component `If` in one-shot mode.
+def Main(start any) (stop any) {
+	if_router If<any>
+	---
+	:start -> true -> if_router:data
+	if_router:then -> :stop
+}

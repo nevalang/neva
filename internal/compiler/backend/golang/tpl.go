@@ -1,20 +1,18 @@
 package golang
 
-//nolint:govet // fieldalignment: template grouping.
 type templateData struct {
 	CompilerVersion string
+	TraceComment    string
 	ChanVarNames    []string
 	FuncCalls       []templateFuncCall
 	Trace           bool
-	TraceComment    string
 	DebugValidation bool
 }
 
-//nolint:govet // fieldalignment: template grouping.
 type templateFuncCall struct {
+	IO     templateIO
 	Ref    string
 	Config string
-	IO     templateIO
 }
 
 type templateIO struct {
@@ -22,25 +20,23 @@ type templateIO struct {
 	Out map[string]string
 }
 
-//nolint:govet // fieldalignment: template grouping.
 type libraryTemplateData struct {
 	CompilerVersion   string
-	Exports           []exportTemplateData
 	RuntimeImportPath string
 	PackageName       string
+	Exports           []exportTemplateData
 }
 
-//nolint:govet // fieldalignment: template grouping.
 type exportTemplateData struct {
 	Name          string
+	TraceComment  string
+	StartPortChan string
+	StopPortChan  string
 	InFields      []fieldTemplateData
 	OutFields     []fieldTemplateData
 	ChanVarNames  []string
 	FuncCalls     []templateFuncCall
 	Trace         bool
-	TraceComment  string
-	StartPortChan string
-	StopPortChan  string
 }
 
 type fieldTemplateData struct {

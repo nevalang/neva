@@ -1,0 +1,5 @@
+// Startup baseline benchmark.
+// Measures process + runtime startup overhead with no stdlib component hot path.
+def Main(start any) (stop any) {
+	:start -> :stop
+}

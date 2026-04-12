@@ -1,0 +1,18 @@
+// Benchmarks logical operators as one simple family scenario.
+// Covers Not, And, and Or.
+def Main(start any) (stop any) {
+	logic BoolLogical
+	---
+	:start -> logic -> :stop
+}
+
+def BoolLogical(start any) (res any) {
+	not Not
+	and And
+	or Or
+	---
+	:start -> [true -> not:data, true -> and:left, false -> or:right]
+	not -> and:right
+	and -> or:left
+	or -> true -> :res
+}

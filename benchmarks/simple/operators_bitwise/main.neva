@@ -1,0 +1,21 @@
+// Benchmarks integer bitwise operators as one simple family scenario.
+def Main(start any) (stop any) {
+	bits Bitwise
+	---
+	:start -> bits -> :stop
+}
+
+def Bitwise(start any) (res any) {
+	and BitAnd
+	or BitOr
+	xor BitXor
+	lsh BitLsh
+	rsh BitRsh
+	---
+	:start -> [42 -> and:left, 255 -> and:right]
+	and -> [or:left, 1 -> or:right]
+	or -> [xor:left, 1023 -> xor:right]
+	xor -> [lsh:left, 2 -> lsh:right]
+	lsh -> [rsh:left, 1 -> rsh:right]
+	rsh -> true -> :res
+}

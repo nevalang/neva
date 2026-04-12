@@ -153,6 +153,8 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("runtime.NewIntMsg(int64(%s.%s))", prefix, field)
 			case "string":
 				return fmt.Sprintf("runtime.NewStringMsg(%s.%s)", prefix, field)
+			case "[]byte":
+				return fmt.Sprintf("runtime.NewBytesMsg(%s.%s)", prefix, field)
 			case "bool":
 				return fmt.Sprintf("runtime.NewBoolMsg(%s.%s)", prefix, field)
 			case "float64":
@@ -180,6 +182,8 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 				return fmt.Sprintf("int(%s.Int())", msgVar)
 			case "string":
 				return fmt.Sprintf("%s.Str()", msgVar)
+			case "[]byte":
+				return fmt.Sprintf("%s.Bytes()", msgVar)
 			case "bool":
 				return fmt.Sprintf("%s.Bool()", msgVar)
 			case "float64":
@@ -263,6 +267,8 @@ func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 				goType = "int"
 			case "string":
 				goType = "string"
+			case "bytes":
+				goType = "[]byte"
 			case "bool":
 				goType = "bool"
 			case "float":
@@ -308,9 +314,9 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
-		idx uint8
+	type arrPortSlot struct {
 		ch  string
+		idx uint8
 	}
 
 	for _, call := range funcs {
@@ -446,6 +452,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
 		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
+	case ir.MsgTypeBytes:
+		return fmt.Sprintf("runtime.NewBytesMsg([]byte(%q))", string(msg.Bytes)), nil
 	case ir.MsgTypeUnion:
 		if msg.Union.Data == nil {
 			return fmt.Sprintf(`runtime.NewUnionMsgNoData(%q)`, msg.Union.Tag), nil
@@ -468,7 +476,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeDict:
 		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(compiler.Pointer(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}
@@ -478,7 +487,8 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	case ir.MsgTypeStruct:
 		fields := make([]string, 0, len(msg.DictOrStruct))
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(compiler.Pointer(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}

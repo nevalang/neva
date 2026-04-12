@@ -18,7 +18,7 @@ func (arrayPortToStream) Create(
 		return nil, errors.New("missing array inport 'port'")
 	}
 
-	seqOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (arrayPortToStream) Create(
 		l := portIn.Len()
 
 		for {
-			for idx := 0; idx < l; idx++ {
+			for idx := range l {
 				msg, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
@@ -41,7 +41,7 @@ func (arrayPortToStream) Create(
 					idx == l-1,
 				)
 
-				if !seqOut.Send(ctx, item) {
+				if !resOut.Send(ctx, item) {
 					return
 				}
 			}

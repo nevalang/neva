@@ -54,6 +54,9 @@ func (d DebugInterceptor) formatMsg(msg Msg) string {
 	if msg.IsString() {
 		return fmt.Sprintf("%q", msg.Str())
 	}
+	if msg.IsBytes() {
+		return fmt.Sprintf("%q", msg.Bytes())
+	}
 	return fmt.Sprint(msg)
 }
 

@@ -12,10 +12,10 @@ import (
 func TestValidator_Validate(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		wantErr error
 		name    string
 		expr    ts.Expr
-		wantErr error
 	}{
 		// both or nothing
 		{

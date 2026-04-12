@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/nevalang/neva/pkg"
 	"github.com/nevalang/neva/pkg/core"
+	ts "github.com/nevalang/neva/pkg/typesystem"
 )
 
 // NewScope returns a new scope with a given location
@@ -19,10 +19,10 @@ func NewScope(build Build, location core.Location) Scope {
 
 // Scope is entity reference resolver
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type Scope struct {
-	loc   core.Location
 	build Build
+	loc   core.Location
 }
 
 // Location returns a location of the current scope

@@ -1,0 +1,130 @@
+name: Discord Release News
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-release-news-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  send-discord-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OUTPUT_DIR: .opencode/context/release-discord-output
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate required runtime configuration
+        env:
+          DISCORD_NEWS_WEBHOOK_URL: ${{ secrets.DISCORD_NEWS_WEBHOOK_URL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$OPENROUTER_API_KEY" || { echo "Missing OPENROUTER_API_KEY secret"; exit 1; }
+          test -n "$DISCORD_NEWS_WEBHOOK_URL" || { echo "Missing DISCORD_NEWS_WEBHOOK_URL secret"; exit 1; }
+          printf '%s' "$DISCORD_NEWS_WEBHOOK_URL" | grep -Eq '^https://(discord|discordapp)\.com/api/webhooks/[0-9]+/[^[:space:]]+$' || {
+            echo "DISCORD_NEWS_WEBHOOK_URL does not look like a valid Discord webhook URL"
+            exit 1
+          }
+          mkdir -p "$OUTPUT_DIR"
+
+      - name: Install OpenCode CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
+      - name: Generate Discord post with OpenCode
+        env:
+          DISCORD_CHANNEL_NAME: news
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_NOTES: ${{ github.event.release.body }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+        run: |
+          set -euo pipefail
+          PROMPT_FILE="${OUTPUT_DIR}/release-prompt.txt"
+
+          {
+            echo 'Use the `release-discord-post` skill.'
+            echo
+            echo "Generate a Discord release post for the official Neva Discord channel #${DISCORD_CHANNEL_NAME} using this release payload:"
+            echo "- Repository: ${RELEASE_REPOSITORY}"
+            echo "- Target channel: #${DISCORD_CHANNEL_NAME}"
+            echo "- Tag: ${RELEASE_TAG}"
+            echo "- Name: ${RELEASE_NAME}"
+            echo "- URL: ${RELEASE_URL}"
+            echo "- Notes:"
+            printf '%s\n' "${RELEASE_NOTES}"
+            echo
+            echo "Save the final post body to \`${OUTPUT_DIR}/discord-message.txt\`."
+            echo "Important: this file is sent as-is in Discord webhook JSON \`content\` field; output body only, no wrappers."
+          } >"${PROMPT_FILE}"
+
+          opencode run \
+            --model openrouter/anthropic/claude-sonnet-4.6 \
+            --prompt "$(cat "${PROMPT_FILE}")"
+
+      - name: Ensure generated message exists
+        run: |
+          set -euo pipefail
+          test -s "${OUTPUT_DIR}/discord-message.txt" || {
+            echo "Missing generated file: ${OUTPUT_DIR}/discord-message.txt"
+            exit 1
+          }
+
+      - name: Validate generated message shape
+        run: |
+          set -euo pipefail
+          FILE="${OUTPUT_DIR}/discord-message.txt"
+          LENGTH="$(wc -m <"$FILE" | tr -d ' ')"
+
+          if grep -q '```' "$FILE"; then
+            echo "Generated message contains markdown code fences."
+            exit 1
+          fi
+          if head -n 1 "$FILE" | grep -Eiq "^(here( is|'s)|result:|output:|sure[,!:]?)"; then
+            echo "Generated message starts with an LLM wrapper line."
+            exit 1
+          fi
+          if [ "$LENGTH" -gt 1800 ]; then
+            echo "Generated message is too long for Discord comfort: ${LENGTH} characters."
+            exit 1
+          fi
+
+      - name: Upload generated marketing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-discord-output
+          path: ${{ env.OUTPUT_DIR }}
+
+      - name: Send Discord message
+        env:
+          DISCORD_NEWS_WEBHOOK_URL: ${{ secrets.DISCORD_NEWS_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          MESSAGE="$(cat "${OUTPUT_DIR}/discord-message.txt")"
+          test -n "$MESSAGE" || { echo "Generated message is empty"; exit 1; }
+
+          payload="$(
+            jq -n \
+              --arg content "$MESSAGE" \
+              '{content: $content}'
+          )"
+
+          curl --fail --silent --show-error \
+            -X POST "${DISCORD_NEWS_WEBHOOK_URL}" \
+            -H "Content-Type: application/json" \
+            -d "$payload" >/dev/null

@@ -1,0 +1,6 @@
+// Benchmarks builtin component `Float` in one-shot mode.
+def Main(start any) (stop any) {
+	to_float Float
+	---
+	:start -> 42 -> to_float -> :stop
+}

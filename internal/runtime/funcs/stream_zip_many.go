@@ -42,7 +42,7 @@ func (streamZipMany) Create(
 			var wg sync.WaitGroup
 			wg.Add(streamsCount)
 
-			for streamIdx := 0; streamIdx < streamsCount; streamIdx++ {
+			for streamIdx := range streamsCount {
 				idx := streamIdx
 
 				go func() {
@@ -84,7 +84,7 @@ func (streamZipMany) Create(
 
 			for idx := 0; idx < count; idx++ {
 				zipped := make([]runtime.Msg, streamsCount)
-				for streamIdx := 0; streamIdx < streamsCount; streamIdx++ {
+				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 

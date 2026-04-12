@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Cond` else-path in one-shot mode.
+def Main(start any) (stop any) {
+	cond Cond<int>
+	---
+	:start -> [
+		42 -> cond:data,
+		false -> cond:if
+	]
+	cond:else -> :stop
+}

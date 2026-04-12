@@ -206,7 +206,8 @@ func (r Resolver) resolveExpr(
 			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
 			for field, fieldExpr := range expr.Lit.Struct {
 				// we create new trace with virtual ref "struct" (it's safe because it's reserved word)
-				// otherwise expressions like `error struct {child maybe<error>}` will be direct recursive for terminator
+				// otherwise recursive definitions (e.g. error -> maybe<error>)
+				// will be direct recursive for terminator
 				newTrace := Trace{
 					prev: trace,
 					cur:  core.EntityRef{Name: "struct"},

@@ -6,12 +6,12 @@ import (
 )
 
 // Program is a graph where ports are vertexes and connections are edges.
-//nolint:govet // fieldalignment: keep semantic grouping.
+//
+
 type Program struct {
-	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"` // Hide from default marshaling
+	Connections map[PortAddr]PortAddr `json:"-" yaml:"-"`
+	Comment     string                `json:"comment,omitempty" yaml:"comment,omitempty"`
 	Funcs       []FuncCall            `json:"funcs,omitempty" yaml:"funcs,omitempty"`
-	// Comment is an arbitrary string that backends may use.
-	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Program
@@ -23,10 +23,9 @@ func (p Program) MarshalJSON() ([]byte, error) {
 		connections[from.String()] = to.String()
 	}
 
-	//nolint:govet // fieldalignment: anonymous marshalling struct.
 	return json.Marshal(struct {
-		programAlias
 		Connections map[string]string `json:"connections,omitempty"`
+		programAlias
 	}{
 		programAlias: programAlias(p),
 		Connections:  connections,
@@ -48,11 +47,10 @@ func (p Program) MarshalYAML() (any, error) {
 		})
 	}
 
-	//nolint:govet // fieldalignment: anonymous marshalling struct.
 	return struct {
+		Comment     string                 `yaml:"comment,omitempty"`
 		Connections []serializedConnection `yaml:"connections,omitempty"`
 		Funcs       []FuncCall             `yaml:"funcs,omitempty"`
-		Comment     string                 `yaml:"comment,omitempty"`
 	}{
 		Connections: connections,
 		Funcs:       p.Funcs,
@@ -84,11 +82,12 @@ func (p PortAddr) MarshalYAML() (any, error) {
 }
 
 // FuncCall describes call of a runtime function.
-//nolint:govet // fieldalignment: keep semantic grouping.
+//
+
 type FuncCall struct {
-	Ref string   `json:"ref,omitempty" yaml:"ref,omitempty"` // Reference to the function in registry.
-	IO  FuncIO   `json:"io" yaml:"io"`                       // Input/output ports of the function.
-	Msg *Message `json:"msg,omitempty" yaml:"msg,omitempty"` // Optional initialization message.
+	Msg *Message `json:"msg,omitempty" yaml:"msg,omitempty"`
+	Ref string   `json:"ref,omitempty" yaml:"ref,omitempty"`
+	IO  FuncIO   `json:"io" yaml:"io"`
 }
 
 // FuncIO is how a runtime function gets access to its ports.
@@ -98,22 +97,23 @@ type FuncIO struct {
 }
 
 // Message is a data that can be sent and received.
-//nolint:govet // fieldalignment: keep semantic grouping.
+//
+
 type Message struct {
+	Union        UnionMessage       `json:"union" yaml:"union,omitempty"`
+	DictOrStruct map[string]Message `json:"map,omitempty" yaml:"map,omitempty"`
 	Type         MsgType            `json:"type" yaml:"type"`
-	Bool         bool               `json:"bool,omitempty" yaml:"bool,omitempty"`
+	String       string             `json:"str,omitempty" yaml:"str,omitempty"`
+	Bytes        []byte             `json:"bytes,omitempty" yaml:"bytes,omitempty"`
+	List         []Message          `json:"list,omitempty" yaml:"list,omitempty"`
 	Int          int64              `json:"int,omitempty" yaml:"int,omitempty"`
 	Float        float64            `json:"float,omitempty" yaml:"float,omitempty"`
-	String       string             `json:"str,omitempty" yaml:"str,omitempty"`
-	List         []Message          `json:"list,omitempty" yaml:"list,omitempty"`
-	DictOrStruct map[string]Message `json:"map,omitempty" yaml:"map,omitempty"`
-	Union        UnionMessage       `json:"union,omitempty" yaml:"union,omitempty"`
+	Bool         bool               `json:"bool,omitempty" yaml:"bool,omitempty"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type UnionMessage struct {
-	Tag  string   `json:"tag" yaml:"tag"`
 	Data *Message `json:"data,omitempty" yaml:"data,omitempty"`
+	Tag  string   `json:"tag" yaml:"tag"`
 }
 
 // MsgType is an enumeration of message types.
@@ -124,6 +124,7 @@ const (
 	MsgTypeInt    MsgType = "int"
 	MsgTypeFloat  MsgType = "float"
 	MsgTypeString MsgType = "string"
+	MsgTypeBytes  MsgType = "bytes"
 	MsgTypeList   MsgType = "list"
 	MsgTypeDict   MsgType = "dict"
 	MsgTypeStruct MsgType = "struct"

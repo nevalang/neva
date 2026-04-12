@@ -22,3 +22,13 @@ func SaveFilesToDir(dst string, files map[string][]byte) error {
 
 	return nil
 }
+
+// FileExists reports whether path exists and points to a regular file.
+func FileExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
+}

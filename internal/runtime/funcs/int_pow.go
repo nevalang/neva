@@ -54,7 +54,7 @@ func (intPow) Create(
 			exp := elMsg.Int()
 			result := int64(1)
 
-			for i := int64(0); i < exp; i++ {
+			for range exp {
 				result *= base
 			}
 

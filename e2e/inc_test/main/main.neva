@@ -4,7 +4,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    Inc, fmt.Println<int>
+    inc Inc, println fmt.Println<int>
     panic runtime.Panic
     ---
     :start -> 41 -> inc

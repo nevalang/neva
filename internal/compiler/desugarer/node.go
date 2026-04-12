@@ -95,6 +95,9 @@ func (Desugarer) handleNode(
 		}
 
 		desugaredDIArgs := maps.Clone(node.DIArgs)
+		if desugaredDIArgs == nil {
+			panic("internal invariant violated: anonymous dependency exists but DI args map clone is nil")
+		}
 		desugaredDIArgs[depName] = anonDepArg // actual desugaring
 		node = src.Node{                      // rewrite variable with desugared node
 			Directives: node.Directives,

@@ -1,0 +1,7 @@
+// Benchmarks builtin component `BitXor` in one-shot mode.
+def Main(start any) (stop any) {
+	bit_xor BitXor
+	---
+	:start -> [6 -> bit_xor:left, 3 -> bit_xor:right]
+	bit_xor -> :stop
+}

@@ -26,7 +26,7 @@ func acquireLockFile() (release func(), err error) {
 
 	filename := filepath.Join(home, "neva", ".lock")
 
-	for i := 0; i < 60; i++ {
+	for range 60 {
 		f, err := os.OpenFile(
 			filename,
 			os.O_CREATE|os.O_EXCL,

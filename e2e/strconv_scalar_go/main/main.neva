@@ -1,0 +1,77 @@
+import {
+    fmt
+    runtime
+    strconv
+}
+
+def Main(start any) (stop any) {
+    parse_bool strconv.ParseBool
+    format_bool strconv.FormatBool
+    itoa strconv.Itoa
+    format_int strconv.FormatInt
+    format_float strconv.FormatFloat
+    atoi strconv.Atoi
+    parse_int strconv.ParseInt
+    parse_float strconv.ParseFloat
+
+    p1 fmt.Println<any>
+    p2 fmt.Println<any>
+    p3 fmt.Println<any>
+    p4 fmt.Println<any>
+    p5 fmt.Println<any>
+    p6 fmt.Println<any>
+    p7 fmt.Println<any>
+    p8 fmt.Println<any>
+    panic runtime.Panic
+    ---
+    :start -> 'TRUE' -> parse_bool
+    parse_bool:res -> p1
+
+    [
+        parse_bool:err,
+        atoi:err,
+        parse_int:err,
+        parse_float:err,
+        p1:err,
+        p2:err,
+        p3:err,
+        p4:err,
+        p5:err,
+        p6:err,
+        p7:err,
+        p8:err
+    ] -> panic
+
+    p1:res -> true -> format_bool -> p2
+    p2:res -> 42 -> itoa -> p3
+    p3:res -> [
+        42 -> format_int:data,
+        16 -> format_int:base
+    ]
+    format_int:res -> p4
+
+    p4:res -> [
+        12.5 -> format_float:data,
+        'g' -> format_float:fmt,
+        -1 -> format_float:prec,
+        64 -> format_float:bits
+    ]
+    format_float:res -> p5
+
+    p5:res -> '42' -> atoi
+    atoi:res -> p6
+
+    p6:res -> [
+        '2a' -> parse_int:data,
+        16 -> parse_int:base,
+        0 -> parse_int:bits
+    ]
+    parse_int:res -> p7
+
+    p7:res -> [
+        '3.14' -> parse_float:data,
+        64 -> parse_float:bits
+    ]
+    parse_float:res -> p8
+    p8:res -> :stop
+}

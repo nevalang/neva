@@ -30,9 +30,137 @@ Neva opts for simplicity with only int and float types, reducing type-conversion
 
 Separate int and float types provide better handling of large numbers, improved integer operation performance, more predictable comparisons, and enhanced type safety.
 
+## Why doesn't Neva have type-casting as a language feature?
+
+Neva intentionally keeps conversions as explicit components instead of syntax
+(`-> int ->`, `type(...)`, etc.). There are three reasons:
+
+1. Preserve the 1:1 graph model. In Neva, every computation should be visible as
+   a node and edge. Cast syntax would hide conversion nodes behind parser sugar.
+2. Keep language core small. Conversion behavior (rounding, parse policy, error
+   handling) is a library concern and can evolve in stdlib without growing the
+   compiler surface.
+3. Keep failures explicit. Many conversions are partial (for example string to
+   number parsing). Component APIs can expose `err` outports and integrate with
+   `?` propagation naturally.
+4. Keep conversions composable. As normal components, converters can be passed
+   as dependencies into HOCs/DI flows instead of being hardcoded syntax.
+
+In short: conversions exist, but they are modeled as normal components in
+stdlib, not as special language-level casts.
+
+## What is the Go-like split for scalar conversions?
+
+Use a simple split:
+
+1. `builtin`: only total scalar casts that cannot fail at runtime.
+2. `strconv`: text parsing/formatting (`string` <-> scalar), where input can be invalid.
+
+In practice, this means:
+
+- `Int(float) -> int`, `Float(int) -> float`, and `String(int) -> string` (code-point cast)
+  belong to `builtin` and have no `err` outport.
+- `string -> int/float/bool` belongs to `strconv` and should return `err` on invalid input.
+- Human-readable scalar-to-string formatting should also live in `strconv` (Go style),
+  for example `strconv.Itoa`/`FormatFloat`/`FormatBool`.
+
 ## What determines which entities are in the builtin package?
 
-Builtin package entities are frequently used or used internally by the compiler.
+Builtin is Neva's implicit prelude. Every file can reference builtin entities
+without imports, so this surface should stay small and stable.
+
+In practice, builtin is for:
+
+1. Primitive language-level types (`int`, `float`, `list<T>`, etc.)
+2. Compiler-coupled contracts (for example directives/special analyzer behavior)
+3. Very common low-level building blocks that the language model relies on
+
+If Neva later splits builtin into `core` and `prelude`, the same principle
+still applies: compiler contracts stay close to core, policy-heavy APIs stay
+outside.
+
+## Why are `Union` and `Struct` in builtin?
+
+Because they are part of compiler contracts, not just convenience utilities.
+
+- `Union` has analyzer-aware logic for tag/data compatibility and union-member
+  checks. It is not treated as a regular arbitrary helper component.
+- `Struct` is the canonical `#autoports` builder. Analyzer/desugarer flows
+  assume this pattern for deriving inports from struct type arguments.
+
+So keeping them in builtin makes their special role explicit and keeps them
+always available without import noise.
+
+Note: coupling strength differs. `Union` has stronger explicit analyzer coupling;
+`Struct` is mostly coupled through `#autoports` conventions and desugaring flow.
+If this changes in compiler architecture, this answer should be updated.
+
+## What is builtin `Type` (`type Type any`) and why does it exist?
+
+`Type` is a semantic marker alias over `any` used by compiler-aware builtin
+components such as `Union` and `Switch`:
+
+- `Union<T Type>(data Type, tag T) (res T)`
+- `Switch<T>(data T, [case] T) ([case] Type, else T)`
+
+It marks ports that may carry different concrete payload types depending on
+tag/case analysis. Runtime representation is still `any`, but the alias keeps
+signatures readable and communicates "this is intentionally heterogeneous".
+
+In short, `Type` exists because current type-system expressiveness is not enough
+to model these ports with fully precise static types while preserving today's
+ergonomic component APIs.
+
+## How is `strconv` different from `fmt`?
+
+`strconv` and `fmt` solve different problems:
+
+- `strconv`: pure value conversion/parsing contracts (`string` <-> numbers, etc.)
+- `fmt`: presentation and I/O-oriented formatting
+
+Even if both are deterministic, their compatibility promises differ. Conversion
+APIs are expected to be canonical and stable for machine-to-machine flows.
+Formatting APIs are user-facing and may prioritize readability or template
+flexibility.
+
+## Why is `string(42)` in Go not `"42"`?
+
+In Go, integer-to-string conversion in the language is a Unicode code point
+conversion, not decimal formatting:
+
+- `string(42)` is `"*"` because 42 is `U+002A`.
+- `string(1)` is a one-byte control character (`U+0001`), often shown as `"\x01"`
+  in escaped form.
+
+So this is different from "number to decimal text". Decimal formatting is done
+via `strconv`/`fmt` APIs.
+
+## Why not allow every `bool <-> number` conversion by default?
+
+Because these conversions are policy-heavy and easy to misuse when global:
+
+- `bool -> int`: should `true` always be `1` and `false` `0`? usually yes.
+- `int -> bool`: should non-zero mean `true` or only `1` mean `true`?
+- `float -> bool`: what about `0.0`, `-0.0`, `NaN`, `Inf`?
+
+Neva prefers explicitness for these cases. If such conversions are added, they
+should have narrowly named components with documented semantics and error rules,
+instead of one broad "magic cast" behavior.
+
+## Why does `bytes` have no literal syntax yet?
+
+Current `bytes` support is intentionally transport-focused (I/O, HTTP, image
+payloads) and keeps conversion explicit via stdlib components
+(`bytes.FromString`, `strings.FromBytes`).
+
+Adding literal syntax now would force language-level decisions that are coupled
+with unfinished numeric-byte design (`byte/uint8` topic), for example:
+
+- Should numeric forms exist, and with which range/overflow rules?
+- How should byte literals interact with `int` conversions?
+- Which part is syntax vs stdlib-level policy?
+
+Until those semantics are settled, Neva keeps `bytes` literal-free and explicit.
 
 ## Why `New` is implemented like an infinite loop?
 
@@ -50,7 +178,7 @@ Neva supports infinite nesting for streams, but nested streams aren't used to re
 
 ## How to work with components that expect `T` when you have `stream<T>`?
 
-Use `Map/Filter/Reduce` for data transformations and `For` for side-effects. For complex cases, access `.data` on stream item directly.
+Use `Map/Filter/Reduce` for data transformations and `ForEach` for side-effects. For complex cases, access `.data` on stream item directly.
 
 ## Why isn't `Main:stop` of `int` type?
 
@@ -63,6 +191,27 @@ It reduces code, especially for mappings between records, vectors, and dictionar
 ## Why have `any`?
 
 Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary for certain critical cases where the alternative would be an overly complicated type system.
+
+## How should errors and execution traces relate in Neva?
+
+Treat them as different layers:
+
+1. `error` value carries failure semantics (what failed).
+2. runtime trace carries execution context (where/how message moved in graph).
+
+This split avoids overloading error payloads with transport/debug metadata and
+keeps dataflow semantics explicit.
+
+Practical implications:
+
+- Keep `res` / `err` outport model and `?` error propagation idioms.
+- Use error wrapping for semantic context when needed (domain-level meaning),
+  not as the only way to reconstruct execution path.
+- Panic/debugger/error-formatting should rely on runtime trace facilities for
+  graph context.
+
+Status: tracing query/format APIs are still evolving, so behavior may be
+incremental until the runtime tracing track is fully implemented.
 
 ## Why can only primitive messages be used as "literal network senders"?
 
@@ -82,11 +231,17 @@ For consistency with other type syntax and to avoid confusion with different syn
 
 ## Why is there inconsistent naming in stdlib?
 
-Some basic components follow naming conventions from other languages for familiarity.
+Historically, stdlib mixed multiple naming styles while the language and APIs were evolving. The current direction is to standardize on clear port roles: `res` for primary output, `err` for failures, and `data` only as a generic input placeholder.
 
 ## What's the reasoning behind Neva's naming conventions?
 
-Names are chosen to be familiar to most programmers, easing the paradigm shift.
+Naming follows three heuristics:
+
+1. Semantic clarity in local context (`url`, `filename`, `left`, `right`).
+2. Stable control/dataflow conventions (`sig`, `res`, `err`, `then`, `else`).
+3. Familiarity with common ecosystems (for example Go stdlib) when it does not reduce clarity.
+
+When heuristics conflict, semantic clarity wins.
 
 ## Why do `struct` and `dict` literals require `:` and `,` while struct declarations don't?
 

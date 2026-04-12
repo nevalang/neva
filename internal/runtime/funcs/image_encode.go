@@ -1,9 +1,9 @@
 package funcs
 
 import (
+	"bytes"
 	"context"
 	"image/png"
-	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -16,7 +16,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 
 			imgStructMsg := imgMsg.Struct()
 			b := imageMsg{
-				pixels: imgStructMsg.Get("pixels").Str(),
+				pixels: imgStructMsg.Get("pixels").Bytes(),
 				width:  imgStructMsg.Get("width").Int(),
 				height: imgStructMsg.Get("height").Int(),
 			}
@@ -43,16 +43,16 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 			im := b.createImage()
 
 			// Encode the image in the desired format to sb.
-			var sb strings.Builder // for encoded output.
+			var sb bytes.Buffer // for encoded output.
 			if err := png.Encode(&sb, im); err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
 			}
 
-			if !dataOut.Send(
+			if !resOut.Send(
 				ctx,
-				runtime.NewStringMsg(sb.String()),
+				runtime.NewBytesMsg(sb.Bytes()),
 			) {
 				return
 			}

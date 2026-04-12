@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Select` in one-shot mode.
+def Main(start any) (stop any) {
+	select Select<int>
+	---
+	:start -> [
+		true -> select:if[0],
+		42 -> select:then[0]
+	]
+	select -> :stop
+}

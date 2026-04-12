@@ -15,7 +15,7 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 		return nil, err
 	}
 
-	dataOut, err := io.Out.Single("data")
+	resOut, err := io.Out.Single("res")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			result = append(result, runtime.NewStringMsg(os.Args[i]))
 		}
 
-		if !dataOut.Send(ctx, runtime.NewListMsg(result)) {
+		if !resOut.Send(ctx, runtime.NewListMsg(result)) {
 			return
 		}
 	}, nil

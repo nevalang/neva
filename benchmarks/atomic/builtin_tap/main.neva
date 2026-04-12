@@ -1,0 +1,24 @@
+// Benchmarks builtin component `Tap` in one-shot mode.
+const tapHandlerValue dict<string> = {
+	ok: 'ok'
+}
+
+def Main(start any) (stop any) {
+	tap Tap<int>{Handler}
+	del Del
+	---
+	:start -> 42 -> tap:data
+	tap:res -> :stop
+	tap:err -> del
+}
+
+def Handler(data int) (res any, err error) {
+	dict_key Get<string>
+	---
+	:data -> [
+		$tapHandlerValue -> dict_key:dict,
+		'ok' -> dict_key:key
+	]
+	dict_key:res -> :res
+	dict_key:err -> :err
+}

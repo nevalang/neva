@@ -19,7 +19,7 @@ const numsStruct NumsStruct = {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println, runtime.Panic
+    println fmt.Println, panic runtime.Panic
     ---
     :start -> $numsStruct -> println:data
     println:res -> :stop
