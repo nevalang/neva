@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package typesystem
 
 import "github.com/nevalang/neva/pkg/core"

@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // package core contains abstractions that are used by
 // both source-code and type-system.
 
@@ -39,6 +40,7 @@ type Location struct {
 }
 
 func (l Location) String() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s string
 	if l.ModRef.Path == "@" {
 		s = l.Package

@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
 package ast

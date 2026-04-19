@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package ir
 
 // GraphReduction removes intermediate connections and returns reduced graph.

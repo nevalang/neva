@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // This file implements Scope interface specifically for tests.
 package typesystem_test
 

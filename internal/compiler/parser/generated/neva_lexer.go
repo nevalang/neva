@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing

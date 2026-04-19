@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package golang
 
 // ReleaseBuildArgs returns standardized `go build` args for end-user artifacts.

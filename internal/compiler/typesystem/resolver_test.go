@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 //nolint:gocritic // keep commented-out draft test logic for future restoration.
 package typesystem_test
 

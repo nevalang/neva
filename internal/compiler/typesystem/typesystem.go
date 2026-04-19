@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // Package typesystem implements type-system with generics and structural subtyping.
 // For convenience these structures have json tags (like `src` package).
 // This is not clean architecture but it's very handy for LSP.

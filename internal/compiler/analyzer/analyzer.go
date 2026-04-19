@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // Package analyzer implements source code static semantic analysis.
 // It's important to keep errors as human-readable as possible
 // because they are what end-user is facing when something goes wrong.

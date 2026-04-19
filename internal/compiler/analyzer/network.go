@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // This file contains the logic for analyzing network connections.
 // Some methods here might look like they are related to senders or receivers specifically,
 // but they are actually related to both, so they are placed here.

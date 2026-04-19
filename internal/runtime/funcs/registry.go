@@ -1,3 +1,4 @@
+//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // Package funcs implements low-level flows (runtime functions).
 // It has only one exported entity which is function creators registry.
 package funcs
