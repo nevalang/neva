@@ -10,19 +10,19 @@ type rangeInt struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	fromIn, err := io.In.Single("from")
+	fromIn, err := singleIn(io, "from")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	toIn, err := io.In.Single("to")
+	toIn, err := singleIn(io, "to")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

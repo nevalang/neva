@@ -15,19 +15,19 @@ func (intBitwiseRsh) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	accIn, err := io.In.Single("left")
+	accIn, err := singleIn(io, "left")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	elIn, err := io.In.Single("right")
+	elIn, err := singleIn(io, "right")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

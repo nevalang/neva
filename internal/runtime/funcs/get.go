@@ -11,25 +11,25 @@ type getDictValue struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (g getDictValue) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dictIn, err := io.In.Single("dict")
+	dictIn, err := singleIn(io, "dict")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	keyIn, err := io.In.Single("key")
+	keyIn, err := singleIn(io, "key")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
+	errOut, err := singleOut(io, "err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

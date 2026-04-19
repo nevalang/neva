@@ -11,31 +11,31 @@ type accumulator struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	initIn, err := io.In.Single("init")
+	initIn, err := singleIn(io, "init")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	updIn, err := io.In.Single("upd")
+	updIn, err := singleIn(io, "upd")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	lastIn, err := io.In.Single("last")
+	lastIn, err := singleIn(io, "last")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	curOut, err := io.Out.Single("cur")
+	curOut, err := singleOut(io, "cur")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

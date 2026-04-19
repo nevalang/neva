@@ -10,19 +10,19 @@ type waitGroup struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (g waitGroup) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	countIn, err := io.In.Single("count")
+	countIn, err := singleIn(io, "count")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	sigIn, err := io.In.Single("sig")
+	sigIn, err := singleIn(io, "sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	sigOut, err := io.Out.Single("sig")
+	sigOut, err := singleOut(io, "sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

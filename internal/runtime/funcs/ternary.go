@@ -10,25 +10,25 @@ type ternarySelector struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p ternarySelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	ifIn, err := io.In.Single("if")
+	ifIn, err := singleIn(io, "if")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	thenIn, err := io.In.Single("then")
+	thenIn, err := singleIn(io, "then")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	elseIn, err := io.In.Single("else")
+	elseIn, err := singleIn(io, "else")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

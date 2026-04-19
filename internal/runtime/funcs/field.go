@@ -21,13 +21,13 @@ func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Co
 		pathStrings = append(pathStrings, el.Str())
 	}
 
-	dataIn, err := io.In.Single("data")
+	dataIn, err := singleIn(io, "data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

@@ -11,13 +11,13 @@ type selector struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	ifArrIn, err := io.In.Array("if")
+	ifArrIn, err := arrayIn(io, "if")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	thenArrIn, err := io.In.Array("then")
+	thenArrIn, err := arrayIn(io, "then")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
@@ -27,7 +27,7 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 		return nil, errors.New("number of 'if' inports must match number of 'then' outports")
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

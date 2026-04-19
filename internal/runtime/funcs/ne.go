@@ -11,19 +11,19 @@ type notEq struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p notEq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Single("left")
+	actualIn, err := singleIn(io, "left")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	comparedIn, err := io.In.Single("right")
+	comparedIn, err := singleIn(io, "right")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

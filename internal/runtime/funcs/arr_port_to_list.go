@@ -14,12 +14,12 @@ func (arrayPortToList) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
-	portIn, err := io.In.Array("port")
+	portIn, err := arrayIn(io, "port")
 	if err != nil {
 		return nil, errors.New("missing array inport 'port'")
 	}
 
-	listOut, err := io.Out.Single("res")
+	listOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

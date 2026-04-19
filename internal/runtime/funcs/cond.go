@@ -11,25 +11,25 @@ type cond struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+	dataIn, err := singleIn(io, "data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	ifIn, err := io.In.Single("if")
+	ifIn, err := singleIn(io, "if")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	thenOut, err := io.Out.Single("then")
+	thenOut, err := singleOut(io, "then")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	elseOut, err := io.Out.Single("else")
+	elseOut, err := singleOut(io, "else")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

@@ -14,7 +14,7 @@ func (p panicker) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	msgIn, err := io.In.Single("data")
+	msgIn, err := singleIn(io, "data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

@@ -13,25 +13,25 @@ type parseFloat struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p parseFloat) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+	dataIn, err := singleIn(io, "data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	bitsIn, err := io.In.Single("bits")
+	bitsIn, err := singleIn(io, "bits")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
+	errOut, err := singleOut(io, "err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

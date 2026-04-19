@@ -11,19 +11,19 @@ type matchSelector struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+	dataIn, err := singleIn(io, "data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	ifIn, err := io.In.Array("if")
+	ifIn, err := arrayIn(io, "if")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	thenOut, err := io.In.Array("then")
+	thenOut, err := arrayIn(io, "then")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
@@ -33,13 +33,13 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 		return nil, errors.New("number of 'if' inports must match number of 'then' outports")
 	}
 
-	elseIn, err := io.In.Single("else")
+	elseIn, err := singleIn(io, "else")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

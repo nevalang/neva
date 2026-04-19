@@ -10,19 +10,19 @@ type intMod struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (intMod) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	leftIn, err := io.In.Single("left") // numerator
+	leftIn, err := singleIn(io, "left") // numerator
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	denIn, err := io.In.Single("right") // denominator
+	denIn, err := singleIn(io, "right") // denominator
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res") // modulo
+	resOut, err := singleOut(io, "res") // modulo
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

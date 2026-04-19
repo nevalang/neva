@@ -15,19 +15,19 @@ func (streamProduct) Create(
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Single("first")
+	firstIn, err := singleIn(io, "first")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	secondIn, err := io.In.Single("second")
+	secondIn, err := singleIn(io, "second")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

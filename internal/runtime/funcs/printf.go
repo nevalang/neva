@@ -13,25 +13,25 @@ type printf struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p printf) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	tplIn, err := io.In.Single("tpl")
+	tplIn, err := singleIn(io, "tpl")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	argsIn, err := io.In.Array("args")
+	argsIn, err := arrayIn(io, "args")
 	if err != nil {
 		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, fmt.Errorf("missing required input port 'args'")
 	}
 
-	sigOut, err := io.Out.Single("sig")
+	sigOut, err := singleOut(io, "sig")
 	if err != nil {
 		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, fmt.Errorf("missing required output port 'args'")
 	}
 
-	errOut, err := io.Out.Single("err")
+	errOut, err := singleOut(io, "err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

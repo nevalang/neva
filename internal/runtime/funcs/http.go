@@ -12,19 +12,19 @@ type httpGet struct{}
 
 //nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	urlIn, err := funcIO.In.Single("url")
+	urlIn, err := singleIn(funcIO, "url")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := funcIO.Out.Single("res")
+	resOut, err := singleOut(funcIO, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	errOut, err := funcIO.Out.Single("err")
+	errOut, err := singleOut(funcIO, "err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

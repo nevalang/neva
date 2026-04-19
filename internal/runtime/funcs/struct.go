@@ -27,7 +27,7 @@ func (s structBuilder) Create(
 		inports[inportName] = *inportSlots.Single()
 	}
 
-	outport, err := io.Out.Single("res")
+	outport, err := singleOut(io, "res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

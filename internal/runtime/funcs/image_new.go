@@ -11,19 +11,19 @@ type imageNew struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pixelsIn, err := io.In.Single("pixels")
+	pixelsIn, err := singleIn(io, "pixels")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	imgOut, err := io.Out.Single("img")
+	imgOut, err := singleOut(io, "img")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	errOut, err := io.Out.Single("err")
+	errOut, err := singleOut(io, "err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
