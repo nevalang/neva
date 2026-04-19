@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package cli
 
 import (
@@ -20,6 +19,7 @@ import (
 	"github.com/nevalang/neva/internal/compiler/desugarer"
 )
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func newRunCmd(
 	workdir string,
 	bldr builder.Builder,
@@ -134,6 +134,7 @@ func newRunCmd(
 				input.OutputPath = tempExecDir
 
 				if _, err := compilerToNative.Compile(ctx, input); err != nil {
+					//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 					return err
 				}
 

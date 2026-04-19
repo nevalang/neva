@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package builder
 
 import (
@@ -46,6 +45,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 		ReferenceName: ref,
 	})
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return "", "", err
 	}
 
@@ -59,6 +59,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 	}
 
 	if err := nevaGit.Checkout(repo, latestTagHash.String()); err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return "", "", err
 	}
 
@@ -83,6 +84,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 func getLatestTagHash(repository *gitlib.Repository) (plumbing.Hash, string, error) {
 	tagRefs, err := repository.Tags()
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return plumbing.Hash{}, "", err
 	}
 
@@ -96,6 +98,7 @@ func getLatestTagHash(repository *gitlib.Repository) (plumbing.Hash, string, err
 		return nil
 	})
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return plumbing.Hash{}, "", err
 	}
 

@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package cli
 
 import (
@@ -19,7 +18,8 @@ const (
 )
 
 //nolint:gocyclo // Control flow handles multiple run and watch edge cases.
-func watchAndRun(ctx context.Context, moduleRoot string, run func(context.Context) error) error {
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func watchAndRun(ctx context.Context, moduleRoot string, run func(context.Context) error) error { //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("create watcher: %w", err)
@@ -116,6 +116,7 @@ func watchAndRun(ctx context.Context, moduleRoot string, run func(context.Contex
 }
 
 func addWatchersRecursively(watcher *fsnotify.Watcher, root string) error {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

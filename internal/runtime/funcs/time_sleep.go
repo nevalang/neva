@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -10,14 +9,17 @@ import (
 
 type timeAfter struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (timeAfter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	durIn, err := io.In.Single("dur")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	sigOut, err := io.Out.Single("sig")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

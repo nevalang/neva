@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -10,24 +9,29 @@ import (
 
 type imageNew struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	pixelsIn, err := io.In.Single("pixels")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	imgOut, err := io.Out.Single("img")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	errOut, err := io.Out.Single("err")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			im := make(map[pixelMsg]struct{})
 			var (
 				width  int64
@@ -35,6 +39,7 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			)
 		stream:
 			for {
+				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				m, ok := pixelsIn.Receive(ctx)
 				if !ok {
 					return

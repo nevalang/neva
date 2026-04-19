@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -22,19 +21,23 @@ type dotenvLoad struct {
 	override bool
 }
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d dotenvLoadFrom) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	errOut, err := rio.Out.Single("err")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -64,19 +67,23 @@ func (d dotenvLoadFrom) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.
 	}, nil
 }
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	errOut, err := rio.Out.Single("err")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -104,6 +111,7 @@ func loadDotenvFile(path string, override bool) error {
 	// #nosec G304,G703 -- path comes from explicit component input (caller-controlled by design).
 	file, err := os.Open(path)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 	defer file.Close()
@@ -160,6 +168,7 @@ func parseDotenv(r io.Reader) (map[string]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -210,10 +219,12 @@ func parseDotenvValue(raw string) (string, error) {
 	return raw, nil
 }
 
+//nolint:cyclop,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func unescapeDoubleQuoted(s string) (string, error) {
 	var builder strings.Builder
 	builder.Grow(len(s))
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
 		if ch != '\\' {
@@ -253,12 +264,14 @@ func unescapeDoubleQuoted(s string) (string, error) {
 	return builder.String(), nil
 }
 
+//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func stripInlineComment(value string) string {
 	value = strings.TrimRightFunc(value, unicode.IsSpace)
 
 	inSingle := false
 	inDouble := false
 
+	//nolint:intrange,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i := 0; i < len(value); i++ {
 		switch value[i] {
 		case '\'':
@@ -288,6 +301,7 @@ func stripInlineComment(value string) string {
 	return strings.TrimSpace(value)
 }
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func isEscaped(s string, idx int) bool {
 	if idx == 0 {
 		return false

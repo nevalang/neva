@@ -1,5 +1,6 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // This file implements Scope interface specifically for tests.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package typesystem_test
 
 import (
@@ -13,6 +14,7 @@ var ErrDefaultScope = errors.New("default scope")
 
 type TestScope map[string]ts.Def
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s TestScope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
@@ -20,6 +22,7 @@ func (s TestScope) IsTopType(expr ts.Expr) bool {
 	return expr.Inst.Ref.String() == "any"
 }
 
+//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s TestScope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	v, ok := s[ref.String()]
 	if !ok {

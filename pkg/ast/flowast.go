@@ -1,6 +1,7 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package ast
 
 import (
@@ -26,7 +27,9 @@ type Module struct {
 	Manifest ModuleManifest     `json:"manifest"`
 }
 
+//nolint:gocritic,nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
 		return Entity{}, "", fmt.Errorf("package not found: %v", entityRef.Pkg)
@@ -48,7 +51,10 @@ type ModuleManifest struct {
 type Package map[string]File
 
 // Just like program's Entity
-func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) {
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) { //nolint:lll,nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for fileName, file := range p {
 		entity, ok := file.Entities[entityName]
 		if ok {
@@ -68,6 +74,7 @@ type EntitiesResult struct {
 func (pkg Package) Entities() func(func(EntitiesResult) bool) {
 	return func(yield func(EntitiesResult) bool) {
 		for fileName, file := range pkg {
+			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for entityName, entity := range file.Entities {
 				if !yield(EntitiesResult{
 					EntityName: entityName,
@@ -101,7 +108,9 @@ type Entity struct {
 	IsPublic  bool        `json:"exported,omitempty"`
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (e Entity) Meta() *core.Meta {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	m := core.Meta{}
 	switch e.Kind {
 	case ConstEntity:
@@ -154,8 +163,10 @@ type TypeParams struct {
 	Meta   core.Meta  `json:"meta"`
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (t TypeParams) ToFrame() map[string]ts.Def {
 	frame := make(map[string]ts.Def, len(t.Params))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, param := range t.Params {
 		frame[param.Name] = ts.Def{
 			BodyExpr: &param.Constr,
@@ -166,8 +177,10 @@ func (t TypeParams) ToFrame() map[string]ts.Def {
 }
 
 func (t TypeParams) String() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s strings.Builder
 	s.WriteString("<")
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range t.Params {
 		s.WriteString(param.Name + " " + param.Constr.String())
 		if i < len(t.Params)-1 {
@@ -200,8 +213,10 @@ func (n Node) String() string {
 type TypeArgs []ts.Expr
 
 func (t TypeArgs) String() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s strings.Builder
 	s.WriteString("<")
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, arg := range t {
 		s.WriteString(arg.String())
 		if i < len(t)-1 {
@@ -252,16 +267,20 @@ type UnionLiteral struct {
 func (m MsgLiteral) String() string {
 	switch {
 	case m.Bool != nil:
+		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return fmt.Sprintf("%v", *m.Bool)
 	case m.Int != nil:
+		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return fmt.Sprintf("%v", *m.Int)
 	case m.Float != nil:
 		return fmt.Sprintf("%v", *m.Float)
 	case m.Str != nil:
 		return fmt.Sprintf("%q", *m.Str)
 	case len(m.List) != 0:
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		var s strings.Builder
 		s.WriteString("[")
+		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for i, item := range m.List {
 			s.WriteString(item.String())
 			if i != len(m.List)-1 {
@@ -270,8 +289,10 @@ func (m MsgLiteral) String() string {
 		}
 		return s.String() + "]"
 	case len(m.DictOrStruct) != 0:
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		var s strings.Builder
 		s.WriteString("{")
+		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for key, value := range m.DictOrStruct {
 			fmt.Fprintf(&s, "%q: %v", key, value.String())
 		}
@@ -356,6 +377,7 @@ func (p PortAddr) String() string {
 		if IsArrayBypassIdx(p.Idx) {
 			idxString = "*"
 		} else {
+			//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			idxString = fmt.Sprintf("%v", *p.Idx)
 		}
 	}

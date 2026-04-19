@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -8,6 +7,7 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *compiler.Error {
 	if len(cmp.TypeParams.Params) != 0 {
 		return &compiler.Error{
@@ -27,6 +27,7 @@ func (a Analyzer) analyzeMainComponent(cmp src.Component, scope src.Scope) *comp
 	return nil
 }
 
+//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	if len(io.In) != 1 {
 		return &compiler.Error{
@@ -41,6 +42,7 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 		}
 	}
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	enterInport, ok := io.In["start"]
 	if !ok {
 		return &compiler.Error{Message: "Main component must have 'start' inport", Meta: &io.Meta}
@@ -62,6 +64,7 @@ func (a Analyzer) analyzeMainFlowIO(io src.IO) *compiler.Error {
 	return nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzeMainComponentPort(port src.Port) *compiler.Error {
 	if port.IsArray {
 		return &compiler.Error{
@@ -80,8 +83,10 @@ func (a Analyzer) analyzeMainComponentPort(port src.Port) *compiler.Error {
 
 func (Analyzer) analyzeMainComponentNodes(
 	nodes map[string]src.Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) *compiler.Error {
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, node := range nodes {
 		if _, err := scope.GetComponent(node.EntityRef); err != nil {
 			return &compiler.Error{

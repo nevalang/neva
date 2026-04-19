@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package desugarer
 
 import (
@@ -17,6 +16,7 @@ type desugarStructSelectorsResult struct {
 // desugarStructSelectors doesn't generate incoming connections for field node,
 // it's responsibility of desugarChainConnection.
 func (d *Desugarer) desugarStructSelectors(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	conn src.Connection, // sender here is selector (this is chained connection)
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -82,6 +82,7 @@ func pathConstTypeExpr() ts.Expr {
 	}
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Desugarer) createSelectorCfgMsg(senderSide src.ConnectionSender) src.Const {
 	result := make([]src.ConstValue, 0, len(senderSide.StructSelector))
 	locOnlyMeta := core.Meta{

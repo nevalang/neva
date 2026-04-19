@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -14,8 +13,11 @@ var (
 )
 
 //nolint:gocyclo // Const analysis handles many literal/type branches.
-func (a Analyzer) analyzeConst(
+//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (a Analyzer) analyzeConst( //nolint:cyclop,funlen,gocognit,lll,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	constant src.Const,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Const, *compiler.Error) {
 	if constant.Value.Message == nil && constant.Value.Ref == nil {

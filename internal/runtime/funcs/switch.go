@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -11,24 +10,29 @@ import (
 
 type switchRouter struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	caseArrIn, err := io.In.Array("case")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	caseOut, err := io.Out.Array("case")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	elseOut, err := io.Out.Single("else")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -39,6 +43,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 	return func(ctx context.Context) {
 		for {
 			var (
+				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				wg              sync.WaitGroup
 				dataMsg         runtime.Msg
 				cases           = make([]runtime.Msg, caseArrIn.Len())
@@ -90,7 +95,9 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 	}, nil
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func tryToUnboxIfUnion(dataMsg runtime.Msg) runtime.Msg {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	u, ok := dataMsg.(runtime.UnionMsg)
 	if !ok {
 		return dataMsg

@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package ir
 
 import (
@@ -36,6 +35,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 }
 
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, export := range exports {
 		if err := b.emit(dst, "ir_"+export.Name, export.Program); err != nil {
 			return err
@@ -74,12 +74,14 @@ func (b Backend) emit(dst, name string, prog *ir.Program) error {
 		return fmt.Errorf("unknown format: %s", b.format)
 	}
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	f, err := os.OpenFile(
 		filepath.Join(dst, fileName),
 		os.O_CREATE|os.O_TRUNC|os.O_RDWR,
 		0755,
 	)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 	defer f.Close()

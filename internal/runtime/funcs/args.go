@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -10,14 +9,17 @@ import (
 
 type args struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -28,6 +30,7 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 
 		result := make([]runtime.Msg, len(os.Args))
 		for i := range os.Args {
+			//nolint:makezero // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			result = append(result, runtime.NewStringMsg(os.Args[i]))
 		}
 

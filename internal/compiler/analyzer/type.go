@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -11,6 +10,7 @@ type analyzeTypeDefParams struct {
 	allowEmptyBody bool
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDefParams) (ts.Def, *compiler.Error) {
 	if !params.allowEmptyBody && def.BodyExpr == nil {
 		meta := def.Meta
@@ -38,6 +38,7 @@ func (a Analyzer) analyzeType(def ts.Def, scope src.Scope, params analyzeTypeDef
 	}, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *compiler.Error) {
 	resolvedExpr, err := a.resolver.ResolveExpr(expr, scope)
 	if err != nil {
@@ -52,6 +53,7 @@ func (a Analyzer) analyzeTypeExpr(expr ts.Expr, scope src.Scope) (ts.Expr, *comp
 
 func (a Analyzer) analyzeTypeParams(
 	params []ts.Param,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (
 	[]ts.Param,

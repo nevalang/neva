@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -9,6 +8,7 @@ import (
 
 type netNodesUsage map[string]netNodeUsage
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (n netNodesUsage) trackInportUsage(addr src.PortAddr) error {
 	if _, ok := n[addr.Node]; !ok {
 		n[addr.Node] = netNodeUsage{
@@ -19,6 +19,7 @@ func (n netNodesUsage) trackInportUsage(addr src.PortAddr) error {
 	return n[addr.Node].trackInportUsage(addr)
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (n netNodesUsage) trackOutportUsage(addr src.PortAddr) error {
 	if _, ok := n[addr.Node]; !ok {
 		n[addr.Node] = netNodeUsage{
@@ -33,10 +34,12 @@ type netNodeUsage struct {
 	In, Out portsUsage
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (n netNodeUsage) trackOutportUsage(addr src.PortAddr) error {
 	return n.Out.trackSlotUsage(addr)
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (n netNodeUsage) trackInportUsage(addr src.PortAddr) error {
 	return n.In.trackSlotUsage(addr)
 }
@@ -44,6 +47,7 @@ func (n netNodeUsage) trackInportUsage(addr src.PortAddr) error {
 // portsUsage maps port name to slots used, slots map is nil for single ports
 type portsUsage map[string]map[uint8]struct{}
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p portsUsage) trackSlotUsage(addr src.PortAddr) error {
 	isArrayBypass := src.IsArrayBypassIdx(addr.Idx)
 	if _, ok := p[addr.Port]; !ok {

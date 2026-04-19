@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package test
 
 import (
@@ -48,6 +47,7 @@ pub def PrintHello(sig int) (res string) {
 
 	// go mod init in "gen" dir BEFORE build to let compiler detect module path
 	require.NoError(t, os.Mkdir("gen", 0o755))
+	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	goModInit := exec.Command("go", "mod", "init", "example.com/tmpgen")
 	goModInit.Dir = "gen"
 	out, err := goModInit.CombinedOutput()
@@ -78,6 +78,7 @@ func main(){
 	require.NoError(t, os.WriteFile(filepath.Join("gen", "main.go"), []byte(runner), 0o644))
 
 	// Just go run .
+	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	run := exec.Command("go", "run", ".")
 	run.Dir = "gen"
 	out, err = run.CombinedOutput()

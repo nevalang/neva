@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // package core contains abstractions that are used by
 // both source-code and type-system.
 

@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 // Package typesystem re-exports Neva type-system structures for external tooling.
 package typesystem
 

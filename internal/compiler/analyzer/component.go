@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -8,7 +7,9 @@ import (
 
 func (a Analyzer) analyzeComponent(
 	componentName string,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	component src.Component,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
 	externArg, hasExtern := component.Directives[compiler.ExternDirective]

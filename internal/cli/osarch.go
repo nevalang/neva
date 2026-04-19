@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package cli
 
 import (
@@ -14,6 +13,7 @@ func newOSArchCmd() *cli.Command {
 		Name:  "osarch",
 		Usage: "List supported OS/architecture combinations for native target",
 		Action: func(cliCtx *cli.Context) error {
+			//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			cmd := exec.Command("go", "tool", "dist", "list")
 			output, err := cmd.Output()
 			if err != nil {

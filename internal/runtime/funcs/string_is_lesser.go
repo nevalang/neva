@@ -1,4 +1,4 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:dupl // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -9,24 +9,29 @@ import (
 
 type strIsLesser struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p strIsLesser) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	actualIn, err := io.In.Single("left")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	comparedIn, err := io.In.Single("right")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			val1, ok := actualIn.Receive(ctx)
 			if !ok {
 				return

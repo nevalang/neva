@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -12,6 +11,7 @@ import (
 type structBuilder struct{}
 
 func (s structBuilder) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
@@ -29,6 +29,7 @@ func (s structBuilder) Create(
 
 	outport, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -42,7 +43,9 @@ func (structBuilder) Handle(
 	return func(ctx context.Context) {
 		for {
 			fields := make([]runtime.StructField, 0, len(inports))
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var mu sync.Mutex
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			for inportName, inportChan := range inports {
 				wg.Go(func() {

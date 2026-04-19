@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package cli
 
 import (
@@ -37,12 +36,14 @@ func newNewCmd() *cli.Command {
 
 			template := cCtx.String("template")
 
+			//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			if template != "" {
 				if err := scaffoldFromTemplate(pathArg, template); err != nil {
 					return err
 				}
 			} else {
 				if err := os.MkdirAll(pathArg, 0o755); err != nil {
+					//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 					return err
 				}
 				if err := createNevaMod(pathArg); err != nil {
@@ -79,17 +80,20 @@ func createNevaMod(path string) error {
 		fmt.Appendf(nil, "neva: %s", pkg.Version),
 		0o644,
 	); err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 
 	// Create src sub-directory
 	srcPath := filepath.Join(path, "src")
 	if err := os.Mkdir(srcPath, 0o755); err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 
 	// Create main.neva file
 	// #nosec G306 -- new files are intended to be readable
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return os.WriteFile(
 		filepath.Join(srcPath, "main.neva"),
 		[]byte(mainNevaContent),
@@ -100,10 +104,12 @@ func createNevaMod(path string) error {
 func scaffoldFromTemplate(path string, template string) error {
 	spec, err := nevaGit.ParseRepoSpec(template)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 
 	if spec.IsLocal() {
+		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return fmt.Errorf("local templates are not supported, use a remote repository URL")
 	}
 
@@ -144,9 +150,11 @@ func scaffoldFromTemplate(path string, template string) error {
 func ensureEmptyDir(path string) error {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return os.MkdirAll(path, 0o755)
 	}
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 	if !info.IsDir() {
@@ -154,6 +162,7 @@ func ensureEmptyDir(path string) error {
 	}
 	entries, err := os.ReadDir(path)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 	if len(entries) > 0 {
@@ -162,7 +171,9 @@ func ensureEmptyDir(path string) error {
 	return nil
 }
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func copyDir(src, dst string) error {
+	//nolint:varnamelen,wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -170,6 +181,7 @@ func copyDir(src, dst string) error {
 
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return err
 		}
 		if rel == "." {
@@ -189,6 +201,7 @@ func copyDir(src, dst string) error {
 
 		info, err := d.Info()
 		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return err
 		}
 

@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package irgen
 
 import (
@@ -9,6 +8,7 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, src.Component) {
 	var version src.Component
 	if len(versions) == 1 {
@@ -25,6 +25,7 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 	return externArg, version
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	bindArg, hasBind := node.Directives[compiler.BindDirective]
 	if !hasBind {
@@ -34,11 +35,13 @@ func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 
 	entityRef, err := compiler.ParseEntityRef(context.Background(), bindArg)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	entity, location, err := scope.Entity(entityRef)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

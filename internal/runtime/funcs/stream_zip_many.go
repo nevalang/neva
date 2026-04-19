@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package funcs
 
 import (
@@ -11,17 +10,21 @@ import (
 
 type streamZipMany struct{}
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamZipMany) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Array("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -40,6 +43,7 @@ func (streamZipMany) Create(
 			var shouldStop atomic.Bool
 			var aborted atomic.Bool
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			wg.Add(streamsCount)
 
@@ -83,6 +87,7 @@ func (streamZipMany) Create(
 				}
 			}
 
+			//nolint:intrange // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for idx := 0; idx < count; idx++ {
 				zipped := make([]runtime.Msg, streamsCount)
 				for streamIdx := range streamsCount {

@@ -1,4 +1,3 @@
-//nolint:all // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package irgen
 
 import (
@@ -60,6 +59,7 @@ func (g Generator) GenerateForComponent(
 		Name: componentName,
 	})
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -120,8 +120,11 @@ func buildProgramComment(modulePath, moduleVersion, mainPackage string) string {
 	)
 }
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (g Generator) processNode(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	result *ir.Program,
 ) {
@@ -164,6 +167,7 @@ func (g Generator) processNode(
 		result,
 	)
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for subnodeName, subnode := range version.Nodes {
 		nodePortsUsage, ok := subnodesPortsUsage[subnodeName]
 		if !ok {
@@ -176,10 +180,12 @@ func (g Generator) processNode(
 		// our component is used like this `Parent{handler FilterOdd<T>}`
 		// Parent.handler is not interface, but its component has interface
 		// It needs our DI nodes, so we merge our DI with node's DI
+		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		if len(nodeCtx.node.DIArgs) > 0 {
 			if subnode.DIArgs == nil {
 				subnode.DIArgs = make(map[string]src.Node)
 			}
+			//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for k, ourDIarg := range nodeCtx.node.DIArgs {
 				// FIXME HOC with drilled di arg can't resolve ref to it
 				// because it resolves it with its own location
@@ -235,6 +241,7 @@ func (g Generator) processNode(
 	}
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Generator) insertAndReturnInports(nodeCtx nodeContext) []ir.PortAddr {
 	inports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.in))
 
@@ -257,6 +264,7 @@ func (Generator) insertAndReturnInports(nodeCtx nodeContext) []ir.PortAddr {
 	return inports
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Generator) insertAndReturnOutports(nodeCtx nodeContext) []ir.PortAddr {
 	outports := make([]ir.PortAddr, 0, len(nodeCtx.portsUsage.out))
 
