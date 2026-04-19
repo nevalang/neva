@@ -68,6 +68,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 		panic("missing interface definition")
 	}
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	v, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		panic(err)

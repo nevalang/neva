@@ -20,6 +20,7 @@ func (def Def) String() string {
 	var params strings.Builder
 
 	params.WriteString("<")
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range def.Params {
 		params.WriteString(param.Name)
 		params.WriteString(" " + param.Constr.String())
@@ -38,6 +39,8 @@ type Param struct {
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
@@ -47,13 +50,15 @@ type Expr struct {
 // String formats expression in a TS manner
 //
 //nolint:gocyclo // String formatting covers multiple expression shapes.
-func (expr Expr) String() string {
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (expr Expr) String() string { //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	if expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
 
 	var str string
 
+	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	if expr.Lit != nil {
 		switch expr.Lit.Type() {
 		case EmptyLitType:
@@ -124,6 +129,7 @@ func (expr Expr) String() string {
 	str = expr.Inst.Ref.String()
 	str += "<"
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, arg := range expr.Inst.Args {
 		str += arg.String()
 		if i < len(expr.Inst.Args)-1 {
@@ -136,12 +142,16 @@ func (expr Expr) String() string {
 }
 
 // Instantiation expression
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type InstExpr struct {
 	Args []Expr         `json:"args,omitempty"`
 	Ref  core.EntityRef `json:"ref"`
 }
 
 // Literal expression. Only one field must be initialized
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type LitExpr struct {
 	Struct map[string]Expr  `json:"struct,omitempty"`
 	Union  map[string]*Expr `json:"union,omitempty"` // tag -> constraint
@@ -154,6 +164,8 @@ func (lit *LitExpr) Empty() bool {
 }
 
 // Always call Validate before
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (lit *LitExpr) Type() LiteralType {
 	switch {
 	case lit == nil:

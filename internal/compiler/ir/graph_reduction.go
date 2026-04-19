@@ -35,6 +35,8 @@ func GraphReduction(connections map[PortAddr]PortAddr) map[PortAddr]PortAddr {
 
 // getFinalReceiver returns the final receiver for a given port address.
 // It also returns true if the given port address was intermediate, false otherwise.
+//
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getFinalReceiver(
 	receiver PortAddr,
 	connections map[PortAddr]PortAddr,

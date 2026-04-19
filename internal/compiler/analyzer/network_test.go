@@ -55,6 +55,8 @@ func TestCreateSingleElementUnion(t *testing.T) {
 
 // createSingleElementUnion creates a union type with a single element matching the given type.
 // It's used only by unit tests.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) createSingleElementUnion(expr ts.Expr) ts.Expr {
 	// if the expression is already a union, return it as-is
 	if expr.Lit != nil && expr.Lit.Union != nil {

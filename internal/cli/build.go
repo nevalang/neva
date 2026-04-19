@@ -22,7 +22,8 @@ import (
 )
 
 //nolint:gocyclo // CLI flag setup is dense; refactor later without behavior changes.
-func newBuildCmd(
+//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func newBuildCmd( //nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	workdir string,
 	bldr builder.Builder,
 	parser parser.Parser,
@@ -91,15 +92,18 @@ func newBuildCmd(
 
 			targetOS := cliCtx.String("target-os")
 			if targetOS != "" && target != "native" {
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Errorf("target-os and target-arch are only supported when target is native")
 			}
 
 			targetArch := cliCtx.String("target-arch")
 			if targetArch != "" && target != "native" {
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Errorf("target-arch is only supported when target is native")
 			}
 
 			if (targetOS != "" && targetArch == "") || (targetOS == "" && targetArch != "") {
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Errorf("target-os and target-arch must be set together")
 			}
 
@@ -238,14 +242,14 @@ func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 		return "", errors.New("path to main package is required")
 	}
 	raw := cliCtx.Args().First()
-	
+
 	// Resolve path relative to workdir if not absolute
 	abs := raw
 	if !filepath.IsAbs(abs) {
 		abs = filepath.Join(workdir, raw)
 	}
 	abs = filepath.Clean(abs)
-	
+
 	// Check if path exists and is a .neva file - if so, use its directory
 	info, err := os.Stat(abs)
 	if err == nil && !info.IsDir() {
@@ -253,6 +257,6 @@ func mainPkgPathFromArgs(cliCtx *cli.Context, workdir string) (string, error) {
 			abs = filepath.Dir(abs)
 		}
 	}
-	
+
 	return abs, nil
 }

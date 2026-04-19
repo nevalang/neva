@@ -24,6 +24,7 @@ func configureCommandCleanup(cmd *exec.Cmd) {
 			return nil
 		}
 
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 }

@@ -8,19 +8,23 @@ import (
 
 type waitGroup struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (g waitGroup) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	countIn, err := io.In.Single("count")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	sigOut, err := io.Out.Single("sig")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -34,11 +38,13 @@ func (waitGroup) Handle(
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			n, ok := countIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
+			//nolint:intrange // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for i := int64(0); i < n.Int(); i++ {
 				if _, ok := sigIn.Receive(ctx); !ok {
 					return

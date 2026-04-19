@@ -22,6 +22,8 @@ type Indexer struct {
 }
 
 // FullScan processes and analyzes a Neva workspace.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (i Indexer) FullScan(
 	ctx context.Context,
 	workspacePath string,

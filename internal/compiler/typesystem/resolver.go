@@ -48,12 +48,15 @@ type (
 )
 
 // ResolveExpr resolves given expression using only global scope.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
 	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
 // ResolveExprWithFrame works like ResolveExpr but allows to pass local scope.
 func (r Resolver) ResolveExprWithFrame(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	expr Expr,
 	frame map[string]Def,
 	scope Scope,
@@ -62,12 +65,15 @@ func (r Resolver) ResolveExprWithFrame(
 }
 
 // ResolveExprWithFrame works like ResolveExprWithFrame but for list of expressions.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) ResolveExprsWithFrame(
 	exprs []Expr,
 	frame map[string]Def,
 	scope Scope,
 ) ([]Expr, error) {
 	resolvedExprs := make([]Expr, 0, len(exprs))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, expr := range exprs {
 		resolvedExpr, err := r.resolveExpr(expr, scope, frame, nil)
 		if err != nil {
@@ -89,6 +95,7 @@ func (r Resolver) ResolveParams(
 ) {
 	result := make([]Param, 0, len(params))
 	frame := make(map[string]Def, len(params))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, param := range params {
 		resolved, err := r.resolveExpr(param.Constr, scope, frame, nil)
 		if err != nil {
@@ -105,6 +112,8 @@ func (r Resolver) ResolveParams(
 
 // IsSubtypeOf resolves both `sub` and `sup` expressions
 // and returns error if `sub` is not subtype of `sup`.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	resolvedSub, err := r.resolveExpr(sub, scope, nil, nil)
 	if err != nil {
@@ -114,6 +123,7 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return r.checker.Check(
 		resolvedSub,
 		resolvedSup,
@@ -151,6 +161,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			resolvedSup,
 			TerminatorParams{Scope: scope},
 		); err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return err
 		}
 	}
@@ -168,7 +179,9 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // for struct and union apply recursion for it's every field/element.
 //
 //nolint:gocyclo // Resolver covers many expression shapes and recursive cases.
-func (r Resolver) resolveExpr(
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (r Resolver) resolveExpr( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
 	frame map[string]Def, // local scope
@@ -204,6 +217,7 @@ func (r Resolver) resolveExpr(
 			return Expr{Lit: &LitExpr{Union: resolvedUnion}}, nil
 		case StructLitType:
 			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
+			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for field, fieldExpr := range expr.Lit.Struct {
 				// we create new trace with virtual ref "struct" (it's safe because it's reserved word)
 				// otherwise recursive definitions (e.g. error -> maybe<error>)
@@ -267,6 +281,7 @@ func (r Resolver) resolveExpr(
 
 	newFrame := make(map[string]Def, len(def.Params))
 	resolvedArgs := make([]Expr, 0, len(expr.Inst.Args))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range def.Params { // resolve args and constrs and check their compatibility
 		resolvedArg, err := r.resolveExpr(expr.Inst.Args[i], scope, frame, &newTrace)
 		if err != nil {
@@ -310,7 +325,9 @@ func (r Resolver) resolveExpr(
 	return r.resolveExpr(*def.BodyExpr, scopeWhereDefFound, newFrame, &newTrace)
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Resolver) getDef(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	ref core.EntityRef,
 	frame map[string]Def,
 	scope Scope,

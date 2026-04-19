@@ -8,6 +8,7 @@ import (
 	"testing/fstest"
 )
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func TestComputeChecksumForFS(t *testing.T) {
 	tests := []struct {
 		setup       func(t *testing.T) fs.FS
@@ -116,6 +117,7 @@ type failingFS struct {
 func (f *failingFS) Open(name string) (fs.File, error) {
 	file, err := f.MapFS.Open(name)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 	return &failingFile{File: file}, nil
@@ -125,10 +127,12 @@ type failingFile struct {
 	fs.File
 }
 
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (f *failingFile) Read(p []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
 func (f *failingFile) Stat() (fs.FileInfo, error) {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return f.File.Stat()
 }
