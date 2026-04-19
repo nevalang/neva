@@ -25,7 +25,7 @@ jobs:
           git diff --exit-code
 
   golangci:
-    name: lint
+    name: golangci
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -38,6 +38,7 @@ jobs:
         with:
           version: latest
           only-new-issues: true
+          args: --config=.golangci.yml
 
   govulncheck:
     name: govulncheck
