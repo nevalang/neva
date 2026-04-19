@@ -53,7 +53,7 @@ func retrieveSourceCode(rootPath string, pkgs map[string]compiler.RawPackage) er
 		file, err := fsys.Open(filePath)
 		if err != nil {
 			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			return err
+			return fmt.Errorf("open source file %q: %w", filePath, err)
 		}
 		defer file.Close()
 
@@ -61,7 +61,7 @@ func retrieveSourceCode(rootPath string, pkgs map[string]compiler.RawPackage) er
 		bb, err := io.ReadAll(file)
 		if err != nil {
 			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			return err
+			return fmt.Errorf("read source file %q: %w", filePath, err)
 		}
 
 		pkgName := getPkgName(rootPath, filePath)

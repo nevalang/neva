@@ -46,7 +46,7 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 	})
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return "", "", err
+		return "", "", fmt.Errorf("clone dependency %q: %w", depModRef.Path, err)
 	}
 
 	if ref != "" {
@@ -55,12 +55,12 @@ func (p Builder) downloadDep(depModRef core.ModuleRef) (string, string, error) {
 
 	latestTagHash, tagName, err := getLatestTagHash(repo)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("resolve latest tag for %q: %w", depModRef.Path, err)
 	}
 
 	if err := nevaGit.Checkout(repo, latestTagHash.String()); err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return "", "", err
+		return "", "", fmt.Errorf("checkout tag %q for %q: %w", tagName, depModRef.Path, err)
 	}
 
 	// Append the latest tag to the directory name
@@ -85,7 +85,7 @@ func getLatestTagHash(repository *gitlib.Repository) (plumbing.Hash, string, err
 	tagRefs, err := repository.Tags()
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return plumbing.Hash{}, "", err
+		return plumbing.Hash{}, "", fmt.Errorf("list repository tags: %w", err)
 	}
 
 	var (
@@ -99,7 +99,7 @@ func getLatestTagHash(repository *gitlib.Repository) (plumbing.Hash, string, err
 	})
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return plumbing.Hash{}, "", err
+		return plumbing.Hash{}, "", fmt.Errorf("iterate repository tags: %w", err)
 	}
 
 	return hash, strings.Split(name, "/")[2], nil

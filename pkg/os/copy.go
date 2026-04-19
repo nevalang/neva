@@ -1,6 +1,7 @@
 package os
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	stdos "os"
@@ -13,30 +14,34 @@ import (
 func CopyFile(src, dst string, mode fs.FileMode) error {
 	if err := stdos.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("mkdir for %q: %w", dst, err)
 	}
 
 	srcFile, err := stdos.Open(src)
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("open source %q: %w", src, err)
 	}
 	defer srcFile.Close()
 
 	dstFile, err := stdos.OpenFile(dst, stdos.O_CREATE|stdos.O_WRONLY|stdos.O_TRUNC, mode.Perm())
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("open destination %q: %w", dst, err)
 	}
 	defer func() { _ = dstFile.Close() }()
 
 	if _, err := io.Copy(dstFile, srcFile); err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("copy %q to %q: %w", src, dst, err)
 	}
 
 	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	return dstFile.Close()
+	if err := dstFile.Close(); err != nil {
+		return fmt.Errorf("close destination %q: %w", dst, err)
+	}
+
+	return nil
 }
 
 // CopyDir recursively copies a directory tree preserving file modes.
@@ -44,13 +49,13 @@ func CopyDir(src, dst string) error {
 	//nolint:varnamelen,wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("walk %q: %w", path, err)
 		}
 
 		rel, relErr := filepath.Rel(src, path)
 		if relErr != nil {
 			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			return relErr
+			return fmt.Errorf("resolve relative path for %q: %w", path, relErr)
 		}
 
 		target := filepath.Join(dst, rel)
@@ -61,7 +66,7 @@ func CopyDir(src, dst string) error {
 		info, statErr := d.Info()
 		if statErr != nil {
 			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			return statErr
+			return fmt.Errorf("stat %q: %w", path, statErr)
 		}
 
 		return CopyFile(path, target, info.Mode())
