@@ -50,20 +50,17 @@ func (printf) handle(
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
 		for {
-			tpl, ok := tplIn.Receive(ctx)
-			if !ok {
+			templateMsg, received := tplIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			args := make([]runtime.Msg, argsIn.Len())
-			if !argsIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				args[idx] = msg
-				return true
-			}) {
+			args, received := receivePrintfArgs(ctx, &argsIn)
+			if !received {
 				return
 			}
 
-			res, err := format(tpl.Str(), args)
+			res, err := format(templateMsg.Str(), args)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
@@ -87,57 +84,32 @@ func (printf) handle(
 
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func format(tpl string, args []runtime.Msg) (string, error) {
-	// Use a map to keep track of which arguments have been used
 	usedArgs := make(map[int]bool)
-
-	// Builder to construct the final result
 	var result strings.Builder
-	result.Grow(len(tpl)) // Optimistically assume no increase in length
+	result.Grow(len(tpl))
 
-	// Scan through the template to find and replace placeholders
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	i := 0
-	for i < len(tpl) {
+	templatePos := 0
+	for templatePos < len(tpl) {
+		placeholderIndex, nextIndex, hasPlaceholder, err := parsePlaceholderAt(tpl, templatePos)
+		if err != nil {
+			return "", err
+		}
 		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		if tpl[i] == '$' {
-			// Attempt to read an argument index after the '$'
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			j := i + 1
-			var argIndexStr strings.Builder
-			for j < len(tpl) && tpl[j] >= '0' && tpl[j] <= '9' {
-				argIndexStr.WriteString(string(tpl[j]))
-				j++
+		if hasPlaceholder {
+			if placeholderIndex >= len(args) {
+				return "", fmt.Errorf("template refers to arg %d, but only %d args given", placeholderIndex, len(args))
 			}
-
-			if argIndexStr.String() != "" {
-				argIndex, err := strconv.Atoi(argIndexStr.String())
-				if err != nil {
-					// Handle the error if the conversion fails
-					return "", fmt.Errorf("invalid placeholder %s: %w", argIndexStr.String(), err)
-				}
-
-				if argIndex < 0 || argIndex >= len(args) {
-					return "", fmt.Errorf("template refers to arg %d, but only %d args given", argIndex, len(args))
-				}
-
-				// Mark this arg as used
-				usedArgs[argIndex] = true
-
-				// Replace the placeholder with the argument's string representation
-				fmt.Fprint(&result, args[argIndex])
-
-				// Move past the current placeholder in the template
-				i = j
-				continue
-			}
+			usedArgs[placeholderIndex] = true
+			fmt.Fprint(&result, args[placeholderIndex])
+			templatePos = nextIndex
+			continue
 		}
 
-		// If not processing a placeholder, just copy the current character
-		result.WriteByte(tpl[i])
-		i++
+		result.WriteByte(tpl[templatePos])
+		templatePos++
 	}
 
-	// Check if all arguments were used
 	if len(usedArgs) != len(args) {
 		return "", fmt.Errorf(
 			"not all arguments are used in the template: got %v, used %v",
@@ -146,4 +118,39 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 	}
 
 	return result.String(), nil
+}
+
+func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]runtime.Msg, bool) {
+	args := make([]runtime.Msg, argsIn.Len())
+	if !argsIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
+		args[idx] = msg
+		return true
+	}) {
+		return nil, false
+	}
+	return args, true
+}
+
+func parsePlaceholderAt(template string, startIdx int) (int, int, bool, error) {
+	if startIdx >= len(template) || template[startIdx] != '$' {
+		return 0, startIdx, false, nil
+	}
+
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	digitStart := startIdx + 1
+	digitEnd := digitStart
+	for digitEnd < len(template) && template[digitEnd] >= '0' && template[digitEnd] <= '9' {
+		digitEnd++
+	}
+
+	if digitStart == digitEnd {
+		return 0, startIdx, false, nil
+	}
+
+	argIndex, err := strconv.Atoi(template[digitStart:digitEnd])
+	if err != nil {
+		return 0, 0, false, fmt.Errorf("invalid placeholder %q: %w", template[digitStart:digitEnd], err)
+	}
+
+	return argIndex, digitEnd, true, nil
 }
