@@ -20,13 +20,17 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 	tmpGoProj := dst + "/tmp"
 	if err := b.golang.EmitExecutable(tmpGoProj, prog, trace); err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("emit temporary Go project: %w", err)
 	}
 	if err := buildWASM(tmpGoProj, dst); err != nil {
-		return err
+		return fmt.Errorf("build wasm binary: %w", err)
 	}
 	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	return os.RemoveAll(tmpGoProj)
+	if err := os.RemoveAll(tmpGoProj); err != nil {
+		return fmt.Errorf("remove temporary project %q: %w", tmpGoProj, err)
+	}
+
+	return nil
 }
 
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
@@ -38,7 +42,7 @@ func buildWASM(src, dst string) error {
 	outputPath := filepath.Join(dst, "output")
 	if err := os.Chdir(src); err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return err
+		return fmt.Errorf("change working directory to %q: %w", src, err)
 	}
 	// #nosec G204 -- command args are constructed internally from known values
 	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -50,7 +54,11 @@ func buildWASM(src, dst string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("execute go wasm build: %w", err)
+	}
+
+	return nil
 }
 
 func NewBackend(golangBackend backendgolang.Backend) Backend {
