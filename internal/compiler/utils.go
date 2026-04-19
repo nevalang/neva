@@ -13,7 +13,7 @@ import (
 
 // Pointer allows to avoid creating of temporary variables just to take pointers.
 //
-//nolint:gocheckcompilerdirectives // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocheckcompilerdirectives
 //go:fix inline
 func Pointer[T any](v T) *T {
 	return new(v)
@@ -24,7 +24,7 @@ func ParseEntityRef(ctx context.Context, ref string) (core.EntityRef, error) {
 	// Call the generated Neva function
 	out, err := neva.ParseEntityRef(ctx, neva.ParseEntityRefInput{Ref: ref})
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return core.EntityRef{}, err
 	}
 

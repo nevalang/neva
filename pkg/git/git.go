@@ -13,7 +13,7 @@ import (
 // name, a tag, or any revision string understood by go-git's ResolveRevision.
 func Checkout(repo *gitlib.Repository, revision string) error {
 	if revision == "" {
-		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:perfsprint
 		return fmt.Errorf("revision must not be empty")
 	}
 

@@ -39,7 +39,7 @@ type Location struct {
 }
 
 func (l Location) String() string {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	var s string
 	if l.ModRef.Path == "@" {
 		s = l.Package

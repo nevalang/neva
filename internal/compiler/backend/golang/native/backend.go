@@ -38,7 +38,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 }
 
 func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
-	//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:perfsprint
 	return fmt.Errorf("library mode not implemented for native backend")
 }
 
@@ -49,7 +49,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 	}
 
 	// #nosec G204 -- command args are constructed internally from known values
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	cmd := exec.Command(
 		"go",
 		golang.ReleaseBuildArgs(filepath.Join(output, fileName), ".")...,
@@ -58,7 +58,7 @@ func (b Backend) buildExecutable(gomodule, output string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return cmd.Run()
 }
 

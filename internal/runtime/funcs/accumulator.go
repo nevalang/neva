@@ -9,35 +9,35 @@ import (
 
 type accumulator struct{}
 
-//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo,varnamelen
 func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	initIn, err := io.In.Single("init")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	updIn, err := io.In.Single("upd")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	lastIn, err := io.In.Single("last")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	curOut, err := io.Out.Single("cur")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -63,7 +63,7 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				var dataMsg, lastMsg runtime.Msg
 				var dataOk, lastOk bool
 
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:varnamelen
 				var wg sync.WaitGroup
 
 				wg.Go(func() {

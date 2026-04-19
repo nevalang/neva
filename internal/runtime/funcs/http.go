@@ -10,23 +10,23 @@ import (
 
 type httpGet struct{}
 
-//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo
 func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	urlIn, err := funcIO.In.Single("url")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := funcIO.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	errOut, err := funcIO.Out.Single("err")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -37,7 +37,7 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:noctx
 			resp, err := http.Get(urlMsg.Str())
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err)) {

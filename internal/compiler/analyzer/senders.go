@@ -9,9 +9,9 @@ import (
 
 func (a Analyzer) analyzeSenders(
 	senders []src.ConnectionSender,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -21,7 +21,7 @@ func (a Analyzer) analyzeSenders(
 	analyzedSenders := make([]src.ConnectionSender, 0, len(senders))
 	resolvedSenderTypes := make([]*ts.Expr, 0, len(senders))
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, sender := range senders {
 		analyzedSender, expr, err := a.analyzeSender(
 			sender,
@@ -51,13 +51,13 @@ func (a Analyzer) analyzeSenders(
 
 // analyzeSender validates sender, marks it as used if it's port-address and returns its type.
 //
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo
 func (a Analyzer) analyzeSender(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	sender src.ConnectionSender,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -103,7 +103,7 @@ func (a Analyzer) analyzeSender(
 		}.Wrap(err)
 	}
 
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if sender.PortAddr != nil {
 		if !isSenderArr && sender.PortAddr.Idx != nil {
 			return nil, nil, &compiler.Error{
@@ -147,11 +147,11 @@ func (a Analyzer) analyzeSender(
 }
 
 func (a Analyzer) getChainHeadInputType(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	chainHead src.ConnectionSender,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	if chainHead.PortAddr != nil {

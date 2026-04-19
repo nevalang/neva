@@ -10,13 +10,13 @@ type ProdInterceptor struct{}
 
 func (ProdInterceptor) Prepare() error { return nil }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (ProdInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg { return msg }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg { return msg }
 
-//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:recvcheck
 type DebugInterceptor struct {
 	file    *os.File
 	comment string
@@ -25,18 +25,18 @@ type DebugInterceptor struct {
 func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0644)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 	d.file = file
 	if _, err := fmt.Fprintln(d.file, d.comment); err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 	return file.Close, nil
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
 	fmt.Fprintf(
 		d.file,
@@ -46,7 +46,7 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
 	return msg
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
 	fmt.Fprintf(
 		d.file,

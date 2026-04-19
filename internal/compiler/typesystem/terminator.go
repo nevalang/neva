@@ -17,12 +17,12 @@ var (
 
 type Terminator struct{}
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (r Terminator) ShouldTerminate(cur Trace, scope Scope) (bool, error) {
 	return r.shouldTerminate(cur, scope, 0)
 }
 
-//nolint:cyclop,gocognit,gocritic,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocritic,gocyclo
 func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, error) {
 	if counter > 1 {
 		return false, ErrCounter
@@ -73,21 +73,21 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 
 // getLast3AndSwap turns [... a b a] into [b a b]
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (Terminator) getLast3AndSwap(cur Trace) Trace {
 	t1 := Trace{prev: nil, cur: cur.prev.cur}
 	t2 := Trace{prev: &t1, cur: cur.cur}
 	return Trace{prev: &t2, cur: cur.prev.cur}
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func sameRefs(cur, prev core.EntityRef) bool {
 	a := cur.String()
 	b := prev.String()
 	return a == b
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func isRecursiveWrapper(ref core.EntityRef) bool {
 	return ref.Name == "maybe" && (ref.Pkg == "" || ref.Pkg == "builtin")
 }

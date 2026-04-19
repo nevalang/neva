@@ -34,7 +34,7 @@ func ComputeChecksumForFS(filesys fs.FS) (string, error) {
 	// Second pass: hash file contents
 	hasher := sha256.New()
 	for _, filename := range filenames {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		f, err := filesys.Open(filename)
 		if err != nil {
 			return "", fmt.Errorf("open %s: %w", filename, err)

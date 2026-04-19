@@ -26,7 +26,7 @@ func (p Builder) getNearestManifest(wd string) (ast.ModuleManifest, string, erro
 	return parsedNearest, path, nil
 }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 	if iteration > 10 {
 		return nil, "", errors.New("manifest file not found in 10 nearest levels up to where cli executed")
@@ -48,13 +48,13 @@ func lookupManifestFile(wd string, iteration int) ([]byte, string, error) {
 	)
 }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func readManifestFromDir(wd string) ([]byte, error) {
 	raw, err := os.ReadFile(filepath.Join(wd, "neva.yaml"))
 	if err == nil {
 		return raw, nil
 	}
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return os.ReadFile(filepath.Join(wd, "neva.yml"))
 }
 

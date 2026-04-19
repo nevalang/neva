@@ -11,23 +11,23 @@ import (
 
 type atoi struct{}
 
-//nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit,varnamelen
 func (a atoi) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	errOut, err := io.Out.Single("err")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -53,7 +53,7 @@ func (a atoi) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 	}, nil
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (a atoi) stringToRuntimeInt(str string) (runtime.Msg, error) {
 	v, err := strconv.Atoi(str) // equivalent to ParseInt(s, 10, 0)
 	if err != nil {

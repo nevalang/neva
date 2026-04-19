@@ -8,7 +8,7 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a Analyzer) mainSpecificPkgValidation(mainPkgName string, mod src.Module, scope src.Scope) *compiler.Error {
 	mainPkg := mod.Packages[mainPkgName]
 

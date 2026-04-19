@@ -9,7 +9,7 @@ import (
 
 // TODO can't we use uint8 here?
 //
-//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:recvcheck
 type rgbaMsg struct {
 	r int64
 	g int64

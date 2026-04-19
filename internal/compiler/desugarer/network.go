@@ -20,7 +20,7 @@ type handleNetworkResult struct {
 }
 
 func (d *Desugarer) desugarNetwork(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
 	net []src.Connection,
 	nodes map[string]src.Node,
@@ -82,7 +82,7 @@ func (d *Desugarer) mergeImplicitFanIn(
 	positions := map[receiverKey]int{}
 	kept := make([]src.Connection, 0, len(net))
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, conn := range net {
 		if isArrayBypassConn(conn) {
 			kept = append(kept, conn)
@@ -142,7 +142,7 @@ func (d *Desugarer) mergeImplicitFanIn(
 }
 
 func (d *Desugarer) desugarConnections(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
 	net []src.Connection,
 	nodePortsUsed nodeOutportsUsed,
@@ -153,7 +153,7 @@ func (d *Desugarer) desugarConnections(
 ) ([]src.Connection, error) {
 	desugaredConnections := make([]src.Connection, 0, len(net))
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, conn := range net {
 		result, err := d.desugarConnection(
 			iface,
@@ -183,13 +183,13 @@ type desugarConnectionResult struct {
 	insert  []src.Connection
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func isArrayBypassConn(conn src.Connection) bool {
 	_, _, ok := arrayBypassPorts(conn)
 	return ok
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
 	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 		return nil, nil, false
@@ -210,9 +210,9 @@ func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) 
 }
 
 func (d *Desugarer) desugarConnection(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	conn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
 	scope Scope,
@@ -244,9 +244,9 @@ func (d *Desugarer) desugarConnection(
 }
 
 func (d *Desugarer) desugarNormalConnection(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 	nodePortsUsed nodeOutportsUsed,
 	scope Scope,
@@ -334,9 +334,9 @@ type desugarReceiverResult struct {
 
 // desugarSingleReceiver expects connection without fan-out (it must be desugared before).
 func (d *Desugarer) desugarSingleReceiver(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 	scope Scope,
 	nodes map[string]src.Node,
@@ -408,18 +408,18 @@ func (d *Desugarer) desugarSingleReceiver(
 	}, nil
 }
 
-//nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:funlen
 func (d *Desugarer) desugarChainedConnection(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	receiver src.ConnectionReceiver,
 	scope Scope,
 	nodes map[string]src.Node,
 	nodePortsUsed nodeOutportsUsed,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 ) (desugarConnectionResult, error) {
 	chainedConn := *receiver.ChainedConnection
@@ -447,7 +447,7 @@ func (d *Desugarer) desugarChainedConnection(
 
 	locOnlyMeta := core.Meta{Location: chainHead.Meta.Location}
 
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if chainHead.Const != nil {
 		d.virtualTriggersCount++
 		triggerNodeName := fmt.Sprintf("__newv2__%d", d.virtualTriggersCount)
@@ -556,11 +556,11 @@ type desugarSenderResult struct {
 
 // desugarSingleSender keeps receiver side untouched so it must be desugared by caller (except for selectors).
 //
-//nolint:funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:funlen,gocognit
 func (d *Desugarer) desugarSingleSender(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 	scope Scope,
 	nodes map[string]src.Node,
@@ -629,7 +629,7 @@ func (d *Desugarer) desugarSingleSender(
 		}, nil
 	}
 
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if sender.Const != nil {
 		if sender.Const.Value.Ref != nil {
 			portAddr, err := d.handleConstRefSender(*sender.Const.Value.Ref, nodesToInsert, scope)
@@ -674,12 +674,12 @@ func (d *Desugarer) desugarSingleSender(
 func (d *Desugarer) getFirstInportName(
 	scope Scope,
 	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	portAddr src.PortAddr,
 ) (string, error) {
 	io, err := scope.GetNodeIOByPortAddr(nodes, portAddr)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return "", err
 	}
 	for inport := range io.In {
@@ -691,13 +691,13 @@ func (d *Desugarer) getFirstInportName(
 func (d *Desugarer) getFirstOutportName(
 	scope Scope,
 	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	portAddr src.PortAddr,
 ) (string, error) {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	io, err := scope.GetNodeIOByPortAddr(nodes, portAddr)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return "", err
 	}
 
@@ -720,7 +720,7 @@ func newComponentRef() core.EntityRef {
 }
 
 func (d *Desugarer) handleLiteralSender(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	constant src.Const,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -761,7 +761,7 @@ func (d *Desugarer) handleLiteralSender(
 }
 
 func (d *Desugarer) handleConstRefSender(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	ref core.EntityRef,
 	nodesToInsert map[string]src.Node,
 	scope Scope,
@@ -803,7 +803,7 @@ func (d *Desugarer) handleConstRefSender(
 
 // getConstTypeByRef is needed to figure out type parameters for Const node
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (d *Desugarer) getConstTypeByRef(ref core.EntityRef, scope Scope) (ts.Expr, error) {
 	entity, _, err := scope.Entity(ref)
 	if err != nil {
@@ -831,9 +831,9 @@ type desugarFanOutResult struct {
 }
 
 func (d *Desugarer) desugarFanOut(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -865,7 +865,7 @@ func (d *Desugarer) desugarFanOut(
 	}
 
 	insert := make([]src.Connection, 0, len(normConn.Receivers))
-	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic,varnamelen
 	for i, receiver := range normConn.Receivers {
 		if i > maxUint8 {
 			return desugarFanOutResult{}, fmt.Errorf("fan-out index %d overflows uint8", i)
@@ -917,9 +917,9 @@ func (d *Desugarer) desugarFanOut(
 // desugarFanIn returns connections that must be used instead of given one.
 // It recursevely desugars each connection before return so result is final.
 func (d *Desugarer) desugarFanIn(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	normConn src.Connection,
 	nodesToInsert map[string]src.Node,
 	constsToInsert map[string]src.Const,
@@ -943,7 +943,7 @@ func (d *Desugarer) desugarFanIn(
 
 	// 2. connect each sender of this connection with fan-in node
 	desugaredFanIn := make([]src.Connection, 0, len(normConn.Senders))
-	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic,varnamelen
 	for i, originalSender := range normConn.Senders {
 		if i > maxUint8 {
 			return nil, fmt.Errorf("fan-in index %d overflows uint8", i)

@@ -2,7 +2,7 @@ package git
 
 import "testing"
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func TestParseRepoSpec(t *testing.T) {
 	t.Parallel()
 

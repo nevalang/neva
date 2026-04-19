@@ -9,11 +9,11 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo
 func (Desugarer) handleNode(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	node src.Node,
 	desugaredNodes map[string]src.Node,
 	nodeName string,
@@ -86,7 +86,7 @@ func (Desugarer) handleNode(
 	if hasAnonDep { // this node has anonymous dependency injected
 		// find name of the dependency in this node's sub-nodes
 		var depName string
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for depParamName, depParam := range version.Nodes {
 			kind, err := scope.GetEntityKind(depParam.EntityRef)
 			if err != nil {
@@ -137,7 +137,7 @@ func (Desugarer) handleNode(
 
 	// first, we need to create ports for our virtual component
 	inports := make(map[string]src.Port, len(structFields))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for fieldName, fieldTypeExpr := range structFields {
 		inports[fieldName] = src.Port{
 			TypeExpr: fieldTypeExpr,

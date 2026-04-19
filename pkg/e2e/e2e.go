@@ -65,7 +65,7 @@ func WithTimeout(timeout time.Duration) Option {
 // Most tests can ignore stderr: `out, _ := e2e.Run(...)`
 // Tests that need stderr (e.g., panic cases) can use: `out, stderr := e2e.Run(...)` and combine if needed.
 //
-//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns
 func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	t.Helper()
 
@@ -95,7 +95,7 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 	// Resolve the working directory from which the CLI should be executed.
 	// This intentionally differs from the directory used to build the CLI,
 	// which must stay at repo root so Go modules resolve correctly.
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	wd := cfg.wd
 	var err error
 	if wd == "" {
@@ -177,7 +177,7 @@ func FindRepoRoot(tb testing.TB) string {
 	tb.Helper()
 
 	// #nosec G204 -- command arguments are constant
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	cmd := exec.Command("go", "env", "GOMOD")
 	output, err := cmd.Output()
 	require.NoError(tb, err, "failed to run 'go env GOMOD'")
@@ -203,7 +203,7 @@ func BuildNevaBinary(tb testing.TB, repoRoot string) string {
 func PrepareIsolatedNevaHome(repoRoot, homeDir string) error {
 	nevaHome := filepath.Join(homeDir, "neva")
 	if err := os.MkdirAll(nevaHome, 0o755); err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return err
 	}
 
@@ -213,7 +213,7 @@ func PrepareIsolatedNevaHome(repoRoot, homeDir string) error {
 		return nil
 	}
 
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return nevaos.CopyDir(stdSrc, stdDst)
 }
 
@@ -256,7 +256,7 @@ func buildNevaBinaryPerTest(tb testing.TB, repoRoot, mainPath string) string {
 	tb.Helper()
 
 	binPath := filepath.Join(tb.TempDir(), "neva")
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
 	buildCmd.Dir = repoRoot
 
@@ -326,7 +326,7 @@ func buildNevaBinaryFromCache(repoRoot, mainPath string) (string, error) {
 
 // buildNevaBinaryToPath compiles cmd/neva into the requested output path.
 func buildNevaBinaryToPath(repoRoot, mainPath, binPath string) error {
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	buildCmd := exec.Command("go", "build", "-o", binPath, mainPath)
 	buildCmd.Dir = repoRoot
 
@@ -395,11 +395,11 @@ func nevaBuildFingerprint(repoRoot string) (string, error) {
 // compilerInputFiles returns local files that can affect `go build ./cmd/neva`.
 // It includes only repo-local package files from `go list -deps -json` plus go.mod/go.sum.
 //
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func compilerInputFiles(repoRoot string) ([]string, error) {
 	// Use package metadata to include only files that affect cmd/neva build.
 	// External module changes are already covered by go.mod/go.sum.
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	cmd := exec.Command("go", "list", "-deps", "-json", "./cmd/neva")
 	cmd.Dir = repoRoot
 
@@ -472,7 +472,7 @@ func addPackageFiles(filesSet map[string]struct{}, dir string, names []string) {
 
 // decodePackageDir extracts package directory info and filters out stdlib/external packages.
 //
-//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns
 func decodePackageDir(payload map[string]json.RawMessage, normalizedRoot string) (dir string, include bool, err error) {
 	standard := false
 	if raw, ok := payload["Standard"]; ok && len(raw) > 0 {

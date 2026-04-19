@@ -9,30 +9,30 @@ import (
 
 type notEq struct{}
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (p notEq) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	actualIn, err := io.In.Single("left")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	comparedIn, err := io.In.Single("right")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
 			var (
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:varnamelen
 				wg                   sync.WaitGroup
 				val1, val2           runtime.Msg
 				actualOk, comparedOk bool

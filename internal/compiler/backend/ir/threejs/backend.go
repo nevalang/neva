@@ -1,4 +1,4 @@
-//nolint:cyclop // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop
 package threejs
 
 import (
@@ -14,11 +14,11 @@ import (
 
 type Encoder struct{}
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 	tmpl, err := template.New("threejs").Parse(templateHTML)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return err
 	}
 
@@ -27,7 +27,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error {
 		return err
 	}
 
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return tmpl.Execute(w, data)
 }
 
@@ -65,9 +65,9 @@ type outgoingConn struct {
 }
 
 //nolint:gocyclo // Data prep enumerates many node/conn cases.
-//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-//nolint:funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocognit,lll,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx
+//nolint:funlen,gocognit,maintidx
+func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocognit,lll,maintidx
 	nodes := make(map[string]nodeData)
 	pathMap := make(map[string]string) // Maps a port's path to the unified node name
 
@@ -82,7 +82,7 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 	}
 
 	// 1. Collect all nodes defined in Funcs
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	for _, f := range prog.Funcs {
 		// Determine the node name for this function call
 		name := ""
@@ -112,7 +112,7 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 
 		// Map all paths involved in this func to the unified name
 		// and populate ports
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		for j, port := range f.IO.In {
 			pathMap[port.Path] = name
 
@@ -127,7 +127,7 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 			}
 		}
 
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		for j, port := range f.IO.Out {
 			pathMap[port.Path] = name
 
@@ -153,10 +153,10 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 	parentToChildren := make(map[string][]outgoingConn)
 
 	connections := make([]connectionData, 0, len(prog.Connections))
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	for from, to := range prog.Connections {
 		// Resolve From Node
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		fromNode, ok := pathMap[from.Path]
 		if !ok {
 			fromNode = getNodeName(from.Path)
@@ -310,7 +310,7 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 	// We will store computed X for nodes to use for next rank
 	nodeX := make(map[string]float64)
 
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	for r := 0; r <= maxRank; r++ {
 		rankNodes := nodesByRank[r]
 
@@ -333,7 +333,7 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 			sort.Strings(rankNodes)
 		}
 
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		for i, nodeName := range rankNodes {
 			node := nodes[nodeName]
 			// Invert Y so rank 0 is at top
@@ -360,13 +360,13 @@ func prepareData(prog *ir.Program) (templateData, error) { //nolint:funlen,gocog
 
 	nodesJSON, err := json.Marshal(nodes)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return templateData{}, err
 	}
 
 	connsJSON, err := json.Marshal(connections)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return templateData{}, err
 	}
 
@@ -382,7 +382,7 @@ func getParentWeight(childNode string, nodeX map[string]float64, parentToChildre
 	count := 0.0
 
 	for parent, conns := range parentToChildren {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		if pX, ok := nodeX[parent]; ok {
 			for _, conn := range conns {
 				if conn.targetNode == childNode {

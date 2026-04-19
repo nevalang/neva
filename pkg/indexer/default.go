@@ -11,17 +11,17 @@ import (
 
 // NewDefault creates an Indexer with default compiler frontend dependencies.
 func NewDefault(logger commonlog.Logger) (Indexer, error) {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	p := parser.New()
 
 	terminator := typesystem.Terminator{}
 	checker := typesystem.MustNewSubtypeChecker(terminator)
 	resolver := typesystem.MustNewResolver(typesystem.Validator{}, checker, terminator)
 
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	b, err := builder.New(p)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return Indexer{}, err
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (b Builder) Get(wd, path, version string) (string, error) {
 	ref := core.ModuleRef{
 		Path:    path,

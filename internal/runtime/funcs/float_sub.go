@@ -1,4 +1,4 @@
-//nolint:dupl // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:dupl
 package funcs
 
 import (
@@ -11,25 +11,25 @@ import (
 type floatSub struct{}
 
 func (floatSub) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	leftIn, err := io.In.Single("left")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	rightIn, err := io.In.Single("right")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func (floatSub) Create(
 			var leftMsg, rightMsg runtime.Msg
 			var leftOk, rightOk bool
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			var wg sync.WaitGroup
 
 			wg.Go(func() {

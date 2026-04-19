@@ -37,14 +37,14 @@ type CompilerOutput struct {
 	FrontEnd FrontendResult
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOutput, error) {
 	feResult, err := c.fe.Process(ctx, input.MainPkgPath)
 	if err != nil {
 		return nil, errors.New(err.Error()) // to avoid non-nil interface go-issue
 	}
 
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if input.Mode == ModeLibrary {
 		exports, err := c.me.ProcessLibrary(feResult)
 		if err != nil {
@@ -55,7 +55,7 @@ func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOu
 			exports,
 			input.EmitTraceFile,
 		); err != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:wrapcheck
 			return nil, err
 		}
 	} else {
@@ -68,7 +68,7 @@ func (c Compiler) Compile(ctx context.Context, input CompilerInput) (*CompilerOu
 			prog,
 			input.EmitTraceFile,
 		); err != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:wrapcheck
 			return nil, err
 		}
 	}
@@ -138,7 +138,7 @@ type Middleend struct {
 	irgen     Irgen
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (m Middleend) ProcessExecutable(feResult FrontendResult) (*ir.Program, *Error) {
 	analyzedBuild, err := m.analyzer.Analyze(
 		feResult.ParsedBuild,
@@ -175,7 +175,7 @@ func (m Middleend) ProcessExecutable(feResult FrontendResult) (*ir.Program, *Err
 	return irProg, nil
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (m Middleend) ProcessLibrary(feResult FrontendResult) ([]LibraryExport, *Error) {
 	// Library analysis (empty main package)
 	analyzedBuild, err := m.analyzer.Analyze(
@@ -203,7 +203,7 @@ func (m Middleend) ProcessLibrary(feResult FrontendResult) ([]LibraryExport, *Er
 	pkg, ok := entryMod.Packages[feResult.MainPkg]
 	if !ok {
 		return nil, &Error{
-			//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:perfsprint
 			Message: fmt.Sprintf("package not found: %s", feResult.MainPkg),
 		}
 	}
@@ -211,13 +211,13 @@ func (m Middleend) ProcessLibrary(feResult FrontendResult) ([]LibraryExport, *Er
 	interopableExports := pkg.GetInteropableComponents()
 	if len(interopableExports) == 0 {
 		return nil, &Error{
-			//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:perfsprint
 			Message: fmt.Sprintf("no interopable exports found in %s", feResult.MainPkg),
 		}
 	}
 
 	result := make([]LibraryExport, 0, len(interopableExports))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, export := range interopableExports {
 		prog, err := m.irgen.GenerateForComponent(desugaredBuild, feResult.MainPkg, export.Name)
 		if err != nil {

@@ -89,7 +89,7 @@ func NewSingleInport(
 	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	var msg Msg
 	select {
@@ -125,7 +125,7 @@ func (f Inports) Array(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
-//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:recvcheck
 type ArrayInport struct {
 	addr        PortAddr
 	interceptor Interceptor
@@ -150,13 +150,13 @@ func NewArrayInport(
 // It returns the received message and a boolean indicating success.
 // It returns false if the context is done or if the channel is closed.
 //
-//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic,ireturn
 func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	select {
 	case <-ctx.Done():
 		return nil, false
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
+	case v := <-a.chans[idx]: //nolint:varnamelen
 		index := Uint8Index(idx)
 		msg := a.interceptor.Received(
 			PortSlotAddr{
@@ -178,10 +178,10 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 // The function should return false if it wants to stop receiving messages.
 // Functions are called in order of incoming messages, not in order of slots.
 //
-//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic,varnamelen
 func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
 	// IDEA return channel instead of taking function
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	var wg sync.WaitGroup
 	success := true
 	resultChan := make(chan bool, len(a.chans))
@@ -235,7 +235,7 @@ func (s SelectedMsg) String() string {
 
 // Select returns the oldest
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
@@ -243,7 +243,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 		// it's important to do at least len(ss) iterations even if we already got some messages
 		// the reason is that sending might happen exactly while skip iteration in default case
 		// if we do len(ss) iterations, that's ok, because we will go back and check
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		for slotIdx, ch := range a.chans {
 			select {
 			default:
@@ -296,7 +296,7 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 	return v, true
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a ArrayInport) Len() int {
 	return len(a.chans)
 }
@@ -432,9 +432,9 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 // Each slot is guaranteed to be handled only once.
 // TODO: figure out why this is the only working version of `SendAll`
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	var wg sync.WaitGroup
 	success := true
 

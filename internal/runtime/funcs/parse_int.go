@@ -11,41 +11,41 @@ import (
 
 type parseInt struct{}
 
-//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo,varnamelen
 func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	baseIn, err := io.In.Single("base")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	bitsIn, err := io.In.Single("bits")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	errOut, err := io.Out.Single("err")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
@@ -76,13 +76,13 @@ func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 	}, nil
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn
 func (p parseInt) stringToRuntimeInt(
 	data runtime.Msg,
 	base runtime.Msg,
 	bits runtime.Msg,
 ) (runtime.Msg, error) {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	v, err := strconv.ParseInt(
 		data.Str(),
 		int(base.Int()),

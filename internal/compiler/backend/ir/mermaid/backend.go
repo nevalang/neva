@@ -1,4 +1,4 @@
-//nolint:cyclop // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop
 package mermaid
 
 import (
@@ -15,9 +15,9 @@ import (
 type Encoder struct{}
 
 //nolint:gocyclo // Encoding includes multiple rendering branches.
-//nolint:cyclop,funlen,gocognit,maintidx,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-//nolint:funlen,gocognit,maintidx,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,gocognit,lll,maintidx,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx,varnamelen
+//nolint:funlen,gocognit,maintidx,varnamelen
+func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,gocognit,lll,maintidx,varnamelen
 	// Parse comment for metadata (module, compiler version)
 	// Format: // module=@@ main=hello_world compiler=0.34.0
 	var modName, compilerVer string
@@ -43,7 +43,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 	fmt.Fprintln(w, "```mermaid")
 
 	if _, err := fmt.Fprintln(w, "flowchart TD"); err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return err
 	}
 
@@ -54,7 +54,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
     classDef invisible display:none;
 `
 	if _, err := fmt.Fprint(w, styles); err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 		// Default label is the last part of the path
 		parts := strings.Split(path, "/")
 		label := parts[len(parts)-1]
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		n := &NodeInfo{
 			Path:  path,
 			Label: label,
@@ -149,7 +149,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 
 	// Second pass: Extract metadata from prog.Funcs
 	// Iterate over Funcs and match them to existing nodes by looking at their used ports.
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	for _, f := range prog.Funcs {
 		var matchPath string
 
@@ -186,7 +186,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 
 		// If we found a path, update the node's metadata
 		if matchPath != "" {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			if n, ok := nodes[matchPath]; ok {
 				n.Meta.Ref = f.Ref
 				if f.Msg != nil {
@@ -195,10 +195,10 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 					case ir.MsgTypeString:
 						n.Meta.Msg = fmt.Sprintf("%q", f.Msg.String)
 					case ir.MsgTypeInt:
-						//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+						//nolint:perfsprint
 						n.Meta.Msg = fmt.Sprintf("%d", f.Msg.Int)
 					case ir.MsgTypeBool:
-						//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+						//nolint:perfsprint
 						n.Meta.Msg = fmt.Sprintf("%v", f.Msg.Bool)
 					case ir.MsgTypeFloat:
 						n.Meta.Msg = fmt.Sprintf("%f", f.Msg.Float)
@@ -223,7 +223,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 
 	// 2. Emit Nodes (Subgraphs)
 	for _, path := range nodePaths {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		n := nodes[path]
 		if n == nil {
 			panic("internal invariant violated: node map contains nil entry")
@@ -280,7 +280,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 	for s, r := range prog.Connections {
 		conns = append(conns, conn{s, r})
 	}
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	sort.Slice(conns, func(i, j int) bool {
 		s1 := conns[i].From.String()
 		s2 := conns[j].From.String()
@@ -303,7 +303,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 	fmt.Fprintln(w, "| Node | Ref | Config | Ports |")
 	fmt.Fprintln(w, "| :--- | :--- | :--- | :--- |")
 	for _, path := range nodePaths {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		n := nodes[path]
 		if n == nil {
 			panic("internal invariant violated: node map contains nil entry")
@@ -344,7 +344,7 @@ func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,g
 	return nil
 }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func sanitize(s string) string {
 	return strings.NewReplacer(
 		"/", "_",

@@ -44,7 +44,7 @@ func BenchmarkRuntimeE2E(b *testing.B) {
 
 // discoverBenchmarkPkgs finds all benchmark packages under benchmark tiers.
 //
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func discoverBenchmarkPkgs(repoRoot string) ([]string, error) {
 	benchmarksRoot := filepath.Join(repoRoot, "benchmarks")
 	pkgs := make([]string, 0, 64)
@@ -73,7 +73,7 @@ func discoverBenchmarkPkgs(repoRoot string) ([]string, error) {
 			return nil
 		})
 		if walkErr != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:wrapcheck
 			return nil, walkErr
 		}
 	}
@@ -114,7 +114,7 @@ func buildProgramOnce(b *testing.B, repoRoot, nevaBin, pkgName string) string {
 	}
 
 	// Compile the benchmark program once and return its output binary.
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	buildProg := exec.Command(nevaBin, "build", pkgName)
 	buildProg.Dir = moduleDir
 	buildProg.Env = append(os.Environ(), "HOME="+homeDir)

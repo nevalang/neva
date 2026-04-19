@@ -124,10 +124,10 @@ func (p Parser) parseFile(
 	return listener.state, nil
 }
 
-//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns
 func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
 	defer func() {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		if e := recover(); e != nil {
 			if compilerErr, ok := e.(*compiler.Error); ok {
 				err = compilerErr

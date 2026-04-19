@@ -9,29 +9,29 @@ import (
 
 type cond struct{}
 
-//nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit,varnamelen
 func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	ifIn, err := io.In.Single("if")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	thenOut, err := io.Out.Single("then")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	elseOut, err := io.Out.Single("else")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -40,7 +40,7 @@ func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			var dataMsg, ifMsg runtime.Msg
 			var dataOk, ifOk bool
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			var wg sync.WaitGroup
 
 			wg.Go(func() {

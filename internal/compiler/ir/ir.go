@@ -23,7 +23,7 @@ func (p Program) MarshalJSON() ([]byte, error) {
 		connections[from.String()] = to.String()
 	}
 
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return json.Marshal(struct {
 		Connections map[string]string `json:"connections,omitempty"`
 		programAlias
@@ -75,7 +75,7 @@ func (p PortAddr) String() string {
 }
 
 func (p PortAddr) MarshalJSON() ([]byte, error) {
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return json.Marshal(p.String())
 }
 

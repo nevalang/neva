@@ -6,7 +6,7 @@ import (
 
 // handleConst handles case when constant has integer value and type is float.
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (d *Desugarer) handleConst(constant src.Const) src.Const {
 	if constant.Value.Message == nil {
 		return constant

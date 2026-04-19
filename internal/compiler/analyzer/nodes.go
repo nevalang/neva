@@ -17,11 +17,11 @@ type foundInterface struct {
 
 func (a Analyzer) analyzeNodes(
 	parentComponentName string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface, // resolved interface of the component that contains the nodes
 	nodes map[string]src.Node, // nodes to analyze
 	net []src.Connection, // network of the component that contains the nodes
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope, // scope of the component
 ) (
 	map[string]src.Node, // resolved nodes
@@ -33,7 +33,7 @@ func (a Analyzer) analyzeNodes(
 	nodesInterfaces := make(map[string]foundInterface, len(nodes))
 	hasErrGuard := false
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for nodeName, node := range nodes {
 		if isMissingNodeName(nodeName) {
 			return nil, nil, false, &compiler.Error{
@@ -75,15 +75,15 @@ func isMissingNodeName(nodeName string) bool {
 }
 
 //nolint:gocyclo // Analyzer node handling is a high-branch routine.
-//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx
+func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx
 	name string, // name of the node
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	node src.Node, // node to analyze
 	parentComponentName string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope, // scope of the component that contains the node
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	iface src.Interface, // interface of the component that contains the node
 	nodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
@@ -258,7 +258,7 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 	}
 
 	resolvedFlowDI := make(map[string]src.Node, len(node.DIArgs))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for depName, depNode := range node.DIArgs {
 		// di arguments are not regular nodes in the network, so we generate a unique name
 		// that won't be found in the network. This will cause the overloading logic to skip
@@ -298,18 +298,18 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 // getInterfaceAndOverloadingIndexForNode returns interface and overload index for the given node.
 // Overloading at the level of sourcecode is implemented here.
 //
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo
 func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 	nodeName string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	entity src.Entity,
 	hasBind bool,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	node src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	resolvedParentIface src.Interface, // resolved interface of the component that contains the node
 	allParentNodes map[string]src.Node, // nodes of the component that contains the node
 	net []src.Connection, // network of the component that contains the node
@@ -409,7 +409,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 
 	structFields := resolvedNodeArg.Lit.Struct
 	inports := make(map[string]src.Port, len(structFields))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for fieldName, fieldTypeExpr := range structFields {
 		inports[fieldName] = src.Port{
 			TypeExpr: fieldTypeExpr,
@@ -437,17 +437,17 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 // This is called when we know the node references an overloaded component with multiple implementations.
 // It analyzes how the node is used in connections to determine the appropriate implementation.
 //
-//nolint:funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:funlen,gocognit
 func (a Analyzer) getNodeOverloadVersionAndIndex(
 	nodeName string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	resolvedParentIface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	resolvedNodeArgs []typesystem.Expr,
 	allParentNodes map[string]src.Node,
 	net []src.Connection,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	entity src.Entity,
 ) (src.Component, *int, *compiler.Error) {
 	nodeRefs := findNodeRefsInNet(nodeName, net)
@@ -478,7 +478,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 	remainingIdx := make([]int, 0, len(entity.Component))
 	remainingComps := make([]src.Component, 0, len(entity.Component))
-	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic,varnamelen
 	for i, component := range entity.Component {
 		// skip network-based compatibility check for di arguments
 		if !isDIArg {
@@ -489,7 +489,7 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 
 		// for native components with multiple extern implementations, use type argument-based disambiguation
 		// this handles cases like Dec(int) vs Dec(float) or Len(list) vs Len(string)
-		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:nestif
 		if a.isNativeComponentWithMultipleExterns(component, entity) {
 			// if we have type arguments, use them for disambiguation
 			if len(resolvedNodeArgs) > 0 {
@@ -553,10 +553,10 @@ func (a Analyzer) getNodeOverloadVersionAndIndex(
 // from the parent component's dependency declaration.
 //
 //nolint:gocyclo // DI constraint derivation has multiple cases to check.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit
+func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,gocognit,lll
 	nodeName string, // the unique name of the DI argument (e.g., "__di_reduce_reducer")
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	allParentNodes map[string]src.Node,
 ) nodeUsageConstraints {
@@ -580,7 +580,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 	// we need to look through all parent nodes to find the one that has this dependency
 	var parentNodeName string
 	var parentNode src.Node
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for nodeName, node := range allParentNodes {
 		if node.DIArgs != nil {
 			if _, hasDep := node.DIArgs[depName]; hasDep {
@@ -622,7 +622,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 
 	if depName == "" {
 		// for anonymous dependencies, find the first interface node
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, node := range parentComponent.Nodes {
 			entity, _, err := parentScope.Entity(node.EntityRef)
 			if err == nil && entity.Kind == src.InterfaceEntity {
@@ -653,7 +653,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 	// we need to create a frame from the parent's type arguments
 	// the parent component's original interface has the type parameters
 	parentTypeFrame := make(map[string]typesystem.Def)
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for i, param := range parentComponent.TypeParams.Params {
 		if i < len(parentNode.TypeArgs) {
 			parentTypeFrame[param.Name] = typesystem.Def{
@@ -670,7 +670,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 	}
 
 	// add incoming constraints (input ports) - resolve each port type with the parent's type frame
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for portName, port := range depEntity.Interface.IO.In {
 		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
 		if err != nil {
@@ -680,7 +680,7 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 	}
 
 	// add outgoing constraints (output ports) - resolve each port type with the parent's type frame
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for portName, port := range depEntity.Interface.IO.Out {
 		resolvedType, err := a.resolver.ResolveExprWithFrame(port.TypeExpr, parentTypeFrame, scope)
 		if err != nil {
@@ -726,9 +726,9 @@ func (a Analyzer) collectDITypeConstraintsFromParent( //nolint:cyclop,funlen,goc
 // Compatibility is checked by comparing the port types and array usage.
 // The type of the port ignored for now, to be checked later.
 //
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func isCandidateCompatibleWithAllNodeRefs(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	component src.Component,
 	nodeRefs []nodeRefInNet,
 ) bool {
@@ -773,9 +773,9 @@ func isCandidateCompatibleWithAllNodeRefs(
 func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefInNet {
 	var refs []nodeRefInNet
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, conn := range connections {
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, sender := range conn.Senders {
 			if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
 				refs = append(refs, nodeRefInNet{
@@ -795,7 +795,7 @@ func findNodeRefsInNet(nodeName string, connections []src.Connection) []nodeRefI
 func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiver) []nodeRefInNet {
 	var nodeRefs []nodeRefInNet
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, receiver := range receivers {
 		// Check direct port address
 		if receiver.PortAddr != nil && receiver.PortAddr.Node == nodeName {
@@ -809,7 +809,7 @@ func findNodeUsagesInReceivers(nodeName string, receivers []src.ConnectionReceiv
 		// Check chained connection
 		if receiver.ChainedConnection != nil {
 			// Check senders in the chain
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, sender := range receiver.ChainedConnection.Senders {
 				if sender.PortAddr != nil && sender.PortAddr.Node == nodeName {
 					nodeRefs = append(nodeRefs, nodeRefInNet{
@@ -852,10 +852,10 @@ func emptyConstraints() nodeUsageConstraints {
 // We use string form here because analyzer already treats typesystem.Expr.String()
 // as canonical identity (see typesMatchExactly).
 //
-//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic,varnamelen
 func appendUniqueType(dst *[]typesystem.Expr, t typesystem.Expr) {
 	s := t.String()
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, existing := range *dst {
 		if existing.String() == s {
 			return
@@ -883,7 +883,7 @@ func singleUnambiguousType(candidates []typesystem.Expr) (typesystem.Expr, bool)
 // aTypesMatchExactly keeps type equivalence logic centralized for helpers that
 // are outside Analyzer methods.
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func aTypesMatchExactly(type1, type2 typesystem.Expr) bool {
 	return type1.String() == type2.String()
 }
@@ -893,17 +893,17 @@ func aTypesMatchExactly(type1, type2 typesystem.Expr) bool {
 // It is needed only to select correct version of the overloaded component.
 //
 //nolint:gocyclo // Node constraint derivation handles many network patterns.
-//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocognit,lll,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx
+func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocognit,lll,maintidx
 	nodeName string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	resolvedParentIface src.Interface,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	nodes map[string]src.Node,
 	net []src.Connection,
 ) nodeUsageConstraints {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	c := nodeUsageConstraints{
 		incoming: map[string][]typesystem.Expr{},
 		outgoing: map[string][]typesystem.Expr{},
@@ -924,10 +924,10 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 	}
 
 	// walk all connections
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, conn := range net {
 		// check if our node is a sender in this connection (including chained connections)
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, sender := range conn.Senders {
 			if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
 				continue
@@ -935,7 +935,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 			port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
 			// derive expected types from all receivers
 			recvPortAddrs := a.flattenReceiversPortAddrs(conn.Receivers)
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, rpa := range recvPortAddrs {
 				// parent out
 				if rpa.Node == "out" {
@@ -964,13 +964,13 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 			}
 
 			// also check chained connections for outgoing constraints
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, receiver := range conn.Receivers {
-				//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:nestif
 				if receiver.ChainedConnection != nil {
 					// this is a chained connection, look at the receivers within the chain
 					chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Receivers)
-					//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:gocritic
 					for _, rpa := range chainedRecvPortAddrs {
 						// parent out
 						if rpa.Node == "out" {
@@ -1006,11 +1006,11 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 		// this needs to be recursive to handle nested chains like "a -> b -> c -> d"
 		var checkChainedConnections func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver)
 		checkChainedConnections = func(outerSenders []src.ConnectionSender, receivers []src.ConnectionReceiver) {
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, receiver := range receivers {
-				//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:nestif
 				if receiver.ChainedConnection != nil {
-					//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:gocritic
 					for _, sender := range receiver.ChainedConnection.Senders {
 						if sender.PortAddr == nil || sender.PortAddr.Node != nodeName {
 							continue
@@ -1021,7 +1021,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 						inPort := a.resolvePortName(nodeName, nodes, scope, true, "")
 
 						// collect types from the outer senders
-						//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+						//nolint:gocritic
 						for _, outerSender := range outerSenders {
 							types := a.getPossibleSenderTypes(
 								scope,
@@ -1033,7 +1033,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 								nil,
 								net,
 							)
-							//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+							//nolint:gocritic
 							for _, t := range types {
 								list := c.incoming[inPort]
 								appendUniqueType(&list, t)
@@ -1044,7 +1044,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 						// collect outgoing constraints from the chained connection's receivers
 						port := a.resolvePortName(nodeName, nodes, scope, false, sender.PortAddr.Port)
 						chainedRecvPortAddrs := a.flattenReceiversPortAddrs(receiver.ChainedConnection.Receivers)
-						//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+						//nolint:gocritic
 						for _, rpa := range chainedRecvPortAddrs {
 							if rpa.Node == "out" {
 								if p, ok := resolvedParentIface.IO.Out[rpa.Port]; ok {
@@ -1080,13 +1080,13 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 
 		// Check if our node is a receiver in this connection.
 		recvPairs := a.collectReceiverSenderPairs(conn.Receivers, conn.Senders)
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, pair := range recvPairs {
 			if pair.portAddr.Node != nodeName {
 				continue
 			}
 			port := a.resolvePortName(nodeName, nodes, scope, true, pair.portAddr.Port)
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, sender := range pair.senders {
 				types := a.getPossibleSenderTypes(
 					scope,
@@ -1097,7 +1097,7 @@ func (a Analyzer) deriveNodeConstraintsFromNetwork( //nolint:cyclop,funlen,gocog
 					pair.prevChainLink,
 					net,
 				)
-				//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:gocritic
 				for _, t := range types {
 					list := c.incoming[port]
 					appendUniqueType(&list, t)
@@ -1126,7 +1126,7 @@ func (a Analyzer) flattenReceiversPortAddrs(receivers []src.ConnectionReceiver) 
 	var res []src.PortAddr
 	var visit func(recs []src.ConnectionReceiver)
 	visit = func(recs []src.ConnectionReceiver) {
-		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic,varnamelen
 		for _, r := range recs {
 			if r.PortAddr != nil {
 				res = append(res, *r.PortAddr)
@@ -1154,7 +1154,7 @@ func collectReceiverSenderPairsRec(
 	snd []src.ConnectionSender,
 	prevChainLink []src.ConnectionSender,
 ) {
-	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic,varnamelen
 	for _, r := range recs {
 		if r.PortAddr != nil {
 			*pairs = append(*pairs, receiverSenderPair{
@@ -1199,21 +1199,21 @@ func (a Analyzer) collectReceiverSenderPairs(
 // Later regular sender/receiver validation emits concrete diagnostics.
 //
 //nolint:gocyclo // This centralizes sender forms (const/selector/port) for consistent constraint derivation.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit
+func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll
+	//nolint:gocritic
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	parentIface src.Interface,
 	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	sender src.ConnectionSender,
 	prevChainLink []src.ConnectionSender,
 	net []src.Connection,
 ) []typesystem.Expr {
 	// const sender
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if sender.Const != nil {
 		// for type constraint collection, we need to get the resolved type without validation
 		// since we're just collecting constraints, not validating the sender
@@ -1239,7 +1239,7 @@ func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll //
 		}
 
 		var selectorTypes []typesystem.Expr
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, chainHead := range prevChainLink {
 			headTypes := a.getPossibleSenderTypes(
 				scope,
@@ -1250,7 +1250,7 @@ func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll //
 				nil,
 				net,
 			)
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, headType := range headTypes {
 				resolvedSelectorType, err := a.getSelectorsSenderType(headType, sender.StructSelector, scope)
 				if err != nil {
@@ -1267,7 +1267,7 @@ func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll //
 	}
 
 	// port-addr
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if sender.PortAddr != nil {
 		// Switch:case[i] array outport slot is a special case because of possible pattern matching.
 		// When T in Switch<T> is (resolves to) union, and corresponding union member has type expression body,
@@ -1333,12 +1333,12 @@ func (a Analyzer) getPossibleSenderTypes( //nolint:cyclop,funlen,gocognit,lll //
 // It can return an empty set when the entity/port cannot be resolved in this
 // phase or when no overload yields a resolvable type for the requested port.
 //
-//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo
 func (a Analyzer) getPossibleNodePortTypes(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	parentFrame map[string]typesystem.Def,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	node src.Node,
 	isInput bool,
 	portName string,
@@ -1354,19 +1354,19 @@ func (a Analyzer) getPossibleNodePortTypes(
 	if err2 != nil {
 		return out
 	}
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, comp := range entity.Component {
 		iface := comp.Interface
 		// choose port
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		var p src.Port
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		var ok bool
-		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:nestif
 		if isInput {
 			if portName == "" {
 				if len(iface.IO.In) == 1 {
-					//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:gocritic
 					for _, v := range iface.IO.In {
 						p = v
 						ok = true
@@ -1380,14 +1380,14 @@ func (a Analyzer) getPossibleNodePortTypes(
 			if portName == "" {
 				// if multiple, prefer first non-err
 				if len(iface.IO.Out) == 1 {
-					//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:gocritic
 					for _, v := range iface.IO.Out {
 						p = v
 						ok = true
 						break
 					}
 				} else {
-					//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:gocritic
 					for name, v := range iface.IO.Out {
 						if name != "err" {
 							p = v
@@ -1405,7 +1405,7 @@ func (a Analyzer) getPossibleNodePortTypes(
 		}
 		// substitute node args into port type
 		frame := make(map[string]typesystem.Def, len(iface.TypeParams.Params))
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for i, param := range iface.TypeParams.Params {
 			if i < len(resolvedArgs) {
 				frame[param.Name] = typesystem.Def{BodyExpr: &resolvedArgs[i]}
@@ -1420,18 +1420,18 @@ func (a Analyzer) getPossibleNodePortTypes(
 
 // doesCandidateSatisfyTypeConstraints checks that a candidate interface matches all collected constraints.
 //
-//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo
 func (a Analyzer) doesCandidateSatisfyTypeConstraints(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	candidate src.Interface,
 	resolvedNodeArgs []typesystem.Expr,
 	nodeUsageConstr nodeUsageConstraints,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 ) bool {
 	// build frame for candidate from node's resolved args
 	frame := make(map[string]typesystem.Def, len(candidate.TypeParams.Params))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for i, param := range candidate.TypeParams.Params {
 		if i < len(resolvedNodeArgs) {
 			frame[param.Name] = typesystem.Def{BodyExpr: &resolvedNodeArgs[i]}
@@ -1448,7 +1448,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 		if err != nil {
 			return false
 		}
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, t := range types {
 			if a.resolver.IsSubtypeOf(t, candType, scope) != nil {
 				return false
@@ -1466,7 +1466,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 		if err != nil {
 			return false
 		}
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, exp := range types {
 			if err := a.resolver.IsSubtypeOf(candType, exp, scope); err != nil {
 				return false
@@ -1480,7 +1480,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 // isNativeComponentWithMultipleExterns checks if this is a native component with multiple extern implementations
 // (like Dec with int_dec and float_dec, or Len with list_len, map_len, and string_len)
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a Analyzer) isNativeComponentWithMultipleExterns(component src.Component, entity src.Entity) bool {
 	// check if this component has extern directive
 	_, hasExtern := component.Directives[compiler.ExternDirective]
@@ -1495,7 +1495,7 @@ func (a Analyzer) isNativeComponentWithMultipleExterns(component src.Component, 
 // doesNativeComponentMatchTypeArgs checks if a native component's interface matches the type arguments
 // this is used for disambiguating between overloaded native components like Dec(int) vs Dec(float)
 //
-//nolint:gocognit,gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit,gocritic
 func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, resolvedNodeArgs []typesystem.Expr, scope src.Scope) bool {
 	// for native components, we need to check if the type arguments match the component's interface
 	// for example, if we have Dec<int>, we need to find the component with Dec(data int) (res int)
@@ -1506,7 +1506,7 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 	}
 
 	// resolve the first type argument to get the concrete type
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if len(resolvedNodeArgs) > 0 {
 		resolvedType, err := a.resolver.ResolveExpr(resolvedNodeArgs[0], scope)
 		if err != nil {
@@ -1516,7 +1516,7 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 		// check if this component's interface matches the resolved type
 		// for native components, we need to check the input port type
 		if len(component.IO.In) == 1 {
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for _, port := range component.IO.In {
 				// resolve the port type
 				portType, err := a.resolver.ResolveExpr(port.TypeExpr, scope)
@@ -1539,7 +1539,7 @@ func (a Analyzer) doesNativeComponentMatchTypeArgs(component src.Component, reso
 // typesMatchExactly checks if two types match exactly (for native component disambiguation)
 // uses string comparison as a simple and reliable equality check
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a Analyzer) typesMatchExactly(type1, type2 typesystem.Expr) bool {
 	return type1.String() == type2.String()
 }
@@ -1550,7 +1550,7 @@ func (a Analyzer) typesMatchExactly(type1, type2 typesystem.Expr) bool {
 func (a Analyzer) resolvePortName(
 	nodeName string,
 	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	isInput bool,
 	portName string,

@@ -9,13 +9,13 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo
 func getIRMsgBySrcRef(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	constant src.ConstValue,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	typeExpr ts.Expr,
 ) (*ir.Message, error) {
 	if constant.Ref != nil {
@@ -67,7 +67,7 @@ func getIRMsgBySrcRef(
 		listElType := typeExpr.Inst.Args[0]
 		listMsg := make([]ir.Message, len(constant.Message.List))
 
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for i, el := range constant.Message.List {
 			result, err := getIRMsgBySrcRef(el, scope, listElType)
 			if err != nil {
@@ -81,12 +81,12 @@ func getIRMsgBySrcRef(
 			List: listMsg,
 		}, nil
 	case constant.Message.DictOrStruct != nil:
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		m := make(map[string]ir.Message, len(constant.Message.DictOrStruct))
 
 		isStruct := typeExpr.Lit != nil && typeExpr.Lit.Struct != nil
 
-		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic,varnamelen
 		for name, el := range constant.Message.DictOrStruct {
 			var elType ts.Expr
 			if isStruct {

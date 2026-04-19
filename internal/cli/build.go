@@ -22,8 +22,8 @@ import (
 )
 
 //nolint:gocyclo // CLI flag setup is dense; refactor later without behavior changes.
-//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func newBuildCmd( //nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx
+func newBuildCmd( //nolint:cyclop,funlen,gocognit,maintidx
 	workdir string,
 	bldr builder.Builder,
 	parser parser.Parser,
@@ -92,18 +92,18 @@ func newBuildCmd( //nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint p
 
 			targetOS := cliCtx.String("target-os")
 			if targetOS != "" && target != "native" {
-				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:perfsprint
 				return fmt.Errorf("target-os and target-arch are only supported when target is native")
 			}
 
 			targetArch := cliCtx.String("target-arch")
 			if targetArch != "" && target != "native" {
-				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:perfsprint
 				return fmt.Errorf("target-arch is only supported when target is native")
 			}
 
 			if (targetOS != "" && targetArch == "") || (targetOS == "" && targetArch != "") {
-				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:perfsprint
 				return fmt.Errorf("target-os and target-arch must be set together")
 			}
 

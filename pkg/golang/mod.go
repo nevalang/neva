@@ -8,24 +8,24 @@ import (
 	"strings"
 )
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func FindModulePath(dst string) (string, error) {
 	absDst, err := filepath.Abs(dst)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return "", err
 	}
 
 	dir := absDst
 	for {
 		goModPath := filepath.Join(dir, "go.mod")
-		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:nestif
 		if _, err := os.Stat(goModPath); err == nil {
 			modulePath, err := func() (string, error) {
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:varnamelen
 				f, err := os.Open(goModPath)
 				if err != nil {
-					//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+					//nolint:wrapcheck
 					return "", err
 				}
 				defer f.Close()
@@ -37,7 +37,7 @@ func FindModulePath(dst string) (string, error) {
 						modName := strings.TrimSpace(after)
 						relPath, err := filepath.Rel(dir, absDst)
 						if err != nil {
-							//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+							//nolint:wrapcheck
 							return "", err
 						}
 						if relPath == "." {

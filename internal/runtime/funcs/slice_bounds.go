@@ -4,7 +4,7 @@ package funcs
 // Negative indices are interpreted from the end, all bounds are clamped to [0, length],
 // and out-of-order ranges become empty slices.
 //
-//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns
 func normalizeSliceBounds(from int64, to int64, length int64) (start int64, end int64) {
 	start = normalizeSliceIndex(from, length)
 	end = normalizeSliceIndex(to, length)

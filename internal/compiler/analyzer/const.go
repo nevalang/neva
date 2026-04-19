@@ -13,11 +13,11 @@ var (
 )
 
 //nolint:gocyclo // Const analysis handles many literal/type branches.
-//nolint:cyclop,funlen,gocognit,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a Analyzer) analyzeConst( //nolint:cyclop,funlen,gocognit,lll,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,maintidx
+func (a Analyzer) analyzeConst( //nolint:cyclop,funlen,gocognit,lll,maintidx
+	//nolint:gocritic
 	constant src.Const,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 ) (src.Const, *compiler.Error) {
 	if constant.Value.Message == nil && constant.Value.Ref == nil {

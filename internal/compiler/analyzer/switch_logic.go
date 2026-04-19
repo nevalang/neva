@@ -14,15 +14,15 @@ import (
 // to determine which Union tag matches this case, and returns that tag's type.
 // If T is not a Union, it returns nil (meaning standard T applies).
 func (a Analyzer) getSwitchCaseOutportType(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	switchPort src.PortAddr,
 	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 	net []src.Connection,
 ) (*ts.Expr, *compiler.Error) {
 	// 1. Get Switch Node to check if T is Union
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	node, ok := nodes[switchPort.Node]
 	if !ok {
 		panic("switch node not found")
@@ -86,9 +86,9 @@ func (a Analyzer) getSwitchCaseOutportType(
 }
 
 func (a Analyzer) getUnionTagFromSender(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	sender src.ConnectionSender,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 ) (string, *compiler.Error) {
 	if sender.Const == nil {
@@ -117,9 +117,9 @@ func (a Analyzer) getUnionTagFromSender(
 }
 
 func (a Analyzer) resolveUnionConstRef(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	ref core.EntityRef,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	scope src.Scope,
 ) (*src.UnionLiteral, *compiler.Error) {
 	constant, loc, err := scope.GetConst(ref)
@@ -148,10 +148,10 @@ func (a Analyzer) findSenderForSwitchCaseInput(
 	net []src.Connection,
 	nodeName string,
 	idx *uint8,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	switchPort src.PortAddr,
 ) (*src.ConnectionSender, *compiler.Error) {
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, conn := range net {
 		sender, err := a.findSenderForSwitchCaseInputInConn(&conn, nodeName, idx)
 		if err != nil {
@@ -176,14 +176,14 @@ func (a Analyzer) findSenderForSwitchCaseInputInConn(
 	return a.findSenderForSwitchCaseInportInConn(*conn, nodeName, idx)
 }
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocognit
 func (a Analyzer) findSenderForSwitchCaseInportInConn(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	conn src.Connection,
 	nodeName string,
 	idx *uint8,
 ) (*src.ConnectionSender, *compiler.Error) {
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	for _, receiver := range conn.Receivers {
 		// Receiver is `... -> switch:case[i]`
 		if a.isSwitchCaseReceiver(receiver, nodeName, idx) {
@@ -198,7 +198,7 @@ func (a Analyzer) findSenderForSwitchCaseInportInConn(
 
 		// Check chained connection
 		// ... -> switch:case[i] -> ...
-		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:nestif
 		if receiver.ChainedConnection != nil {
 			if len(receiver.ChainedConnection.Senders) > 0 {
 				chainHead := receiver.ChainedConnection.Senders[0]
@@ -231,7 +231,7 @@ func (a Analyzer) findSenderForSwitchCaseInportInConn(
 	return nil, nil
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (Analyzer) isSwitchCaseSender(sender src.ConnectionSender, nodeName string, idx *uint8) bool {
 	return sender.PortAddr != nil &&
 		sender.PortAddr.Node == nodeName &&
@@ -240,7 +240,7 @@ func (Analyzer) isSwitchCaseSender(sender src.ConnectionSender, nodeName string,
 		*sender.PortAddr.Idx == *idx
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (Analyzer) isSwitchCaseReceiver(receiver src.ConnectionReceiver, nodeName string, idx *uint8) bool {
 	return receiver.PortAddr != nil &&
 		receiver.PortAddr.Node == nodeName &&
@@ -251,7 +251,7 @@ func (Analyzer) isSwitchCaseReceiver(receiver src.ConnectionReceiver, nodeName s
 
 // isSwitchCasePort checks if a port address refers to a Switch component's case port.
 //
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func isSwitchCasePort(portAddr src.PortAddr, nodes map[string]src.Node) bool {
 	node, ok := nodes[portAddr.Node]
 	if !ok {

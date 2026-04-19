@@ -2,13 +2,13 @@
 // It's important to keep errors as human-readable as possible
 // because they are what end-user is facing when something goes wrong.
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 package analyzer
 
 import (
 	"fmt"
 
-	//nolint:exptostd // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:exptostd
 	"golang.org/x/exp/maps"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -25,7 +25,7 @@ type Analyzer struct {
 // analyzer treats the build as an executable entry. When mainPkgName is empty,
 // analyzer only analyzes the build as a library.
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (a Analyzer) Analyze(build src.Build, mainPkgName string) (src.Build, *compiler.Error) {
 	if mainPkgName == "" {
 		return a.analyzeBuild(build)
@@ -117,7 +117,7 @@ func (a Analyzer) analyzeModule(modRef core.ModuleRef, build src.Build) (map[str
 	}
 
 	pkgsCopy := make(map[string]src.Package, len(mod.Packages))
-	//nolint:exptostd // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:exptostd
 	maps.Copy(pkgsCopy, mod.Packages)
 
 	for pkgName, pkg := range pkgsCopy {
@@ -143,7 +143,7 @@ func (a Analyzer) analyzeModule(modRef core.ModuleRef, build src.Build) (map[str
 	return pkgsCopy, nil
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *compiler.Error) {
 	if len(pkg) == 0 {
 		return nil, &compiler.Error{
@@ -183,7 +183,7 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	return analyzedFiles, nil
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, scope src.Scope) (src.Entity, *compiler.Error) {
 	resolvedEntity := src.Entity{
 		IsPublic: entity.IsPublic,
@@ -232,7 +232,7 @@ func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, scope src.
 		resolvedEntity.Interface = resolvedInterface
 	case src.ComponentEntity:
 		analyzedVersions := make([]src.Component, 0, len(entity.Component))
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for _, component := range entity.Component {
 			analyzedComponent, err := a.analyzeComponent(entityName, component, scope)
 			if err != nil {

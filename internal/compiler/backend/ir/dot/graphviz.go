@@ -99,14 +99,14 @@ func (c *Cluster) getOrCreateClusterNode(b *ClusterBuilder, path string) *Node {
 	return c.getOrCreateClusterNodeRec(b, path, "", path)
 }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (c *Cluster) getOrCreateClusterNodeRec(b *ClusterBuilder, path, prefix, remaining string) *Node {
 	before, after, found := strings.Cut(remaining, "/")
 	if !found {
 		if c.Nodes == nil {
 			c.Nodes = map[string]*Node{}
 		}
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		n, ok := c.Nodes[before]
 		if ok {
 			return n
@@ -161,7 +161,7 @@ func (b *ClusterBuilder) insertClusterNode(addr ir.PortAddr) {
 		b.Main = cluster
 		b.nextId++
 	}
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	switch n := b.Main.getOrCreateClusterNode(b, addr.Path); {
 	case strings.HasSuffix(addr.Path, "/in"):
 		if n.In == nil {
@@ -186,6 +186,6 @@ func (b *ClusterBuilder) Build(w io.Writer) error {
 	if b.once.Do(b.initTemplates); b.err != nil {
 		return b.err
 	}
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:wrapcheck
 	return b.tmpl.ExecuteTemplate(w, "graph.dot.tmpl", b)
 }

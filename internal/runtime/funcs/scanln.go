@@ -11,24 +11,24 @@ type scanln struct{}
 
 // TODO add `:err` outport
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) { //nolint:gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
+//nolint:gocognit
+func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) { //nolint:gocognit,lll
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	errOut, err := rio.Out.Single("err")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 

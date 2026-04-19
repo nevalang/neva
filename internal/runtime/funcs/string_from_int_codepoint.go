@@ -10,19 +10,19 @@ import (
 type stringFromIntCodepoint struct{}
 
 func (stringFromIntCodepoint) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -41,7 +41,7 @@ func (stringFromIntCodepoint) Create(
 	}, nil
 }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func codePointString(v int64) string {
 	if v < 0 || v > unicode.MaxRune || (v >= 0xD800 && v <= 0xDFFF) {
 		return string(unicode.ReplacementChar)

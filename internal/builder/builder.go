@@ -71,7 +71,7 @@ func (b Builder) Build(
 	}
 	defer release()
 
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	q := newQueue(entryMod.Manifest.Deps)
 
 	for !q.empty() {
@@ -115,7 +115,7 @@ func (b Builder) Build(
 func getThirdPartyPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return "", err
 	}
 
@@ -123,7 +123,7 @@ func getThirdPartyPath() (string, error) {
 
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return "", err
 	}
 

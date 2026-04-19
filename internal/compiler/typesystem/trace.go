@@ -8,7 +8,7 @@ import (
 
 // Linked-list to handle recursive types
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 type Trace struct {
 	prev *Trace
 	cur  core.EntityRef
@@ -16,7 +16,7 @@ type Trace struct {
 
 // O(2n)
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (t Trace) String() string {
 	lastToFirst := []core.EntityRef{}
 
@@ -38,7 +38,7 @@ func (t Trace) String() string {
 	return firstToLast.String() + "]"
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func NewTrace(prev *Trace, cur core.EntityRef) Trace {
 	return Trace{
 		prev: prev,

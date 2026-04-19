@@ -35,13 +35,13 @@ type TerminatorParams struct {
 // It also takes traces for those expressions and scope to handle recursive types.
 //
 //nolint:gocyclo // Subtype checking has many structural cases.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit
+func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll
+	//nolint:gocritic
 	expr,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	constr Expr,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	params TerminatorParams,
 ) error {
 	if params.Scope.IsTopType(constr) {
@@ -62,7 +62,7 @@ func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 		)
 	}
 
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if isConstraintInstance { // both expr and constr are insts
 		isSubTypeRecursive, err := s.terminator.ShouldTerminate(
 			params.SubtypeTrace,
@@ -97,7 +97,7 @@ func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 			expr.Inst.Ref,
 			constr.Inst.Ref,
 		)
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		for i := range constr.Inst.Args {
 			newExpr := expr.Inst.Args[i]
 			newConstr := constr.Inst.Args[i]
@@ -191,7 +191,7 @@ func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 			}
 			// HACK: we copy-paste this loop to avoid re-assigning to params variable
 			// because that leads to infinite nesting inside that struct because of recursive pointers
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:gocritic
 			for constrFieldName, constrField := range constr.Lit.Struct {
 				exprField, ok := expr.Lit.Struct[constrFieldName]
 				if !ok {
@@ -206,7 +206,7 @@ func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 			}
 			break
 		}
-		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:gocritic
 		for constrFieldName, constrField := range constr.Lit.Struct {
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
@@ -225,9 +225,9 @@ func (s SubtypeChecker) Check( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 }
 
 func (SubtypeChecker) getNewTerminatorParams(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	old TerminatorParams,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	subRef, supRef core.EntityRef,
 ) TerminatorParams {
 	newSubtypeTrace := Trace{

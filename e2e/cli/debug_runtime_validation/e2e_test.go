@@ -40,7 +40,7 @@ func TestDebugRuntimeValidation(t *testing.T) {
 	require.Contains(t, string(debugBytes), "func DebugValidation")
 
 	// Build the generated Go module to ensure the code compiles.
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	buildCmd := exec.Command("go", "build", "-o", "app", ".")
 	buildCmd.Dir = "gen"
 	buildOut, err := buildCmd.CombinedOutput()
@@ -52,7 +52,7 @@ func TestDebugRuntimeValidation(t *testing.T) {
 		binaryPath += ".exe"
 	}
 
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	runCmd := exec.Command(binaryPath)
 	runOut, err := runCmd.CombinedOutput()
 	require.NoError(t, err, string(runOut))

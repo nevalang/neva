@@ -8,7 +8,7 @@ type Helper struct{}
 
 // any base type def (without body) that has type parameters allows recursion
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (h Helper) BaseDefWithRecursionAllowed(params ...Param) Def {
 	return Def{
 		Params:   params,
@@ -18,12 +18,12 @@ func (h Helper) BaseDefWithRecursionAllowed(params ...Param) Def {
 
 // Do not pass empty string as a name to avoid Body.Empty() == true
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (h Helper) BaseDef(params ...Param) Def {
 	return Def{Params: params}
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (h Helper) Def(body Expr, params ...Param) Def {
 	return Def{
 		Params:   params,
@@ -33,7 +33,7 @@ func (h Helper) Def(body Expr, params ...Param) Def {
 
 // Do not pass empty string as a name to avoid inst.Empty() == true
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:godoclint
 func (h Helper) Inst(ref string, args ...Expr) Expr {
 	if args == nil {
 		args = []Expr{} // makes easier testing because resolver returns non-nil args for native types
@@ -77,7 +77,7 @@ func (h Helper) ParamWithNoConstr(name string) Param {
 	}
 }
 
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic
 func (h Helper) Param(name string, constr Expr) Param {
 	return Param{
 		Name:   name,
@@ -89,7 +89,7 @@ type DefaultStringer string
 
 func (ds DefaultStringer) String() string { return string(ds) }
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (h Helper) Trace(ss ...string) Trace {
 	if len(ss) == 0 {
 		panic("internal invariant violated: trace requires at least one element")

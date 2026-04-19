@@ -73,7 +73,7 @@ func TestInstall(t *testing.T) {
 	require.Equal(t, installedBinary, foundPath, "LookPath should return the installed binary path")
 
 	// Run the binary using just the command name (without full path)
-	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:noctx
 	runCmd := exec.Command(expectedBinName)
 	runCmd.Dir = workdir
 	runOut, runErr := runCmd.CombinedOutput()

@@ -60,7 +60,7 @@ func (s *treeShapeListener) parseTypeParams(
 	typeParams := params.TypeParamList().AllTypeParam()
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		v, err := s.parseTypeExpr(typeParam.TypeExpr())
 		if err != nil {
 			return src.TypeParams{}, err
@@ -116,9 +116,9 @@ func (s *treeShapeListener) parseTypeExpr(expr generated.ITypeExprContext) (ts.E
 	}
 
 	var result *ts.Expr
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:nestif
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		v, err := s.parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
@@ -414,7 +414,7 @@ func (s *treeShapeListener) parsePorts(
 		arr := port.ArrayPortDef()
 
 		var (
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			id       antlr.TerminalNode
 			typeExpr generated.ITypeExprContext
 			isArr    bool
@@ -434,7 +434,7 @@ func (s *treeShapeListener) parsePorts(
 			portName = id.GetText()
 		}
 
-		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:varnamelen
 		v, err := s.parseTypeExpr(typeExpr)
 		if err != nil {
 			return nil, err
@@ -476,7 +476,7 @@ func (s *treeShapeListener) parseInterfaceDef(
 	if inPortsDef == nil || inPortsDef.PortsDef() == nil {
 		panic("internal invariant violated: missing in ports definition in interface")
 	}
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	in, err := s.parsePorts(inPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
@@ -515,7 +515,7 @@ func (s *treeShapeListener) parseInterfaceDef(
 	}, nil
 }
 
-//nolint:funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:funlen,gocognit
 func (s *treeShapeListener) parseNodes(
 	actx generated.ICompNodesDefBodyContext,
 	isRootLevel bool,
@@ -701,7 +701,7 @@ func (s *treeShapeListener) parsePortAddr(
 
 func (s *treeShapeListener) parsePortAddrIdx(
 	idxText string,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	meta core.Meta,
 ) (*uint8, *compiler.Error) {
 	if idxText == "*" {
@@ -729,7 +729,7 @@ func (s *treeShapeListener) parsePortAddrIdx(
 func (s *treeShapeListener) parseSinglePortAddr(
 	fallbackNode string,
 	expr generated.ISinglePortAddrContext,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	meta core.Meta,
 ) (src.PortAddr, *compiler.Error) {
 	nodeName := fallbackNode
@@ -803,8 +803,8 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 }
 
 //nolint:gocyclo // Parsing literals requires many grammar branches.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit
+func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll
 	constVal generated.IConstLitContext,
 ) (src.MsgLiteral, *compiler.Error) {
 	msg := src.MsgLiteral{
@@ -1032,7 +1032,7 @@ func (s *treeShapeListener) parseTypeDef(
 		body = &typeExpr
 	}
 
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:varnamelen
 	v, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Entity{}, err
@@ -1242,7 +1242,7 @@ func (s *treeShapeListener) parseConnection(connDef generated.IConnDefContext) (
 
 func (s *treeShapeListener) parseConnDef(
 	actx generated.IConnDefContext,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
 	if actx == nil {
@@ -1349,7 +1349,7 @@ func (s *treeShapeListener) parseSingleReceiverSide(
 
 func (s *treeShapeListener) parseChainedConnExpr(
 	actx generated.IChainedNormConnContext,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic
 	connMeta core.Meta,
 ) (src.ConnectionReceiver, *compiler.Error) {
 	parsedConn, err := s.parseConnDef(actx.ConnDef(), connMeta)
@@ -1423,7 +1423,7 @@ func (s *treeShapeListener) parseMultipleReceiverSides(
 	return parsedReceivers, nil
 }
 
-//nolint:cyclop,funlen,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocyclo
 func (s *treeShapeListener) parseSingleSender(
 	senderSide generated.ISingleSenderSideContext,
 ) (src.ConnectionSender, *compiler.Error) {

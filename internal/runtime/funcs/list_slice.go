@@ -15,29 +15,29 @@ func sliceList(data []runtime.Msg, from int64, to int64) []runtime.Msg {
 	return append([]runtime.Msg(nil), data[start:end]...)
 }
 
-//nolint:dupl,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:dupl,varnamelen
 func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	fromIn, err := io.In.Single("from")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	toIn, err := io.In.Single("to")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -46,7 +46,7 @@ func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), er
 			var dataMsg, fromMsg, toMsg runtime.Msg
 			var dataOK, fromOK, toOK bool
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			var wg sync.WaitGroup
 			wg.Go(func() {
 				dataMsg, dataOK = dataIn.Receive(ctx)

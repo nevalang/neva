@@ -9,17 +9,17 @@ import (
 
 type selector struct{}
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	ifArrIn, err := io.In.Array("if")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	thenArrIn, err := io.In.Array("then")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
@@ -29,7 +29,7 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 

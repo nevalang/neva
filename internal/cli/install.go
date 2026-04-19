@@ -16,7 +16,7 @@ import (
 	"github.com/nevalang/neva/pkg/golang"
 )
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo
 func newInstallCmd(
 	workdir string,
 	bldr builder.Builder,
@@ -93,7 +93,7 @@ func newInstallCmd(
 				EmitTraceFile: false,
 				Mode:          compiler.ModeExecutable,
 			}); err != nil {
-				//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				//nolint:wrapcheck
 				return err
 			}
 
@@ -116,7 +116,7 @@ func newInstallCmd(
 
 			// Use go build to build directly to the target location
 			// This leverages Go's build system while giving us control over binary name
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			wd, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("get working directory: %w", err)
@@ -135,7 +135,7 @@ func newInstallCmd(
 			// Keep build flags centralized so CLI/install and compiler backends stay in sync.
 			// This avoids silent drift in artifact reproducibility/size behavior over time.
 			// #nosec G204 -- command args are constructed internally from known values
-			//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:noctx
 			cmd := exec.Command("go", golang.ReleaseBuildArgs(targetPath, ".")...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -213,7 +213,7 @@ func resolveMainPkgPath(absPkg string) (string, error) {
 func dirContainsNeva(path string) (bool, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return false, err
 	}
 

@@ -11,13 +11,13 @@ func SaveFilesToDir(dst string, files map[string][]byte) error {
 		dirPath := filepath.Dir(filePath)
 
 		if err := os.MkdirAll(dirPath, 0o755); err != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:wrapcheck
 			return err
 		}
 
 		// #nosec G306 -- build outputs are intended to be readable
 		if err := os.WriteFile(filePath, content, 0o644); err != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:wrapcheck
 			return err
 		}
 	}

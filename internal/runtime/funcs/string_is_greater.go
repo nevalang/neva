@@ -1,4 +1,4 @@
-//nolint:dupl // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:dupl
 package funcs
 
 import (
@@ -9,29 +9,29 @@ import (
 
 type strIsGreater struct{}
 
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:varnamelen
 func (p strIsGreater) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	actualIn, err := io.In.Single("left")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	comparedIn, err := io.In.Single("right")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		//nolint:wrapcheck
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:varnamelen
 			val1, ok := actualIn.Receive(ctx)
 			if !ok {
 				return
