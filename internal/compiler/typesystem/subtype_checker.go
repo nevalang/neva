@@ -57,13 +57,13 @@ func (s SubtypeChecker) Check(
 	}
 
 	if isConstraintInstance { // both expr and constr are insts
-		return s.checkInstSubtype(expr, constr, params)
+		return s.checkInstSubtype(&expr, &constr, &params)
 	}
 
-	return s.checkLitSubtype(expr, constr, params)
+	return s.checkLitSubtype(&expr, &constr, &params)
 }
 
-func (s SubtypeChecker) checkInstSubtype(expr, constr Expr, params TerminatorParams) error {
+func (s SubtypeChecker) checkInstSubtype(expr, constr *Expr, params *TerminatorParams) error {
 	isSubTypeRecursive, err := s.terminator.ShouldTerminate(params.SubtypeTrace, params.Scope)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrTerminator, err)
@@ -86,7 +86,7 @@ func (s SubtypeChecker) checkInstSubtype(expr, constr Expr, params TerminatorPar
 		return fmt.Errorf("%w: got %v, want %v", ErrArgsCount, len(expr.Inst.Args), len(constr.Inst.Args))
 	}
 
-	newTParams := s.getNewTerminatorParams(params, expr.Inst.Ref, constr.Inst.Ref)
+	newTParams := s.getNewTerminatorParams(*params, expr.Inst.Ref, constr.Inst.Ref)
 	for i := range constr.Inst.Args {
 		if err := s.Check(expr.Inst.Args[i], constr.Inst.Args[i], newTParams); err != nil {
 			return errors.Join(
@@ -99,7 +99,7 @@ func (s SubtypeChecker) checkInstSubtype(expr, constr Expr, params TerminatorPar
 	return nil
 }
 
-func (s SubtypeChecker) checkLitSubtype(expr, constr Expr, params TerminatorParams) error {
+func (s SubtypeChecker) checkLitSubtype(expr, constr *Expr, params *TerminatorParams) error {
 	exprLitType := expr.Lit.Type()
 	constrLitType := constr.Lit.Type()
 	if constrLitType != UnionLitType && exprLitType != constrLitType { // if it's not union, expr must be same lit
@@ -118,7 +118,7 @@ func (s SubtypeChecker) checkLitSubtype(expr, constr Expr, params TerminatorPara
 	}
 }
 
-func (s SubtypeChecker) checkUnionSubtype(expr, constr Expr, params TerminatorParams) error {
+func (s SubtypeChecker) checkUnionSubtype(expr, constr *Expr, params *TerminatorParams) error {
 	// Both constraint and expression must be unions.
 	// In a type-system where unions are tagged it's impossible to do otherwise.
 	if expr.Lit == nil || expr.Lit.Union == nil {
@@ -150,7 +150,7 @@ func (s SubtypeChecker) checkUnionSubtype(expr, constr Expr, params TerminatorPa
 		}
 
 		// both have types, check compatibility
-		if err := s.Check(*exprTagType, *constrTagType, params); err != nil {
+		if err := s.Check(*exprTagType, *constrTagType, *params); err != nil {
 			return errors.Join(ErrUnions, fmt.Errorf("for tag %s: %w", tag, err))
 		}
 	}
@@ -158,7 +158,7 @@ func (s SubtypeChecker) checkUnionSubtype(expr, constr Expr, params TerminatorPa
 	return nil
 }
 
-func (s SubtypeChecker) checkStructSubtype(expr, constr Expr, params TerminatorParams) error {
+func (s SubtypeChecker) checkStructSubtype(expr, constr *Expr, params *TerminatorParams) error {
 	// super type must fit into sub-type
 	if len(expr.Lit.Struct) < len(constr.Lit.Struct) {
 		return fmt.Errorf(
@@ -169,7 +169,7 @@ func (s SubtypeChecker) checkStructSubtype(expr, constr Expr, params TerminatorP
 		)
 	}
 
-	checkParams := params
+	checkParams := *params
 	// add virtual ref "struct" to trace to avoid direct recursion
 	// e.g. recursive refs like error -> maybe<error>
 	// but only if it's not already there
@@ -181,16 +181,17 @@ func (s SubtypeChecker) checkStructSubtype(expr, constr Expr, params TerminatorP
 		}
 	}
 
-	return s.checkStructFields(expr, constr, checkParams)
+	return s.checkStructFields(expr, constr, &checkParams)
 }
 
-func (s SubtypeChecker) checkStructFields(expr, constr Expr, params TerminatorParams) error {
-	for constrFieldName, constrField := range constr.Lit.Struct {
+func (s SubtypeChecker) checkStructFields(expr, constr *Expr, params *TerminatorParams) error {
+	for constrFieldName := range constr.Lit.Struct {
+		constrField := constr.Lit.Struct[constrFieldName]
 		exprField, ok := expr.Lit.Struct[constrFieldName]
 		if !ok {
 			return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
 		}
-		if err := s.Check(exprField, constrField, params); err != nil {
+		if err := s.Check(exprField, constrField, *params); err != nil {
 			return errors.Join(ErrStructField, fmt.Errorf("field '%s': %w", constrFieldName, err))
 		}
 	}

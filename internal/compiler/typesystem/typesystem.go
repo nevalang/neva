@@ -51,17 +51,17 @@ func (expr Expr) String() string {
 	}
 
 	if expr.Lit != nil {
-		return expr.stringLit()
+		return (&expr).stringLit()
 	}
 
 	if len(expr.Inst.Args) == 0 {
 		return expr.Inst.Ref.String()
 	}
 
-	return expr.stringInst()
+	return (&expr).stringInst()
 }
 
-func (expr Expr) stringLit() string {
+func (expr *Expr) stringLit() string {
 	switch expr.Lit.Type() {
 	case EmptyLitType:
 		return "empty"
@@ -74,13 +74,13 @@ func (expr Expr) stringLit() string {
 	}
 }
 
-func (expr Expr) stringUnionLit() string {
+func (expr *Expr) stringUnionLit() string {
 	var str strings.Builder
 
 	str.WriteString("union {")
 	tags := sortedKeysFromUnion(expr.Lit.Union)
-	for i, tag := range tags {
-		if i == 0 {
+	for tagIndex, tag := range tags {
+		if tagIndex == 0 {
 			str.WriteString(" ")
 		}
 
@@ -93,7 +93,7 @@ func (expr Expr) stringUnionLit() string {
 			str.WriteString(tagExpr.String())
 		}
 
-		if i < len(tags)-1 {
+		if tagIndex < len(tags)-1 {
 			str.WriteString(", ")
 		}
 	}
@@ -105,7 +105,7 @@ func (expr Expr) stringUnionLit() string {
 	return str.String()
 }
 
-func (expr Expr) stringStructLit() string {
+func (expr *Expr) stringStructLit() string {
 	var str strings.Builder
 
 	str.WriteString("{")
@@ -126,7 +126,7 @@ func (expr Expr) stringStructLit() string {
 	return str.String()
 }
 
-func (expr Expr) stringInst() string {
+func (expr *Expr) stringInst() string {
 	var str strings.Builder
 
 	str.WriteString(expr.Inst.Ref.String())

@@ -177,14 +177,14 @@ func (r Resolver) resolveExpr(
 	}
 
 	if expr.Lit != nil {
-		return r.resolveLitExpr(expr, scope, frame, trace)
+		return r.resolveLitExpr(&expr, scope, frame, trace)
 	}
 
-	return r.resolveInstExpr(expr, scope, frame, trace)
+	return r.resolveInstExpr(&expr, scope, frame, trace)
 }
 
 func (r Resolver) resolveLitExpr(
-	expr Expr,
+	expr *Expr,
 	scope Scope,
 	frame map[string]Def,
 	trace *Trace,
@@ -202,7 +202,7 @@ func (r Resolver) resolveLitExpr(
 }
 
 func (r Resolver) resolveUnionLitExpr(
-	expr Expr,
+	expr *Expr,
 	scope Scope,
 	frame map[string]Def,
 	trace *Trace,
@@ -230,20 +230,20 @@ func (r Resolver) resolveUnionLitExpr(
 }
 
 func (r Resolver) resolveStructLitExpr(
-	expr Expr,
+	expr *Expr,
 	scope Scope,
 	frame map[string]Def,
 	trace *Trace,
 ) (Expr, error) {
 	resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
-	for field, fieldExpr := range expr.Lit.Struct {
+	for field := range expr.Lit.Struct {
 		// We create new trace with virtual ref "struct" (it's safe because it's reserved word).
 		// Otherwise recursive definitions (e.g. error -> maybe<error>) will be direct recursion for terminator.
 		newTrace := Trace{
 			prev: trace,
 			cur:  core.EntityRef{Name: "struct"},
 		}
-		resolvedFieldExpr, err := r.resolveExpr(fieldExpr, scope, frame, &newTrace)
+		resolvedFieldExpr, err := r.resolveExpr(expr.Lit.Struct[field], scope, frame, &newTrace)
 		if err != nil {
 			return Expr{}, fmt.Errorf("%w: %s: %w", ErrRecFieldUnresolved, field, err)
 		}
@@ -254,7 +254,7 @@ func (r Resolver) resolveStructLitExpr(
 }
 
 func (r Resolver) resolveInstExpr(
-	expr Expr,
+	expr *Expr,
 	scope Scope,
 	frame map[string]Def,
 	trace *Trace,
@@ -287,7 +287,7 @@ func (r Resolver) resolveInstExpr(
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w: %w", ErrTerminator, err)
 	} else if shouldReturn {
-		return expr, nil
+		return *expr, nil
 	}
 
 	resolvedArgs, newFrame, err := r.resolveInstArgs(expr.Inst.Args, def.Params, scope, frame, &newTrace)
@@ -295,7 +295,7 @@ func (r Resolver) resolveInstExpr(
 		return Expr{}, err
 	}
 
-	return r.resolveInstBaseOrBody(expr, def, scopeWhereDefFound, newFrame, &newTrace, resolvedArgs)
+	return r.resolveInstBaseOrBody(expr, &def, scopeWhereDefFound, newFrame, &newTrace, resolvedArgs)
 }
 
 func (r Resolver) resolveInstArgs(
@@ -307,7 +307,8 @@ func (r Resolver) resolveInstArgs(
 ) ([]Expr, map[string]Def, error) {
 	newFrame := make(map[string]Def, len(params))
 	resolvedArgs := make([]Expr, 0, len(args))
-	for i, param := range params { // resolve args and constrs and check their compatibility.
+	for i := range params { // resolve args and constrs and check their compatibility.
+		param := &params[i]
 		resolvedArg, err := r.resolveExpr(args[i], scope, frame, newTrace)
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w: %w", ErrUnresolvedArg, err)
@@ -336,8 +337,8 @@ func (r Resolver) resolveInstArgs(
 }
 
 func (r Resolver) resolveInstBaseOrBody(
-	expr Expr,
-	def Def,
+	expr *Expr,
+	def *Def,
 	scopeWhereDefFound Scope,
 	newFrame map[string]Def,
 	newTrace *Trace,
