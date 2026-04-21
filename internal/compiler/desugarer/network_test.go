@@ -14,6 +14,8 @@ import (
 
 // Note: some cases are hard to test this way because desugarer depends on Scope object
 // which is normally passed from top-level functions in this package.
+//
+//nolint:maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func TestDesugarNetwork(t *testing.T) {
 	tests := []struct {
 		mockScope      func(scope *MockScopeMockRecorder)
@@ -84,6 +86,7 @@ func TestDesugarNetwork(t *testing.T) {
 				"node2": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node2"}},
 				"node3": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node3"}},
 			},
+			//nolint:dupl // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{
@@ -160,6 +163,7 @@ func TestDesugarNetwork(t *testing.T) {
 				"node1": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node1"}},
 				"node2": {EntityRef: core.EntityRef{Pkg: "test", Name: "Node2"}},
 			},
+			//nolint:dupl // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			expectedResult: handleNetworkResult{
 				desugaredConnections: []src.Connection{
 					{

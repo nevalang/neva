@@ -22,42 +22,42 @@ type ParseEntityRefOutput struct {
 
 func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRefOutput, error) {
 	var (
-		__fan_out__1_out_data_2_to___newv2__1_in_sig = make(chan runtime.OrderedMsg)
-		eq_out_res_to_cond_in_if = make(chan runtime.OrderedMsg)
-		in_ref_to___fan_out__1_in_data = make(chan runtime.OrderedMsg)
-		__newv2__5_out_res_to_lock_empty_pkg_in_data = make(chan runtime.OrderedMsg)
-		at_name_2_at_out_res_to_fan_in_name_in_data_0 = make(chan runtime.OrderedMsg)
-		__newv2__1_out_res_to_split_in_delim = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_1_to_builder_in_metaText = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_7_to___newv2__6_in_sig = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_6_to___newv2__5_in_sig = make(chan runtime.OrderedMsg)
-		at_name_1_at_out_res_to_fan_in_name_in_data_1 = make(chan runtime.OrderedMsg)
-		cond_out_then_to___fan_out__3_in_data = make(chan runtime.OrderedMsg)
-		__newv2__4_out_res_to_at_name_2_at_in_idx = make(chan runtime.OrderedMsg)
-		at_pkg_2_at_out_res_to_fan_in_pkg_in_data_0 = make(chan runtime.OrderedMsg)
-		lock_empty_pkg_out_res_to_fan_in_pkg_in_data_1 = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_4_to___newv2__3_in_sig = make(chan runtime.OrderedMsg)
-		__fan_out__3_out_data_0_to_at_pkg_2_at_in_data = make(chan runtime.OrderedMsg)
-		cond_out_else_to___fan_out__4_in_data = make(chan runtime.OrderedMsg)
-		__fan_out__3_out_data_1_to_at_name_2_at_in_data = make(chan runtime.OrderedMsg)
-		__newv2__6_out_res_to_at_name_1_at_in_idx = make(chan runtime.OrderedMsg)
-		at_name_1_at_out_err_to_at_name_1_panic_in_data = make(chan runtime.OrderedMsg)
-		split_out_res_to___fan_out__2_in_data = make(chan runtime.OrderedMsg)
-		__fan_out__2_out_data_0_to_len_in_data = make(chan runtime.OrderedMsg)
-		__newv2__3_out_res_to_at_pkg_2_at_in_idx = make(chan runtime.OrderedMsg)
-		fan_in_pkg_out_res_to_builder_in_pkg = make(chan runtime.OrderedMsg)
-		__fan_out__2_out_data_1_to_cond_in_data = make(chan runtime.OrderedMsg)
-		len_out_res_to_eq_in_left = make(chan runtime.OrderedMsg)
-		at_name_2_at_out_err_to_at_name_2_panic_in_data = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_3_to___newv2__2_in_sig = make(chan runtime.OrderedMsg)
-		builder_out_res_to_out_res = make(chan runtime.OrderedMsg)
-		__fan_out__4_out_data_1_to_at_name_1_at_in_data = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_0_to_split_in_data = make(chan runtime.OrderedMsg)
-		__newv2__2_out_res_to_eq_in_right = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_2_to___newv2__1_in_sig     = make(chan runtime.OrderedMsg)
+		eq_out_res_to_cond_in_if                         = make(chan runtime.OrderedMsg)
+		in_ref_to___fan_out__1_in_data                   = make(chan runtime.OrderedMsg)
+		__newv2__5_out_res_to_lock_empty_pkg_in_data     = make(chan runtime.OrderedMsg)
+		at_name_2_at_out_res_to_fan_in_name_in_data_0    = make(chan runtime.OrderedMsg)
+		__newv2__1_out_res_to_split_in_delim             = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_1_to_builder_in_metaText   = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_7_to___newv2__6_in_sig     = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_6_to___newv2__5_in_sig     = make(chan runtime.OrderedMsg)
+		at_name_1_at_out_res_to_fan_in_name_in_data_1    = make(chan runtime.OrderedMsg)
+		cond_out_then_to___fan_out__3_in_data            = make(chan runtime.OrderedMsg)
+		__newv2__4_out_res_to_at_name_2_at_in_idx        = make(chan runtime.OrderedMsg)
+		at_pkg_2_at_out_res_to_fan_in_pkg_in_data_0      = make(chan runtime.OrderedMsg)
+		lock_empty_pkg_out_res_to_fan_in_pkg_in_data_1   = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_4_to___newv2__3_in_sig     = make(chan runtime.OrderedMsg)
+		__fan_out__3_out_data_0_to_at_pkg_2_at_in_data   = make(chan runtime.OrderedMsg)
+		cond_out_else_to___fan_out__4_in_data            = make(chan runtime.OrderedMsg)
+		__fan_out__3_out_data_1_to_at_name_2_at_in_data  = make(chan runtime.OrderedMsg)
+		__newv2__6_out_res_to_at_name_1_at_in_idx        = make(chan runtime.OrderedMsg)
+		at_name_1_at_out_err_to_at_name_1_panic_in_data  = make(chan runtime.OrderedMsg)
+		split_out_res_to___fan_out__2_in_data            = make(chan runtime.OrderedMsg)
+		__fan_out__2_out_data_0_to_len_in_data           = make(chan runtime.OrderedMsg)
+		__newv2__3_out_res_to_at_pkg_2_at_in_idx         = make(chan runtime.OrderedMsg)
+		fan_in_pkg_out_res_to_builder_in_pkg             = make(chan runtime.OrderedMsg)
+		__fan_out__2_out_data_1_to_cond_in_data          = make(chan runtime.OrderedMsg)
+		len_out_res_to_eq_in_left                        = make(chan runtime.OrderedMsg)
+		at_name_2_at_out_err_to_at_name_2_panic_in_data  = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_3_to___newv2__2_in_sig     = make(chan runtime.OrderedMsg)
+		builder_out_res_to_out_res                       = make(chan runtime.OrderedMsg)
+		__fan_out__4_out_data_1_to_at_name_1_at_in_data  = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_0_to_split_in_data         = make(chan runtime.OrderedMsg)
+		__newv2__2_out_res_to_eq_in_right                = make(chan runtime.OrderedMsg)
 		__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig = make(chan runtime.OrderedMsg)
-		at_pkg_2_at_out_err_to_at_pkg_2_panic_in_data = make(chan runtime.OrderedMsg)
-		fan_in_name_out_res_to_builder_in_name = make(chan runtime.OrderedMsg)
-		__fan_out__1_out_data_5_to___newv2__4_in_sig = make(chan runtime.OrderedMsg)
+		at_pkg_2_at_out_err_to_at_pkg_2_panic_in_data    = make(chan runtime.OrderedMsg)
+		fan_in_name_out_res_to_builder_in_name           = make(chan runtime.OrderedMsg)
+		__fan_out__1_out_data_5_to___newv2__4_in_sig     = make(chan runtime.OrderedMsg)
 	)
 	interceptor := runtime.ProdInterceptor{}
 
@@ -92,8 +92,8 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"metaText": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_1_to_builder_in_metaText, runtime.PortAddr{Path: "builder/in", Port: "metaText"}, interceptor)),
-					"name": runtime.NewInport(nil, runtime.NewSingleInport(fan_in_name_out_res_to_builder_in_name, runtime.PortAddr{Path: "builder/in", Port: "name"}, interceptor)),
-					"pkg": runtime.NewInport(nil, runtime.NewSingleInport(fan_in_pkg_out_res_to_builder_in_pkg, runtime.PortAddr{Path: "builder/in", Port: "pkg"}, interceptor)),
+					"name":     runtime.NewInport(nil, runtime.NewSingleInport(fan_in_name_out_res_to_builder_in_name, runtime.PortAddr{Path: "builder/in", Port: "name"}, interceptor)),
+					"pkg":      runtime.NewInport(nil, runtime.NewSingleInport(fan_in_pkg_out_res_to_builder_in_pkg, runtime.PortAddr{Path: "builder/in", Port: "pkg"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "builder/out", Port: "res"}, interceptor, builder_out_res_to_out_res), nil),
@@ -154,7 +154,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__5_out_res_to_lock_empty_pkg_in_data, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "data"}, interceptor)),
-					"sig": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "sig"}, interceptor)),
+					"sig":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_0_to_lock_empty_pkg_in_sig, runtime.PortAddr{Path: "lock_empty_pkg/in", Port: "sig"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "lock_empty_pkg/out", Port: "res"}, interceptor, lock_empty_pkg_out_res_to_fan_in_pkg_in_data_1), nil),
@@ -167,7 +167,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__4_out_data_1_to_at_name_1_at_in_data, runtime.PortAddr{Path: "at_name_1/at/in", Port: "data"}, interceptor)),
-					"idx": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__6_out_res_to_at_name_1_at_in_idx, runtime.PortAddr{Path: "at_name_1/at/in", Port: "idx"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__6_out_res_to_at_name_1_at_in_idx, runtime.PortAddr{Path: "at_name_1/at/in", Port: "idx"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_1/at/out", Port: "err"}, interceptor, at_name_1_at_out_err_to_at_name_1_panic_in_data), nil),
@@ -182,8 +182,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_name_1_at_out_err_to_at_name_1_panic_in_data, runtime.PortAddr{Path: "at_name_1/panic/in", Port: "data"}, interceptor)),
 				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
 			Config: nil,
 		},
@@ -215,7 +214,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Ref: "strings_split",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_0_to_split_in_data, runtime.PortAddr{Path: "split/in", Port: "data"}, interceptor)),
+					"data":  runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__1_out_data_0_to_split_in_data, runtime.PortAddr{Path: "split/in", Port: "data"}, interceptor)),
 					"delim": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__1_out_res_to_split_in_delim, runtime.PortAddr{Path: "split/in", Port: "delim"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
@@ -241,7 +240,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__2_out_data_1_to_cond_in_data, runtime.PortAddr{Path: "cond/in", Port: "data"}, interceptor)),
-					"if": runtime.NewInport(nil, runtime.NewSingleInport(eq_out_res_to_cond_in_if, runtime.PortAddr{Path: "cond/in", Port: "if"}, interceptor)),
+					"if":   runtime.NewInport(nil, runtime.NewSingleInport(eq_out_res_to_cond_in_if, runtime.PortAddr{Path: "cond/in", Port: "if"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"else": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "cond/out", Port: "else"}, interceptor, cond_out_else_to___fan_out__4_in_data), nil),
@@ -254,7 +253,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			Ref: "eq",
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
-					"left": runtime.NewInport(nil, runtime.NewSingleInport(len_out_res_to_eq_in_left, runtime.PortAddr{Path: "eq/in", Port: "left"}, interceptor)),
+					"left":  runtime.NewInport(nil, runtime.NewSingleInport(len_out_res_to_eq_in_left, runtime.PortAddr{Path: "eq/in", Port: "left"}, interceptor)),
 					"right": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__2_out_res_to_eq_in_right, runtime.PortAddr{Path: "eq/in", Port: "right"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
@@ -304,7 +303,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__3_out_data_0_to_at_pkg_2_at_in_data, runtime.PortAddr{Path: "at_pkg_2/at/in", Port: "data"}, interceptor)),
-					"idx": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__3_out_res_to_at_pkg_2_at_in_idx, runtime.PortAddr{Path: "at_pkg_2/at/in", Port: "idx"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__3_out_res_to_at_pkg_2_at_in_idx, runtime.PortAddr{Path: "at_pkg_2/at/in", Port: "idx"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_pkg_2/at/out", Port: "err"}, interceptor, at_pkg_2_at_out_err_to_at_pkg_2_panic_in_data), nil),
@@ -319,8 +318,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_pkg_2_at_out_err_to_at_pkg_2_panic_in_data, runtime.PortAddr{Path: "at_pkg_2/panic/in", Port: "data"}, interceptor)),
 				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
 			Config: nil,
 		},
@@ -329,7 +327,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 			IO: runtime.IO{
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(__fan_out__3_out_data_1_to_at_name_2_at_in_data, runtime.PortAddr{Path: "at_name_2/at/in", Port: "data"}, interceptor)),
-					"idx": runtime.NewInport(nil, runtime.NewSingleInport(__newv2__4_out_res_to_at_name_2_at_in_idx, runtime.PortAddr{Path: "at_name_2/at/in", Port: "idx"}, interceptor)),
+					"idx":  runtime.NewInport(nil, runtime.NewSingleInport(__newv2__4_out_res_to_at_name_2_at_in_idx, runtime.PortAddr{Path: "at_name_2/at/in", Port: "idx"}, interceptor)),
 				}),
 				Out: runtime.NewOutports(map[string]runtime.Outport{
 					"err": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "at_name_2/at/out", Port: "err"}, interceptor, at_name_2_at_out_err_to_at_name_2_panic_in_data), nil),
@@ -344,8 +342,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 				In: runtime.NewInports(map[string]runtime.Inport{
 					"data": runtime.NewInport(nil, runtime.NewSingleInport(at_name_2_at_out_err_to_at_name_2_panic_in_data, runtime.PortAddr{Path: "at_name_2/panic/in", Port: "data"}, interceptor)),
 				}),
-				Out: runtime.NewOutports(map[string]runtime.Outport{
-				}),
+				Out: runtime.NewOutports(map[string]runtime.Outport{}),
 			},
 			Config: nil,
 		},
@@ -376,8 +373,8 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 	}
 
 	rprog := runtime.Program{
-		Start: startPort,
-		Stop: stopPort,
+		Start:     startPort,
+		Stop:      stopPort,
 		FuncCalls: funcCalls,
 	}
 	startMsg := runtime.NewStringMsg(in.Ref)

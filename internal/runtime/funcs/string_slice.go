@@ -16,24 +16,29 @@ func sliceString(data string, from int64, to int64) string {
 	return string(runes[start:end])
 }
 
+//nolint:dupl,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (stringSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	fromIn, err := io.In.Single("from")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	toIn, err := io.In.Single("to")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -42,6 +47,7 @@ func (stringSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), 
 			var dataMsg, fromMsg, toMsg runtime.Msg
 			var dataOK, fromOK, toOK bool
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			wg.Go(func() {
 				dataMsg, dataOK = dataIn.Receive(ctx)

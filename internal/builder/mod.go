@@ -35,6 +35,7 @@ func (p Builder) LoadModuleByPath(
 // retrieveSourceCode recursively walks the given tree and fills given pkgs with neva files
 func retrieveSourceCode(rootPath string, pkgs map[string]compiler.RawPackage) error {
 	fsys := os.DirFS(rootPath)
+	//nolint:varnamelen,wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return fs.WalkDir(fsys, ".", func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("filepath walk: %s: %w", filePath, err)
@@ -51,13 +52,16 @@ func retrieveSourceCode(rootPath string, pkgs map[string]compiler.RawPackage) er
 
 		file, err := fsys.Open(filePath)
 		if err != nil {
-			return err
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			return fmt.Errorf("open source file %q: %w", filePath, err)
 		}
 		defer file.Close()
 
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		bb, err := io.ReadAll(file)
 		if err != nil {
-			return err
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			return fmt.Errorf("read source file %q: %w", filePath, err)
 		}
 
 		pkgName := getPkgName(rootPath, filePath)

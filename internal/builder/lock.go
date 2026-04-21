@@ -18,15 +18,19 @@ import (
 //
 // The lock is necessary because multiple concurrent builds could try to download and write
 // the same dependency files simultaneously, which could corrupt the dependency cache.
+//
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func acquireLockFile() (release func(), err error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	filename := filepath.Join(home, "neva", ".lock")
 
 	for range 60 {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		f, err := os.OpenFile(
 			filename,
 			os.O_CREATE|os.O_EXCL,

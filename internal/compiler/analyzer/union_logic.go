@@ -16,13 +16,17 @@ type unionActiveTagInfo struct {
 // buildUnionActiveTagBindings inspects the network wiring to determine which concrete tag
 // is active for each Union<T> node (via its :tag port). It returns a map from Union node name
 // to the active tag and its payload type, so Union:data connections can be validated.
+//
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) buildUnionActiveTagBindings(
 	net []src.Connection,
 	nodes map[string]src.Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (map[string]unionActiveTagInfo, *compiler.Error) {
 	infos := map[string]unionActiveTagInfo{}
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for nodeName, node := range nodes {
 		// Only Union<T> nodes participate in tag/data validation.
 		if !a.isUnionNode(node) {
@@ -105,10 +109,12 @@ func (a Analyzer) buildUnionActiveTagBindings(
 // validateUnionDataReceiverPort checks a single port address and applies the Union:data constraint
 // if the receiver is a Union node with a resolved active tag type.
 func (a Analyzer) validateUnionDataReceiverPort(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
 	senders []src.ConnectionSender,
 	resolvedSenderTypes []*ts.Expr,
 	unionActiveTags map[string]unionActiveTagInfo,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) *compiler.Error {
 	tagInfo, ok := unionActiveTags[portAddr.Node]
@@ -118,6 +124,7 @@ func (a Analyzer) validateUnionDataReceiverPort(
 	}
 
 	// All senders must be subtype-compatible with the selected tag payload type.
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, senderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*senderType, tagInfo.tagTypeExpr, scope); err != nil {
 			return &compiler.Error{
@@ -145,6 +152,7 @@ func (a Analyzer) collectPortSenders(
 ) []src.ConnectionSender {
 	var out []src.ConnectionSender
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, conn := range net {
 		a.collectPortSendersInReceivers(
 			conn.Senders,
@@ -160,6 +168,8 @@ func (a Analyzer) collectPortSenders(
 
 // collectPortSendersInReceivers is the recursive worker that walks receiver trees
 // and appends matching senders into out.
+//
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) collectPortSendersInReceivers(
 	senders []src.ConnectionSender,
 	receivers []src.ConnectionReceiver,
@@ -167,6 +177,7 @@ func (a Analyzer) collectPortSendersInReceivers(
 	port string,
 	out *[]src.ConnectionSender,
 ) {
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, receiver := range receivers {
 		// Direct receiver: outer senders feed nodeName:port.
 		if receiver.PortAddr != nil {
@@ -177,6 +188,7 @@ func (a Analyzer) collectPortSendersInReceivers(
 
 		// Chained receiver: chain head is the receiver for outer senders.
 		if receiver.ChainedConnection != nil {
+			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for _, chainHead := range receiver.ChainedConnection.Senders {
 				if chainHead.PortAddr != nil &&
 					chainHead.PortAddr.Node == nodeName &&
@@ -198,6 +210,8 @@ func (a Analyzer) collectPortSendersInReceivers(
 }
 
 // isUnionNode identifies the builtin Union<T> node used for wrapping tags/payloads.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) isUnionNode(node src.Node) bool {
 	return node.EntityRef.Name == "Union" && (node.EntityRef.Pkg == "" || node.EntityRef.Pkg == "builtin")
 }
@@ -205,7 +219,9 @@ func (a Analyzer) isUnionNode(node src.Node) bool {
 // resolveUnionConstSender extracts a union literal from a sender.
 // Valid senders are union literal constants or references to constants that resolve to union literals.
 func (a Analyzer) resolveUnionConstSender(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	sender src.ConnectionSender,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (*src.UnionLiteral, *compiler.Error) {
 	if sender.Const == nil {
@@ -233,6 +249,7 @@ func (a Analyzer) resolveUnionConstSender(
 // It returns the fully analyzed union type expression or an error if the reference isn't a union.
 func (a Analyzer) resolveUnionTypeFromLiteral(
 	unionLiteral *src.UnionLiteral,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	typeDef, _, err := scope.GetType(unionLiteral.EntityRef)

@@ -13,7 +13,9 @@ type handleComponentResult struct {
 }
 
 func (d *Desugarer) desugarComponent(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	component src.Component,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (handleComponentResult, error) {
 	if len(component.Net) == 0 && len(component.Nodes) == 0 {
@@ -47,6 +49,7 @@ func (d *Desugarer) desugarComponent(
 	desugaredNetwork := slices.Clone(desugarNetResult.desugaredConnections)
 
 	// add virtual constants created by network handler to virtual entities
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for name, constant := range desugarNetResult.constsToInsert {
 		virtualEntities[name] = src.Entity{
 			Kind:  src.ConstEntity,
@@ -82,13 +85,16 @@ func (d *Desugarer) desugarComponent(
 }
 
 func (d *Desugarer) desugarNodes(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	component src.Component,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	virtualEntities map[string]src.Entity,
 ) (map[string]src.Node, []src.Connection, error) {
 	desugaredNodes := make(map[string]src.Node, len(component.Nodes))
 	virtualConns := []src.Connection{}
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for nodeName, node := range component.Nodes {
 		extraConns, err := d.handleNode(
 			scope,

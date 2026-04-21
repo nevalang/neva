@@ -38,6 +38,8 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 // Call runs a single request-response round-trip using program Start/Stop.
 // It sends the provided input to Start, waits for one message on Stop,
 // then cancels and waits for all handlers to finish.
+//
+//nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
 	var out Msg
 	ctx, cancel := context.WithCancel(ctx)
@@ -77,6 +79,7 @@ func deferFuncCalls(
 	}
 
 	return func(ctx context.Context) {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		wg := sync.WaitGroup{}
 		for i := range handlers {
 			routine := handlers[i]
@@ -94,6 +97,7 @@ func createHandlers(
 ) ([]func(context.Context), error) {
 	funcs := make([]func(context.Context), len(funcCalls))
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, call := range funcCalls {
 		creator, ok := registry[call.Ref]
 		if !ok {

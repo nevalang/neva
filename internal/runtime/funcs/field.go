@@ -9,6 +9,7 @@ import (
 
 type structField struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
 	path := cfg.List()
 	if len(path) == 0 {
@@ -22,11 +23,13 @@ func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Co
 
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -44,6 +47,7 @@ func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Co
 	}, nil
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (structField) selector(m runtime.Msg, path []string) runtime.Msg {
 	for len(path) > 0 {
 		m = m.Struct().Get(path[0])

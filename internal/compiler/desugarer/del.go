@@ -13,6 +13,7 @@ type unusedOutportsResult struct {
 
 func (Desugarer) handleUnusedOutports(
 	unusedOutports nodeOutportsUsed,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	meta core.Meta,
 ) unusedOutportsResult {
 	destructorNodeName := "__del__"
@@ -66,13 +67,17 @@ func (Desugarer) handleUnusedOutports(
 	return result
 }
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (Desugarer) findUnusedOutports(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	component src.Component,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	usedNodePorts nodeOutportsUsed,
 ) nodeOutportsUsed {
 	unusedOutports := newNodePortsMap()
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for nodeName, node := range component.Nodes {
 		entity, _, err := scope.Entity(node.EntityRef)
 		if err != nil {
@@ -82,6 +87,7 @@ func (Desugarer) findUnusedOutports(
 			continue
 		}
 
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		var io src.IO
 		if entity.Kind == src.InterfaceEntity {
 			io = entity.Interface.IO

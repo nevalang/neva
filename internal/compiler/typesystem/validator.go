@@ -16,6 +16,8 @@ var (
 )
 
 // ValidateDef makes sure that type supports recursion only if it's base type and that parameters are valid
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (v Validator) ValidateDef(def Def) error {
 	if err := v.CheckParamUnique(def.Params); err != nil {
 		return errors.Join(ErrParams, err)
@@ -26,6 +28,7 @@ func (v Validator) ValidateDef(def Def) error {
 // CheckParamUnique doesn't validate constraints, only ensures uniqueness
 func (v Validator) CheckParamUnique(params []Param) error {
 	m := make(map[string]struct{}, len(params))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, param := range params {
 		if _, ok := m[param.Name]; ok {
 			return fmt.Errorf("%w: param", ErrParamDuplicate)
@@ -36,6 +39,8 @@ func (v Validator) CheckParamUnique(params []Param) error {
 
 // Validate makes shallow validation of expr.
 // It checks that it's inst or literal, not both and not neither; All insts are valid by default;
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (v Validator) Validate(expr Expr) error {
 	if expr.Lit.Empty() == (expr.Inst == nil) {
 		return ErrExprMustBeInstOrLit
