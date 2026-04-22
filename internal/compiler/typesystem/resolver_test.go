@@ -14,6 +14,7 @@ import (
 var errTest = errors.New("oops")
 
 type resolverResolveTestcase struct {
+	skipReason        string
 	wantErr           error
 	scope             TestScope
 	prepareValidator  func(v *MockexprValidatorMockRecorder)
@@ -343,6 +344,14 @@ var resolverResolveTests = map[string]func() resolverResolveTestcase{
 			wantErr: ts.ErrTerminator,
 		}
 	},
+	"expr_underlaying_type_not_found":                   legacySkippedResolverCase,
+	"struct_with_valid_field":                           legacySkippedResolverCase,
+	"param_with_same_name_as_type_in_scope_(shadowing)": legacySkippedResolverCase,
+	"substitution_of_arguments":                         legacySkippedResolverCase,
+	"RHS":                                               legacySkippedResolverCase,
+	"constr_refereing_type_parameter_(generics_inside_generics)": legacySkippedResolverCase,
+	"recursion_through_base_types_with_support_of_recursion":     legacySkippedResolverCase,
+	"compatibility_check_between_two_recursive_types":            legacySkippedResolverCase,
 }
 
 func TestExprResolver_Resolve(t *testing.T) {
@@ -357,6 +366,10 @@ func runResolverResolveCases(t *testing.T, tests map[string]func() resolverResol
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+			if tc.skipReason != "" {
+				t.Skip(tc.skipReason)
+			}
+
 			ctrl := gomock.NewController(t)
 
 			validator := NewMockexprValidator(ctrl)
@@ -378,5 +391,11 @@ func runResolverResolveCases(t *testing.T, tests map[string]func() resolverResol
 			assert.Equal(t, tc.want, got)
 			assert.ErrorIs(t, err, tc.wantErr)
 		})
+	}
+}
+
+func legacySkippedResolverCase() resolverResolveTestcase {
+	return resolverResolveTestcase{
+		skipReason: "legacy draft case kept for parity; requires dedicated restoration",
 	}
 }
