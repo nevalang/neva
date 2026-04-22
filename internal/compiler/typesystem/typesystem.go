@@ -20,7 +20,6 @@ func (def Def) String() string {
 	var params strings.Builder
 
 	params.WriteString("<")
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range def.Params {
 		params.WriteString(param.Name)
 		params.WriteString(" " + param.Constr.String())
@@ -39,119 +38,137 @@ type Param struct {
 }
 
 // Instantiation or literal. Lit or Inst must be not nil, but not both
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
 	Meta core.Meta `json:"meta"` // This field must be ignored by the typesystem and only used outside
 }
 
-// String formats expression in a TS manner
-//
-//nolint:gocyclo // String formatting covers multiple expression shapes.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (expr Expr) String() string { //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// String formats expression in a TS manner.
+func (expr Expr) String() string {
 	if expr.Inst == nil && expr.Lit == nil {
 		return "empty"
 	}
 
-	var str string
-
-	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	if expr.Lit != nil {
-		switch expr.Lit.Type() {
-		case EmptyLitType:
-			return "empty"
-		case UnionLitType:
-			// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice (same for struct)
-			count := 0
-			str += "union {"
-			// collect and sort tags for stable output
-			var tags []string
-			for tag := range expr.Lit.Union {
-				tags = append(tags, tag)
-			}
-			sort.Strings(tags)
-			for _, tag := range tags {
-				tagExpr := expr.Lit.Union[tag]
-				if count == 0 {
-					str += " "
-				}
-				if tagExpr != nil {
-					// check if this is a tag-only union (tag name matches type name)
-					if tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
-						str += tag
-					} else {
-						str += tag + " " + tagExpr.String()
-					}
-				} else {
-					str += tag
-				}
-				if count < len(tags)-1 {
-					str += ", "
-				}
-				count++
-			}
-			if count > 0 {
-				str += " "
-			}
-			str += "}"
-			return str
-		case StructLitType:
-			// todo: keep deterministic order by sorting; ideally match source order which would require moving from map to slice
-			str += "{"
-			count := 0
-			// collect and sort field names for stable output
-			var fields []string
-			for fieldName := range expr.Lit.Struct {
-				fields = append(fields, fieldName)
-			}
-			sort.Strings(fields)
-			for _, fieldName := range fields {
-				fieldExpr := expr.Lit.Struct[fieldName]
-				str += " " + fieldName + " " + fieldExpr.String()
-				if count < len(fields)-1 {
-					str += ","
-				} else {
-					str += " "
-				}
-				count++
-			}
-			return str + "}"
-		}
+		return (&expr).stringLit()
 	}
 
 	if len(expr.Inst.Args) == 0 {
 		return expr.Inst.Ref.String()
 	}
 
-	str = expr.Inst.Ref.String()
-	str += "<"
+	return (&expr).stringInst()
+}
 
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	for i, arg := range expr.Inst.Args {
-		str += arg.String()
-		if i < len(expr.Inst.Args)-1 {
-			str += ", "
+func (expr *Expr) stringLit() string {
+	switch expr.Lit.Type() {
+	case EmptyLitType:
+		return "empty"
+	case UnionLitType:
+		return expr.stringUnionLit()
+	case StructLitType:
+		return expr.stringStructLit()
+	default:
+		return "empty"
+	}
+}
+
+func (expr *Expr) stringUnionLit() string {
+	var str strings.Builder
+
+	str.WriteString("union {")
+	tags := sortedKeysFromUnion(expr.Lit.Union)
+	for tagIndex, tag := range tags {
+		if tagIndex == 0 {
+			str.WriteString(" ")
+		}
+
+		tagExpr := expr.Lit.Union[tag]
+		if tagExpr == nil || tagExpr.Inst != nil && tagExpr.Inst.Ref.Name == tag {
+			str.WriteString(tag)
+		} else {
+			str.WriteString(tag)
+			str.WriteString(" ")
+			str.WriteString(tagExpr.String())
+		}
+
+		if tagIndex < len(tags)-1 {
+			str.WriteString(", ")
 		}
 	}
-	str += ">"
+	if len(tags) > 0 {
+		str.WriteString(" ")
+	}
+	str.WriteString("}")
 
-	return str
+	return str.String()
+}
+
+func (expr *Expr) stringStructLit() string {
+	var str strings.Builder
+
+	str.WriteString("{")
+	fields := sortedKeysFromStruct(expr.Lit.Struct)
+	for i, fieldName := range fields {
+		str.WriteString(" ")
+		str.WriteString(fieldName)
+		str.WriteString(" ")
+		str.WriteString(expr.Lit.Struct[fieldName].String())
+		if i < len(fields)-1 {
+			str.WriteString(",")
+		} else {
+			str.WriteString(" ")
+		}
+	}
+	str.WriteString("}")
+
+	return str.String()
+}
+
+func (expr *Expr) stringInst() string {
+	var str strings.Builder
+
+	str.WriteString(expr.Inst.Ref.String())
+	str.WriteString("<")
+	for i, arg := range expr.Inst.Args {
+		if i > 0 {
+			str.WriteString(", ")
+		}
+		str.WriteString(arg.String())
+	}
+	str.WriteString(">")
+
+	return str.String()
+}
+
+func sortedKeysFromUnion(union map[string]*Expr) []string {
+	tags := make([]string, 0, len(union))
+	for tag := range union {
+		tags = append(tags, tag)
+	}
+	sort.Strings(tags)
+
+	return tags
+}
+
+func sortedKeysFromStruct(structFields map[string]Expr) []string {
+	fields := make([]string, 0, len(structFields))
+	for fieldName := range structFields {
+		fields = append(fields, fieldName)
+	}
+	sort.Strings(fields)
+
+	return fields
 }
 
 // Instantiation expression
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type InstExpr struct {
 	Args []Expr         `json:"args,omitempty"`
 	Ref  core.EntityRef `json:"ref"`
 }
 
 // Literal expression. Only one field must be initialized
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type LitExpr struct {
 	Struct map[string]Expr  `json:"struct,omitempty"`
 	Union  map[string]*Expr `json:"union,omitempty"` // tag -> constraint
@@ -164,8 +181,6 @@ func (lit *LitExpr) Empty() bool {
 }
 
 // Always call Validate before
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (lit *LitExpr) Type() LiteralType {
 	switch {
 	case lit == nil:

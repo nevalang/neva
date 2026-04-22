@@ -48,15 +48,12 @@ type (
 )
 
 // ResolveExpr resolves given expression using only global scope.
-//
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
 	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
 // ResolveExprWithFrame works like ResolveExpr but allows to pass local scope.
 func (r Resolver) ResolveExprWithFrame(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	expr Expr,
 	frame map[string]Def,
 	scope Scope,
@@ -65,15 +62,12 @@ func (r Resolver) ResolveExprWithFrame(
 }
 
 // ResolveExprWithFrame works like ResolveExprWithFrame but for list of expressions.
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) ResolveExprsWithFrame(
 	exprs []Expr,
 	frame map[string]Def,
 	scope Scope,
 ) ([]Expr, error) {
 	resolvedExprs := make([]Expr, 0, len(exprs))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, expr := range exprs {
 		resolvedExpr, err := r.resolveExpr(expr, scope, frame, nil)
 		if err != nil {
@@ -95,7 +89,6 @@ func (r Resolver) ResolveParams(
 ) {
 	result := make([]Param, 0, len(params))
 	frame := make(map[string]Def, len(params))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, param := range params {
 		resolved, err := r.resolveExpr(param.Constr, scope, frame, nil)
 		if err != nil {
@@ -112,8 +105,6 @@ func (r Resolver) ResolveParams(
 
 // IsSubtypeOf resolves both `sub` and `sup` expressions
 // and returns error if `sub` is not subtype of `sup`.
-//
-//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	resolvedSub, err := r.resolveExpr(sub, scope, nil, nil)
 	if err != nil {
@@ -123,7 +114,6 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return r.checker.Check(
 		resolvedSub,
 		resolvedSup,
@@ -161,7 +151,6 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			resolvedSup,
 			TerminatorParams{Scope: scope},
 		); err != nil {
-			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return err
 		}
 	}
@@ -169,7 +158,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 	return nil
 }
 
-// resolveExpr turn one expression into another where all references points to native types.
+// resolveExpr turns one expression into another where all references point to native types.
 // It's a recursive process where each step starts with validation. Invalid expression always leads to error.
 // For inst expr it checks compatibility between args and params and returns error if some constraint isn't satisfied.
 // Then it updates scope by adding params of ref type with resolved args as values to allow substitution later.
@@ -177,11 +166,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this:
 // for struct and union apply recursion for it's every field/element.
-//
-//nolint:gocyclo // Resolver covers many expression shapes and recursive cases.
-//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (r Resolver) resolveExpr( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
 	frame map[string]Def, // local scope
@@ -192,62 +177,88 @@ func (r Resolver) resolveExpr( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 	}
 
 	if expr.Lit != nil {
-		switch expr.Lit.Type() {
-		case EmptyLitType:
-			return Expr{}, fmt.Errorf("%w: empty literal", ErrInvalidExpr)
-		case UnionLitType:
-			resolvedUnion := make(map[string]*Expr, len(expr.Lit.Union))
-			keys := make([]string, 0, len(expr.Lit.Union))
-			for unionElName := range expr.Lit.Union {
-				keys = append(keys, unionElName)
-			}
-			sort.Strings(keys)
-			for _, unionElName := range keys {
-				unionEl := expr.Lit.Union[unionElName]
-				if unionEl == nil {
-					resolvedUnion[unionElName] = nil
-					continue
-				}
-				resolvedEl, err := r.resolveExpr(*unionEl, scope, frame, trace)
-				if err != nil {
-					return Expr{}, fmt.Errorf("%w: %w", ErrUnionUnresolvedEl, err)
-				}
-				resolvedUnion[unionElName] = &resolvedEl
-			}
-			return Expr{Lit: &LitExpr{Union: resolvedUnion}}, nil
-		case StructLitType:
-			resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
-			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			for field, fieldExpr := range expr.Lit.Struct {
-				// we create new trace with virtual ref "struct" (it's safe because it's reserved word)
-				// otherwise recursive definitions (e.g. error -> maybe<error>)
-				// will be direct recursive for terminator
-				newTrace := Trace{
-					prev: trace,
-					cur:  core.EntityRef{Name: "struct"},
-				}
-				resolvedFieldExpr, err := r.resolveExpr(
-					fieldExpr,
-					scope,
-					frame,
-					&newTrace,
-				)
-				if err != nil {
-					return Expr{}, fmt.Errorf(
-						"%w: %s: %w",
-						ErrRecFieldUnresolved,
-						field,
-						err,
-					)
-				}
-				resolvedStruct[field] = resolvedFieldExpr
-			}
-			return Expr{
-				Lit: &LitExpr{Struct: resolvedStruct},
-			}, nil
-		}
+		return r.resolveLitExpr(&expr, scope, frame, trace)
 	}
 
+	return r.resolveInstExpr(&expr, scope, frame, trace)
+}
+
+func (r Resolver) resolveLitExpr(
+	expr *Expr,
+	scope Scope,
+	frame map[string]Def,
+	trace *Trace,
+) (Expr, error) {
+	switch expr.Lit.Type() {
+	case EmptyLitType:
+		return Expr{}, fmt.Errorf("%w: empty literal", ErrInvalidExpr)
+	case UnionLitType:
+		return r.resolveUnionLitExpr(expr, scope, frame, trace)
+	case StructLitType:
+		return r.resolveStructLitExpr(expr, scope, frame, trace)
+	default:
+		return Expr{}, fmt.Errorf("%w: unknown literal type", ErrInvalidExpr)
+	}
+}
+
+func (r Resolver) resolveUnionLitExpr(
+	expr *Expr,
+	scope Scope,
+	frame map[string]Def,
+	trace *Trace,
+) (Expr, error) {
+	resolvedUnion := make(map[string]*Expr, len(expr.Lit.Union))
+	keys := make([]string, 0, len(expr.Lit.Union))
+	for unionElName := range expr.Lit.Union {
+		keys = append(keys, unionElName)
+	}
+	sort.Strings(keys)
+	for _, unionElName := range keys {
+		unionEl := expr.Lit.Union[unionElName]
+		if unionEl == nil {
+			resolvedUnion[unionElName] = nil
+			continue
+		}
+		resolvedEl, err := r.resolveExpr(*unionEl, scope, frame, trace)
+		if err != nil {
+			return Expr{}, fmt.Errorf("%w: %w", ErrUnionUnresolvedEl, err)
+		}
+		resolvedUnion[unionElName] = &resolvedEl
+	}
+
+	return Expr{Lit: &LitExpr{Union: resolvedUnion}}, nil
+}
+
+func (r Resolver) resolveStructLitExpr(
+	expr *Expr,
+	scope Scope,
+	frame map[string]Def,
+	trace *Trace,
+) (Expr, error) {
+	resolvedStruct := make(map[string]Expr, len(expr.Lit.Struct))
+	for field := range expr.Lit.Struct {
+		// We create new trace with virtual ref "struct" (it's safe because it's reserved word).
+		// Otherwise recursive definitions (e.g. error -> maybe<error>) will be direct recursion for terminator.
+		newTrace := Trace{
+			prev: trace,
+			cur:  core.EntityRef{Name: "struct"},
+		}
+		resolvedFieldExpr, err := r.resolveExpr(expr.Lit.Struct[field], scope, frame, &newTrace)
+		if err != nil {
+			return Expr{}, fmt.Errorf("%w: %s: %w", ErrRecFieldUnresolved, field, err)
+		}
+		resolvedStruct[field] = resolvedFieldExpr
+	}
+
+	return Expr{Lit: &LitExpr{Struct: resolvedStruct}}, nil
+}
+
+func (r Resolver) resolveInstExpr(
+	expr *Expr,
+	scope Scope,
+	frame map[string]Def,
+	trace *Trace,
+) (Expr, error) {
 	def, scopeWhereDefFound, err := r.getDef(expr.Inst.Ref, frame, scope)
 	if err != nil {
 		return Expr{}, err
@@ -257,7 +268,7 @@ func (r Resolver) resolveExpr( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 		return Expr{}, errors.Join(ErrInvalidDef, err)
 	}
 
-	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint
+	if len(def.Params) != len(expr.Inst.Args) { // args must not be > than params to avoid bad case with constraint.
 		return Expr{}, fmt.Errorf(
 			"%w for '%v': want %d, got %d",
 			ErrInstArgsCount,
@@ -276,58 +287,71 @@ func (r Resolver) resolveExpr( //nolint:cyclop,funlen,gocognit,lll // TODO(stric
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w: %w", ErrTerminator, err)
 	} else if shouldReturn {
-		return expr, nil
+		return *expr, nil
 	}
 
-	newFrame := make(map[string]Def, len(def.Params))
-	resolvedArgs := make([]Expr, 0, len(expr.Inst.Args))
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	for i, param := range def.Params { // resolve args and constrs and check their compatibility
-		resolvedArg, err := r.resolveExpr(expr.Inst.Args[i], scope, frame, &newTrace)
-		if err != nil {
-			return Expr{}, fmt.Errorf("%w: %w", ErrUnresolvedArg, err)
-		}
-
-		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics
-		resolvedArgs = append(resolvedArgs, resolvedArg)
-
-		// we pass newFrame because constr can refer to type parameters
-		resolvedConstr, err := r.resolveExpr(
-			param.Constr,
-			scope,
-			newFrame,
-			&newTrace,
-		)
-		if err != nil {
-			return Expr{}, fmt.Errorf("%w: %w", ErrConstr, err)
-		}
-
-		params := TerminatorParams{
-			Scope:          scope,
-			SubtypeTrace:   newTrace,
-			SupertypeTrace: newTrace,
-		}
-
-		if err := r.checker.Check(resolvedArg, resolvedConstr, params); err != nil {
-			return Expr{}, fmt.Errorf("%w: %w", ErrIncompatArg, err)
-		}
+	resolvedArgs, newFrame, err := r.resolveInstArgs(expr.Inst.Args, def.Params, scope, frame, &newTrace)
+	if err != nil {
+		return Expr{}, err
 	}
 
-	if def.BodyExpr == nil {
-		return Expr{
-			Inst: &InstExpr{
-				Ref:  expr.Inst.Ref,
-				Args: resolvedArgs,
-			},
-		}, nil
-	}
-
-	return r.resolveExpr(*def.BodyExpr, scopeWhereDefFound, newFrame, &newTrace)
+	return r.resolveInstBaseOrBody(expr, &def, scopeWhereDefFound, newFrame, &newTrace, resolvedArgs)
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (r Resolver) resolveInstArgs(
+	args []Expr,
+	params []Param,
+	scope Scope,
+	frame map[string]Def,
+	newTrace *Trace,
+) ([]Expr, map[string]Def, error) {
+	newFrame := make(map[string]Def, len(params))
+	resolvedArgs := make([]Expr, 0, len(args))
+	for i := range params { // resolve args and constrs and check their compatibility.
+		param := &params[i]
+		resolvedArg, err := r.resolveExpr(args[i], scope, frame, newTrace)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%w: %w", ErrUnresolvedArg, err)
+		}
+
+		newFrame[param.Name] = Def{BodyExpr: &resolvedArg} // no params for generics.
+		resolvedArgs = append(resolvedArgs, resolvedArg)
+
+		// We pass newFrame because constr can refer to type parameters.
+		resolvedConstr, err := r.resolveExpr(param.Constr, scope, newFrame, newTrace)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%w: %w", ErrConstr, err)
+		}
+
+		terminatorParams := TerminatorParams{
+			Scope:          scope,
+			SubtypeTrace:   *newTrace,
+			SupertypeTrace: *newTrace,
+		}
+		if err := r.checker.Check(resolvedArg, resolvedConstr, terminatorParams); err != nil {
+			return nil, nil, fmt.Errorf("%w: %w", ErrIncompatArg, err)
+		}
+	}
+
+	return resolvedArgs, newFrame, nil
+}
+
+func (r Resolver) resolveInstBaseOrBody(
+	expr *Expr,
+	def *Def,
+	scopeWhereDefFound Scope,
+	newFrame map[string]Def,
+	newTrace *Trace,
+	resolvedArgs []Expr,
+) (Expr, error) {
+	if def.BodyExpr == nil {
+		return Expr{Inst: &InstExpr{Ref: expr.Inst.Ref, Args: resolvedArgs}}, nil
+	}
+
+	return r.resolveExpr(*def.BodyExpr, scopeWhereDefFound, newFrame, newTrace)
+}
+
 func (Resolver) getDef(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	ref core.EntityRef,
 	frame map[string]Def,
 	scope Scope,
