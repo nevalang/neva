@@ -143,17 +143,6 @@ linters:
           - lll # tests may be long
           - varnamelen # tests may use short vars
         path: _test\.go # apply to test files
-      - linters:
-          - cyclop # phase-1: runtime funcs stay explicit and can be structurally repetitive
-          - dupl # phase-1: avoid large mechanical dedup refactors in runtime funcs
-          - funlen # phase-1: runtime flow handlers are intentionally long/explicit
-          - gocognit # phase-1: keep behavior-first logic while cleanup is in progress
-          - gocyclo # phase-1: avoid forcing control-flow rewrites
-          - maintidx # phase-1: postpone maintainability-index-driven rewrites
-          - nestif # phase-1: nested flow checks remain explicit for now
-          - varnamelen # phase-1: short signal names in runtime handlers are accepted
-          - wrapcheck # phase-1: existing localized nolint migration remains temporary
-        path: ^internal/runtime/funcs/.*\.go$ # temporary scoped suppression for strict-lint phase 1
     paths:
       - third_party$
       - builtin$
