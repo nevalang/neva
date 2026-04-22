@@ -9,7 +9,7 @@ import (
 type strIsLesser struct{}
 
 func (strIsLesser) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
-	return createBinaryFuncSequential(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
+	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
 		return runtime.NewBoolMsg(left.Str() < right.Str())
 	})
 }

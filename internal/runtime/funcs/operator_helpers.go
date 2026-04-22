@@ -12,31 +12,6 @@ type binaryOperator func(left runtime.Msg, right runtime.Msg) runtime.Msg
 
 type unaryOperator func(input runtime.Msg) runtime.Msg
 
-func createBinaryFuncSequential(runtimeIO runtime.IO, apply binaryOperator) (func(context.Context), error) {
-	leftInput, rightInput, resultOutput, err := resolveBinaryPorts(runtimeIO)
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			leftValue, leftAvailable := leftInput.Receive(ctx)
-			if !leftAvailable {
-				return
-			}
-
-			rightValue, rightAvailable := rightInput.Receive(ctx)
-			if !rightAvailable {
-				return
-			}
-
-			if !resultOutput.Send(ctx, apply(leftValue, rightValue)) {
-				return
-			}
-		}
-	}, nil
-}
-
 func createBinaryFuncConcurrent(runtimeIO runtime.IO, apply binaryOperator) (func(context.Context), error) {
 	leftInput, rightInput, resultOutput, err := resolveBinaryPorts(runtimeIO)
 	if err != nil {
@@ -50,14 +25,14 @@ func createBinaryFuncConcurrent(runtimeIO runtime.IO, apply binaryOperator) (fun
 			var leftAvailable bool
 			var rightAvailable bool
 
-			var waitGroup sync.WaitGroup
-			waitGroup.Go(func() {
+			var group sync.WaitGroup
+			group.Go(func() {
 				leftValue, leftAvailable = leftInput.Receive(ctx)
 			})
-			waitGroup.Go(func() {
+			group.Go(func() {
 				rightValue, rightAvailable = rightInput.Receive(ctx)
 			})
-			waitGroup.Wait()
+			group.Wait()
 
 			if !leftAvailable || !rightAvailable {
 				return

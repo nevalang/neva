@@ -3,10 +3,13 @@ package funcs
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// TODO: Add per-runtime-function unit tests; this file keeps a compact baseline
+// behavior matrix and is not a replacement for exhaustive per-function coverage.
 func TestBinaryOperatorsBehavior(t *testing.T) {
 	t.Parallel()
 
@@ -112,12 +115,33 @@ func assertBinaryOperatorResult(
 		close(done)
 	}()
 
-	leftInput <- runtime.OrderedMsg{Msg: left}
-	rightInput <- runtime.OrderedMsg{Msg: right}
+	for _, sendRightFirst := range []bool{false, true} {
+		sendDone := make(chan struct{})
+		go func(sendRightFirst bool) {
+			if sendRightFirst {
+				rightInput <- runtime.OrderedMsg{Msg: right}
+				leftInput <- runtime.OrderedMsg{Msg: left}
+			} else {
+				leftInput <- runtime.OrderedMsg{Msg: left}
+				rightInput <- runtime.OrderedMsg{Msg: right}
+			}
+			close(sendDone)
+		}(sendRightFirst)
 
-	result := <-resultOutput
-	if !result.Equal(expected) {
-		t.Fatalf("result = %v, want %v", result, expected)
+		select {
+		case <-sendDone:
+		case <-time.After(1 * time.Second):
+			t.Fatalf("sending inputs blocked (sendRightFirst=%v)", sendRightFirst)
+		}
+
+		select {
+		case result := <-resultOutput:
+			if !result.Equal(expected) {
+				t.Fatalf("result = %v, want %v (sendRightFirst=%v)", result, expected, sendRightFirst)
+			}
+		case <-time.After(1 * time.Second):
+			t.Fatalf("operator did not produce output in time (sendRightFirst=%v)", sendRightFirst)
+		}
 	}
 
 	cancel()
@@ -157,8 +181,8 @@ func assertUnaryOperatorResult(
 }
 
 func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
-	leftIn := make(chan runtime.OrderedMsg, 1)
-	rightIn := make(chan runtime.OrderedMsg, 1)
+	leftIn := make(chan runtime.OrderedMsg)
+	rightIn := make(chan runtime.OrderedMsg)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
 	interceptor := runtime.ProdInterceptor{}
