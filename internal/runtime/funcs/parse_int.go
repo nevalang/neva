@@ -45,18 +45,7 @@ func (p parseInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			baseMsg, ok := baseIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			bitsMsg, ok := bitsIn.Receive(ctx)
+			dataMsg, baseMsg, bitsMsg, ok := receive3(ctx, dataIn, baseIn, bitsIn)
 			if !ok {
 				return
 			}

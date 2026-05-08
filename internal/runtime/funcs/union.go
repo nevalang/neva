@@ -30,13 +30,7 @@ func (unionWrapper) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			tagMsg, ok := tagIn.Receive(ctx)
+			dataMsg, tagMsg, ok := receive2(ctx, dataIn, tagIn)
 			if !ok {
 				return
 			}

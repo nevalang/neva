@@ -39,13 +39,7 @@ func (p parseFloat) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			bitsMsg, ok := bitsIn.Receive(ctx)
+			dataMsg, bitsMsg, ok := receive2(ctx, dataIn, bitsIn)
 			if !ok {
 				return
 			}

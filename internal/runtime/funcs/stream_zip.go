@@ -35,13 +35,7 @@ func (streamZip) Create(
 	return func(ctx context.Context) {
 		var idx int64
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			leftMsg, ok := leftIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			rightMsg, ok := rightIn.Receive(ctx)
+			leftMsg, rightMsg, ok := receive2(ctx, leftIn, rightIn)
 			if !ok {
 				return
 			}

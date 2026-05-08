@@ -31,13 +31,7 @@ func (timeDelay) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			durMsg, ok := durIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			dataMsg, ok := dataIn.Receive(ctx)
+			durMsg, dataMsg, ok := receive2(ctx, durIn, dataIn)
 			if !ok {
 				return
 			}

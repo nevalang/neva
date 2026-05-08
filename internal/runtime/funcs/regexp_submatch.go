@@ -38,8 +38,7 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			regexpMsg, ok := regexpIn.Receive(ctx)
+			regexpMsg, dataMsg, ok := receive2(ctx, regexpIn, dataIn)
 			if !ok {
 				return
 			}
@@ -50,11 +49,6 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 					return
 				}
 				continue
-			}
-
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
 			}
 
 			if !resOut.Send(

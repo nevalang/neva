@@ -36,18 +36,7 @@ func (p ternarySelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := ifIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			thenMsg, ok := thenIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			elseMsg, ok := elseIn.Receive(ctx)
+			dataMsg, thenMsg, elseMsg, ok := receive3(ctx, ifIn, thenIn, elseIn)
 			if !ok {
 				return
 			}

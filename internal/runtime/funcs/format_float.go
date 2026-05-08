@@ -47,23 +47,7 @@ func (formatFloat) Create(
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			data, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			fmtMsg, ok := fmtIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			prec, ok := precIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			bits, ok := bitsIn.Receive(ctx)
+			data, fmtMsg, prec, bits, ok := receive4(ctx, dataIn, fmtIn, precIn, bitsIn)
 			if !ok {
 				return
 			}
