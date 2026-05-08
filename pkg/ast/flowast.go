@@ -64,10 +64,11 @@ func (p Package) Entity(entityName string) (entity Entity, filename string, ok b
 	return Entity{}, "", false
 }
 
+//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type EntitiesResult struct {
+	Entity     Entity
 	EntityName string
 	FileName   string
-	Entity     Entity
 }
 
 // Entities iterates over all entities in the package using the range-func protocol.
@@ -99,12 +100,14 @@ type Import struct {
 	Meta    core.Meta `json:"meta"`
 }
 
+//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Entity struct {
-	Kind      EntityKind  `json:"kind,omitempty"`
 	Type      ts.Def      `json:"type"`
 	Component []Component `json:"component,omitempty"`
 	Interface Interface   `json:"interface"`
 	Const     Const       `json:"const"`
+	Comments  *Comments   `json:"comments,omitempty"`
+	Kind      EntityKind  `json:"kind,omitempty"`
 	IsPublic  bool        `json:"exported,omitempty"`
 }
 

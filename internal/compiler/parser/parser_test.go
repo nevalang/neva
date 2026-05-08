@@ -240,6 +240,65 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 	require.True(t, err == nil)
 }
 
+func TestParser_ParseFile_EntityComments(t *testing.T) {
+	text := []byte(`
+		// Processes payload.
+		// Stable behavior.
+		//
+		// @inport start Trigger signal.
+		// @inport data Input payload.
+		//
+		// @outport res Processed result.
+		// @outport err Processing error.
+		//
+		// @example :start -> process:start
+		// @example 'hello' -> process:data
+		// @custom owned-by-ai-cli
+		def Process(start any, data string) (res string, err error)
+	`)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+
+	entity := got.Entities["Process"]
+	require.NotNil(t, entity.Comments)
+	require.Equal(t, []string{"Processes payload.\nStable behavior."}, entity.Comments.TextBlocks)
+	require.Equal(t, "Trigger signal.", entity.Comments.Inports["start"])
+	require.Equal(t, "Input payload.", entity.Comments.Inports["data"])
+	require.Equal(t, "Processed result.", entity.Comments.Outports["res"])
+	require.Equal(t, "Processing error.", entity.Comments.Outports["err"])
+	require.Equal(t, []string{":start -> process:start", "'hello' -> process:data"}, entity.Comments.Examples)
+	require.Len(t, entity.Comments.Tags, 1)
+	require.Equal(t, "custom", entity.Comments.Tags[0].Name)
+	require.Equal(t, "owned-by-ai-cli", entity.Comments.Tags[0].Value)
+}
+
+func TestParser_ParseFile_EntityCommentsBlankLineNotAttached(t *testing.T) {
+	text := []byte(`
+		// Not attached due to blank line.
+
+		def Process(start any) (stop any)
+	`)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+	require.Nil(t, got.Entities["Process"].Comments)
+}
+
+func TestParser_ParseFile_EntityCommentsUnknownPortFails(t *testing.T) {
+	text := []byte(`
+		// @inport missing does-not-exist
+		def Process(start any) (stop any)
+	`)
+
+	p := New()
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "unknown @inport reference")
+}
+
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		#extern(d1)
