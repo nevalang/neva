@@ -34,13 +34,7 @@ func (formatInt) Create(
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			data, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			base, ok := baseIn.Receive(ctx)
+			data, base, ok := receive2(ctx, dataIn, baseIn)
 			if !ok {
 				return
 			}

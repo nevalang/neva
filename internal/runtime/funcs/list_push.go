@@ -30,13 +30,7 @@ func (p listPush) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			lstMsg, ok := lstIn.Receive(ctx)
+			dataMsg, lstMsg, ok := receive2(ctx, dataIn, lstIn)
 			if !ok {
 				return
 			}

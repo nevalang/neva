@@ -37,13 +37,7 @@ func (stringAt) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), err
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			idxMsg, ok := idxIn.Receive(ctx)
+			dataMsg, idxMsg, ok := receive2(ctx, dataIn, idxIn)
 			if !ok {
 				return
 			}

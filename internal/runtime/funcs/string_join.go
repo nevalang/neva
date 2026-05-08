@@ -31,13 +31,7 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			sepMsg, ok := sepIn.Receive(ctx)
+			dataMsg, sepMsg, ok := receive2(ctx, dataIn, sepIn)
 			if !ok {
 				return
 			}
@@ -90,39 +84,51 @@ func (stringJoinStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 		)
 
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
+			var msg runtime.Msg
+			var ok bool
 
 			if !hasSep {
-				sepMsg, ok := sepIn.Receive(ctx)
+				var sepMsg runtime.Msg
+				msg, sepMsg, ok = receive2(ctx, dataIn, sepIn)
 				if !ok {
 					return
 				}
 
 				sep = sepMsg.Str()
-				hasSep = true
+			} else {
+				msg, ok = dataIn.Receive(ctx)
+				if !ok {
+					return
+				}
 			}
 
-			item := msg.Struct()
-
-			if builder.Len() > 0 {
-				builder.WriteString(sep)
-			}
-
-			builder.WriteString(item.Get("data").Str())
-
-			if !item.Get("last").Bool() {
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+			if !appendAndFlushJoinItem(ctx, resOut, &builder, sep, msg.Struct()) {
 				return
 			}
-
-			builder.Reset()
-			hasSep = false
+			hasSep = builder.Len() > 0
 		}
 	}, nil
+}
+
+func appendAndFlushJoinItem(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	builder *strings.Builder,
+	sep string,
+	item runtime.StructMsg,
+) bool {
+	if builder.Len() > 0 {
+		builder.WriteString(sep)
+	}
+	builder.WriteString(item.Get("data").Str())
+
+	if !item.Get("last").Bool() {
+		return true
+	}
+
+	if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+		return false
+	}
+	builder.Reset()
+	return true
 }

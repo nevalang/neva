@@ -30,13 +30,7 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			fromMsg, ok := fromIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			toMsg, ok := toIn.Receive(ctx)
+			fromMsg, toMsg, ok := receive2(ctx, fromIn, toIn)
 			if !ok {
 				return
 			}

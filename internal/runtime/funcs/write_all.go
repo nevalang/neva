@@ -37,13 +37,7 @@ func (c writeAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			filenameMsg, ok := filenameIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			dataMsg, ok := dataIn.Receive(ctx)
+			filenameMsg, dataMsg, ok := receive2(ctx, filenameIn, dataIn)
 			if !ok {
 				return
 			}
