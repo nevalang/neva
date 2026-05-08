@@ -25,33 +25,11 @@ func TestFormatIntReceivesInputsConcurrently(t *testing.T) {
 	}()
 
 	for _, order := range [][]string{{"data", "base"}, {"base", "data"}} {
-		sendDone := make(chan struct{})
-		go func(order []string) {
-			for _, name := range order {
-				switch name {
-				case "data":
-					inChans[name] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(42)}
-				case "base":
-					inChans[name] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(10)}
-				}
-			}
-			close(sendDone)
-		}(order)
-
-		select {
-		case <-sendDone:
-		case <-time.After(time.Second):
-			t.Fatalf("sending blocked for order %v", order)
-		}
-
-		select {
-		case got := <-outChans["res"]:
-			if !got.Msg.Equal(runtime.NewStringMsg("42")) {
-				t.Fatalf("result = %v, want 42", got.Msg)
-			}
-		case <-time.After(time.Second):
-			t.Fatalf("no result for order %v", order)
-		}
+		sendInOrder(t, inChans, order, map[string]runtime.Msg{
+			"data": runtime.NewIntMsg(42),
+			"base": runtime.NewIntMsg(10),
+		})
+		assertOutputEquals(t, outChans, "res", runtime.NewStringMsg("42"), order)
 	}
 
 	cancel()
@@ -75,39 +53,58 @@ func TestTernaryReceivesInputsConcurrently(t *testing.T) {
 	}()
 
 	for _, order := range [][]string{{"if", "then", "else"}, {"else", "then", "if"}} {
-		sendDone := make(chan struct{})
-		go func(order []string) {
-			for _, name := range order {
-				switch name {
-				case "if":
-					inChans[name] <- runtime.OrderedMsg{Msg: runtime.NewBoolMsg(true)}
-				case "then":
-					inChans[name] <- runtime.OrderedMsg{Msg: runtime.NewStringMsg("then")}
-				case "else":
-					inChans[name] <- runtime.OrderedMsg{Msg: runtime.NewStringMsg("else")}
-				}
-			}
-			close(sendDone)
-		}(order)
-
-		select {
-		case <-sendDone:
-		case <-time.After(time.Second):
-			t.Fatalf("sending blocked for order %v", order)
-		}
-
-		select {
-		case got := <-outChans["res"]:
-			if !got.Msg.Equal(runtime.NewStringMsg("then")) {
-				t.Fatalf("result = %v, want then", got.Msg)
-			}
-		case <-time.After(time.Second):
-			t.Fatalf("no result for order %v", order)
-		}
+		sendInOrder(t, inChans, order, map[string]runtime.Msg{
+			"if":   runtime.NewBoolMsg(true),
+			"then": runtime.NewStringMsg("then"),
+			"else": runtime.NewStringMsg("else"),
+		})
+		assertOutputEquals(t, outChans, "res", runtime.NewStringMsg("then"), order)
 	}
 
 	cancel()
 	<-done
+}
+
+func sendInOrder(
+	t *testing.T,
+	inChans map[string]chan runtime.OrderedMsg,
+	order []string,
+	payload map[string]runtime.Msg,
+) {
+	t.Helper()
+
+	sendDone := make(chan struct{})
+	go func() {
+		for _, name := range order {
+			inChans[name] <- runtime.OrderedMsg{Msg: payload[name]}
+		}
+		close(sendDone)
+	}()
+
+	select {
+	case <-sendDone:
+	case <-time.After(time.Second):
+		t.Fatalf("sending blocked for order %v", order)
+	}
+}
+
+func assertOutputEquals(
+	t *testing.T,
+	outChans map[string]chan runtime.OrderedMsg,
+	outName string,
+	want runtime.Msg,
+	order []string,
+) {
+	t.Helper()
+
+	select {
+	case got := <-outChans[outName]:
+		if !got.Msg.Equal(want) {
+			t.Fatalf("result = %v, want %v", got.Msg, want)
+		}
+	case <-time.After(time.Second):
+		t.Fatalf("no result for order %v", order)
+	}
 }
 
 func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
