@@ -30,6 +30,7 @@ func emptyStruct() runtime.StructMsg {
 	return runtime.NewStructMsg(nil)
 }
 
+//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
 func receive2(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
@@ -38,18 +39,19 @@ func receive2(
 	var firstMsg, secondMsg runtime.Msg
 	var firstOK, secondOK bool
 
-	var wg sync.WaitGroup
-	wg.Go(func() {
+	var waitGroup sync.WaitGroup
+	waitGroup.Go(func() {
 		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
-	wg.Wait()
+	waitGroup.Wait()
 
 	return firstMsg, secondMsg, firstOK && secondOK
 }
 
+//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
 func receive3(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
@@ -59,21 +61,22 @@ func receive3(
 	var firstMsg, secondMsg, thirdMsg runtime.Msg
 	var firstOK, secondOK, thirdOK bool
 
-	var wg sync.WaitGroup
-	wg.Go(func() {
+	var waitGroup sync.WaitGroup
+	waitGroup.Go(func() {
 		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		thirdMsg, thirdOK = thirdIn.Receive(ctx)
 	})
-	wg.Wait()
+	waitGroup.Wait()
 
 	return firstMsg, secondMsg, thirdMsg, firstOK && secondOK && thirdOK
 }
 
+//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
 func receive4(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
@@ -84,20 +87,20 @@ func receive4(
 	var firstMsg, secondMsg, thirdMsg, fourthMsg runtime.Msg
 	var firstOK, secondOK, thirdOK, fourthOK bool
 
-	var wg sync.WaitGroup
-	wg.Go(func() {
+	var waitGroup sync.WaitGroup
+	waitGroup.Go(func() {
 		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		thirdMsg, thirdOK = thirdIn.Receive(ctx)
 	})
-	wg.Go(func() {
+	waitGroup.Go(func() {
 		fourthMsg, fourthOK = fourthIn.Receive(ctx)
 	})
-	wg.Wait()
+	waitGroup.Wait()
 
 	return firstMsg, secondMsg, thirdMsg, fourthMsg, firstOK && secondOK && thirdOK && fourthOK
 }

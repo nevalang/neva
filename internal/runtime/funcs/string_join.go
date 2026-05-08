@@ -84,53 +84,51 @@ func (stringJoinStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 		)
 
 		for {
+			var msg runtime.Msg
+			var ok bool
+
 			if !hasSep {
-				msg, sepMsg, ok := receive2(ctx, dataIn, sepIn)
+				var sepMsg runtime.Msg
+				msg, sepMsg, ok = receive2(ctx, dataIn, sepIn)
 				if !ok {
 					return
 				}
 
 				sep = sepMsg.Str()
-				hasSep = true
-
-				item := msg.Struct()
-				if builder.Len() > 0 {
-					builder.WriteString(sep)
+			} else {
+				msg, ok = dataIn.Receive(ctx)
+				if !ok {
+					return
 				}
-				builder.WriteString(item.Get("data").Str())
-				if item.Get("last").Bool() {
-					if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
-						return
-					}
-					builder.Reset()
-					hasSep = false
-				}
-				continue
 			}
 
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			if !appendAndFlushJoinItem(ctx, resOut, &builder, sep, msg.Struct()) {
 				return
 			}
-
-			item := msg.Struct()
-
-			if builder.Len() > 0 {
-				builder.WriteString(sep)
-			}
-
-			builder.WriteString(item.Get("data").Str())
-
-			if !item.Get("last").Bool() {
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
-				return
-			}
-
-			builder.Reset()
-			hasSep = false
+			hasSep = builder.Len() > 0
 		}
 	}, nil
+}
+
+func appendAndFlushJoinItem(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	builder *strings.Builder,
+	sep string,
+	item runtime.StructMsg,
+) bool {
+	if builder.Len() > 0 {
+		builder.WriteString(sep)
+	}
+	builder.WriteString(item.Get("data").Str())
+
+	if !item.Get("last").Bool() {
+		return true
+	}
+
+	if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+		return false
+	}
+	builder.Reset()
+	return true
 }

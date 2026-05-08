@@ -99,8 +99,8 @@ func assertOutputEquals(
 
 	select {
 	case got := <-outChans[outName]:
-		if !got.Msg.Equal(want) {
-			t.Fatalf("result = %v, want %v", got.Msg, want)
+		if !got.Equal(want) {
+			t.Fatalf("result = %v, want %v", got, want)
 		}
 	case <-time.After(time.Second):
 		t.Fatalf("no result for order %v", order)
