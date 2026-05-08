@@ -35,7 +35,7 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), src.IO{})
+	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), &src.IO{})
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +60,7 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), src.IO{})
+	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), &src.IO{})
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +84,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	if err != nil {
 		panic(err)
 	}
-	comments, err := s.parseLeadingComments(ifaceDef.GetStart().GetLine(), v.IO)
+	comments, err := s.parseLeadingComments(ifaceDef.GetStart().GetLine(), &v.IO)
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +126,7 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	parsedComponent.Directives = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
-	comments, err := s.parseLeadingComments(compDef.GetStart().GetLine(), parsedComponent.IO)
+	comments, err := s.parseLeadingComments(compDef.GetStart().GetLine(), &parsedComponent.IO)
 	if err != nil {
 		panic(err)
 	}

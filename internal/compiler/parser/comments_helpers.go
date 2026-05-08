@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -9,9 +8,10 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
+//nolint:gocyclo,cyclop // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s *treeShapeListener) parseLeadingComments(
 	entityLine int,
-	io src.IO,
+	ports *src.IO,
 ) (*src.Comments, *compiler.Error) {
 	lines, startLine, stopLine := s.leadingCommentLines(entityLine)
 	if len(lines) == 0 {
@@ -50,33 +50,8 @@ func (s *treeShapeListener) parseLeadingComments(
 		textBuf = textBuf[:0]
 
 		tagName, tagValue := splitTag(trimmed[1:])
-		switch tagName {
-		case "inport":
-			portName, desc := splitFirstWord(tagValue)
-			if portName == "" {
-				return nil, s.commentParseError("invalid @inport tag: port name is required", startLine)
-			}
-			if _, ok := io.In[portName]; !ok {
-				return nil, s.commentParseError(fmt.Sprintf("unknown @inport reference: %s", portName), startLine)
-			}
-			comments.Inports[portName] = desc
-		case "outport":
-			portName, desc := splitFirstWord(tagValue)
-			if portName == "" {
-				return nil, s.commentParseError("invalid @outport tag: port name is required", startLine)
-			}
-			if _, ok := io.Out[portName]; !ok {
-				return nil, s.commentParseError(fmt.Sprintf("unknown @outport reference: %s", portName), startLine)
-			}
-			comments.Outports[portName] = desc
-		case "example":
-			comments.Examples = append(comments.Examples, tagValue)
-		default:
-			// Parser intentionally keeps unknown tags for CLI/AI and third-party tooling.
-			comments.Tags = append(comments.Tags, src.CommentTag{
-				Name:  tagName,
-				Value: tagValue,
-			})
+		if err := s.consumeTag(comments, ports, startLine, tagName, tagValue); err != nil {
+			return nil, err
 		}
 	}
 	s.flushTextBlock(comments, textBuf)
@@ -95,6 +70,45 @@ func (s *treeShapeListener) parseLeadingComments(
 	return comments, nil
 }
 
+func (s *treeShapeListener) consumeTag(
+	comments *src.Comments,
+	ports *src.IO,
+	startLine int,
+	tagName string,
+	tagValue string,
+) *compiler.Error {
+	switch tagName {
+	case "inport":
+		portName, desc := splitFirstWord(tagValue)
+		if portName == "" {
+			return s.commentParseError("invalid @inport tag: port name is required", startLine)
+		}
+		if _, ok := ports.In[portName]; !ok {
+			return s.commentParseError("unknown @inport reference: "+portName, startLine)
+		}
+		comments.Inports[portName] = desc
+	case "outport":
+		portName, desc := splitFirstWord(tagValue)
+		if portName == "" {
+			return s.commentParseError("invalid @outport tag: port name is required", startLine)
+		}
+		if _, ok := ports.Out[portName]; !ok {
+			return s.commentParseError("unknown @outport reference: "+portName, startLine)
+		}
+		comments.Outports[portName] = desc
+	case "example":
+		comments.Examples = append(comments.Examples, tagValue)
+	default:
+		// Parser intentionally keeps unknown tags for CLI/AI and third-party tooling.
+		comments.Tags = append(comments.Tags, src.CommentTag{
+			Name:  tagName,
+			Value: tagValue,
+		})
+	}
+
+	return nil
+}
+
 func (s *treeShapeListener) flushTextBlock(comments *src.Comments, textLines []string) {
 	if len(textLines) == 0 {
 		return
@@ -107,24 +121,24 @@ func (s *treeShapeListener) leadingCommentLines(entityLine int) ([]string, int, 
 		return nil, 0, 0
 	}
 
-	i := entityLine - 2 // 0-based line before entity declaration.
-	line := strings.TrimSpace(s.sourceLines[i])
+	lineIdx := entityLine - 2 // 0-based line before entity declaration.
+	line := strings.TrimSpace(s.sourceLines[lineIdx])
 	if !strings.HasPrefix(line, "//") {
 		return nil, 0, 0
 	}
 
 	raw := make([]string, 0, 8)
-	start := i + 1
-	stop := i + 1
-	for ; i >= 0; i-- {
-		trimmed := strings.TrimSpace(s.sourceLines[i])
+	start := lineIdx + 1
+	stop := lineIdx + 1
+	for ; lineIdx >= 0; lineIdx-- {
+		trimmed := strings.TrimSpace(s.sourceLines[lineIdx])
 		if !strings.HasPrefix(trimmed, "//") {
 			break
 		}
 		content := strings.TrimPrefix(trimmed, "//")
 		content = strings.TrimPrefix(content, " ")
 		raw = append(raw, content)
-		start = i + 1
+		start = lineIdx + 1
 	}
 
 	// reverse to keep source order.
@@ -140,14 +154,14 @@ func splitTag(s string) (string, string) {
 	return strings.ToLower(name), value
 }
 
-func splitFirstWord(s string) (string, string) {
-	parts := strings.Fields(s)
+func splitFirstWord(text string) (string, string) {
+	parts := strings.Fields(text)
 	if len(parts) == 0 {
 		return "", ""
 	}
 	name := parts[0]
-	idx := strings.Index(s, name)
-	rest := strings.TrimSpace(s[idx+len(name):])
+	idx := strings.Index(text, name)
+	rest := strings.TrimSpace(text[idx+len(name):])
 	return name, rest
 }
 

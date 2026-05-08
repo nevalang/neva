@@ -75,10 +75,6 @@ flowchart LR
 
 </div>
 
-## Vision
-
-See **[docs/vision.md](./docs/vision.md)** for Neva principles: hybrid programming, concurrency-first design, static reliability, and AI-native ergonomics.
-
 ## Why?
 
 1. Controlflow paradigm is is well established while dataflow is underrepresented.
