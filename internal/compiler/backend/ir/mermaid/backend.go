@@ -19,7 +19,7 @@ type Encoder struct{}
 //nolint:funlen,gocognit,maintidx,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (e Encoder) Encode(w io.Writer, prog *ir.Program) error { //nolint:funlen,gocognit,lll,maintidx,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	// Parse comment for metadata (module, compiler version)
-	// Format: // module=@@ main=hello_world compiler=0.34.0
+	// Format: // module=@@ main=hello_world compiler=0.36.1
 	var modName, compilerVer string
 	if strings.HasPrefix(prog.Comment, "//") {
 		parts := strings.FieldsSeq(prog.Comment)
