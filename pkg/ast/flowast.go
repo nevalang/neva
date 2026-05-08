@@ -106,6 +106,7 @@ type Entity struct {
 	Interface Interface   `json:"interface"`
 	Const     Const       `json:"const"`
 	IsPublic  bool        `json:"exported,omitempty"`
+	Comments  *Comments   `json:"comments,omitempty"`
 }
 
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

@@ -9,7 +9,8 @@ import (
 type treeShapeListener struct {
 	state src.File
 	*generated.BasenevaListener
-	loc core.Location
+	loc         core.Location
+	sourceLines []string
 }
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
@@ -34,6 +35,11 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
+	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), src.IO{})
+	if err != nil {
+		panic(err)
+	}
+	parsedEntity.Comments = comments
 	nameIdent := typeDef.IDENTIFIER()
 	if nameIdent == nil {
 		panic("missing type identifier")
@@ -54,6 +60,11 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
+	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), src.IO{})
+	if err != nil {
+		panic(err)
+	}
+	parsedEntity.Comments = comments
 	nameIdent := constDef.IDENTIFIER()
 	if nameIdent == nil {
 		panic("missing const identifier")
@@ -73,6 +84,11 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 	if err != nil {
 		panic(err)
 	}
+	comments, err := s.parseLeadingComments(ifaceDef.GetStart().GetLine(), v.IO)
+	if err != nil {
+		panic(err)
+	}
+
 	nameIdent := ifaceDef.IDENTIFIER()
 	if nameIdent == nil {
 		panic("missing interface identifier")
@@ -82,6 +98,7 @@ func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtCont
 		IsPublic:  actx.PUB() != nil,
 		Kind:      src.InterfaceEntity,
 		Interface: v,
+		Comments:  comments,
 	}
 }
 
@@ -109,6 +126,10 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	parsedComponent.Directives = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
+	comments, err := s.parseLeadingComments(compDef.GetStart().GetLine(), parsedComponent.IO)
+	if err != nil {
+		panic(err)
+	}
 
 	existing, ok := s.state.Entities[name]
 	if !ok {
@@ -116,11 +137,15 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 			Kind:      src.ComponentEntity,
 			IsPublic:  actx.PUB() != nil, // in case of overloaded component, first version sets visibility
 			Component: []src.Component{parsedComponent},
+			Comments:  comments,
 		}
 		return
 	}
 
 	existing.Component = append(existing.Component, parsedComponent)
+	if comments != nil {
+		existing.Comments = comments
+	}
 
 	// store back the updated entity; without this, only the first overload is kept
 	s.state.Entities[name] = existing

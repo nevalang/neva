@@ -5,6 +5,7 @@ package parser
 import (
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
 
@@ -107,6 +108,7 @@ func (p Parser) parseFile(
 			Package:  pkgName,
 			Filename: fileName,
 		},
+		sourceLines: strings.Split(string(content), "\n"),
 	}
 
 	if err := walkTree(listener, prsr.Prog()); err != nil {
