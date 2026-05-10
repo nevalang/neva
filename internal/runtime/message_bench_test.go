@@ -141,31 +141,3 @@ func BenchmarkMsgStructGet(b *testing.B) {
 		intSink = msg.Struct().Get("f31").Int()
 	}
 }
-
-func BenchmarkMsgUnionUnbox(b *testing.B) {
-	withData := NewUnionMsg("Some", NewIntMsg(42))
-	noData := NewUnionMsgNoData("None")
-
-	b.Run("with_data", func(b *testing.B) {
-		b.ReportAllocs()
-		b.ResetTimer()
-		//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
-		for i := 0; i < b.N; i++ {
-			u := withData.Union()
-			if !u.HasData() {
-				b.Fatalf("expected payload for with_data")
-			}
-			intSink = u.Data().Int()
-		}
-	})
-
-	b.Run("no_data", func(b *testing.B) {
-		b.ReportAllocs()
-		b.ResetTimer()
-		//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
-		for i := 0; i < b.N; i++ {
-			u := noData.Union()
-			boolSink = u.HasData()
-		}
-	})
-}
