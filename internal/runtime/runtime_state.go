@@ -55,7 +55,7 @@ func ReportProgramPanic(ctx context.Context, msg Msg) {
 		return
 	}
 	state.panicErr = programPanicError{
-		payload: fmt.Sprint(UnwrapTraceMsg(msg)),
+		payload: fmt.Sprint(msg),
 	}
 }
 

@@ -33,7 +33,7 @@ func recordSent(traceID, parentTraceID uint64, sender PortSlotAddr, msg Msg) {
 	hop.ParentTraceID = parentTraceID
 	senderCopy := sender
 	hop.Sender = &senderCopy
-	hop.Message = fmt.Sprint(UnwrapTraceMsg(msg))
+	hop.Message = fmt.Sprint(msg)
 	globalTraceStore.hops[traceID] = hop
 }
 

@@ -34,7 +34,10 @@ type Msg interface {
 
 // Internal
 
-type internalMsg struct{}
+type internalMsg struct {
+	parentTraceID uint64
+	traceID       uint64
+}
 
 func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
 func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
@@ -52,6 +55,10 @@ func (internalMsg) Struct() StructMsg {
 func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
 func (internalMsg) Equal(other Msg) bool {
 	panic("unexpected Equal method call on internal message type")
+}
+
+func (m internalMsg) traceMeta() (uint64, uint64) {
+	return m.traceID, m.parentTraceID
 }
 
 // Bool
@@ -124,8 +131,8 @@ func NewFloatMsg(n float64) FloatMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StringMsg struct {
-	internalMsg
 	v string
+	internalMsg
 }
 
 func (msg StringMsg) Str() string { return msg.v }
@@ -153,8 +160,8 @@ func NewStringMsg(s string) StringMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type BytesMsg struct {
-	internalMsg
 	v []byte
+	internalMsg
 }
 
 func (msg BytesMsg) Bytes() []byte { return msg.v }
@@ -188,8 +195,8 @@ func NewBytesMsg(v []byte) BytesMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type ListMsg struct {
-	internalMsg
 	v []Msg
+	internalMsg
 }
 
 func (msg ListMsg) List() []Msg { return msg.v }
@@ -230,8 +237,8 @@ func NewListMsg(v []Msg) ListMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DictMsg struct {
-	internalMsg
 	v map[string]Msg
+	internalMsg
 }
 
 func (msg DictMsg) Dict() map[string]Msg { return msg.v }
@@ -279,8 +286,8 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StructMsg struct {
-	internalMsg
 	fields []StructField
+	internalMsg
 }
 
 func (msg StructMsg) Struct() StructMsg { return msg }
@@ -391,9 +398,9 @@ func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) 
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type UnionMsg struct {
-	internalMsg
 	data Msg
 	tag  string
+	internalMsg
 }
 
 func (msg UnionMsg) Union() UnionMsg {
@@ -485,9 +492,6 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 // Match compares two messages and return true if they matches and false otherwise.
 // Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
-	msg = UnwrapTraceMsg(msg)
-	pattern = UnwrapTraceMsg(pattern)
-
 	// at the moment we only match unions
 	// maybe in the future we'll add support for more types e.g. structs
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
