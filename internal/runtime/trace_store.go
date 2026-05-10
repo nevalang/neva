@@ -92,7 +92,7 @@ func TracePath(msg Msg) []TraceHop {
 	return TracePathByID(traceID)
 }
 
-// FormatDataflowTrace renders Dataflow Trace in graph terms from newest to oldest.
+// FormatDataflowTrace renders panic-focused Dataflow Trace in a readable flow format.
 func FormatDataflowTrace(msg Msg) string {
 	path := TracePath(msg)
 	if len(path) == 0 {
@@ -100,20 +100,30 @@ func FormatDataflowTrace(msg Msg) string {
 	}
 
 	var builder strings.Builder
-	builder.WriteString("panic cause dataflow trace (newest -> oldest):\n")
+	panicReceiver := "<?>"
+	if path[0].Receiver != nil {
+		panicReceiver = formatPortSlotAddr(*path[0].Receiver)
+	}
+	panicComponent := componentNameFromReceiver(path[0].Receiver)
 
-	for i := range path {
+	builder.WriteString("panic cause dataflow trace\n")
+	builder.WriteString("direction: oldest -> newest (left -> right)\n")
+	builder.WriteString(fmt.Sprintf("panic sink: %s\n", panicReceiver))
+	if panicComponent != "" {
+		builder.WriteString(fmt.Sprintf("panic component: %s\n", panicComponent))
+	}
+	builder.WriteString("events:\n")
+
+	for i := len(path) - 1; i >= 0; i-- {
 		hop := path[i]
-		indent := strings.Repeat("  ", i)
-		builder.WriteString(indent)
-		builder.WriteString(formatHop(hop))
+		builder.WriteString(fmt.Sprintf("  %d. %s\n", len(path)-i, formatHopFlow(hop)))
 		builder.WriteByte('\n')
 	}
 
 	return strings.TrimRight(builder.String(), "\n")
 }
 
-func formatHop(hop TraceHop) string {
+func formatHopFlow(hop TraceHop) string {
 	recv := "<?>"
 	send := "<?>"
 	if hop.Receiver != nil {
@@ -122,7 +132,21 @@ func formatHop(hop TraceHop) string {
 	if hop.Sender != nil {
 		send = formatPortSlotAddr(*hop.Sender)
 	}
-	return fmt.Sprintf("%s <- %s", recv, send)
+	return fmt.Sprintf("%s -> %s", send, recv)
+}
+
+func componentNameFromReceiver(receiver *PortSlotAddr) string {
+	if receiver == nil {
+		return ""
+	}
+	path := receiver.Path
+	path = strings.TrimSuffix(path, "/in")
+	path = strings.TrimSuffix(path, "/out")
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+	return parts[len(parts)-1]
 }
 
 func formatPortSlotAddr(slot PortSlotAddr) string {
