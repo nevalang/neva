@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
+//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Error struct {
 	Meta    *core.Meta
 	child   *Error
@@ -25,6 +26,7 @@ func (e Error) Unwrap() *Error {
 }
 
 func (e *Error) Error() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s string
 
 	current := e.Unwrap()

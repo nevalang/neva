@@ -124,6 +124,7 @@ func (f Inports) Array(name string) (ArrayInport, error) {
 	return *ports.array, nil
 }
 
+//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type ArrayInport struct {
 	addr        PortAddr
 	interceptor Interceptor
@@ -147,6 +148,8 @@ func NewArrayInport(
 // Receive receives a message from a specific slot of the array inport.
 // It returns the received message and a boolean indicating success.
 // It returns false if the context is done or if the channel is closed.
+//
+//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 	select {
 	case <-ctx.Done():
@@ -172,6 +175,8 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 // The function is called for each message received.
 // The function should return false if it wants to stop receiving messages.
 // Functions are called in order of incoming messages, not in order of slots.
+//
+//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
 	// IDEA return channel instead of taking function
 	var wg sync.WaitGroup
@@ -226,6 +231,8 @@ func (s SelectedMsg) String() string {
 }
 
 // Select returns the oldest
+//
+//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
@@ -285,6 +292,7 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 	return v, true
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a ArrayInport) Len() int {
 	return len(a.chans)
 }
@@ -413,12 +421,14 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	}
 }
 
-// SendAllV2 sends the same message to all slots of the array outport.
+// SendAll sends the same message to all slots of the array outport.
 // It returns false if context is done.
 // It blocks until message is sent to all slots.
 // Slots are not guaranteed to be handled in order, message is sent to first available slot.
 // Each slot is guaranteed to be handled only once.
 // TODO: figure out why this is the only working version of `SendAll`
+//
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	var wg sync.WaitGroup
 	success := true

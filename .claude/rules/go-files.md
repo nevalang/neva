@@ -15,5 +15,8 @@ paths:
 - Runtime boundary rule is strict:
   - `internal/runtime/*.go`: stdlib imports only
   - `internal/runtime/funcs/**`: stdlib + `internal/runtime`
+- Runtime operator rule: binary runtime funcs in `internal/runtime/funcs/**`
+  must receive `left`/`right` inputs concurrently; do not add sequential
+  two-input receives in operator helpers or creators.
 - Add doc comments for new Go functions and types.
 - For newly generated Go code blocks longer than 3 lines, add a short one-line intent comment when the purpose is not immediately obvious.

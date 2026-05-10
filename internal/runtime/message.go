@@ -188,10 +188,13 @@ func (msg Msg) MarshalJSON() ([]byte, error) {
 	case MsgKindFloat:
 		return []byte(strconv.FormatFloat(msg.Float(), 'g', -1, 64)), nil
 	case MsgKindString:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return json.Marshal(msg.Str())
 	case MsgKindBytes:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return json.Marshal(msg.Bytes())
 	case MsgKindList:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return json.Marshal(msg.List())
 	case MsgKindDict:
 		return marshalMapWithSpaces(msg.Dict())
@@ -288,27 +291,27 @@ func NewFloatMsg(n float64) Msg {
 	return Msg{kind: MsgKindFloat, bits: math.Float64bits(n)}
 }
 
-// --- STRING ---
+// NewStringMsg wraps a string runtime value.
 func NewStringMsg(s string) Msg {
 	return Msg{kind: MsgKindString, str: s}
 }
 
-// --- BYTES ---
+// NewBytesMsg wraps a bytes runtime value.
 func NewBytesMsg(v []byte) Msg {
 	return Msg{kind: MsgKindBytes, val: v}
 }
 
-// --- LIST ---
+// NewListMsg wraps a list runtime value.
 func NewListMsg(v []Msg) Msg {
 	return Msg{kind: MsgKindList, val: v}
 }
 
-// --- DICT ---
+// NewDictMsg wraps a dict runtime value.
 func NewDictMsg(d map[string]Msg) Msg {
 	return Msg{kind: MsgKindDict, val: d}
 }
 
-// --- STRUCT ---
+// StructMsg stores struct fields in runtime representation.
 type StructMsg struct {
 	fields []StructField
 }
@@ -419,7 +422,7 @@ func NewStructMsg(fields []StructField) Msg { return newStructMsg(fields).Msg() 
 
 func NewStructValue(fields []StructField) StructMsg { return newStructMsg(fields) }
 
-// --- UNION ---
+// UnionMsg represents tagged union runtime data.
 type UnionMsg struct {
 	tag     string
 	data    Msg
@@ -579,32 +582,33 @@ func equalMsgDicts(left map[string]Msg, right map[string]Msg) bool {
 	return true
 }
 
-func marshalMapWithSpaces(m map[string]Msg) ([]byte, error) {
-	if len(m) == 0 {
+func marshalMapWithSpaces(msgMap map[string]Msg) ([]byte, error) {
+	if len(msgMap) == 0 {
 		return []byte("{}"), nil
 	}
 
-	keys := make([]string, 0, len(m))
-	for k := range m {
+	keys := make([]string, 0, len(msgMap))
+	for k := range msgMap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	out := make([]byte, 0, len(m)*16+2)
+	out := make([]byte, 0, len(msgMap)*16+2)
 	out = append(out, '{')
-	for i := range keys {
-		if i > 0 {
+	for idx := range keys {
+		if idx > 0 {
 			out = append(out, ',', ' ')
 		}
 
-		keyJSON, err := json.Marshal(keys[i])
+		keyJSON, err := json.Marshal(keys[idx])
 		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return nil, err
 		}
 		out = append(out, keyJSON...)
 		out = append(out, ':', ' ')
 
-		valueJSON, err := marshalNestedJSON(m[keys[i]])
+		valueJSON, err := marshalNestedJSON(msgMap[keys[idx]])
 		if err != nil {
 			return nil, err
 		}
@@ -618,19 +622,20 @@ func marshalMapWithSpaces(m map[string]Msg) ([]byte, error) {
 func marshalStructFieldsWithSpaces(fields []StructField) ([]byte, error) {
 	out := make([]byte, 0, len(fields)*16+2)
 	out = append(out, '{')
-	for i := range fields {
-		if i > 0 {
+	for idx := range fields {
+		if idx > 0 {
 			out = append(out, ',', ' ')
 		}
 
-		keyJSON, err := json.Marshal(fields[i].name)
+		keyJSON, err := json.Marshal(fields[idx].name)
 		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return nil, err
 		}
 		out = append(out, keyJSON...)
 		out = append(out, ':', ' ')
 
-		valueJSON, err := marshalNestedJSON(fields[i].value)
+		valueJSON, err := marshalNestedJSON(fields[idx].value)
 		if err != nil {
 			return nil, err
 		}

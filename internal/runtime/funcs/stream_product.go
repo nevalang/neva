@@ -9,22 +9,27 @@ import (
 
 type streamProduct struct{}
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamProduct) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	firstIn, err := io.In.Single("first")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	secondIn, err := io.In.Single("second")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -37,6 +42,7 @@ func (streamProduct) Create(
 				secondData        = []runtime.Msg{}
 			)
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 
 			wg.Go(func() {
@@ -79,7 +85,9 @@ func (streamProduct) Create(
 				return
 			}
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for i, firstMsg := range firstData {
+				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				for j, secondMsg := range secondData {
 					resOut.Send(
 						ctx,

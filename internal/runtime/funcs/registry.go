@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+//nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		"new":     newV2{},

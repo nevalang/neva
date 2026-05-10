@@ -26,11 +26,15 @@ type Scope struct {
 }
 
 // Location returns a location of the current scope
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) Location() *core.Location {
 	return &s.loc
 }
 
 // Relocate returns a new scope with a given location
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) Relocate(location core.Location) Scope {
 	return Scope{
 		loc:   location,
@@ -39,6 +43,8 @@ func (s Scope) Relocate(location core.Location) Scope {
 }
 
 // IsTopType returns true if expr is a top type (any)
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) IsTopType(expr ts.Expr) bool {
 	if expr.Inst == nil {
 		return false
@@ -50,6 +56,8 @@ func (s Scope) IsTopType(expr ts.Expr) bool {
 }
 
 // GetType returns type definition by reference
+//
+//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 	entity, location, err := s.entity(ref)
 	if err != nil {
@@ -59,10 +67,13 @@ func (s Scope) GetType(ref core.EntityRef) (ts.Def, ts.Scope, error) {
 }
 
 // Entity returns entity by reference
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) Entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	return s.entity(entityRef)
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetConst(entityRef core.EntityRef) (Const, core.Location, error) {
 	entity, loc, err := s.entity(entityRef)
 	if err != nil {
@@ -77,7 +88,10 @@ func (s Scope) GetConst(entityRef core.EntityRef) (Const, core.Location, error) 
 }
 
 // TODO rename to GetComponents
-func (s Scope) GetComponent(entityRef core.EntityRef) ([]Component, error) {
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (s Scope) GetComponent(entityRef core.EntityRef) ([]Component, error) { //nolint:gocritic,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	entity, _, err := s.entity(entityRef)
 	if err != nil {
 		return nil, err
@@ -91,7 +105,10 @@ func (s Scope) GetComponent(entityRef core.EntityRef) ([]Component, error) {
 }
 
 // entity is an alrogithm that resolves entity reference based on scope's location
+//
+//nolint:cyclop,funlen,gocognit,gocritic,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	curMod, ok := s.build.Modules[s.loc.ModRef]
 	if !ok {
 		return Entity{}, core.Location{}, fmt.Errorf("module not found: %v", s.loc.ModRef)
@@ -103,6 +120,7 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	}
 
 	if entityRef.Pkg == "" { // local reference (current package or builtin)
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		entity, fileName, ok := curPkg.Entity(entityRef.Name)
 		if ok {
 			return entity, core.Location{
@@ -183,8 +201,10 @@ func (s Scope) entity(entityRef core.EntityRef) (Entity, core.Location, error) {
 	}, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetNodeIOByPortAddr(
 	nodes map[string]Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr PortAddr,
 ) (IO, error) {
 	node, ok := nodes[portAddr.Node]
@@ -210,8 +230,10 @@ func (s Scope) GetNodeIOByPortAddr(
 	return IO{}, errors.New("component not found")
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetFirstInportName(
 	nodes map[string]Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr PortAddr,
 ) (string, error) {
 	io, err := s.GetNodeIOByPortAddr(nodes, portAddr)
@@ -226,6 +248,7 @@ func (s Scope) GetFirstInportName(
 	return "", errors.New("first inport not found")
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
 	entity, _, err := s.entity(entityRef)
 	if err != nil {
@@ -235,8 +258,10 @@ func (s Scope) GetEntityKind(entityRef core.EntityRef) (EntityKind, error) {
 	return entity.Kind, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s Scope) GetFirstOutportName(
 	nodes map[string]Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr PortAddr,
 ) (string, error) {
 	io, err := s.GetNodeIOByPortAddr(nodes, portAddr)

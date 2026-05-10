@@ -10,24 +10,29 @@ import (
 
 type switchRouter struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	caseArrIn, err := io.In.Array("case")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	caseOut, err := io.Out.Array("case")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	elseOut, err := io.Out.Single("else")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

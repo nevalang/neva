@@ -16,6 +16,7 @@ func (p panicker) Create(
 ) (func(ctx context.Context), error) {
 	msgIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

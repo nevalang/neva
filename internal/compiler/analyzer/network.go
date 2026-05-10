@@ -1,6 +1,8 @@
 // This file contains the logic for analyzing network connections.
 // Some methods here might look like they are related to senders or receivers specifically,
 // but they are actually related to both, so they are placed here.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package analyzer
 
 import (
@@ -20,10 +22,12 @@ var ErrComplexLiteralSender = errors.New("literal network sender must have primi
 // analyzeNetwork must be called after analyzeNodes so we sure nodes are resolved.
 func (a Analyzer) analyzeNetwork(
 	net []src.Connection, // network to analyze
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface, // resolved interface of the component that contains the network
 	hasGuard bool, // whether `?` is used by at least one node in the network
 	nodes map[string]src.Node, // nodes of the component that contains the network
 	nodesIfaces map[string]foundInterface, // resolved interfaces of the nodes
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) ([]src.Connection, *compiler.Error) {
 	nodesUsage := make(map[string]netNodeUsage, len(nodes))
@@ -65,15 +69,18 @@ func (a Analyzer) analyzeNetwork(
 // analyzeConnections does two things:
 func (a Analyzer) analyzeConnections(
 	net []src.Connection,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
 	nodesUsage map[string]netNodeUsage,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	unionActiveTags map[string]unionActiveTagInfo,
 ) ([]src.Connection, *compiler.Error) {
 	analyzedConnections := make([]src.Connection, 0, len(net))
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, conn := range net {
 		resolvedConn, err := a.analyzeConnection(
 			conn,
@@ -98,10 +105,13 @@ func (a Analyzer) analyzeConnections(
 // 1. Analyzes every connection and terminates with non-nil error if any of them is invalid.
 // 2. Updates nodesUsage (we mutate it in-place instead of returning to avoid merging across recursive calls).
 func (a Analyzer) analyzeConnection(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	conn src.Connection,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
@@ -150,12 +160,15 @@ func (a Analyzer) analyzeConnection(
 	return analyzedConn, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func arrayBypassPortAddr(conn src.Connection) *src.PortAddr {
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, sender := range conn.Senders {
 		if src.IsArrayBypassPortAddr(sender.PortAddr) {
 			return sender.PortAddr
 		}
 	}
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, receiver := range conn.Receivers {
 		if receiver.PortAddr != nil && src.IsArrayBypassPortAddr(receiver.PortAddr) {
 			return receiver.PortAddr
@@ -165,10 +178,13 @@ func arrayBypassPortAddr(conn src.Connection) *src.PortAddr {
 }
 
 func (a Analyzer) analyzeNormalConnection(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	conn src.Connection,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	nodesUsage map[string]netNodeUsage,
 	prevChainLink []src.ConnectionSender,
@@ -225,6 +241,7 @@ func (a Analyzer) analyzeNormalConnection(
 	}, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
 	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 		return nil, nil, false
@@ -255,10 +272,12 @@ func (a Analyzer) patchSwitchSenders(
 	analyzedSenders []src.ConnectionSender,
 	resolvedSenderTypes []*ts.Expr,
 	nodes map[string]src.Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	net []src.Connection,
 ) ([]src.ConnectionSender, []*ts.Expr, *compiler.Error) {
 	// Must run after sender normalization so switch:case[i] senders are resolved.
+	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, sender := range analyzedSenders {
 		if sender.PortAddr == nil {
 			continue
@@ -283,10 +302,15 @@ func (a Analyzer) patchSwitchSenders(
 }
 
 func (a Analyzer) analyzeArrayBypassConnection(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	senderPort src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	receiverPort src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	connMeta core.Meta,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -362,7 +386,9 @@ func (a Analyzer) analyzeArrayBypassConnection(
 }
 
 //nolint:gocyclo // Network port usage covers multiple connection kinds.
-func (a Analyzer) analyzeNetPortsUsage(
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (a Analyzer) analyzeNetPortsUsage( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface, // resolved interface of the component that contains the network
 	nodesIfaces map[string]foundInterface, // resolved interfaces of the nodes in the network
 	hasGuard bool, // whether `?` is used by at least one node in the network
@@ -370,6 +396,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	nodes map[string]src.Node,
 ) *compiler.Error {
 	// 1. every self inport must be used
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	inportsUsage, ok := nodesUsage["in"]
 	if !ok {
 		allInports := make([]string, 0, len(iface.IO.In))
@@ -421,6 +448,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 	}
 
 	// 3. check sub-nodes usage in network
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for nodeName, nodeIface := range nodesIfaces {
 		nodeMeta := nodes[nodeName].Meta
 
@@ -501,6 +529,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 				}
 			}
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for i := uint8(0); i <= maxSlot; i++ {
 				if _, ok := usedSlots[i]; !ok {
 					return &compiler.Error{
@@ -528,6 +557,7 @@ func (a Analyzer) analyzeNetPortsUsage(
 				}
 			}
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for i := uint8(0); i <= maxSlot; i++ {
 				if _, ok := usedSlots[i]; !ok {
 					return &compiler.Error{
@@ -560,8 +590,11 @@ func unusedPortsMessage(portType string, ports []string) string {
 func (a Analyzer) getResolvedPortType(
 	ports map[string]src.Port,
 	nodeIfaceParams []ts.Param,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	node src.Node,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	isInput bool,
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
@@ -599,7 +632,9 @@ func (a Analyzer) getResolvedPortType(
 
 func (a Analyzer) resolveUnnamedPort(
 	ports map[string]src.Port,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	node src.Node,
 	isInput bool,
 ) (src.PortAddr, *compiler.Error) {
@@ -637,13 +672,16 @@ func (a Analyzer) resolveUnnamedPort(
 }
 
 func (a Analyzer) resolvePortTypeWithFrame(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	port src.Port,
 	nodeIfaceParams []ts.Param,
 	resolvedNodeArgs []ts.Expr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	// we don't resolve node's args assuming they resolved already
 	frame := make(map[string]ts.Def, len(nodeIfaceParams))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range nodeIfaceParams {
 		arg := resolvedNodeArgs[i]
 		frame[param.Name] = ts.Def{
@@ -668,10 +706,13 @@ func (a Analyzer) resolvePortTypeWithFrame(
 }
 
 func (a Analyzer) getResolvedSenderType(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	sender src.ConnectionSender,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	prevChainLink []src.ConnectionSender,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
@@ -739,8 +780,11 @@ func (a Analyzer) getResolvedSenderType(
 // getPortSenderType returns resolved port-addr, type expr and isArray bool.
 // Resolved port is equal to the given one unless it was an "" empty string.
 func (a Analyzer) getPortSenderType(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	senderSidePortAddr src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
@@ -784,7 +828,9 @@ func (a Analyzer) getPortSenderType(
 }
 
 func (a Analyzer) getConstSenderType(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	constSender src.Const,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Const, ts.Expr, *compiler.Error) {
 	if constSender.Value.Ref != nil {
@@ -842,6 +888,8 @@ func (a Analyzer) getConstSenderType(
 
 // validateLiteralSender allows only primitive literals and union literals for now.
 // Complex literals (list/dict/struct) are rejected for simplicity; use const refs instead.
+//
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 	if resolvedExpr.Inst != nil {
 		switch resolvedExpr.Inst.Ref.String() {
@@ -862,11 +910,14 @@ func (a Analyzer) validateLiteralSender(resolvedExpr ts.Expr) error {
 // getNodeOutportType returns resolved port-addr, type expr and isArray bool.
 // Resolved port is equal to the given one unless it was an "" empty string.
 func (a Analyzer) getNodeOutportType(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
 	nodes map[string]src.Node,
 	nodesIfaces map[string]foundInterface,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.PortAddr, ts.Expr, bool, *compiler.Error) {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	node, ok := nodes[portAddr.Node]
 	if !ok {
 		return src.PortAddr{}, ts.Expr{}, false, &compiler.Error{
@@ -899,7 +950,9 @@ func (a Analyzer) getNodeOutportType(
 }
 
 func (a Analyzer) getResolvedConstTypeByRef(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	ref core.EntityRef,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	constant, loc, err := scope.GetConst(ref)
@@ -934,8 +987,10 @@ func (a Analyzer) getResolvedConstTypeByRef(
 }
 
 func (a Analyzer) getSelectorsSenderType(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	senderType ts.Expr,
 	selectors []string,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
 	if len(selectors) == 0 {

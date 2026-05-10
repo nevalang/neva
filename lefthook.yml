@@ -9,7 +9,7 @@ pre-commit:
       stage_fixed: true
     golangci-fix:
       glob: "*.go"
-      run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run --fix {staged_files}
+      run: scripts/hooks/precommit-golangci-fix.sh
       stage_fixed: true
 
 pre-push:

@@ -19,6 +19,7 @@ func BenchmarkMsgListIter(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
+	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
 		var sum int64
 		for _, item := range listMsg.List() {
@@ -40,6 +41,7 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
+	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
 		var sum int64
 		data := msg.Dict()
@@ -62,6 +64,7 @@ func BenchmarkMsgEqualList(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
+	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
 		boolSink = left.Equal(right)
 	}
@@ -76,6 +79,7 @@ func BenchmarkMsgStructGet(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
+	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
 		intSink = msg.Struct().Get("f31").Int()
 	}

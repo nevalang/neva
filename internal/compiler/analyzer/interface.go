@@ -18,7 +18,9 @@ type analyzeInterfaceParams struct {
 }
 
 func (a Analyzer) analyzeInterface(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	iface src.Interface,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	params analyzeInterfaceParams,
 ) (src.Interface, *compiler.Error) {
@@ -52,7 +54,9 @@ func (a Analyzer) analyzeInterface(
 
 func (a Analyzer) analyzeIO(
 	typeParams []ts.Param,
+	//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io src.IO,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 	params analyzeInterfaceParams,
 ) (src.IO, *compiler.Error) {
@@ -95,9 +99,11 @@ func (a Analyzer) analyzeIO(
 func (a Analyzer) analyzePorts(
 	params []ts.Param,
 	ports map[string]src.Port,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (map[string]src.Port, *compiler.Error) {
 	resolvedPorts := make(map[string]src.Port, len(ports))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for name, port := range ports {
 		resolvedPort, err := a.analyzePort(params, port, scope)
 		if err != nil {
@@ -110,6 +116,7 @@ func (a Analyzer) analyzePorts(
 	return resolvedPorts, nil
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope) (src.Port, *compiler.Error) {
 	// TODO https://github.com/nevalang/neva/issues/507
 	resolvedDef, err := a.analyzeType(

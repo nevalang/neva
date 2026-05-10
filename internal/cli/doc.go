@@ -14,6 +14,7 @@ import (
 	"github.com/nevalang/neva/std"
 )
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func newDocCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "doc",
@@ -115,6 +116,7 @@ func normalizePkgArg(arg string) string {
 	return strings.ReplaceAll(trimmed, "\\", "/")
 }
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func searchStdlib(pkgPath string, re *regexp.Regexp, context int) ([]docMatch, error) {
 	if context < 0 {
 		context = 0
@@ -146,10 +148,12 @@ func searchStdlib(pkgPath string, re *regexp.Regexp, context int) ([]docMatch, e
 
 		data, err := fs.ReadFile(fsys, entryPath)
 		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			return err
 		}
 
 		lines := strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n")
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for i, line := range lines {
 			if !re.MatchString(line) {
 				continue
@@ -184,6 +188,7 @@ func searchStdlib(pkgPath string, re *regexp.Regexp, context int) ([]docMatch, e
 		return nil
 	})
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

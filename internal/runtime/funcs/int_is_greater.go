@@ -8,37 +8,8 @@ import (
 
 type intIsGreater struct{}
 
-func (p intIsGreater) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	actualIn, err := io.In.Single("left")
-	if err != nil {
-		return nil, err
-	}
-
-	comparedIn, err := io.In.Single("right")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := io.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			actualMsg, ok := actualIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			comparedMsg, ok := comparedIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if !resOut.Send(ctx, runtime.NewBoolMsg(actualMsg.Int() > comparedMsg.Int())) {
-				return
-			}
-		}
-	}, nil
+func (intIsGreater) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
+		return runtime.NewBoolMsg(left.Int() > right.Int())
+	})
 }
