@@ -7,6 +7,23 @@ import (
 	"strings"
 )
 
+type traceSentEvent struct {
+	Message       string `json:"message"`
+	Event         string `json:"event"`
+	Port          string `json:"port"`
+	ParentTraceID uint64 `json:"parentTraceId"`
+	TraceID       uint64 `json:"traceId"`
+	Version       int    `json:"v"`
+}
+
+type traceRecvEvent struct {
+	Message string `json:"message"`
+	Event   string `json:"event"`
+	Port    string `json:"port"`
+	TraceID uint64 `json:"traceId"`
+	Version int    `json:"v"`
+}
+
 type ProdInterceptor struct{}
 
 func (ProdInterceptor) Prepare() error { return nil }
@@ -43,13 +60,13 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
 	if !ok {
 		traceID = 0
 	}
-	evt := map[string]any{
-		"v":             1,
-		"event":         "sent",
-		"traceId":       traceID,
-		"parentTraceId": parentTraceIDFromMsg(msg),
-		"port":          d.formatPortSlotAddr(sender),
-		"message":       d.formatMsg(msg),
+	evt := traceSentEvent{
+		Version:       1,
+		Event:         "sent",
+		TraceID:       traceID,
+		ParentTraceID: parentTraceIDFromMsg(msg),
+		Port:          d.formatPortSlotAddr(sender),
+		Message:       d.formatMsg(msg),
 	}
 	writeTraceEvent(d.file, evt)
 	return msg
@@ -61,12 +78,12 @@ func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
 	if !ok {
 		traceID = 0
 	}
-	evt := map[string]any{
-		"v":       1,
-		"event":   "recv",
-		"traceId": traceID,
-		"port":    d.formatPortSlotAddr(receiver),
-		"message": d.formatMsg(msg),
+	evt := traceRecvEvent{
+		Version: 1,
+		Event:   "recv",
+		TraceID: traceID,
+		Port:    d.formatPortSlotAddr(receiver),
+		Message: d.formatMsg(msg),
 	}
 	writeTraceEvent(d.file, evt)
 	return msg
@@ -82,12 +99,14 @@ func (d DebugInterceptor) formatMsg(msg Msg) string {
 	return fmt.Sprint(msg)
 }
 
-func writeTraceEvent(file *os.File, evt map[string]any) {
+func writeTraceEvent(file *os.File, evt any) {
 	encoded, err := json.Marshal(evt)
 	if err != nil {
-		return
+		panic(err)
 	}
-	_, _ = fmt.Fprintln(file, string(encoded))
+	if _, err := fmt.Fprintln(file, string(encoded)); err != nil {
+		panic(err)
+	}
 }
 
 func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {

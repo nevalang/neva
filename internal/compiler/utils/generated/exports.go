@@ -380,10 +380,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 	startMsg := runtime.NewStringMsg(in.Ref)
 
 	// Run the program
-	res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
-	if err != nil {
-		return ParseEntityRefOutput{}, err
-	}
+	res := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
 
 	// Parse output message
 	var out ParseEntityRefOutput

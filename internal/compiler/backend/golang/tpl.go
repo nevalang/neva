@@ -127,12 +127,16 @@ func main() {
     runtime.DebugValidation(rprog)
     {{- end }}
 
-    if err := runtime.Run(context.Background(), rprog, funcs.NewRegistry()); err != nil {
-        if !runtime.IsProgramPanic(err) {
-		    fmt.Fprintln(os.Stderr, "runtime error:", err.Error())
+    defer func() {
+        if recovered := recover(); recovered != nil {
+            if runtime.IsProgramPanic(recovered) {
+                os.Exit(1)
+            }
+            panic(recovered)
         }
-		os.Exit(1)
-	}
+    }()
+
+    runtime.Run(context.Background(), rprog, funcs.NewRegistry())
 }
 
 `
@@ -356,10 +360,7 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 	{{- end}}
 
 	// Run the program
-	res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
-	if err != nil {
-		return {{.Name}}Output{}, err
-	}
+	res := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
 
 	// Parse output message
 	var out {{.Name}}Output
