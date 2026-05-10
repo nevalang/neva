@@ -485,6 +485,9 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 // Match compares two messages and return true if they matches and false otherwise.
 // Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
+	msg = UnwrapTraceMsg(msg)
+	pattern = UnwrapTraceMsg(pattern)
+
 	// at the moment we only match unions
 	// maybe in the future we'll add support for more types e.g. structs
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

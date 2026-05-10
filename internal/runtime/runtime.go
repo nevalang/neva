@@ -43,6 +43,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
 	var out Msg
 	ctx, cancel := context.WithCancel(ctx)
+	ctx = contextWithRuntimeState(ctx, &runtimeState{})
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
 		cancel() // normal termination
@@ -65,6 +66,10 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	prog.Start.Send(ctx, in)
 
 	<-funcsFinished
+
+	if panicErr := panicErrorFromContext(ctx); panicErr != nil {
+		return out, panicErr
+	}
 
 	return out, nil
 }

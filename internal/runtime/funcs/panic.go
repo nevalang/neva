@@ -26,12 +26,20 @@ func (p panicker) Create(
 			return
 		}
 
+		runtime.ReportProgramPanic(ctx, panicMsg)
+
 		if cancel, ok := runtime.CancelFuncFromContext(ctx); ok {
 			cancel()
 		}
 
 		if _, err := fmt.Fprintln(os.Stderr, "panic:", panicMsg); err != nil {
 			panic(err)
+		}
+
+		if trace := runtime.FormatDataflowTrace(panicMsg); trace != "" {
+			if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
+				panic(err)
+			}
 		}
 	}, nil
 }

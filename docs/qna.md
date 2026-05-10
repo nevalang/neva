@@ -197,7 +197,8 @@ Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary 
 Treat them as different layers:
 
 1. `error` value carries failure semantics (what failed).
-2. runtime trace carries execution context (where/how message moved in graph).
+2. runtime trace (Dataflow Trace; historically also called Graph trace) carries
+   execution context (where/how message moved in graph).
 
 This split avoids overloading error payloads with transport/debug metadata and
 keeps dataflow semantics explicit.
@@ -209,6 +210,8 @@ Practical implications:
   not as the only way to reconstruct execution path.
 - Panic/debugger/error-formatting should rely on runtime trace facilities for
   graph context.
+- Runtime trace output should remain machine-parseable with explicit format
+  versioning for backward-compatible tooling evolution.
 
 Status: tracing query/format APIs are still evolving, so behavior may be
 incremental until the runtime tracing track is fully implemented.

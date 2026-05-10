@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -38,26 +39,41 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
-	fmt.Fprintf(
-		d.file,
-		"sent | %v | %v\n",
-		d.formatPortSlotAddr(sender), d.formatMsg(msg),
-	)
+	traceID, ok := TraceIDFromMsg(msg)
+	if !ok {
+		traceID = 0
+	}
+	evt := map[string]any{
+		"v":             1,
+		"event":         "sent",
+		"traceId":       traceID,
+		"parentTraceId": parentTraceIDFromMsg(msg),
+		"port":          d.formatPortSlotAddr(sender),
+		"message":       d.formatMsg(msg),
+	}
+	writeTraceEvent(d.file, evt)
 	return msg
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
-	fmt.Fprintf(
-		d.file,
-		"recv | %v | %v\n",
-		d.formatPortSlotAddr(receiver),
-		d.formatMsg(msg),
-	)
+	traceID, ok := TraceIDFromMsg(msg)
+	if !ok {
+		traceID = 0
+	}
+	evt := map[string]any{
+		"v":       1,
+		"event":   "recv",
+		"traceId": traceID,
+		"port":    d.formatPortSlotAddr(receiver),
+		"message": d.formatMsg(msg),
+	}
+	writeTraceEvent(d.file, evt)
 	return msg
 }
 
 func (d DebugInterceptor) formatMsg(msg Msg) string {
+	msg = UnwrapTraceMsg(msg)
 	if strMsg, ok := msg.(StringMsg); ok {
 		return fmt.Sprintf("%q", strMsg.Str())
 	}
@@ -65,6 +81,14 @@ func (d DebugInterceptor) formatMsg(msg Msg) string {
 		return fmt.Sprintf("%q", bytesMsg.Bytes())
 	}
 	return fmt.Sprint(msg)
+}
+
+func writeTraceEvent(file *os.File, evt map[string]any) {
+	encoded, err := json.Marshal(evt)
+	if err != nil {
+		return
+	}
+	_, _ = fmt.Fprintln(file, string(encoded))
 }
 
 func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {

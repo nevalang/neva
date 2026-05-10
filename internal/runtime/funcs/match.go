@@ -82,7 +82,7 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				}
 			}
 
-			if u, ok := resMsg.(runtime.UnionMsg); ok {
+			if u, ok := runtime.AsUnion(resMsg); ok {
 				resMsg = u.Data()
 			}
 

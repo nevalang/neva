@@ -128,7 +128,9 @@ func main() {
     {{- end }}
 
     if err := runtime.Run(context.Background(), rprog, funcs.NewRegistry()); err != nil {
-		fmt.Fprintln(os.Stderr, "runtime error:", err.Error())
+        if !runtime.IsProgramPanic(err) {
+		    fmt.Fprintln(os.Stderr, "runtime error:", err.Error())
+        }
 		os.Exit(1)
 	}
 }
