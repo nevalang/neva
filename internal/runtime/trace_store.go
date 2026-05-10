@@ -150,11 +150,26 @@ func componentNameFromReceiver(receiver *PortSlotAddr) string {
 }
 
 func formatPortSlotAddr(slot PortSlotAddr) string {
+	slot.Path = normalizePortPath(slot.Path)
 	s := fmt.Sprintf("%s:%s", slot.Path, slot.Port)
 	if slot.Index != nil {
 		s = fmt.Sprintf("%s[%d]", s, *slot.Index)
 	}
 	return s
+}
+
+func normalizePortPath(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+
+	lastPart := parts[len(parts)-1]
+	if lastPart == "in" || lastPart == "out" {
+		parts = parts[:len(parts)-1]
+	}
+
+	return strings.Join(parts, "/")
 }
 
 func resetTraceStoreForTests() {

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -117,5 +118,60 @@ func TestTracePath_ForwardedMessageTracksParent(t *testing.T) {
 	formatted := FormatDataflowTrace(last)
 	if formatted == "" {
 		t.Fatalf("expected formatted trace")
+	}
+}
+
+func TestFormatDataflowTrace_NormalizesInOutPathSuffixes(t *testing.T) {
+	resetRuntimeTraceStateForTests()
+
+	ctx := context.Background()
+	ch1 := make(chan OrderedMsg, 1)
+	ch2 := make(chan OrderedMsg, 1)
+
+	out1 := NewSingleOutport(
+		PortAddr{Path: "http/in", Port: "req"},
+		ProdInterceptor{},
+		ch1,
+	)
+	in1 := NewSingleInport(
+		ch1,
+		PortAddr{Path: "parse/in", Port: "data"},
+		ProdInterceptor{},
+	)
+	out2 := NewSingleOutport(
+		PortAddr{Path: "parse/out", Port: "req"},
+		ProdInterceptor{},
+		ch2,
+	)
+	in2 := NewSingleInport(
+		ch2,
+		PortAddr{Path: "checkout/finalize/in", Port: "err"},
+		ProdInterceptor{},
+	)
+
+	if !out1.Send(ctx, NewStringMsg("x")) {
+		t.Fatalf("first send failed")
+	}
+	mid, ok := in1.Receive(ctx)
+	if !ok {
+		t.Fatalf("first receive failed")
+	}
+	if !out2.Send(ctx, mid) {
+		t.Fatalf("second send failed")
+	}
+	last, ok := in2.Receive(ctx)
+	if !ok {
+		t.Fatalf("second receive failed")
+	}
+
+	formatted := FormatDataflowTrace(last)
+	if !strings.Contains(formatted, "panic sink: checkout/finalize:err") {
+		t.Fatalf("expected normalized panic sink, got:\n%s", formatted)
+	}
+	if !strings.Contains(formatted, "http:req -> parse:data") {
+		t.Fatalf("expected normalized hop with http:req -> parse:data, got:\n%s", formatted)
+	}
+	if !strings.Contains(formatted, "parse:req -> checkout/finalize:err") {
+		t.Fatalf("expected normalized hop with parse:req -> checkout/finalize:err, got:\n%s", formatted)
 	}
 }
