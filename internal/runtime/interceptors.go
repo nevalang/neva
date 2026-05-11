@@ -56,14 +56,10 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
-	traceID, ok := TraceIDFromMsg(msg)
-	if !ok {
-		traceID = 0
-	}
 	evt := traceSentEvent{
 		Version:       1,
 		Event:         "sent",
-		TraceID:       traceID,
+		TraceID:       mustTraceIDFromMsg(msg),
 		ParentTraceID: parentTraceIDFromMsg(msg),
 		Port:          d.formatPortSlotAddr(sender),
 		Message:       d.formatMsg(msg),
@@ -74,14 +70,10 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
-	traceID, ok := TraceIDFromMsg(msg)
-	if !ok {
-		traceID = 0
-	}
 	evt := traceRecvEvent{
 		Version: 1,
 		Event:   "recv",
-		TraceID: traceID,
+		TraceID: mustTraceIDFromMsg(msg),
 		Port:    d.formatPortSlotAddr(receiver),
 		Message: d.formatMsg(msg),
 	}

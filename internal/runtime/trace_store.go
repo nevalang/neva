@@ -108,15 +108,15 @@ func FormatDataflowTrace(msg Msg) string {
 
 	builder.WriteString("panic cause dataflow trace\n")
 	builder.WriteString("direction: oldest -> newest (left -> right)\n")
-	builder.WriteString(fmt.Sprintf("panic sink: %s\n", panicReceiver))
+	_, _ = fmt.Fprintf(&builder, "panic sink: %s\n", panicReceiver)
 	if panicComponent != "" {
-		builder.WriteString(fmt.Sprintf("panic component: %s\n", panicComponent))
+		_, _ = fmt.Fprintf(&builder, "panic component: %s\n", panicComponent)
 	}
 	builder.WriteString("events:\n")
 
 	for i := len(path) - 1; i >= 0; i-- {
 		hop := path[i]
-		builder.WriteString(fmt.Sprintf("  %d. %s\n", len(path)-i, formatHopFlow(hop)))
+		_, _ = fmt.Fprintf(&builder, "  %d. %s\n", len(path)-i, formatHopFlow(hop))
 		builder.WriteByte('\n')
 	}
 
