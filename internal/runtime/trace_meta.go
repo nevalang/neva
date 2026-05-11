@@ -4,14 +4,6 @@ type traceCarrier interface {
 	traceMeta() (uint64, uint64)
 }
 
-func mustTraceMeta(msg Msg) (uint64, uint64) {
-	carrier, ok := msg.(traceCarrier)
-	if !ok {
-		panic("runtime invariant: message does not carry trace metadata")
-	}
-	return carrier.traceMeta()
-}
-
 // TraceIDFromMsg extracts runtime Dataflow Trace identity from message payload.
 func TraceIDFromMsg(msg Msg) (uint64, bool) {
 	carrier, ok := msg.(traceCarrier)
@@ -20,14 +12,6 @@ func TraceIDFromMsg(msg Msg) (uint64, bool) {
 	}
 	traceID, _ := carrier.traceMeta()
 	return traceID, traceID != 0
-}
-
-func mustTraceIDFromMsg(msg Msg) uint64 {
-	traceID, _ := mustTraceMeta(msg)
-	if traceID == 0 {
-		panic("runtime invariant: trace id is not initialized")
-	}
-	return traceID
 }
 
 func parentTraceIDFromMsg(msg Msg) uint64 {

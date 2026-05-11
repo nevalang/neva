@@ -4,24 +4,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 )
 
-type traceSentEvent struct {
-	Message       string `json:"message"`
-	Event         string `json:"event"`
-	Port          string `json:"port"`
-	ParentTraceID uint64 `json:"parentTraceId"`
-	TraceID       uint64 `json:"traceId"`
-	Version       int    `json:"v"`
+// traceEventVersion tracks JSONL schema version for trace events.
+const traceEventVersion = 1
+
+// traceEventPort identifies a concrete runtime port endpoint.
+type traceEventPort struct {
+	Index *uint8 `json:"index,omitempty"`
+	Path  string `json:"path"`
+	Name  string `json:"name"`
 }
 
+// traceSentEvent is emitted when runtime sends a message through outport.
+type traceSentEvent struct {
+	Port          traceEventPort `json:"port"`
+	Event         string         `json:"event"`
+	Message       string         `json:"message"`
+	Version       int            `json:"v"`
+	TraceID       uint64         `json:"traceId"`
+	ParentTraceID uint64         `json:"parentTraceId"`
+}
+
+// traceRecvEvent is emitted when runtime receives a message from inport.
 type traceRecvEvent struct {
-	Message string `json:"message"`
-	Event   string `json:"event"`
-	Port    string `json:"port"`
-	TraceID uint64 `json:"traceId"`
-	Version int    `json:"v"`
+	Port    traceEventPort `json:"port"`
+	Event   string         `json:"event"`
+	Message string         `json:"message"`
+	Version int            `json:"v"`
+	TraceID uint64         `json:"traceId"`
 }
 
 type ProdInterceptor struct{}
@@ -29,10 +40,10 @@ type ProdInterceptor struct{}
 func (ProdInterceptor) Prepare() error { return nil }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg { return msg }
+func (ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg { return ordered }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg { return msg }
+func (ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg { return ordered }
 
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DebugInterceptor struct {
@@ -55,30 +66,30 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Sent(sender PortSlotAddr, msg Msg) Msg {
+func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	evt := traceSentEvent{
-		Version:       1,
+		Version:       traceEventVersion,
 		Event:         "sent",
-		TraceID:       mustTraceIDFromMsg(msg),
-		ParentTraceID: parentTraceIDFromMsg(msg),
-		Port:          d.formatPortSlotAddr(sender),
-		Message:       d.formatMsg(msg),
+		TraceID:       ordered.index,
+		ParentTraceID: parentTraceIDFromMsg(ordered.Msg),
+		Port:          traceEventPortFromSlot(sender),
+		Message:       d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
-	return msg
+	return ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Received(receiver PortSlotAddr, msg Msg) Msg {
+func (d *DebugInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	evt := traceRecvEvent{
-		Version: 1,
+		Version: traceEventVersion,
 		Event:   "recv",
-		TraceID: mustTraceIDFromMsg(msg),
-		Port:    d.formatPortSlotAddr(receiver),
-		Message: d.formatMsg(msg),
+		TraceID: ordered.index,
+		Port:    traceEventPortFromSlot(receiver),
+		Message: d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
-	return msg
+	return ordered
 }
 
 func (d DebugInterceptor) formatMsg(msg Msg) string {
@@ -101,20 +112,12 @@ func writeTraceEvent(file *os.File, evt any) {
 	}
 }
 
-func (d DebugInterceptor) formatPortSlotAddr(slotAddr PortSlotAddr) string {
-	parts := strings.Split(slotAddr.Path, "/")
-	lastPart := parts[len(parts)-1]
-	if lastPart == "in" || lastPart == "out" {
-		parts = parts[:len(parts)-1]
+func traceEventPortFromSlot(slotAddr PortSlotAddr) traceEventPort {
+	return traceEventPort{
+		Path:  normalizePortPath(slotAddr.Path),
+		Name:  slotAddr.Port,
+		Index: slotAddr.Index,
 	}
-	slotAddr.Path = strings.Join(parts, "/")
-
-	s := fmt.Sprintf("%v:%v", slotAddr.Path, slotAddr.Port)
-	if slotAddr.Index != nil {
-		s = fmt.Sprintf("%v[%v]", s, *slotAddr.Index)
-	}
-
-	return s
 }
 
 func NewDebugInterceptor(comment string) *DebugInterceptor {

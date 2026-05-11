@@ -99,7 +99,6 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 		ordered = v
 	}
 
-	msg := ordered.Msg
 	recordReceived(
 		ordered.index,
 		PortSlotAddr{
@@ -110,17 +109,17 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 		},
 	)
 
-	msg = s.interceptor.Received(
+	ordered = s.interceptor.Received(
 		PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: s.addr.Path,
 				Port: s.addr.Port,
 			},
 		},
-		msg,
+		ordered,
 	)
 
-	return msg, true
+	return ordered.Msg, true
 }
 
 func (f Inports) Array(name string) (ArrayInport, error) {
@@ -179,7 +178,7 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 				Index: &index,
 			},
 		)
-		msg := a.interceptor.Received(
+		ordered := a.interceptor.Received(
 			PortSlotAddr{
 				PortAddr: PortAddr{
 					Path: a.addr.Path,
@@ -187,9 +186,9 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 				},
 				Index: &index,
 			},
-			v.Msg,
+			v,
 		)
-		return msg, true
+		return ordered.Msg, true
 	}
 }
 
@@ -224,7 +223,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 						Index: &index,
 					},
 				)
-				msg := a.interceptor.Received(
+				ordered := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
 							Path: a.addr.Path,
@@ -232,9 +231,9 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 						},
 						Index: &index,
 					},
-					received.Msg,
+					received,
 				)
-				resultChan <- f(idx, msg)
+				resultChan <- f(idx, ordered.Msg)
 			}
 		})
 	}
@@ -293,7 +292,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 						Index: &index,
 					},
 				)
-				msg := a.interceptor.Received(
+				orderedMsg = a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
 							Path: a.addr.Path,
@@ -301,14 +300,11 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 						},
 						Index: &index,
 					},
-					orderedMsg.Msg,
+					orderedMsg,
 				)
 				buf = append(buf, SelectedMsg{
-					OrderedMsg: OrderedMsg{
-						Msg:   msg,
-						index: orderedMsg.index,
-					},
-					SlotIdx: index,
+					OrderedMsg: orderedMsg,
+					SlotIdx:    index,
 				})
 			}
 		}
@@ -410,6 +406,10 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 	traceID := counter.Add(1)
 	parentTraceID, _ := TraceIDFromMsg(msg)
 	msg = withTrace(msg, traceID, parentTraceID)
+	ordered := OrderedMsg{
+		Msg:   msg,
+		index: traceID,
+	}
 	recordSent(
 		traceID,
 		parentTraceID,
@@ -422,29 +422,26 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 		msg,
 	)
 
-	msg = s.interceptor.Sent(
+	ordered = s.interceptor.Sent(
 		PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: s.addr.Path,
 				Port: s.addr.Port,
 			},
 		},
-		msg,
+		ordered,
 	)
 	select {
 	case <-ctx.Done():
 		return false
-	case s.ch <- OrderedMsg{
-		Msg:   msg,
-		index: traceID,
-	}:
+	case s.ch <- ordered:
 		return true
 	}
 }
 
 type Interceptor interface {
-	Sent(PortSlotAddr, Msg) Msg
-	Received(PortSlotAddr, Msg) Msg
+	Sent(PortSlotAddr, OrderedMsg) OrderedMsg
+	Received(PortSlotAddr, OrderedMsg) OrderedMsg
 }
 
 type PortSlotAddr struct {
@@ -466,6 +463,7 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	traceID := counter.Add(1)
 	parentTraceID, _ := TraceIDFromMsg(msg)
 	msg = withTrace(msg, traceID, parentTraceID)
+	ordered := OrderedMsg{Msg: msg, index: traceID}
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
 			Path: a.addr.Path,
@@ -473,16 +471,12 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 		},
 		Index: &idx,
 	}
-	recordSent(traceID, parentTraceID, slotAddr, msg)
-
-	a.interceptor.Sent(
-		slotAddr,
-		msg,
-	)
+	recordSent(traceID, parentTraceID, slotAddr, ordered.Msg)
+	ordered = a.interceptor.Sent(slotAddr, ordered)
 	select {
 	case <-ctx.Done():
 		return false
-	case a.slots[idx] <- OrderedMsg{Msg: msg, index: traceID}:
+	case a.slots[idx] <- ordered:
 		return true
 	}
 }
@@ -505,18 +499,19 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 			traceID := counter.Add(1)
 			parentTraceID, _ := TraceIDFromMsg(msg)
 			traceMsg := withTrace(msg, traceID, parentTraceID)
+			ordered := OrderedMsg{Msg: traceMsg, index: traceID}
 			i := Uint8Index(idx)
 			slotAddr := PortSlotAddr{
 				PortAddr: a.addr,
 				Index:    &i,
 			}
 			recordSent(traceID, parentTraceID, slotAddr, traceMsg)
+			ordered = a.interceptor.Sent(slotAddr, ordered)
 
 			select {
 			case <-ctx.Done():
 				success = false
-			case a.slots[idx] <- OrderedMsg{Msg: traceMsg, index: traceID}:
-				a.interceptor.Sent(slotAddr, traceMsg)
+			case a.slots[idx] <- ordered:
 			}
 		})
 	}

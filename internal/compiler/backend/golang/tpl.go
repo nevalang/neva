@@ -129,6 +129,8 @@ func main() {
     runtime.DebugValidation(rprog)
     {{- end }}
 
+    // User-level runtime.Panic is transported as a dedicated Go panic signal.
+    // We convert only that signal into process exit code 1 and re-panic everything else.
     defer func() {
         if recovered := recover(); recovered != nil {
             if runtime.IsProgramPanic(recovered) {
