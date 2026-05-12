@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"testing"
 )
@@ -120,66 +119,6 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 	if tree.Hop.ParentTraceIDs[0] != tree.Parents[0].Hop.TraceID {
 		t.Fatalf("expected parent link to parent node trace id, got ids=%v parent=%d", tree.Hop.ParentTraceIDs, tree.Parents[0].Hop.TraceID)
 	}
-
-	formatted := FormatDataflowTrace(last)
-	if formatted == "" {
-		t.Fatalf("expected formatted trace")
-	}
-}
-
-func TestFormatDataflowTrace_NormalizesInOutPathSuffixes(t *testing.T) {
-	resetRuntimeTraceStateForTests()
-
-	ctx := context.Background()
-	ch1 := make(chan OrderedMsg, 1)
-	ch2 := make(chan OrderedMsg, 1)
-
-	out1 := NewSingleOutport(
-		PortAddr{Path: "http/in", Port: "req"},
-		ProdInterceptor{},
-		ch1,
-	)
-	in1 := NewSingleInport(
-		ch1,
-		PortAddr{Path: "parse/in", Port: "data"},
-		ProdInterceptor{},
-	)
-	out2 := NewSingleOutport(
-		PortAddr{Path: "parse/out", Port: "req"},
-		ProdInterceptor{},
-		ch2,
-	)
-	in2 := NewSingleInport(
-		ch2,
-		PortAddr{Path: "checkout/finalize/in", Port: "err"},
-		ProdInterceptor{},
-	)
-
-	if !out1.Send(ctx, NewStringMsg("x")) {
-		t.Fatalf("first send failed")
-	}
-	mid, ok := in1.Receive(ctx)
-	if !ok {
-		t.Fatalf("first receive failed")
-	}
-	if !out2.Send(ctx, mid) {
-		t.Fatalf("second send failed")
-	}
-	last, ok := in2.Receive(ctx)
-	if !ok {
-		t.Fatalf("second receive failed")
-	}
-
-	formatted := FormatDataflowTrace(last)
-	if !strings.Contains(formatted, "panic sink: checkout/finalize:err") {
-		t.Fatalf("expected normalized panic sink, got:\n%s", formatted)
-	}
-	if !strings.Contains(formatted, "http:req -> parse:data") {
-		t.Fatalf("expected normalized hop with http:req -> parse:data, got:\n%s", formatted)
-	}
-	if !strings.Contains(formatted, "parse:req -> checkout/finalize:err") {
-		t.Fatalf("expected normalized hop with parse:req -> checkout/finalize:err, got:\n%s", formatted)
-	}
 }
 
 type testFanInCreator struct{}
@@ -292,14 +231,6 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 		if parent.Hop.TraceID == 0 {
 			t.Fatalf("expected non-zero parent hop trace id")
 		}
-	}
-
-	formatted := FormatDataflowTrace(last)
-	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
-		t.Fatalf("expected fan-in output hop in formatted trace, got:\n%s", formatted)
-	}
-	if strings.Count(formatted, "first:res -> fanin:first")+strings.Count(formatted, "second:res -> fanin:second")+strings.Count(formatted, "third:res -> fanin:third") < 3 {
-		t.Fatalf("expected all fan-in parents in formatted trace, got:\n%s", formatted)
 	}
 }
 

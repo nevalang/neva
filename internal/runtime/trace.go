@@ -290,72 +290,17 @@ func (t *Tracer) TraceCauseTree(msg Msg) (TraceTree, bool) {
 	return t.TraceCauseTreeByID(traceID)
 }
 
-// FormatDataflowTrace renders panic-focused Dataflow Trace in a readable flow format.
-func (t *Tracer) FormatDataflowTrace(msg Msg) string {
-	tree, ok := t.TraceCauseTree(msg)
-	if !ok {
-		return ""
-	}
-
-	var builder strings.Builder
-	panicReceiver := "<?>"
-	if tree.Hop.Receiver != nil {
-		panicReceiver = formatPortSlotAddr(*tree.Hop.Receiver)
-	}
-	panicComponent := componentNameFromReceiver(tree.Hop.Receiver)
-
-	builder.WriteString("panic cause dataflow trace\n")
-	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
-	_, _ = fmt.Fprintf(&builder, "panic sink: %s\n", panicReceiver)
-	if panicComponent != "" {
-		_, _ = fmt.Fprintf(&builder, "panic component: %s\n", panicComponent)
-	}
-	builder.WriteString("events:\n")
-	formatTraceTree(&builder, &tree, "  ")
-
-	return strings.TrimRight(builder.String(), "\n")
+func AsUnion(msg Msg) (UnionMsg, bool) {
+	unionMsg, ok := msg.(UnionMsg)
+	return unionMsg, ok
 }
 
-func formatTraceTree(builder *strings.Builder, tree *TraceTree, indent string) {
-	_, _ = fmt.Fprintf(builder, "%s- %s\n", indent, formatHopFlow(tree.Hop))
-	for _, parent := range tree.Parents {
-		formatTraceTree(builder, &parent, indent+"  ")
-	}
+func TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
+	return globalTracer.TraceCauseTreeByID(traceID)
 }
 
-func formatHopFlow(hop TraceHop) string {
-	recv := "<?>"
-	send := "<?>"
-	if hop.Receiver != nil {
-		recv = formatPortSlotAddr(*hop.Receiver)
-	}
-	if hop.Sender != nil {
-		send = formatPortSlotAddr(*hop.Sender)
-	}
-	return fmt.Sprintf("%s -> %s", send, recv)
-}
-
-func componentNameFromReceiver(receiver *PortSlotAddr) string {
-	if receiver == nil {
-		return ""
-	}
-	path := receiver.Path
-	path = strings.TrimSuffix(path, "/in")
-	path = strings.TrimSuffix(path, "/out")
-	parts := strings.Split(path, "/")
-	if len(parts) == 0 {
-		return path
-	}
-	return parts[len(parts)-1]
-}
-
-func formatPortSlotAddr(slot PortSlotAddr) string {
-	slot.Path = normalizePortPath(slot.Path)
-	s := fmt.Sprintf("%s:%s", slot.Path, slot.Port)
-	if slot.Index != nil {
-		s = fmt.Sprintf("%s[%d]", s, *slot.Index)
-	}
-	return s
+func TraceCauseTree(msg Msg) (TraceTree, bool) {
+	return globalTracer.TraceCauseTree(msg)
 }
 
 func normalizePortPath(path string) string {
@@ -370,23 +315,6 @@ func normalizePortPath(path string) string {
 	}
 
 	return strings.Join(parts, "/")
-}
-
-func AsUnion(msg Msg) (UnionMsg, bool) {
-	unionMsg, ok := msg.(UnionMsg)
-	return unionMsg, ok
-}
-
-func TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
-	return globalTracer.TraceCauseTreeByID(traceID)
-}
-
-func TraceCauseTree(msg Msg) (TraceTree, bool) {
-	return globalTracer.TraceCauseTree(msg)
-}
-
-func FormatDataflowTrace(msg Msg) string {
-	return globalTracer.FormatDataflowTrace(msg)
 }
 
 func resetTraceStoreForTests() {
