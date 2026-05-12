@@ -20,6 +20,11 @@ type TraceHop struct {
 	TraceID        uint64
 }
 
+type TraceTree struct {
+	Parents []TraceTree
+	Hop     TraceHop
+}
+
 type Tracer struct {
 	store traceStore
 }
@@ -213,65 +218,95 @@ func (t *Tracer) traceHopByID(traceID uint64) (TraceHop, bool) {
 	return hop, ok
 }
 
-// TracePathByID reconstructs one deterministic ancestry chain from newest to oldest.
-// For fan-in hops it follows the lowest trace id parent first; full multi-parent
-// causality remains available via TraceHop.ParentTraceIDs and FormatDataflowTrace.
-func (t *Tracer) TracePathByID(traceID uint64) []TraceHop {
+func (t *Tracer) traceTreeByID(traceID uint64, visited map[uint64]struct{}) (TraceTree, bool) {
 	if traceID == 0 {
-		return nil
+		return TraceTree{}, false
+	}
+	if _, seen := visited[traceID]; seen {
+		return TraceTree{}, false
+	}
+	visited[traceID] = struct{}{}
+
+	hop, ok := t.traceHopByID(traceID)
+	if !ok {
+		return TraceTree{}, false
 	}
 
-	path := make([]TraceHop, 0, 8)
-	seen := make(map[uint64]struct{}, 8)
-	cur := traceID
-
-	for cur != 0 {
-		if _, ok := seen[cur]; ok {
-			break
-		}
-		seen[cur] = struct{}{}
-
-		hop, ok := t.traceHopByID(cur)
+	tree := TraceTree{
+		Hop:     hop,
+		Parents: make([]TraceTree, 0, len(hop.ParentTraceIDs)),
+	}
+	for _, parentTraceID := range hop.ParentTraceIDs {
+		parentTree, ok := t.traceTreeByID(parentTraceID, visited)
 		if !ok {
-			break
+			continue
 		}
-		path = append(path, hop)
-		if len(hop.ParentTraceIDs) == 0 {
-			break
-		}
-		cur = hop.ParentTraceIDs[0]
+		tree.Parents = append(tree.Parents, parentTree)
 	}
 
-	return path
+	delete(visited, traceID)
+	return tree, true
 }
 
-// TracePath reconstructs message ancestry from newest to oldest.
-func (t *Tracer) TracePath(msg Msg) []TraceHop {
-	traceID, ok := TraceIDFromMsg(msg)
+// TraceCauseTreeByID reconstructs full multi-parent ancestry for the given trace id.
+func (t *Tracer) TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
+	return t.traceTreeByID(traceID, map[uint64]struct{}{})
+}
+
+// TraceCauseTree reconstructs full multi-parent ancestry for the given message.
+func (t *Tracer) TraceCauseTree(msg Msg) (TraceTree, bool) {
+	traceID, hasTrace := TraceIDFromMsg(msg)
+	if !hasTrace {
+		return TraceTree{}, false
+	}
+	return t.TraceCauseTreeByID(traceID)
+}
+
+func flattenTraceTree(tree *TraceTree, out *[]TraceHop) {
+	*out = append(*out, tree.Hop)
+	if len(tree.Parents) == 0 {
+		return
+	}
+	firstParent := tree.Parents[0]
+	flattenTraceTree(&firstParent, out)
+}
+
+// TracePathByID reconstructs one deterministic ancestry chain from newest to oldest.
+// For fan-in hops it follows the first parent from the full trace tree.
+func (t *Tracer) TracePathByID(traceID uint64) []TraceHop {
+	tree, ok := t.TraceCauseTreeByID(traceID)
 	if !ok {
 		return nil
 	}
-	return t.TracePathByID(traceID)
+	path := make([]TraceHop, 0, 8)
+	flattenTraceTree(&tree, &path)
+	return path
+}
+
+// TracePath reconstructs one deterministic ancestry chain from newest to oldest.
+func (t *Tracer) TracePath(msg Msg) []TraceHop {
+	tree, ok := t.TraceCauseTree(msg)
+	if !ok {
+		return nil
+	}
+	path := make([]TraceHop, 0, 8)
+	flattenTraceTree(&tree, &path)
+	return path
 }
 
 // FormatDataflowTrace renders panic-focused Dataflow Trace in a readable flow format.
 func (t *Tracer) FormatDataflowTrace(msg Msg) string {
-	traceID, hasTrace := TraceIDFromMsg(msg)
-	if !hasTrace || traceID == 0 {
-		return ""
-	}
-
-	var builder strings.Builder
-	panicHop, ok := t.traceHopByID(traceID)
+	tree, ok := t.TraceCauseTree(msg)
 	if !ok {
 		return ""
 	}
 
+	var builder strings.Builder
 	panicReceiver := "<?>"
-	if panicHop.Receiver != nil {
-		panicReceiver = formatPortSlotAddr(*panicHop.Receiver)
+	if tree.Hop.Receiver != nil {
+		panicReceiver = formatPortSlotAddr(*tree.Hop.Receiver)
 	}
-	panicComponent := componentNameFromReceiver(panicHop.Receiver)
+	panicComponent := componentNameFromReceiver(tree.Hop.Receiver)
 
 	builder.WriteString("panic cause dataflow trace\n")
 	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
@@ -280,32 +315,15 @@ func (t *Tracer) FormatDataflowTrace(msg Msg) string {
 		_, _ = fmt.Fprintf(&builder, "panic component: %s\n", panicComponent)
 	}
 	builder.WriteString("events:\n")
-	t.formatTraceTree(&builder, traceID, "  ", map[uint64]struct{}{})
+	formatTraceTree(&builder, &tree, "  ")
 
 	return strings.TrimRight(builder.String(), "\n")
 }
 
-func (t *Tracer) formatTraceTree(
-	builder *strings.Builder,
-	traceID uint64,
-	indent string,
-	visited map[uint64]struct{},
-) {
-	if _, ok := visited[traceID]; ok {
-		_, _ = fmt.Fprintf(builder, "%s- [cycle] trace=%d\n", indent, traceID)
-		return
-	}
-	visited[traceID] = struct{}{}
-
-	hop, ok := t.traceHopByID(traceID)
-	if !ok {
-		_, _ = fmt.Fprintf(builder, "%s- [missing] trace=%d\n", indent, traceID)
-		return
-	}
-
-	_, _ = fmt.Fprintf(builder, "%s- %s\n", indent, formatHopFlow(hop))
-	for _, parentTraceID := range hop.ParentTraceIDs {
-		t.formatTraceTree(builder, parentTraceID, indent+"  ", visited)
+func formatTraceTree(builder *strings.Builder, tree *TraceTree, indent string) {
+	_, _ = fmt.Fprintf(builder, "%s- %s\n", indent, formatHopFlow(tree.Hop))
+	for _, parent := range tree.Parents {
+		formatTraceTree(builder, &parent, indent+"  ")
 	}
 }
 
@@ -367,8 +385,16 @@ func TracePathByID(traceID uint64) []TraceHop {
 	return globalTracer.TracePathByID(traceID)
 }
 
+func TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
+	return globalTracer.TraceCauseTreeByID(traceID)
+}
+
 func TracePath(msg Msg) []TraceHop {
 	return globalTracer.TracePath(msg)
+}
+
+func TraceCauseTree(msg Msg) (TraceTree, bool) {
+	return globalTracer.TraceCauseTree(msg)
 }
 
 func FormatDataflowTrace(msg Msg) string {

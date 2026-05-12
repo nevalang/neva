@@ -13,7 +13,7 @@ func resetRuntimeTraceStateForTests() {
 }
 
 //nolint:gocyclo,cyclop // test intentionally validates full hop shape in one place.
-func TestTracePath_Linear(t *testing.T) {
+func TestTraceTree_Linear(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 
 	ch := make(chan OrderedMsg, 1)
@@ -43,14 +43,16 @@ func TestTracePath_Linear(t *testing.T) {
 		t.Fatalf("expected trace metadata on received message")
 	}
 
-	path := TracePath(got)
-	if len(path) != 1 {
-		t.Fatalf("expected 1 trace hop, got %d", len(path))
+	tree, ok := TraceCauseTree(got)
+	if !ok {
+		t.Fatalf("expected trace tree")
 	}
-
-	hop := path[0]
+	hop := tree.Hop
 	if len(hop.ParentTraceIDs) != 0 {
 		t.Fatalf("expected root hop parents to be empty, got %v", hop.ParentTraceIDs)
+	}
+	if len(tree.Parents) != 0 {
+		t.Fatalf("expected no parent nodes, got %d", len(tree.Parents))
 	}
 	if hop.Sender == nil || hop.Sender.Path != "producer/out" || hop.Sender.Port != "res" {
 		t.Fatalf("unexpected sender hop: %#v", hop.Sender)
@@ -60,7 +62,7 @@ func TestTracePath_Linear(t *testing.T) {
 	}
 }
 
-func TestTracePath_ForwardedMessageTracksParent(t *testing.T) {
+func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 
 	ctx := context.Background()
@@ -103,17 +105,20 @@ func TestTracePath_ForwardedMessageTracksParent(t *testing.T) {
 		t.Fatalf("second receive failed")
 	}
 
-	path := TracePath(last)
-	if len(path) != 2 {
-		t.Fatalf("expected 2 trace hops, got %d", len(path))
+	tree, ok := TraceCauseTree(last)
+	if !ok {
+		t.Fatalf("expected trace tree")
 	}
-	if len(path[0].ParentTraceIDs) != 1 || path[0].ParentTraceIDs[0] != path[1].TraceID {
+	if len(tree.Hop.ParentTraceIDs) != 1 || len(tree.Parents) != 1 {
 		t.Fatalf(
-			"expected parent link %d -> %d, got parents=%v",
-			path[0].TraceID,
-			path[1].TraceID,
-			path[0].ParentTraceIDs,
+			"expected one parent node for hop %d, got ids=%v parents=%d",
+			tree.Hop.TraceID,
+			tree.Hop.ParentTraceIDs,
+			len(tree.Parents),
 		)
+	}
+	if tree.Hop.ParentTraceIDs[0] != tree.Parents[0].Hop.TraceID {
+		t.Fatalf("expected parent link to parent node trace id, got ids=%v parent=%d", tree.Hop.ParentTraceIDs, tree.Parents[0].Hop.TraceID)
 	}
 
 	formatted := FormatDataflowTrace(last)
@@ -222,7 +227,8 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 	}, nil
 }
 
-func TestTracePath_FanInTracksAllParents(t *testing.T) {
+//nolint:gocyclo,cyclop // test intentionally exercises multi-parent fan-in setup end to end.
+func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 
 	baseCtx := context.Background()
@@ -269,19 +275,30 @@ func TestTracePath_FanInTracksAllParents(t *testing.T) {
 		t.Fatalf("receive failed")
 	}
 
-	path := TracePath(last)
-	if len(path) != 2 {
-		t.Fatalf("expected output hop plus first parent chain entry, got %d hops", len(path))
+	tree, hasTree := TraceCauseTree(last)
+	if !hasTree {
+		t.Fatalf("expected trace tree")
 	}
-	if len(path[0].ParentTraceIDs) != 3 {
-		t.Fatalf("expected 3 parent trace ids, got %v", path[0].ParentTraceIDs)
+	if len(tree.Hop.ParentTraceIDs) != 3 {
+		t.Fatalf("expected 3 parent trace ids, got %v", tree.Hop.ParentTraceIDs)
 	}
-	if path[0].ParentTraceIDs[0] == 0 || path[0].ParentTraceIDs[1] == 0 || path[0].ParentTraceIDs[2] == 0 {
-		t.Fatalf("expected non-zero parent trace ids, got %v", path[0].ParentTraceIDs)
+	if len(tree.Parents) != 3 {
+		t.Fatalf("expected 3 parent nodes, got %d", len(tree.Parents))
+	}
+	if tree.Hop.ParentTraceIDs[0] == 0 || tree.Hop.ParentTraceIDs[1] == 0 || tree.Hop.ParentTraceIDs[2] == 0 {
+		t.Fatalf("expected non-zero parent trace ids, got %v", tree.Hop.ParentTraceIDs)
+	}
+	for _, parent := range tree.Parents {
+		if parent.Hop.TraceID == 0 {
+			t.Fatalf("expected non-zero parent hop trace id")
+		}
 	}
 
 	formatted := FormatDataflowTrace(last)
 	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
 		t.Fatalf("expected fan-in output hop in formatted trace, got:\n%s", formatted)
+	}
+	if strings.Count(formatted, "first:res -> fanin:first")+strings.Count(formatted, "second:res -> fanin:second")+strings.Count(formatted, "third:res -> fanin:third") < 3 {
+		t.Fatalf("expected all fan-in parents in formatted trace, got:\n%s", formatted)
 	}
 }
