@@ -30,7 +30,7 @@ func emptyStruct() runtime.StructMsg {
 	return runtime.NewStructMsg(nil)
 }
 
-func receive2Ordered(
+func receive2(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
 	secondIn runtime.SingleInport,
@@ -49,24 +49,12 @@ func receive2Ordered(
 
 	return firstMsg, secondMsg, firstOK && secondOK
 }
-
-//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
-func receive2(
-	ctx context.Context,
-	firstIn runtime.SingleInport,
-	secondIn runtime.SingleInport,
-) (runtime.Msg, runtime.Msg, bool) {
-	firstMsg, secondMsg, ok := receive2Ordered(ctx, firstIn, secondIn)
-	return firstMsg.Msg, secondMsg.Msg, ok
-}
-
-//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
 func receive3(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
 	secondIn runtime.SingleInport,
 	thirdIn runtime.SingleInport,
-) (runtime.Msg, runtime.Msg, runtime.Msg, bool) {
+) (runtime.OrderedMsg, runtime.OrderedMsg, runtime.OrderedMsg, bool) {
 	var firstMsg, secondMsg, thirdMsg runtime.OrderedMsg
 	var firstOK, secondOK, thirdOK bool
 
@@ -82,17 +70,16 @@ func receive3(
 	})
 	waitGroup.Wait()
 
-	return firstMsg.Msg, secondMsg.Msg, thirdMsg.Msg, firstOK && secondOK && thirdOK
+	return firstMsg, secondMsg, thirdMsg, firstOK && secondOK && thirdOK
 }
 
-//nolint:ireturn // runtime.Msg is the runtime contract type for function ports.
 func receive4(
 	ctx context.Context,
 	firstIn runtime.SingleInport,
 	secondIn runtime.SingleInport,
 	thirdIn runtime.SingleInport,
 	fourthIn runtime.SingleInport,
-) (runtime.Msg, runtime.Msg, runtime.Msg, runtime.Msg, bool) {
+) (runtime.OrderedMsg, runtime.OrderedMsg, runtime.OrderedMsg, runtime.OrderedMsg, bool) {
 	var firstMsg, secondMsg, thirdMsg, fourthMsg runtime.OrderedMsg
 	var firstOK, secondOK, thirdOK, fourthOK bool
 
@@ -111,5 +98,5 @@ func receive4(
 	})
 	waitGroup.Wait()
 
-	return firstMsg.Msg, secondMsg.Msg, thirdMsg.Msg, fourthMsg.Msg, firstOK && secondOK && thirdOK && fourthOK
+	return firstMsg, secondMsg, thirdMsg, fourthMsg, firstOK && secondOK && thirdOK && fourthOK
 }

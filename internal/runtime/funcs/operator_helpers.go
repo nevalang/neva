@@ -19,7 +19,7 @@ func createBinaryFuncConcurrent(runtimeIO runtime.IO, apply binaryOperator) (fun
 
 	return func(ctx context.Context) {
 		for {
-			leftValue, rightValue, ok := receive2Ordered(ctx, leftInput, rightInput)
+			leftValue, rightValue, ok := receive2(ctx, leftInput, rightInput)
 			if !ok {
 				return
 			}

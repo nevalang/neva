@@ -18,6 +18,17 @@ func (o OrderedMsg) String() string {
 	return fmt.Sprint(o.Msg)
 }
 
+func (o OrderedMsg) Bool() bool           { return o.Msg.Bool() }
+func (o OrderedMsg) Int() int64           { return o.Msg.Int() }
+func (o OrderedMsg) Float() float64       { return o.Msg.Float() }
+func (o OrderedMsg) Str() string          { return o.Msg.Str() }
+func (o OrderedMsg) Bytes() []byte        { return o.Msg.Bytes() }
+func (o OrderedMsg) List() []Msg          { return o.Msg.List() }
+func (o OrderedMsg) Dict() map[string]Msg { return o.Msg.Dict() }
+func (o OrderedMsg) Struct() StructMsg    { return o.Msg.Struct() }
+func (o OrderedMsg) Union() UnionMsg      { return o.Msg.Union() }
+func (o OrderedMsg) Equal(other Msg) bool { return o.Msg.Equal(other) }
+
 type Msg interface {
 	Bool() bool
 	Int() int64
