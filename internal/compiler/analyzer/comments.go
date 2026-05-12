@@ -10,6 +10,18 @@ func validateEntityComments(entity *src.Entity) *compiler.Error {
 		return nil
 	}
 
+	hasPortTagComments := len(entity.Comments.Inports) > 0 || len(entity.Comments.Outports) > 0
+	if !hasPortTagComments {
+		return nil
+	}
+
+	if !supportsPortCommentTags(entity.Kind) {
+		return &compiler.Error{
+			Message: "comment tags @inport/@outport are allowed only on interface or component entities",
+			Meta:    &entity.Comments.Meta,
+		}
+	}
+
 	hasInportsComments := len(entity.Comments.Inports) > 0
 	hasOutportsComments := len(entity.Comments.Outports) > 0
 	if hasInportsComments != hasOutportsComments {
@@ -23,10 +35,7 @@ func validateEntityComments(entity *src.Entity) *compiler.Error {
 		return nil
 	}
 
-	entityIO, err := entityIOForComments(entity)
-	if err != nil {
-		return err
-	}
+	entityIO := entityIOForComments(entity)
 
 	if err := validateCommentPortsExist(entity.Comments, entityIO); err != nil {
 		return err
@@ -35,20 +44,28 @@ func validateEntityComments(entity *src.Entity) *compiler.Error {
 	return validateCommentPortsAreComplete(entity.Comments, entityIO)
 }
 
-func entityIOForComments(entity *src.Entity) (*src.IO, *compiler.Error) {
+func supportsPortCommentTags(kind src.EntityKind) bool {
+	switch kind {
+	case src.InterfaceEntity, src.ComponentEntity:
+		return true
+	case src.ConstEntity, src.TypeEntity:
+		return false
+	default:
+		panic("unknown entity kind")
+	}
+}
+
+func entityIOForComments(entity *src.Entity) *src.IO {
 	switch entity.Kind {
 	case src.InterfaceEntity:
-		return &entity.Interface.IO, nil
+		return &entity.Interface.IO
 	case src.ComponentEntity:
 		if len(entity.Component) == 0 {
 			panic("component entity has no component versions")
 		}
-		return &entity.Component[0].IO, nil
+		return &entity.Component[0].IO
 	case src.ConstEntity, src.TypeEntity:
-		return nil, &compiler.Error{
-			Message: "comment tags @inport/@outport are allowed only on interface or component entities",
-			Meta:    &entity.Comments.Meta,
-		}
+		panic("unexpected entity kind for port comment tags")
 	default:
 		panic("unknown entity kind")
 	}

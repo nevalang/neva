@@ -52,6 +52,19 @@ func TestValidateEntityComments(t *testing.T) {
 			},
 		},
 		{
+			name: "type entity with port tags is rejected before pair check",
+			entity: src.Entity{
+				Kind: src.TypeEntity,
+				Comments: &src.Comments{
+					Inports: map[string]string{
+						"data": "payload",
+					},
+					Meta: core.Meta{},
+				},
+			},
+			wantErrPart: "allowed only on interface or component entities",
+		},
+		{
 			name: "inports without outports are rejected",
 			entity: src.Entity{
 				Kind: src.InterfaceEntity,
