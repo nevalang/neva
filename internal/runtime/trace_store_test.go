@@ -302,3 +302,60 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 		t.Fatalf("expected all fan-in parents in formatted trace, got:\n%s", formatted)
 	}
 }
+
+func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
+	resetRuntimeTraceStateForTests()
+
+	ctx := context.Background()
+	firstCh := make(chan OrderedMsg, 1)
+	secondCh := make(chan OrderedMsg, 1)
+	resCh := make(chan OrderedMsg, 1)
+
+	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, ProdInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, ProdInterceptor{}, secondCh)
+	firstIn := NewSingleInport(firstCh, PortAddr{Path: "join/in", Port: "first"}, ProdInterceptor{})
+	secondIn := NewSingleInport(secondCh, PortAddr{Path: "join/in", Port: "second"}, ProdInterceptor{})
+	resOut := NewSingleOutport(PortAddr{Path: "join/out", Port: "res"}, ProdInterceptor{}, resCh)
+	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, ProdInterceptor{})
+
+	if !firstOut.Send(ctx, NewStringMsg("a")) {
+		t.Fatalf("first send failed")
+	}
+	if !secondOut.Send(ctx, NewStringMsg("b")) {
+		t.Fatalf("second send failed")
+	}
+
+	firstOrdered, ok := firstIn.ReceiveOrdered(ctx)
+	if !ok {
+		t.Fatalf("first receive failed")
+	}
+	secondOrdered, ok := secondIn.ReceiveOrdered(ctx)
+	if !ok {
+		t.Fatalf("second receive failed")
+	}
+
+	if !resOut.Send(
+		context.Background(),
+		NewStringMsg(firstOrdered.Str()+secondOrdered.Str()),
+		firstOrdered,
+		secondOrdered,
+	) {
+		t.Fatalf("result send failed")
+	}
+
+	last, ok := resIn.Receive(ctx)
+	if !ok {
+		t.Fatalf("result receive failed")
+	}
+
+	tree, hasTree := TraceCauseTree(last)
+	if !hasTree {
+		t.Fatalf("expected trace tree")
+	}
+	if len(tree.Hop.ParentTraceIDs) != 2 {
+		t.Fatalf("expected 2 explicit parents, got %v", tree.Hop.ParentTraceIDs)
+	}
+	if len(tree.Parents) != 2 {
+		t.Fatalf("expected 2 parent nodes, got %d", len(tree.Parents))
+	}
+}

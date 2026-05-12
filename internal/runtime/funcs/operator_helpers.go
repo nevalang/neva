@@ -3,7 +3,6 @@ package funcs
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -20,25 +19,12 @@ func createBinaryFuncConcurrent(runtimeIO runtime.IO, apply binaryOperator) (fun
 
 	return func(ctx context.Context) {
 		for {
-			var leftValue runtime.Msg
-			var rightValue runtime.Msg
-			var leftAvailable bool
-			var rightAvailable bool
-
-			var group sync.WaitGroup
-			group.Go(func() {
-				leftValue, leftAvailable = leftInput.Receive(ctx)
-			})
-			group.Go(func() {
-				rightValue, rightAvailable = rightInput.Receive(ctx)
-			})
-			group.Wait()
-
-			if !leftAvailable || !rightAvailable {
+			leftValue, rightValue, ok := receive2Ordered(ctx, leftInput, rightInput)
+			if !ok {
 				return
 			}
 
-			if !resultOutput.Send(ctx, apply(leftValue, rightValue)) {
+			if !resultOutput.Send(ctx, apply(leftValue.Msg, rightValue.Msg), leftValue, rightValue) {
 				return
 			}
 		}
@@ -58,12 +44,12 @@ func createUnaryFunc(runtimeIO runtime.IO, apply unaryOperator) (func(context.Co
 
 	return func(ctx context.Context) {
 		for {
-			inputValue, available := dataInput.Receive(ctx)
+			inputValue, available := dataInput.ReceiveOrdered(ctx)
 			if !available {
 				return
 			}
 
-			if !resultOutput.Send(ctx, apply(inputValue)) {
+			if !resultOutput.Send(ctx, apply(inputValue.Msg), inputValue) {
 				return
 			}
 		}

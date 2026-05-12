@@ -89,12 +89,12 @@ func NewSingleInport(
 	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
+// ReceiveOrdered returns the next incoming transport envelope with its runtime ordering metadata.
+func (s SingleInport) ReceiveOrdered(ctx context.Context) (OrderedMsg, bool) {
 	var ordered OrderedMsg
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return OrderedMsg{}, false
 	case v := <-s.ch:
 		ordered = v
 	}
@@ -110,6 +110,15 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 	)
 	recordTraceReceive(ctx, ordered)
 
+	return ordered, true
+}
+
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
+	ordered, ok := s.ReceiveOrdered(ctx)
+	if !ok {
+		return nil, false
+	}
 	return ordered.Msg, true
 }
 
@@ -147,15 +156,11 @@ func NewArrayInport(
 	}
 }
 
-// Receive receives a message from a specific slot of the array inport.
-// It returns the received message and a boolean indicating success.
-// It returns false if the context is done or if the channel is closed.
-//
-//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
+// ReceiveOrdered receives a message from a specific array slot together with its runtime ordering metadata.
+func (a *ArrayInport) ReceiveOrdered(ctx context.Context, idx int) (OrderedMsg, bool) {
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return OrderedMsg{}, false
 		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		index := Uint8Index(idx)
@@ -170,8 +175,17 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 			v,
 		)
 		recordTraceReceive(ctx, ordered)
-		return ordered.Msg, true
+		return ordered, true
 	}
+}
+
+//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (a *ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
+	ordered, ok := a.ReceiveOrdered(ctx, idx)
+	if !ok {
+		return nil, false
+	}
+	return ordered.Msg, true
 }
 
 // ReceiveAll receives messages from all available array inport slots just once.
@@ -181,7 +195,16 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 // Functions are called in order of incoming messages, not in order of slots.
 //
 //nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
+func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
+	return a.ReceiveAllOrdered(ctx, func(idx int, ordered OrderedMsg) bool {
+		return f(idx, ordered.Msg)
+	})
+}
+
+// ReceiveAllOrdered receives one message per slot and passes full transport identity to the callback.
+//
+//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (a *ArrayInport) ReceiveAllOrdered(ctx context.Context, f func(idx int, ordered OrderedMsg) bool) bool {
 	// IDEA return channel instead of taking function
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
@@ -206,7 +229,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 					received,
 				)
 				recordTraceReceive(ctx, ordered)
-				resultChan <- f(idx, ordered.Msg)
+				resultChan <- f(idx, ordered)
 			}
 		})
 	}
@@ -366,9 +389,9 @@ func NewSingleOutport(
 	}
 }
 
-func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
+func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
 	traceID := counter.Add(1)
-	parentTraceIDs := currentTraceParents(ctx, msg)
+	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
 	msg = withTrace(msg, traceID, parentTraceIDs)
 	ordered := OrderedMsg{
 		Msg:   msg,
@@ -411,9 +434,9 @@ func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- Orde
 	return &ArrayOutport{interceptor: interceptor, addr: addr, slots: slots}
 }
 
-func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
+func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...OrderedMsg) bool {
 	traceID := counter.Add(1)
-	parentTraceIDs := currentTraceParents(ctx, msg)
+	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
 	msg = withTrace(msg, traceID, parentTraceIDs)
 	ordered := OrderedMsg{Msg: msg, index: traceID}
 	slotAddr := PortSlotAddr{
@@ -440,11 +463,11 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 // TODO: figure out why this is the only working version of `SendAll`
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
+func (a ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
-	parentTraceIDs := currentTraceParents(ctx, msg)
+	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
 
 	for idx := range a.slots {
 		wg.Go(func() {

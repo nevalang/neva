@@ -64,6 +64,27 @@ func parentTraceIDsFromMsg(msg Msg) []uint64 {
 	return slices.Clone(parentTraceIDs)
 }
 
+func parentTraceIDsFromOrdered(causes []OrderedMsg) []uint64 {
+	if len(causes) == 0 {
+		return nil
+	}
+
+	parentTraceIDs := make([]uint64, 0, len(causes))
+	seen := make(map[uint64]struct{}, len(causes))
+	for _, cause := range causes {
+		if cause.index == 0 {
+			continue
+		}
+		if _, ok := seen[cause.index]; ok {
+			continue
+		}
+		seen[cause.index] = struct{}{}
+		parentTraceIDs = append(parentTraceIDs, cause.index)
+	}
+	slices.Sort(parentTraceIDs)
+	return parentTraceIDs
+}
+
 //nolint:ireturn // Msg is runtime contract type.
 func withTrace(msg Msg, traceID uint64, parentTraceIDs []uint64) Msg {
 	switch typedMsg := msg.(type) {
@@ -182,6 +203,13 @@ func currentTraceParents(ctx context.Context, msg Msg) []uint64 {
 	}
 	state.emitted = true
 	return parentTraceIDs
+}
+
+func parentTraceIDsForSend(ctx context.Context, msg Msg, causes []OrderedMsg) []uint64 {
+	if len(causes) != 0 {
+		return parentTraceIDsFromOrdered(causes)
+	}
+	return currentTraceParents(ctx, msg)
 }
 
 func (t *Tracer) RecordSent(sender PortSlotAddr, ordered OrderedMsg) {
