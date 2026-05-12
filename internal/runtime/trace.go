@@ -18,14 +18,24 @@ type TraceHop struct {
 	ParentTraceID uint64
 }
 
+type Tracer struct {
+	store traceStore
+}
+
 type traceStore struct {
 	hops map[uint64]TraceHop
 	mu   sync.RWMutex
 }
 
-//nolint:gochecknoglobals // runtime-wide trace store must be shared across port events.
-var globalTraceStore = traceStore{
-	hops: make(map[uint64]TraceHop),
+//nolint:gochecknoglobals // runtime-wide tracer must be shared across port events.
+var globalTracer = NewTracer()
+
+func NewTracer() *Tracer {
+	return &Tracer{
+		store: traceStore{
+			hops: make(map[uint64]TraceHop),
+		},
+	}
 }
 
 // TraceIDFromMsg extracts runtime Dataflow Trace identity from message payload.
@@ -91,42 +101,42 @@ func withTrace(msg Msg, traceID, parentTraceID uint64) Msg {
 	}
 }
 
-func recordOrderedSent(sender PortSlotAddr, ordered OrderedMsg) {
-	globalTraceStore.mu.Lock()
-	defer globalTraceStore.mu.Unlock()
+func (t *Tracer) RecordSent(sender PortSlotAddr, ordered OrderedMsg) {
+	t.store.mu.Lock()
+	defer t.store.mu.Unlock()
 
 	traceID := ordered.index
 	parentTraceID := parentTraceIDFromMsg(ordered.Msg)
-	hop := globalTraceStore.hops[traceID]
+	hop := t.store.hops[traceID]
 	hop.TraceID = traceID
 	hop.ParentTraceID = parentTraceID
 	senderCopy := sender
 	hop.Sender = &senderCopy
 	hop.Message = fmt.Sprint(ordered.Msg)
-	globalTraceStore.hops[traceID] = hop
+	t.store.hops[traceID] = hop
 }
 
-func recordOrderedReceived(receiver PortSlotAddr, ordered OrderedMsg) {
-	globalTraceStore.mu.Lock()
-	defer globalTraceStore.mu.Unlock()
+func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
+	t.store.mu.Lock()
+	defer t.store.mu.Unlock()
 
-	hop := globalTraceStore.hops[ordered.index]
+	hop := t.store.hops[ordered.index]
 	hop.TraceID = ordered.index
 	receiverCopy := receiver
 	hop.Receiver = &receiverCopy
-	globalTraceStore.hops[ordered.index] = hop
+	t.store.hops[ordered.index] = hop
 }
 
-func traceHopByID(traceID uint64) (TraceHop, bool) {
-	globalTraceStore.mu.RLock()
-	defer globalTraceStore.mu.RUnlock()
+func (t *Tracer) traceHopByID(traceID uint64) (TraceHop, bool) {
+	t.store.mu.RLock()
+	defer t.store.mu.RUnlock()
 
-	hop, ok := globalTraceStore.hops[traceID]
+	hop, ok := t.store.hops[traceID]
 	return hop, ok
 }
 
 // TracePathByID reconstructs message ancestry from newest to oldest.
-func TracePathByID(traceID uint64) []TraceHop {
+func (t *Tracer) TracePathByID(traceID uint64) []TraceHop {
 	if traceID == 0 {
 		return nil
 	}
@@ -141,7 +151,7 @@ func TracePathByID(traceID uint64) []TraceHop {
 		}
 		seen[cur] = struct{}{}
 
-		hop, ok := traceHopByID(cur)
+		hop, ok := t.traceHopByID(cur)
 		if !ok {
 			break
 		}
@@ -153,17 +163,17 @@ func TracePathByID(traceID uint64) []TraceHop {
 }
 
 // TracePath reconstructs message ancestry from newest to oldest.
-func TracePath(msg Msg) []TraceHop {
+func (t *Tracer) TracePath(msg Msg) []TraceHop {
 	traceID, ok := TraceIDFromMsg(msg)
 	if !ok {
 		return nil
 	}
-	return TracePathByID(traceID)
+	return t.TracePathByID(traceID)
 }
 
 // FormatDataflowTrace renders panic-focused Dataflow Trace in a readable flow format.
-func FormatDataflowTrace(msg Msg) string {
-	path := TracePath(msg)
+func (t *Tracer) FormatDataflowTrace(msg Msg) string {
+	path := t.TracePath(msg)
 	if len(path) == 0 {
 		return ""
 	}
@@ -246,8 +256,20 @@ func AsUnion(msg Msg) (UnionMsg, bool) {
 	return unionMsg, ok
 }
 
+func TracePathByID(traceID uint64) []TraceHop {
+	return globalTracer.TracePathByID(traceID)
+}
+
+func TracePath(msg Msg) []TraceHop {
+	return globalTracer.TracePath(msg)
+}
+
+func FormatDataflowTrace(msg Msg) string {
+	return globalTracer.FormatDataflowTrace(msg)
+}
+
 func resetTraceStoreForTests() {
-	globalTraceStore.mu.Lock()
-	defer globalTraceStore.mu.Unlock()
-	globalTraceStore.hops = make(map[uint64]TraceHop)
+	globalTracer.store.mu.Lock()
+	defer globalTracer.store.mu.Unlock()
+	globalTracer.store.hops = make(map[uint64]TraceHop)
 }

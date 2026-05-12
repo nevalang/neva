@@ -43,24 +43,34 @@ type RecvEvent struct {
 	TraceID uint64    `json:"traceId"`
 }
 
-type ProdInterceptor struct{}
+type ProdInterceptor struct {
+	tracer *Tracer
+}
 
 func (ProdInterceptor) Prepare() error { return nil }
 
+func (p ProdInterceptor) getTracer() *Tracer {
+	if p.tracer != nil {
+		return p.tracer
+	}
+	return globalTracer
+}
+
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	recordOrderedSent(sender, ordered)
+func (p ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+	p.getTracer().RecordSent(sender, ordered)
 	return ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	recordOrderedReceived(receiver, ordered)
+func (p ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+	p.getTracer().RecordReceived(receiver, ordered)
 	return ordered
 }
 
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DebugInterceptor struct {
+	tracer  *Tracer
 	file    *os.File
 	comment string
 }
@@ -79,9 +89,16 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	return file.Close, nil
 }
 
+func (d DebugInterceptor) getTracer() *Tracer {
+	if d.tracer != nil {
+		return d.tracer
+	}
+	return globalTracer
+}
+
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	recordOrderedSent(sender, ordered)
+	d.getTracer().RecordSent(sender, ordered)
 	evt := SentEvent{
 		Version:       traceEventVersion,
 		Event:         EventSent,
@@ -96,7 +113,7 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) Ordered
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	recordOrderedReceived(receiver, ordered)
+	d.getTracer().RecordReceived(receiver, ordered)
 	evt := RecvEvent{
 		Version: traceEventVersion,
 		Event:   EventRecv,
@@ -137,5 +154,29 @@ func eventPortFromSlot(slotAddr PortSlotAddr) EventPort {
 }
 
 func NewDebugInterceptor(comment string) *DebugInterceptor {
-	return &DebugInterceptor{comment: comment}
+	return &DebugInterceptor{
+		tracer:  globalTracer,
+		comment: comment,
+	}
+}
+
+// NewInterceptor always enables in-memory tracing.
+// When tracePath is empty, it skips JSONL emission and returns the production interceptor.
+//
+//nolint:ireturn // Interceptor is the stable runtime transport contract for generated programs.
+func NewInterceptor(tracePath, comment string) (Interceptor, func() error, error) {
+	tracer := globalTracer
+	if tracePath == "" {
+		return ProdInterceptor{tracer: tracer}, func() error { return nil }, nil
+	}
+
+	interceptor := &DebugInterceptor{
+		tracer:  tracer,
+		comment: comment,
+	}
+	closeFn, err := interceptor.Open(tracePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	return interceptor, closeFn, nil
 }

@@ -51,9 +51,6 @@ package main
 import (
     "os"
     "context"
-    {{- if .Trace }}
-    "fmt"
-    {{- end }}
 
     "github.com/nevalang/neva/internal/runtime"
     "github.com/nevalang/neva/internal/runtime/funcs"
@@ -65,25 +62,22 @@ func main() {
         {{.}} = make(chan runtime.OrderedMsg)
         {{- end}}
     )
-    {{- if .Trace }}
-
-    interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
-
-    close, err := interceptor.Open("trace.log")
+    interceptor, close, err := runtime.NewInterceptor(
+        {{- if .Trace }}
+        "trace.log",
+        {{- else }}
+        "",
+        {{- end }}
+        {{printf "%q" .TraceComment}},
+    )
     if err != nil {
-        fmt.Fprintln(os.Stderr, "can't open trace file:", err.Error())
         os.Exit(1)
     }
     defer func() {
         if err := close(); err != nil {
-            fmt.Fprintln(os.Stderr, "can't close trace file:", err.Error())
             os.Exit(1)
         }
     }()
-    {{- else }}
-
-    interceptor := runtime.ProdInterceptor{}
-    {{- end }}
 
     var (
         startPort = runtime.NewSingleOutport(
@@ -288,18 +282,20 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		{{- end}}
 	)
 
-	{{- if .Trace }}
-	interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
-	close, err := interceptor.Open("trace_{{.Name}}.log")
+	interceptor, close, err := runtime.NewInterceptor(
+		{{- if .Trace }}
+		"trace_{{.Name}}.log",
+		{{- else }}
+		"",
+		{{- end }}
+		{{printf "%q" .TraceComment}},
+	)
 	if err != nil {
 		return {{.Name}}Output{}, fmt.Errorf("open trace: %w", err)
 	}
 	defer func() {
 		_ = close()
 	}()
-	{{- else }}
-	interceptor := runtime.ProdInterceptor{}
-	{{- end }}
 
 	var (
 		startPort = runtime.NewSingleOutport(
