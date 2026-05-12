@@ -1,0 +1,23 @@
+import {
+	fmt
+	runtime
+}
+
+// @inport data payload
+// @outport res result
+def Worker(data string) (res string, err error) {
+	println fmt.Println<string>
+	---
+	:data -> println:data
+	println:res -> :res
+	println:err -> :err
+}
+
+def Main(start any) (stop any) {
+	worker Worker
+	panic runtime.Panic
+	---
+	:start -> 'hello' -> worker:data
+	worker:res -> :stop
+	worker:err -> panic
+}
