@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -48,8 +49,8 @@ func TestTracePath_Linear(t *testing.T) {
 	}
 
 	hop := path[0]
-	if hop.ParentTraceID != 0 {
-		t.Fatalf("expected root hop parent to be 0, got %d", hop.ParentTraceID)
+	if len(hop.ParentTraceIDs) != 0 {
+		t.Fatalf("expected root hop parents to be empty, got %v", hop.ParentTraceIDs)
 	}
 	if hop.Sender == nil || hop.Sender.Path != "producer/out" || hop.Sender.Port != "res" {
 		t.Fatalf("unexpected sender hop: %#v", hop.Sender)
@@ -106,12 +107,12 @@ func TestTracePath_ForwardedMessageTracksParent(t *testing.T) {
 	if len(path) != 2 {
 		t.Fatalf("expected 2 trace hops, got %d", len(path))
 	}
-	if path[0].ParentTraceID != path[1].TraceID {
+	if len(path[0].ParentTraceIDs) != 1 || path[0].ParentTraceIDs[0] != path[1].TraceID {
 		t.Fatalf(
-			"expected parent link %d -> %d, got parent=%d",
+			"expected parent link %d -> %d, got parents=%v",
 			path[0].TraceID,
 			path[1].TraceID,
-			path[0].ParentTraceID,
+			path[0].ParentTraceIDs,
 		)
 	}
 
@@ -173,5 +174,114 @@ func TestFormatDataflowTrace_NormalizesInOutPathSuffixes(t *testing.T) {
 	}
 	if !strings.Contains(formatted, "parse:req -> checkout/finalize:err") {
 		t.Fatalf("expected normalized hop with parse:req -> checkout/finalize:err, got:\n%s", formatted)
+	}
+}
+
+type testFanInCreator struct{}
+
+func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
+	firstIn, err := io.In.Single("first")
+	if err != nil {
+		return nil, err
+	}
+	secondIn, err := io.In.Single("second")
+	if err != nil {
+		return nil, err
+	}
+	thirdIn, err := io.In.Single("third")
+	if err != nil {
+		return nil, err
+	}
+	resOut, err := io.Out.Single("res")
+	if err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) {
+		var firstMsg, secondMsg, thirdMsg Msg
+		var firstOK, secondOK, thirdOK bool
+
+		var waitGroup sync.WaitGroup
+		waitGroup.Go(func() {
+			firstMsg, firstOK = firstIn.Receive(ctx)
+		})
+		waitGroup.Go(func() {
+			secondMsg, secondOK = secondIn.Receive(ctx)
+		})
+		waitGroup.Go(func() {
+			thirdMsg, thirdOK = thirdIn.Receive(ctx)
+		})
+		waitGroup.Wait()
+
+		if !firstOK || !secondOK || !thirdOK {
+			return
+		}
+
+		outMsg := NewListMsg([]Msg{firstMsg, secondMsg, thirdMsg})
+		_ = resOut.Send(ctx, outMsg)
+	}, nil
+}
+
+func TestTracePath_FanInTracksAllParents(t *testing.T) {
+	resetRuntimeTraceStateForTests()
+
+	baseCtx := context.Background()
+	handlerCtx := contextWithTraceActivation(baseCtx)
+	sendCtx := context.Background()
+	recvCtx := context.Background()
+	firstCh := make(chan OrderedMsg, 1)
+	secondCh := make(chan OrderedMsg, 1)
+	thirdCh := make(chan OrderedMsg, 1)
+	resCh := make(chan OrderedMsg, 1)
+
+	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, ProdInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, ProdInterceptor{}, secondCh)
+	thirdOut := NewSingleOutport(PortAddr{Path: "third/out", Port: "res"}, ProdInterceptor{}, thirdCh)
+	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, ProdInterceptor{})
+
+	handler, err := testFanInCreator{}.Create(IO{
+		In: NewInports(map[string]Inport{
+			"first":  NewInport(nil, NewSingleInport(firstCh, PortAddr{Path: "fanin/in", Port: "first"}, ProdInterceptor{})),
+			"second": NewInport(nil, NewSingleInport(secondCh, PortAddr{Path: "fanin/in", Port: "second"}, ProdInterceptor{})),
+			"third":  NewInport(nil, NewSingleInport(thirdCh, PortAddr{Path: "fanin/in", Port: "third"}, ProdInterceptor{})),
+		}),
+		Out: NewOutports(map[string]Outport{
+			"res": NewOutport(NewSingleOutport(PortAddr{Path: "fanin/out", Port: "res"}, ProdInterceptor{}, resCh), nil),
+		}),
+	}, nil)
+	if err != nil {
+		t.Fatalf("create handler failed: %v", err)
+	}
+
+	go handler(handlerCtx)
+	if !firstOut.Send(sendCtx, NewStringMsg("a")) {
+		t.Fatalf("first send failed")
+	}
+	if !secondOut.Send(sendCtx, NewStringMsg("b")) {
+		t.Fatalf("second send failed")
+	}
+	if !thirdOut.Send(sendCtx, NewStringMsg("c")) {
+		t.Fatalf("third send failed")
+	}
+
+	last, ok := resIn.Receive(recvCtx)
+	if !ok {
+		t.Fatalf("receive failed")
+	}
+
+	path := TracePath(last)
+	if len(path) != 2 {
+		t.Fatalf("expected output hop plus first parent chain entry, got %d hops", len(path))
+	}
+	if len(path[0].ParentTraceIDs) != 3 {
+		t.Fatalf("expected 3 parent trace ids, got %v", path[0].ParentTraceIDs)
+	}
+	if path[0].ParentTraceIDs[0] == 0 || path[0].ParentTraceIDs[1] == 0 || path[0].ParentTraceIDs[2] == 0 {
+		t.Fatalf("expected non-zero parent trace ids, got %v", path[0].ParentTraceIDs)
+	}
+
+	formatted := FormatDataflowTrace(last)
+	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
+		t.Fatalf("expected fan-in output hop in formatted trace, got:\n%s", formatted)
 	}
 }

@@ -26,12 +26,12 @@ type EventPort struct {
 
 // SentEvent is emitted when runtime sends a message through an outport.
 type SentEvent struct {
-	Port          EventPort `json:"port"`
-	Event         EventKind `json:"event"`
-	Message       string    `json:"message"`
-	Version       int       `json:"v"`
-	TraceID       uint64    `json:"traceId"`
-	ParentTraceID uint64    `json:"parentTraceId"`
+	Port           EventPort `json:"port"`
+	Event          EventKind `json:"event"`
+	Message        string    `json:"message"`
+	ParentTraceIDs []uint64  `json:"parentTraceIds"`
+	Version        int       `json:"v"`
+	TraceID        uint64    `json:"traceId"`
 }
 
 // RecvEvent is emitted when runtime receives a message from an inport.
@@ -100,12 +100,12 @@ func (d DebugInterceptor) getTracer() *Tracer {
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	d.getTracer().RecordSent(sender, ordered)
 	evt := SentEvent{
-		Version:       traceEventVersion,
-		Event:         EventSent,
-		TraceID:       ordered.index,
-		ParentTraceID: parentTraceIDFromMsg(ordered.Msg),
-		Port:          eventPortFromSlot(sender),
-		Message:       d.formatMsg(ordered.Msg),
+		Version:        traceEventVersion,
+		Event:          EventSent,
+		TraceID:        ordered.index,
+		ParentTraceIDs: parentTraceIDsFromMsg(ordered.Msg),
+		Port:           eventPortFromSlot(sender),
+		Message:        d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
 	return ordered

@@ -108,6 +108,7 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 		},
 		ordered,
 	)
+	recordTraceReceive(ctx, ordered)
 
 	return ordered.Msg, true
 }
@@ -168,6 +169,7 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 			},
 			v,
 		)
+		recordTraceReceive(ctx, ordered)
 		return ordered.Msg, true
 	}
 }
@@ -203,6 +205,7 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 					},
 					received,
 				)
+				recordTraceReceive(ctx, ordered)
 				resultChan <- f(idx, ordered.Msg)
 			}
 		})
@@ -262,6 +265,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 					},
 					orderedMsg,
 				)
+				recordTraceReceive(ctx, orderedMsg)
 				buf = append(buf, SelectedMsg{
 					OrderedMsg: orderedMsg,
 					SlotIdx:    index,
@@ -364,8 +368,8 @@ func NewSingleOutport(
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 	traceID := counter.Add(1)
-	parentTraceID, _ := TraceIDFromMsg(msg)
-	msg = withTrace(msg, traceID, parentTraceID)
+	parentTraceIDs := currentTraceParents(ctx, msg)
+	msg = withTrace(msg, traceID, parentTraceIDs)
 	ordered := OrderedMsg{
 		Msg:   msg,
 		index: traceID,
@@ -409,8 +413,8 @@ func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- Orde
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 	traceID := counter.Add(1)
-	parentTraceID, _ := TraceIDFromMsg(msg)
-	msg = withTrace(msg, traceID, parentTraceID)
+	parentTraceIDs := currentTraceParents(ctx, msg)
+	msg = withTrace(msg, traceID, parentTraceIDs)
 	ordered := OrderedMsg{Msg: msg, index: traceID}
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -440,12 +444,12 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
+	parentTraceIDs := currentTraceParents(ctx, msg)
 
 	for idx := range a.slots {
 		wg.Go(func() {
 			traceID := counter.Add(1)
-			parentTraceID, _ := TraceIDFromMsg(msg)
-			traceMsg := withTrace(msg, traceID, parentTraceID)
+			traceMsg := withTrace(msg, traceID, parentTraceIDs)
 			ordered := OrderedMsg{Msg: traceMsg, index: traceID}
 			i := Uint8Index(idx)
 			slotAddr := PortSlotAddr{

@@ -28,6 +28,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	var out Msg
 	ctx, cancel := context.WithCancelCause(ctx)
 	ctx = contextWithProgramCancelCause(ctx, cancel)
+	ctx = contextWithTraceActivation(ctx)
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
 		cancel(nil) // normal termination
@@ -73,7 +74,7 @@ func deferFuncCalls(
 		for i := range handlers {
 			routine := handlers[i]
 			wg.Go(func() {
-				routine(ctx)
+				routine(contextWithTraceActivation(ctx))
 			})
 		}
 		wg.Wait()

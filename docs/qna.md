@@ -208,6 +208,10 @@ Practical implications:
 - Keep `res` / `err` outport model and `?` error propagation idioms.
 - Use error wrapping for semantic context when needed (domain-level meaning),
   not as the only way to reconstruct execution path.
+- Treat runtime trace as always-on execution state; optional CLI trace flags
+  should control external JSONL emission, not whether causality is tracked.
+- Model causality as a graph, not a single linked list: one emitted message may
+  depend on multiple consumed inputs within the same component activation.
 - Panic/debugger/error-formatting should rely on runtime trace facilities for
   graph context.
 - Runtime trace output should remain machine-parseable with explicit format

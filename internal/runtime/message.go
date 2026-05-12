@@ -35,8 +35,8 @@ type Msg interface {
 // Internal
 
 type internalMsg struct {
-	parentTraceID uint64
-	traceID       uint64
+	parentTraceIDs []uint64
+	traceID        uint64
 }
 
 func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
@@ -57,8 +57,8 @@ func (internalMsg) Equal(other Msg) bool {
 	panic("unexpected Equal method call on internal message type")
 }
 
-func (m internalMsg) traceMeta() (uint64, uint64) {
-	return m.traceID, m.parentTraceID
+func (m internalMsg) traceMeta() (uint64, []uint64) {
+	return m.traceID, m.parentTraceIDs
 }
 
 // Bool
