@@ -12,7 +12,7 @@ func TestFormatIntReceivesInputsConcurrently(t *testing.T) {
 	t.Parallel()
 
 	io, inChans, outChans := newNamedRuntimeIO([]string{"data", "base"}, []string{"res"})
-	handler, err := (formatInt{}).Create(io, nil)
+	handler, err := (formatInt{}).Create(io, runtime.Msg{})
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestTernaryReceivesInputsConcurrently(t *testing.T) {
 	t.Parallel()
 
 	io, inChans, outChans := newNamedRuntimeIO([]string{"if", "then", "else"}, []string{"res"})
-	handler, err := (ternarySelector{}).Create(io, nil)
+	handler, err := (ternarySelector{}).Create(io, runtime.Msg{})
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}

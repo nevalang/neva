@@ -82,9 +82,7 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				}
 			}
 
-			if u, ok := resMsg.(runtime.UnionMsg); ok {
-				resMsg = u.Data()
-			}
+			resMsg = tryToUnboxIfUnion(resMsg)
 
 			if !resOut.Send(ctx, resMsg) {
 				return

@@ -43,7 +43,6 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 	return func(ctx context.Context) {
 		for {
 			var (
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				wg              sync.WaitGroup
 				dataMsg         runtime.Msg
 				cases           = make([]runtime.Msg, caseArrIn.Len())
@@ -93,19 +92,4 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func tryToUnboxIfUnion(dataMsg runtime.Msg) runtime.Msg {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	u, ok := dataMsg.(runtime.UnionMsg)
-	if !ok {
-		return dataMsg
-	}
-
-	if u.Data() == nil {
-		return u
-	}
-
-	return u.Data()
 }

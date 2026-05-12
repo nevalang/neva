@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
+	"sort"
 	"strconv"
 )
 
@@ -18,309 +20,428 @@ func (o OrderedMsg) String() string {
 	return fmt.Sprint(o.Msg)
 }
 
-type Msg interface {
-	Bool() bool
-	Int() int64
-	Float() float64
-	Str() string
-	Bytes() []byte
-	List() []Msg
-	Dict() map[string]Msg
-	Struct() StructMsg
-	Union() UnionMsg
+type MsgKind uint8
 
-	Equal(Msg) bool
+const (
+	MsgKindInvalid MsgKind = iota
+	MsgKindBool
+	MsgKindInt
+	MsgKindFloat
+	MsgKindString
+	MsgKindBytes
+	MsgKindList
+	MsgKindDict
+	MsgKindStruct
+	MsgKindUnion
+)
+
+// Msg is the runtime representation of a Neva message.
+// It is a tagged union optimized for minimal allocations in hot paths.
+type Msg struct {
+	val  any
+	str  string
+	bits uint64
+	kind MsgKind
 }
 
-// Internal
-
-type internalMsg struct{}
-
-func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
-func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
-func (internalMsg) Int() int64     { panic("unexpected Int method call on internal message type") }
-func (internalMsg) Float() float64 { panic("unexpected Float method call on internal message type") }
-func (internalMsg) Str() string    { panic("unexpected Str method call on internal message type") }
-func (internalMsg) Bytes() []byte  { panic("unexpected Bytes method call on internal message type") }
-func (internalMsg) List() []Msg    { panic("unexpected List method call on internal message type") }
-func (internalMsg) Dict() map[string]Msg {
-	panic("unexpected Dict method call on internal message type")
+func (msg Msg) Kind() MsgKind {
+	return msg.kind
 }
-func (internalMsg) Struct() StructMsg {
-	panic("unexpected Struct method call on internal message type")
+
+func (msg Msg) IsValid() bool {
+	return msg.kind != MsgKindInvalid
 }
-func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
-func (internalMsg) Equal(other Msg) bool {
-	panic("unexpected Equal method call on internal message type")
+
+func (msg Msg) IsBool() bool {
+	return msg.kind == MsgKindBool
+}
+
+func (msg Msg) IsInt() bool {
+	return msg.kind == MsgKindInt
+}
+
+func (msg Msg) IsFloat() bool {
+	return msg.kind == MsgKindFloat
+}
+
+func (msg Msg) IsString() bool {
+	return msg.kind == MsgKindString
+}
+
+func (msg Msg) IsBytes() bool {
+	return msg.kind == MsgKindBytes
+}
+
+func (msg Msg) IsList() bool {
+	return msg.kind == MsgKindList
+}
+
+func (msg Msg) IsDict() bool {
+	return msg.kind == MsgKindDict
+}
+
+func (msg Msg) IsStruct() bool {
+	return msg.kind == MsgKindStruct
+}
+
+func (msg Msg) IsUnion() bool {
+	return msg.kind == MsgKindUnion
+}
+
+func (msg Msg) Bool() bool {
+	if msg.kind == MsgKindBool {
+		return msg.bits == 1
+	}
+	panicUnexpectedBoolKind(msg.kind)
+	return false
+}
+
+func (msg Msg) Int() int64 {
+	if msg.kind == MsgKindInt {
+		// #nosec G115 -- msg.bits stores int64 in two's complement form.
+		return int64(msg.bits)
+	}
+	panicUnexpectedIntKind(msg.kind)
+	return 0
+}
+
+func (msg Msg) Float() float64 {
+	if msg.kind == MsgKindFloat {
+		return math.Float64frombits(msg.bits)
+	}
+	panicUnexpectedFloatKind(msg.kind)
+	return 0
+}
+
+func (msg Msg) Str() string {
+	if msg.kind == MsgKindString {
+		return msg.str
+	}
+	panicUnexpectedStrKind(msg.kind)
+	return ""
+}
+
+func (msg Msg) Bytes() []byte {
+	if msg.kind != MsgKindBytes {
+		panicUnexpectedBytesKind(msg.kind)
+	}
+	value, ok := msg.val.([]byte)
+	if !ok {
+		panic("unexpected Bytes value type")
+	}
+	return value
+}
+
+func (msg Msg) List() []Msg {
+	if msg.kind != MsgKindList {
+		panicUnexpectedListKind(msg.kind)
+	}
+	list, ok := msg.val.([]Msg)
+	if !ok {
+		panic("unexpected List value type")
+	}
+	return list
+}
+
+func (msg Msg) Dict() map[string]Msg {
+	if msg.kind != MsgKindDict {
+		panicUnexpectedDictKind(msg.kind)
+	}
+	dict, ok := msg.val.(map[string]Msg)
+	if !ok {
+		panic("unexpected Dict value type")
+	}
+	return dict
+}
+
+func (msg Msg) Struct() StructMsg {
+	if msg.kind != MsgKindStruct {
+		panicUnexpectedStructKind(msg.kind)
+	}
+	structMsg, ok := msg.val.(StructMsg)
+	if !ok {
+		panic("unexpected Struct value type")
+	}
+	return structMsg
+}
+
+func (msg Msg) Union() UnionMsg {
+	if msg.kind != MsgKindUnion {
+		panicUnexpectedUnionKind(msg.kind)
+	}
+	unionMsg, ok := msg.val.(UnionMsg)
+	if !ok {
+		panic("unexpected Union value type")
+	}
+	return unionMsg
+}
+
+func (msg Msg) String() string {
+	switch msg.kind {
+	case MsgKindInvalid:
+		panic("unexpected String call on invalid message")
+	case MsgKindBool:
+		return strconv.FormatBool(msg.Bool())
+	case MsgKindInt:
+		return strconv.FormatInt(msg.Int(), 10)
+	case MsgKindFloat:
+		return strconv.FormatFloat(msg.Float(), 'g', -1, 64)
+	case MsgKindString:
+		return msg.Str()
+	case MsgKindBytes, MsgKindList, MsgKindDict, MsgKindStruct, MsgKindUnion:
+		b, err := msg.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+		return string(b)
+	default:
+		panic(fmt.Sprintf("unexpected String call on unknown message kind: %d", msg.kind))
+	}
+}
+
+func (msg Msg) MarshalJSON() ([]byte, error) {
+	switch msg.kind {
+	case MsgKindInvalid:
+		panic("unexpected MarshalJSON call on invalid message")
+	case MsgKindBool:
+		return []byte(strconv.FormatBool(msg.Bool())), nil
+	case MsgKindInt:
+		return []byte(strconv.FormatInt(msg.Int(), 10)), nil
+	case MsgKindFloat:
+		return []byte(strconv.FormatFloat(msg.Float(), 'g', -1, 64)), nil
+	case MsgKindString:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return json.Marshal(msg.Str())
+	case MsgKindBytes:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return json.Marshal(msg.Bytes())
+	case MsgKindList:
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return json.Marshal(msg.List())
+	case MsgKindDict:
+		return marshalMapWithSpaces(msg.Dict())
+	case MsgKindStruct:
+		return msg.Struct().MarshalJSON()
+	case MsgKindUnion:
+		return msg.Union().MarshalJSON()
+	default:
+		panic(fmt.Sprintf("unexpected MarshalJSON call on unknown message kind: %d", msg.kind))
+	}
+}
+
+//nolint:gocognit,gocyclo,cyclop,funlen // hot-path switch intentionally explicit for performance.
+func (msg Msg) Equal(other Msg) bool {
+	if msg.kind != other.kind {
+		return false
+	}
+	switch msg.kind {
+	case MsgKindInvalid:
+		panic("unexpected Equal call on invalid message")
+	case MsgKindBool, MsgKindInt:
+		return msg.bits == other.bits
+	case MsgKindFloat:
+		return math.Float64frombits(msg.bits) == math.Float64frombits(other.bits)
+	case MsgKindString:
+		return msg.str == other.str
+	case MsgKindBytes:
+		left, leftOK := msg.val.([]byte)
+		right, rightOK := other.val.([]byte)
+		if !leftOK || !rightOK {
+			panic("unexpected Bytes value type")
+		}
+		return bytes.Equal(left, right)
+	case MsgKindList:
+		left, leftOK := msg.val.([]Msg)
+		right, rightOK := other.val.([]Msg)
+		if !leftOK || !rightOK {
+			panic("unexpected List value type")
+		}
+		return equalMsgLists(left, right)
+	case MsgKindDict:
+		left, leftOK := msg.val.(map[string]Msg)
+		right, rightOK := other.val.(map[string]Msg)
+		if !leftOK || !rightOK {
+			panic("unexpected Dict value type")
+		}
+		return equalMsgDicts(left, right)
+	case MsgKindStruct:
+		left, leftOK := msg.val.(StructMsg)
+		right, rightOK := other.val.(StructMsg)
+		if !leftOK || !rightOK {
+			panic("unexpected Struct value type")
+		}
+		return left.Equal(right)
+	case MsgKindUnion:
+		left, leftOK := msg.val.(UnionMsg)
+		right, rightOK := other.val.(UnionMsg)
+		if !leftOK || !rightOK {
+			panic("unexpected Union value type")
+		}
+		return left.Equal(right)
+	default:
+		return false
+	}
+}
+
+// Cold panic helpers keep hot accessors inline-friendly.
+//
+//go:noinline
+func panicUnexpectedBoolKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Bool call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedIntKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Int call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedFloatKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Float call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedStrKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Str call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedBytesKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Bytes call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedListKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected List call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedDictKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Dict call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedStructKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Struct call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedUnionKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Union call on %s message", kind))
+}
+
+func (kind MsgKind) String() string {
+	switch kind {
+	case MsgKindInvalid:
+		return "invalid"
+	case MsgKindBool:
+		return "bool"
+	case MsgKindInt:
+		return "int"
+	case MsgKindFloat:
+		return "float"
+	case MsgKindString:
+		return "string"
+	case MsgKindBytes:
+		return "bytes"
+	case MsgKindList:
+		return "list"
+	case MsgKindDict:
+		return "dict"
+	case MsgKindStruct:
+		return "struct"
+	case MsgKindUnion:
+		return "union"
+	default:
+		return "unknown"
+	}
 }
 
 // Bool
 
-type BoolMsg struct {
-	internalMsg
-	v bool
-}
-
-func (msg BoolMsg) Bool() bool                   { return msg.v }
-func (msg BoolMsg) String() string               { return strconv.FormatBool(msg.v) }
-func (msg BoolMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg BoolMsg) Equal(other Msg) bool {
-	otherBool, ok := other.(BoolMsg)
-	return ok && msg.v == otherBool.v
-}
-
-func NewBoolMsg(b bool) BoolMsg {
-	return BoolMsg{
-		internalMsg: internalMsg{},
-		v:           b,
+func NewBoolMsg(b bool) Msg {
+	var bits uint64
+	if b {
+		bits = 1
 	}
+	return Msg{kind: MsgKindBool, bits: bits}
 }
 
 // Int
 
-type IntMsg struct {
-	internalMsg
-	v int64
-}
-
-func (msg IntMsg) Int() int64                   { return msg.v }
-func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
-func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg IntMsg) Equal(other Msg) bool {
-	otherInt, ok := other.(IntMsg)
-	return ok && msg.v == otherInt.v
-}
-
-func NewIntMsg(n int64) IntMsg {
-	return IntMsg{
-		internalMsg: internalMsg{},
-		v:           n,
-	}
+func NewIntMsg(n int64) Msg {
+	// #nosec G115 -- store int64 bit pattern in uint64 for compact storage.
+	return Msg{kind: MsgKindInt, bits: uint64(n)}
 }
 
 // Float
 
-type FloatMsg struct {
-	internalMsg
-	v float64
+func NewFloatMsg(n float64) Msg {
+	return Msg{kind: MsgKindFloat, bits: math.Float64bits(n)}
 }
 
-func (msg FloatMsg) Float() float64               { return msg.v }
-func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
-func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg FloatMsg) Equal(other Msg) bool {
-	otherFloat, ok := other.(FloatMsg)
-	return ok && msg.v == otherFloat.v
+// NewStringMsg wraps a string runtime value.
+func NewStringMsg(s string) Msg {
+	return Msg{kind: MsgKindString, str: s}
 }
 
-func NewFloatMsg(n float64) FloatMsg {
-	return FloatMsg{
-		internalMsg: internalMsg{},
-		v:           n,
-	}
+// NewBytesMsg wraps a bytes runtime value.
+func NewBytesMsg(v []byte) Msg {
+	return Msg{kind: MsgKindBytes, val: v}
 }
 
-// --- STRING ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-type StringMsg struct {
-	internalMsg
-	v string
+// NewListMsg wraps a list runtime value.
+func NewListMsg(v []Msg) Msg {
+	return Msg{kind: MsgKindList, val: v}
 }
 
-func (msg StringMsg) Str() string { return msg.v }
-
-func (msg StringMsg) String() string { return msg.v }
-
-func (msg StringMsg) MarshalJSON() ([]byte, error) {
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	return json.Marshal(msg.String())
+// NewDictMsg wraps a dict runtime value.
+func NewDictMsg(d map[string]Msg) Msg {
+	return Msg{kind: MsgKindDict, val: d}
 }
 
-func (msg StringMsg) Equal(other Msg) bool {
-	otherString, ok := other.(StringMsg)
-	return ok && msg.v == otherString.v
-}
-
-func NewStringMsg(s string) StringMsg {
-	return StringMsg{
-		internalMsg: internalMsg{},
-		v:           s,
-	}
-}
-
-// --- BYTES ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-type BytesMsg struct {
-	internalMsg
-	v []byte
-}
-
-func (msg BytesMsg) Bytes() []byte { return msg.v }
-
-func (msg BytesMsg) String() string {
-	b, err := msg.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
-func (msg BytesMsg) MarshalJSON() ([]byte, error) {
-	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	return json.Marshal(msg.v)
-}
-
-func (msg BytesMsg) Equal(other Msg) bool {
-	otherBytes, ok := other.(BytesMsg)
-	return ok && bytes.Equal(msg.v, otherBytes.v)
-}
-
-func NewBytesMsg(v []byte) BytesMsg {
-	return BytesMsg{
-		internalMsg: internalMsg{},
-		v:           v,
-	}
-}
-
-// --- LIST ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-type ListMsg struct {
-	internalMsg
-	v []Msg
-}
-
-func (msg ListMsg) List() []Msg { return msg.v }
-func (msg ListMsg) String() string {
-	bb, err := msg.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-	return string(bb)
-}
-
-//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
-func (msg ListMsg) Equal(other Msg) bool {
-	otherList, ok := other.(ListMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.v) != len(otherList.v) {
-		return false
-	}
-	for i, v := range msg.v {
-		if !v.Equal(otherList.v[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-func NewListMsg(v []Msg) ListMsg {
-	return ListMsg{
-		internalMsg: internalMsg{},
-		v:           v,
-	}
-}
-
-// --- DICT ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-type DictMsg struct {
-	internalMsg
-	v map[string]Msg
-}
-
-func (msg DictMsg) Dict() map[string]Msg { return msg.v }
-func (msg DictMsg) MarshalJSON() ([]byte, error) {
-	jsonData, err := json.Marshal(msg.v)
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	return addJSONSpaces(jsonData), nil
-}
-func (msg DictMsg) String() string {
-	b, err := msg.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-func (msg DictMsg) Equal(other Msg) bool {
-	otherDict, ok := other.(DictMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.v) != len(otherDict.v) {
-		return false
-	}
-	for k, v := range msg.v {
-		otherV, ok := otherDict.v[k]
-		if !ok || !v.Equal(otherV) {
-			return false
-		}
-	}
-	return true
-}
-
-func NewDictMsg(d map[string]Msg) DictMsg {
-	return DictMsg{
-		internalMsg: internalMsg{},
-		v:           d,
-	}
-}
-
-// --- STRUCT ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// StructMsg stores struct fields in runtime representation.
 type StructMsg struct {
-	internalMsg
 	fields []StructField
 }
 
 func (msg StructMsg) Struct() StructMsg { return msg }
 
-// get returns the value of a field by name.
-// it panics if the field is not found.
-// it uses linear scan to find the field.
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (msg StructMsg) Get(name string) Msg { //nolint:ireturn,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// Get returns the value of a field by name.
+// It panics if the field is not found.
+// It uses linear scan to find the field.
+func (msg StructMsg) Get(name string) Msg {
 	if field, ok := msg.get(name); ok {
 		return field
 	}
 	panic(fmt.Sprintf("field %q not found", name))
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg StructMsg) get(name string) (Msg, bool) {
 	for i := range msg.fields {
 		if msg.fields[i].name == name {
 			return msg.fields[i].value, true
 		}
 	}
-	return nil, false
+	return Msg{}, false
+}
+
+func (msg StructMsg) Fields() []StructField {
+	return msg.fields
 }
 
 func (msg StructMsg) MarshalJSON() ([]byte, error) {
-	m := make(map[string]Msg, len(msg.fields))
-	for i := range msg.fields {
-		m[msg.fields[i].name] = msg.fields[i].value
+	if len(msg.fields) == 0 {
+		return []byte("{}"), nil
 	}
 
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
+	fields := make([]StructField, len(msg.fields))
+	copy(fields, msg.fields)
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].name < fields[j].name
+	})
 
-	return addJSONSpaces(jsonData), nil
+	return marshalStructFieldsWithSpaces(fields)
 }
 
 func (msg StructMsg) String() string {
@@ -334,16 +455,12 @@ func (msg StructMsg) String() string {
 // Equal implements strict equality for StructMsg messages.
 // It returns false if the lengths of the names and fields are different.
 // It returns false if any of the fields are not equal.
-func (msg StructMsg) Equal(other Msg) bool {
-	otherStruct, ok := other.(StructMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.fields) != len(otherStruct.fields) {
+func (msg StructMsg) Equal(other StructMsg) bool {
+	if len(msg.fields) != len(other.fields) {
 		return false
 	}
 	for i := range msg.fields {
-		otherField, ok := otherStruct.get(msg.fields[i].name)
+		otherField, ok := other.get(msg.fields[i].name)
 		if !ok {
 			return false
 		}
@@ -354,46 +471,51 @@ func (msg StructMsg) Equal(other Msg) bool {
 	return true
 }
 
+func (msg StructMsg) Msg() Msg {
+	return Msg{kind: MsgKindStruct, val: msg}
+}
+
 func newStructMsg(fields []StructField) StructMsg {
 	if len(fields) == 0 {
-		return StructMsg{internalMsg: internalMsg{}, fields: nil}
+		return StructMsg{fields: nil}
 	}
 	copied := make([]StructField, len(fields))
 	copy(copied, fields)
 	return StructMsg{
-		internalMsg: internalMsg{},
-		fields:      copied,
+		fields: copied,
 	}
 }
 
-// structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// StructField is a helper to construct structs via runtime.newstruct api without exposing fields.
 type StructField struct {
-	value Msg
 	name  string
+	value Msg
 }
 
-// newstructfield constructs a structfield with provided name and value.
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (field StructField) Name() string {
+	return field.name
+}
+
+func (field StructField) Value() Msg {
+	return field.value
+}
+
+// NewStructField constructs a StructField with provided name and value.
 func NewStructField(name string, value Msg) StructField {
 	return StructField{name: name, value: value}
 }
 
-// newstruct builds a struct message from a slice of structfield.
-// underlying struct representation remains unchanged for now.
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
+// NewStructMsg builds a struct message from a slice of StructField.
+// Underlying struct representation remains unchanged for now.
+func NewStructMsg(fields []StructField) Msg { return newStructMsg(fields).Msg() }
 
-// --- UNION ---
-//
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func NewStructValue(fields []StructField) StructMsg { return newStructMsg(fields) }
+
+// UnionMsg represents tagged union runtime data.
 type UnionMsg struct {
-	internalMsg
-	data Msg
-	tag  string
+	tag     string
+	data    Msg
+	hasData bool
 }
 
 func (msg UnionMsg) Union() UnionMsg {
@@ -404,7 +526,10 @@ func (msg UnionMsg) Tag() string {
 	return msg.tag
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (msg UnionMsg) HasData() bool {
+	return msg.hasData
+}
+
 func (msg UnionMsg) Data() Msg {
 	return msg.data
 }
@@ -415,21 +540,6 @@ func (msg UnionMsg) String() string {
 		panic(err)
 	}
 	return string(b)
-}
-
-func (msg UnionMsg) MarshalJSON() ([]byte, error) {
-	if msg.data == nil {
-		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
-	}
-
-	dataJSON, err := json.Marshal(msg.data)
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-	dataJSON = addJSONSpaces(dataJSON)
-
-	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -444,76 +554,86 @@ func Uint8Index(idx int) uint8 {
 	return uint8(idx)
 }
 
+func (msg UnionMsg) MarshalJSON() ([]byte, error) {
+	if !msg.hasData {
+		return fmt.Appendf(nil, `{ "tag": %q }`, msg.tag), nil
+	}
+
+	dataJSON, err := msg.data.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
+}
+
 // Equal implements strict equality for UnionMsg messages.
 // If one union has data and another doesn't, it returns false.
 // It returns false if tags are different.
 // It returns false if data is different.
-// Tags are compared as Go strings and data is compared recursevely using Equal method.
-func (msg UnionMsg) Equal(other Msg) bool {
-	otherUnion, ok := other.(UnionMsg)
-	if !ok {
+// Tags are compared as Go strings and data is compared recursively using Equal method.
+func (msg UnionMsg) Equal(other UnionMsg) bool {
+	if msg.hasData != other.hasData {
 		return false
 	}
-
-	if msg.data != nil && otherUnion.data == nil {
-		return false
-	} else if msg.data == nil && otherUnion.data != nil {
+	if msg.tag != other.tag {
 		return false
 	}
-
-	if msg.tag != otherUnion.tag {
-		return false
-	}
-
-	if msg.data == nil {
+	if !msg.hasData {
 		return true
 	}
-
-	return msg.data.Equal(otherUnion.data)
+	return msg.data.Equal(other.data)
 }
 
-func NewUnionMsg(tag string, data Msg) UnionMsg {
+func (msg UnionMsg) Msg() Msg {
+	return Msg{kind: MsgKindUnion, val: msg}
+}
+
+func newUnionMsg(tag string, data Msg) UnionMsg {
 	return UnionMsg{
-		internalMsg: internalMsg{},
-		tag:         tag,
-		data:        data,
+		tag:     tag,
+		data:    data,
+		hasData: data.IsValid(),
 	}
+}
+
+func NewUnionMsg(tag string, data Msg) Msg {
+	return newUnionMsg(tag, data).Msg()
+}
+
+func NewUnionMsgNoData(tag string) Msg {
+	return UnionMsg{tag: tag, hasData: false}.Msg()
+}
+
+func NewUnionValue(tag string, data Msg) UnionMsg {
+	return newUnionMsg(tag, data)
+}
+
+func NewUnionValueNoData(tag string) UnionMsg {
+	return UnionMsg{tag: tag, hasData: false}
 }
 
 // --- OPERATIONS ---
 
-// Match compares two messages and return true if they matches and false otherwise.
+// Match compares two messages and returns true if they match, false otherwise.
 // Unlike Equal it compares only some aspects of the messages.
 func Match(msg Msg, pattern Msg) bool {
-	// at the moment we only match unions
-	// maybe in the future we'll add support for more types e.g. structs
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	msgUnion, ok := msg.(UnionMsg)
-	if !ok {
+	if !msg.IsUnion() || !pattern.IsUnion() {
 		return msg.Equal(pattern)
 	}
 
-	// both msg and pattern must be unions to perform pattern matching
-	// if at least one of them is not, strict equality will be applied instead
-	patternUnion, ok := pattern.(UnionMsg)
-	if !ok {
-		return msg.Equal(pattern)
-	}
+	msgUnion := msg.Union()
+	patternUnion := pattern.Union()
 
-	// if tags are not equal data does not matter, there's no match
 	if msgUnion.tag != patternUnion.tag {
 		return false
 	}
 
-	// if pattern doesn't have data we match by tag
-	// and by this time we know tags are equal
-	if patternUnion.data == nil {
+	if !patternUnion.hasData {
 		return true
 	}
 
-	// if we here we know that pattern has data
-	// so if msg doesn't, they don't match
-	if msgUnion.data == nil {
+	if !msgUnion.hasData {
 		return false
 	}
 
@@ -525,41 +645,165 @@ func Match(msg Msg, pattern Msg) bool {
 	return msgUnion.data.Equal(patternUnion.data)
 }
 
-func addJSONSpaces(jsonData []byte) []byte {
-	spaced := make([]byte, 0, len(jsonData))
-	inString := false
-	isEscaped := false
-
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	for _, b := range jsonData {
-		if inString {
-			spaced = append(spaced, b)
-			if isEscaped {
-				isEscaped = false
-				continue
-			}
-			if b == '\\' {
-				isEscaped = true
-				continue
-			}
-			if b == '"' {
-				inString = false
-			}
-			continue
+//nolint:gocognit // hot-path loop intentionally explicit for performance.
+func equalMsgLists(left []Msg, right []Msg) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		leftItem := left[i]
+		rightItem := right[i]
+		if leftItem.kind != rightItem.kind {
+			return false
 		}
-
-		switch b {
-		case '"':
-			inString = true
-			spaced = append(spaced, b)
-		case ':':
-			spaced = append(spaced, ':', ' ')
-		case ',':
-			spaced = append(spaced, ',', ' ')
+		//nolint:exhaustive // non-primitive kinds intentionally handled by default fallback.
+		switch leftItem.kind {
+		case MsgKindBool, MsgKindInt:
+			if leftItem.bits != rightItem.bits {
+				return false
+			}
+		case MsgKindFloat:
+			if math.Float64frombits(leftItem.bits) != math.Float64frombits(rightItem.bits) {
+				return false
+			}
+		case MsgKindString:
+			if leftItem.str != rightItem.str {
+				return false
+			}
 		default:
-			spaced = append(spaced, b)
+			if !leftItem.Equal(rightItem) {
+				return false
+			}
 		}
 	}
+	return true
+}
 
-	return spaced
+// equalMsgDicts is needed because maps.Equal won't work for non-comparable values.
+func equalMsgDicts(left map[string]Msg, right map[string]Msg) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for k, v := range left {
+		other, ok := right[k]
+		if !ok || !v.Equal(other) {
+			return false
+		}
+	}
+	return true
+}
+
+func marshalMapWithSpaces(msgMap map[string]Msg) ([]byte, error) {
+	if len(msgMap) == 0 {
+		return []byte("{}"), nil
+	}
+
+	keys := make([]string, 0, len(msgMap))
+	for k := range msgMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	out := make([]byte, 0, len(msgMap)*16+2)
+	out = append(out, '{')
+	for idx := range keys {
+		if idx > 0 {
+			out = append(out, ',', ' ')
+		}
+
+		keyJSON, err := json.Marshal(keys[idx])
+		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			return nil, err
+		}
+		out = append(out, keyJSON...)
+		out = append(out, ':', ' ')
+
+		valueJSON, err := marshalNestedJSON(msgMap[keys[idx]])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, valueJSON...)
+	}
+	out = append(out, '}')
+
+	return out, nil
+}
+
+func marshalStructFieldsWithSpaces(fields []StructField) ([]byte, error) {
+	out := make([]byte, 0, len(fields)*16+2)
+	out = append(out, '{')
+	for idx := range fields {
+		if idx > 0 {
+			out = append(out, ',', ' ')
+		}
+
+		keyJSON, err := json.Marshal(fields[idx].name)
+		if err != nil {
+			//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			return nil, err
+		}
+		out = append(out, keyJSON...)
+		out = append(out, ':', ' ')
+
+		valueJSON, err := marshalNestedJSON(fields[idx].value)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, valueJSON...)
+	}
+	out = append(out, '}')
+
+	return out, nil
+}
+
+func marshalNestedJSON(msg Msg) ([]byte, error) {
+	switch msg.Kind() {
+	case MsgKindInvalid, MsgKindBool, MsgKindInt, MsgKindFloat, MsgKindString, MsgKindBytes:
+		return msg.MarshalJSON()
+	case MsgKindList:
+		return marshalNestedListWithSpaces(msg.List())
+	case MsgKindDict:
+		return marshalMapWithSpaces(msg.Dict())
+	case MsgKindStruct:
+		return marshalStructFieldsWithSpaces(msg.Struct().fields)
+	case MsgKindUnion:
+		return marshalNestedUnionCompact(msg.Union())
+	default:
+		panic(fmt.Sprintf("unexpected nested JSON marshal for unknown message kind: %d", msg.Kind()))
+	}
+}
+
+func marshalNestedListWithSpaces(list []Msg) ([]byte, error) {
+	if len(list) == 0 {
+		return []byte("[]"), nil
+	}
+
+	var out []byte
+	out = append(out, '[')
+	for i := range list {
+		if i > 0 {
+			out = append(out, ',', ' ')
+		}
+		itemJSON, err := marshalNestedJSON(list[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, itemJSON...)
+	}
+	out = append(out, ']')
+
+	return out, nil
+}
+
+func marshalNestedUnionCompact(msg UnionMsg) ([]byte, error) {
+	if !msg.hasData {
+		return fmt.Appendf(nil, `{"tag": %q}`, msg.tag), nil
+	}
+
+	dataJSON, err := marshalNestedJSON(msg.data)
+	if err != nil {
+		return nil, err
+	}
+	return fmt.Appendf(nil, `{"tag": %q, "data": %s}`, msg.tag, dataJSON), nil
 }

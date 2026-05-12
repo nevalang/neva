@@ -103,7 +103,7 @@ func assertBinaryOperatorResult(
 	t.Helper()
 
 	runtimeIO, leftInput, rightInput, resultOutput := newBinaryRuntimeIO()
-	handler, err := creator.Create(runtimeIO, nil)
+	handler, err := creator.Create(runtimeIO, runtime.Msg{})
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}
@@ -157,7 +157,7 @@ func assertUnaryOperatorResult(
 	t.Helper()
 
 	runtimeIO, dataInput, resultOutput := newUnaryRuntimeIO()
-	handler, err := creator.Create(runtimeIO, nil)
+	handler, err := creator.Create(runtimeIO, runtime.Msg{})
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}
