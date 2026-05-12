@@ -90,15 +90,15 @@ func TestFormatPanicDataflowTrace_FanInKeepsAllParentBranches(t *testing.T) {
 		t.Fatalf("third send failed")
 	}
 
-	firstOrdered, ok := firstIn.ReceiveOrdered(ctx)
+	firstOrdered, ok := firstIn.Receive(ctx)
 	if !ok {
 		t.Fatalf("first receive failed")
 	}
-	secondOrdered, ok := secondIn.ReceiveOrdered(ctx)
+	secondOrdered, ok := secondIn.Receive(ctx)
 	if !ok {
 		t.Fatalf("second receive failed")
 	}
-	thirdOrdered, ok := thirdIn.ReceiveOrdered(ctx)
+	thirdOrdered, ok := thirdIn.Receive(ctx)
 	if !ok {
 		t.Fatalf("third receive failed")
 	}

@@ -44,7 +44,7 @@ func createUnaryFunc(runtimeIO runtime.IO, apply unaryOperator) (func(context.Co
 
 	return func(ctx context.Context) {
 		for {
-			inputValue, available := dataInput.ReceiveOrdered(ctx)
+			inputValue, available := dataInput.Receive(ctx)
 			if !available {
 				return
 			}

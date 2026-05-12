@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -57,14 +58,15 @@ func (p ProdInterceptor) getTracer() *Tracer {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (p ProdInterceptor) Sent(_ context.Context, sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	p.getTracer().RecordSent(sender, ordered)
 	return ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (p ProdInterceptor) Received(ctx context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	p.getTracer().RecordReceived(receiver, ordered)
+	recordTraceReceive(ctx, ordered)
 	return ordered
 }
 
@@ -97,7 +99,7 @@ func (d DebugInterceptor) getTracer() *Tracer {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (d *DebugInterceptor) Sent(_ context.Context, sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	d.getTracer().RecordSent(sender, ordered)
 	evt := SentEvent{
 		Version:        traceEventVersion,
@@ -112,8 +114,9 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) Ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (d *DebugInterceptor) Received(ctx context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	d.getTracer().RecordReceived(receiver, ordered)
+	recordTraceReceive(ctx, ordered)
 	evt := RecvEvent{
 		Version: traceEventVersion,
 		Event:   EventRecv,

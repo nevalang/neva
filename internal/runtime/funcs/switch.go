@@ -55,8 +55,8 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			})
 
 			wg.Go(func() {
-				casesOk = caseArrIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-					cases[idx] = msg
+				casesOk = caseArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+					cases[idx] = ordered.Msg
 					return true
 				})
 			})

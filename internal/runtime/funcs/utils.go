@@ -40,10 +40,10 @@ func receive2Ordered(
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Go(func() {
-		firstMsg, firstOK = firstIn.ReceiveOrdered(ctx)
+		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		secondMsg, secondOK = secondIn.ReceiveOrdered(ctx)
+		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
 	waitGroup.Wait()
 
@@ -72,13 +72,13 @@ func receive3(
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Go(func() {
-		firstMsg, firstOK = firstIn.ReceiveOrdered(ctx)
+		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		secondMsg, secondOK = secondIn.ReceiveOrdered(ctx)
+		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		thirdMsg, thirdOK = thirdIn.ReceiveOrdered(ctx)
+		thirdMsg, thirdOK = thirdIn.Receive(ctx)
 	})
 	waitGroup.Wait()
 
@@ -98,16 +98,16 @@ func receive4(
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Go(func() {
-		firstMsg, firstOK = firstIn.ReceiveOrdered(ctx)
+		firstMsg, firstOK = firstIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		secondMsg, secondOK = secondIn.ReceiveOrdered(ctx)
+		secondMsg, secondOK = secondIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		thirdMsg, thirdOK = thirdIn.ReceiveOrdered(ctx)
+		thirdMsg, thirdOK = thirdIn.Receive(ctx)
 	})
 	waitGroup.Go(func() {
-		fourthMsg, fourthOK = fourthIn.ReceiveOrdered(ctx)
+		fourthMsg, fourthOK = fourthIn.Receive(ctx)
 	})
 	waitGroup.Wait()
 

@@ -48,13 +48,13 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 	return func(ctx context.Context) {
 		for {
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.ReceiveOrdered(ctx)
+			dataMsg, ok := dataIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
 			ifMsgs := make([]runtime.OrderedMsg, ifIn.Len())
-			if !ifIn.ReceiveAllOrdered(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+			if !ifIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
 				ifMsgs[idx] = ordered
 				return true
 			}) {
@@ -62,14 +62,14 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 			}
 
 			thenMsgs := make([]runtime.OrderedMsg, thenOut.Len())
-			if !thenOut.ReceiveAllOrdered(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+			if !thenOut.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
 				thenMsgs[idx] = ordered
 				return true
 			}) {
 				return
 			}
 
-			elseInMsg, ok := elseIn.ReceiveOrdered(ctx)
+			elseInMsg, ok := elseIn.Receive(ctx)
 			if !ok {
 				return
 			}

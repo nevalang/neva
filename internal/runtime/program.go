@@ -89,8 +89,8 @@ func NewSingleInport(
 	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
 }
 
-// ReceiveOrdered returns the next incoming transport envelope with its runtime ordering metadata.
-func (s SingleInport) ReceiveOrdered(ctx context.Context) (OrderedMsg, bool) {
+// Receive returns the next incoming transport envelope with its runtime ordering metadata.
+func (s SingleInport) Receive(ctx context.Context) (OrderedMsg, bool) {
 	var ordered OrderedMsg
 	select {
 	case <-ctx.Done():
@@ -100,6 +100,7 @@ func (s SingleInport) ReceiveOrdered(ctx context.Context) (OrderedMsg, bool) {
 	}
 
 	ordered = s.interceptor.Received(
+		ctx,
 		PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: s.addr.Path,
@@ -108,18 +109,7 @@ func (s SingleInport) ReceiveOrdered(ctx context.Context) (OrderedMsg, bool) {
 		},
 		ordered,
 	)
-	recordTraceReceive(ctx, ordered)
-
 	return ordered, true
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
-	ordered, ok := s.ReceiveOrdered(ctx)
-	if !ok {
-		return nil, false
-	}
-	return ordered.Msg, true
 }
 
 func (f Inports) Array(name string) (ArrayInport, error) {
@@ -156,8 +146,8 @@ func NewArrayInport(
 	}
 }
 
-// ReceiveOrdered receives a message from a specific array slot together with its runtime ordering metadata.
-func (a *ArrayInport) ReceiveOrdered(ctx context.Context, idx int) (OrderedMsg, bool) {
+// Receive receives a message from a specific array slot together with its runtime ordering metadata.
+func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 	select {
 	case <-ctx.Done():
 		return OrderedMsg{}, false
@@ -165,6 +155,7 @@ func (a *ArrayInport) ReceiveOrdered(ctx context.Context, idx int) (OrderedMsg, 
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		index := Uint8Index(idx)
 		ordered := a.interceptor.Received(
+			ctx,
 			PortSlotAddr{
 				PortAddr: PortAddr{
 					Path: a.addr.Path,
@@ -174,37 +165,18 @@ func (a *ArrayInport) ReceiveOrdered(ctx context.Context, idx int) (OrderedMsg, 
 			},
 			v,
 		)
-		recordTraceReceive(ctx, ordered)
 		return ordered, true
 	}
-}
-
-//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a *ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
-	ordered, ok := a.ReceiveOrdered(ctx, idx)
-	if !ok {
-		return nil, false
-	}
-	return ordered.Msg, true
 }
 
 // ReceiveAll receives messages from all available array inport slots just once.
 // It returns false if context is done or if the provided function returns false.
 // The function is called for each message received.
 // The function should return false if it wants to stop receiving messages.
-// Functions are called in order of incoming messages, not in order of slots.
+// Functions receive full transport envelopes and are called in order of incoming messages, not in order of slots.
 //
 //nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
-	return a.ReceiveAllOrdered(ctx, func(idx int, ordered OrderedMsg) bool {
-		return f(idx, ordered.Msg)
-	})
-}
-
-// ReceiveAllOrdered receives one message per slot and passes full transport identity to the callback.
-//
-//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a *ArrayInport) ReceiveAllOrdered(ctx context.Context, f func(idx int, ordered OrderedMsg) bool) bool {
+func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered OrderedMsg) bool) bool {
 	// IDEA return channel instead of taking function
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
@@ -219,6 +191,7 @@ func (a *ArrayInport) ReceiveAllOrdered(ctx context.Context, f func(idx int, ord
 			case received := <-a.chans[idx]:
 				index := Uint8Index(idx)
 				ordered := a.interceptor.Received(
+					ctx,
 					PortSlotAddr{
 						PortAddr: PortAddr{
 							Path: a.addr.Path,
@@ -228,7 +201,6 @@ func (a *ArrayInport) ReceiveAllOrdered(ctx context.Context, f func(idx int, ord
 					},
 					received,
 				)
-				recordTraceReceive(ctx, ordered)
 				resultChan <- f(idx, ordered)
 			}
 		})
@@ -279,6 +251,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case orderedMsg := <-ch:
 				index := Uint8Index(slotIdx)
 				orderedMsg = a.interceptor.Received(
+					ctx,
 					PortSlotAddr{
 						PortAddr: PortAddr{
 							Path: a.addr.Path,
@@ -288,7 +261,6 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 					},
 					orderedMsg,
 				)
-				recordTraceReceive(ctx, orderedMsg)
 				buf = append(buf, SelectedMsg{
 					OrderedMsg: orderedMsg,
 					SlotIdx:    index,
@@ -398,6 +370,7 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 		index: traceID,
 	}
 	ordered = s.interceptor.Sent(
+		ctx,
 		PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: s.addr.Path,
@@ -415,8 +388,8 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 }
 
 type Interceptor interface {
-	Sent(PortSlotAddr, OrderedMsg) OrderedMsg
-	Received(PortSlotAddr, OrderedMsg) OrderedMsg
+	Sent(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
+	Received(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
 }
 
 type PortSlotAddr struct {
@@ -446,7 +419,7 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...Or
 		},
 		Index: &idx,
 	}
-	ordered = a.interceptor.Sent(slotAddr, ordered)
+	ordered = a.interceptor.Sent(ctx, slotAddr, ordered)
 	select {
 	case <-ctx.Done():
 		return false
@@ -479,7 +452,7 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg
 				PortAddr: a.addr,
 				Index:    &i,
 			}
-			ordered = a.interceptor.Sent(slotAddr, ordered)
+			ordered = a.interceptor.Sent(ctx, slotAddr, ordered)
 
 			select {
 			case <-ctx.Done():

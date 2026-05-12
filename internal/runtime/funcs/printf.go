@@ -50,7 +50,7 @@ func (printf) handle(
 ) (func(ctx context.Context), error) {
 	return func(ctx context.Context) {
 		for {
-			templateMsg, received := tplIn.ReceiveOrdered(ctx)
+			templateMsg, received := tplIn.Receive(ctx)
 			if !received {
 				return
 			}
@@ -123,7 +123,7 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]runtime.Msg, []runtime.OrderedMsg, bool) {
 	args := make([]runtime.Msg, argsIn.Len())
 	causes := make([]runtime.OrderedMsg, argsIn.Len())
-	if !argsIn.ReceiveAllOrdered(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+	if !argsIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
 		args[idx] = ordered.Msg
 		causes[idx] = ordered
 		return true

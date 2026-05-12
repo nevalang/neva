@@ -256,11 +256,11 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 		t.Fatalf("second send failed")
 	}
 
-	firstOrdered, ok := firstIn.ReceiveOrdered(ctx)
+	firstOrdered, ok := firstIn.Receive(ctx)
 	if !ok {
 		t.Fatalf("first receive failed")
 	}
-	secondOrdered, ok := secondIn.ReceiveOrdered(ctx)
+	secondOrdered, ok := secondIn.Receive(ctx)
 	if !ok {
 		t.Fatalf("second receive failed")
 	}

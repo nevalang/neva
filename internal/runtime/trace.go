@@ -47,6 +47,9 @@ func NewTracer() *Tracer {
 
 // TraceIDFromMsg extracts runtime Dataflow Trace identity from message payload.
 func TraceIDFromMsg(msg Msg) (uint64, bool) {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		return TraceIDFromMsg(ordered.Msg)
+	}
 	carrier, ok := msg.(traceCarrier)
 	if !ok {
 		return 0, false
@@ -56,6 +59,9 @@ func TraceIDFromMsg(msg Msg) (uint64, bool) {
 }
 
 func parentTraceIDsFromMsg(msg Msg) []uint64 {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		return parentTraceIDsFromMsg(ordered.Msg)
+	}
 	carrier, ok := msg.(traceCarrier)
 	if !ok {
 		return nil
@@ -85,45 +91,39 @@ func parentTraceIDsFromOrdered(causes []OrderedMsg) []uint64 {
 	return parentTraceIDs
 }
 
+func traceMetaValue(traceID uint64, parentTraceIDs []uint64) internalMsg {
+	return internalMsg{
+		traceID:        traceID,
+		parentTraceIDs: slices.Clone(parentTraceIDs),
+	}
+}
+
 //nolint:ireturn // Msg is runtime contract type.
 func withTrace(msg Msg, traceID uint64, parentTraceIDs []uint64) Msg {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		msg = ordered.Msg
+	}
+
+	meta := traceMetaValue(traceID, parentTraceIDs)
 	switch typedMsg := msg.(type) {
 	case BoolMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return BoolMsg{internalMsg: meta, v: typedMsg.v}
 	case IntMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return IntMsg{internalMsg: meta, v: typedMsg.v}
 	case FloatMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return FloatMsg{internalMsg: meta, v: typedMsg.v}
 	case StringMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return StringMsg{internalMsg: meta, v: typedMsg.v}
 	case BytesMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return BytesMsg{internalMsg: meta, v: typedMsg.v}
 	case ListMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return ListMsg{internalMsg: meta, v: typedMsg.v}
 	case DictMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return DictMsg{internalMsg: meta, v: typedMsg.v}
 	case StructMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return StructMsg{internalMsg: meta, fields: typedMsg.fields}
 	case UnionMsg:
-		typedMsg.traceID = traceID
-		typedMsg.parentTraceIDs = slices.Clone(parentTraceIDs)
-		return typedMsg
+		return UnionMsg{internalMsg: meta, tag: typedMsg.tag, data: typedMsg.data}
 	default:
 		return msg
 	}

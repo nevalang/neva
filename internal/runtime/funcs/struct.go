@@ -50,7 +50,7 @@ func (structBuilder) Handle(
 			var wg sync.WaitGroup
 			for inportName, inportChan := range inports {
 				wg.Go(func() {
-					ordered, ok := inportChan.ReceiveOrdered(ctx)
+					ordered, ok := inportChan.Receive(ctx)
 					if !ok {
 						return
 					}
