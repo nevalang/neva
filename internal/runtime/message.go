@@ -89,28 +89,42 @@ func (msg Msg) IsUnion() bool {
 }
 
 func (msg Msg) Bool() bool {
-	msg.mustKind(MsgKindBool, "Bool")
-	return msg.bits == 1
+	if msg.kind == MsgKindBool {
+		return msg.bits == 1
+	}
+	panicUnexpectedBoolKind(msg.kind)
+	return false
 }
 
 func (msg Msg) Int() int64 {
-	msg.mustKind(MsgKindInt, "Int")
-	// #nosec G115 -- msg.bits stores int64 in two's complement form.
-	return int64(msg.bits)
+	if msg.kind == MsgKindInt {
+		// #nosec G115 -- msg.bits stores int64 in two's complement form.
+		return int64(msg.bits)
+	}
+	panicUnexpectedIntKind(msg.kind)
+	return 0
 }
 
 func (msg Msg) Float() float64 {
-	msg.mustKind(MsgKindFloat, "Float")
-	return math.Float64frombits(msg.bits)
+	if msg.kind == MsgKindFloat {
+		return math.Float64frombits(msg.bits)
+	}
+	panicUnexpectedFloatKind(msg.kind)
+	return 0
 }
 
 func (msg Msg) Str() string {
-	msg.mustKind(MsgKindString, "Str")
-	return msg.str
+	if msg.kind == MsgKindString {
+		return msg.str
+	}
+	panicUnexpectedStrKind(msg.kind)
+	return ""
 }
 
 func (msg Msg) Bytes() []byte {
-	msg.mustKind(MsgKindBytes, "Bytes")
+	if msg.kind != MsgKindBytes {
+		panicUnexpectedBytesKind(msg.kind)
+	}
 	value, ok := msg.val.([]byte)
 	if !ok {
 		panic("unexpected Bytes value type")
@@ -119,7 +133,9 @@ func (msg Msg) Bytes() []byte {
 }
 
 func (msg Msg) List() []Msg {
-	msg.mustKind(MsgKindList, "List")
+	if msg.kind != MsgKindList {
+		panicUnexpectedListKind(msg.kind)
+	}
 	list, ok := msg.val.([]Msg)
 	if !ok {
 		panic("unexpected List value type")
@@ -128,7 +144,9 @@ func (msg Msg) List() []Msg {
 }
 
 func (msg Msg) Dict() map[string]Msg {
-	msg.mustKind(MsgKindDict, "Dict")
+	if msg.kind != MsgKindDict {
+		panicUnexpectedDictKind(msg.kind)
+	}
 	dict, ok := msg.val.(map[string]Msg)
 	if !ok {
 		panic("unexpected Dict value type")
@@ -137,7 +155,9 @@ func (msg Msg) Dict() map[string]Msg {
 }
 
 func (msg Msg) Struct() StructMsg {
-	msg.mustKind(MsgKindStruct, "Struct")
+	if msg.kind != MsgKindStruct {
+		panicUnexpectedStructKind(msg.kind)
+	}
 	structMsg, ok := msg.val.(StructMsg)
 	if !ok {
 		panic("unexpected Struct value type")
@@ -146,7 +166,9 @@ func (msg Msg) Struct() StructMsg {
 }
 
 func (msg Msg) Union() UnionMsg {
-	msg.mustKind(MsgKindUnion, "Union")
+	if msg.kind != MsgKindUnion {
+		panicUnexpectedUnionKind(msg.kind)
+	}
 	unionMsg, ok := msg.val.(UnionMsg)
 	if !ok {
 		panic("unexpected Union value type")
@@ -207,6 +229,7 @@ func (msg Msg) MarshalJSON() ([]byte, error) {
 	}
 }
 
+//nolint:gocognit,gocyclo,cyclop,funlen // hot-path switch intentionally explicit for performance.
 func (msg Msg) Equal(other Msg) bool {
 	if msg.kind != other.kind {
 		return false
@@ -217,28 +240,94 @@ func (msg Msg) Equal(other Msg) bool {
 	case MsgKindBool, MsgKindInt:
 		return msg.bits == other.bits
 	case MsgKindFloat:
-		return msg.Float() == other.Float()
+		return math.Float64frombits(msg.bits) == math.Float64frombits(other.bits)
 	case MsgKindString:
 		return msg.str == other.str
 	case MsgKindBytes:
-		return bytes.Equal(msg.Bytes(), other.Bytes())
+		left, leftOK := msg.val.([]byte)
+		right, rightOK := other.val.([]byte)
+		if !leftOK || !rightOK {
+			panic("unexpected Bytes value type")
+		}
+		return bytes.Equal(left, right)
 	case MsgKindList:
-		return equalMsgLists(msg.List(), other.List())
+		left, leftOK := msg.val.([]Msg)
+		right, rightOK := other.val.([]Msg)
+		if !leftOK || !rightOK {
+			panic("unexpected List value type")
+		}
+		return equalMsgLists(left, right)
 	case MsgKindDict:
-		return equalMsgDicts(msg.Dict(), other.Dict())
+		left, leftOK := msg.val.(map[string]Msg)
+		right, rightOK := other.val.(map[string]Msg)
+		if !leftOK || !rightOK {
+			panic("unexpected Dict value type")
+		}
+		return equalMsgDicts(left, right)
 	case MsgKindStruct:
-		return msg.Struct().Equal(other.Struct())
+		left, leftOK := msg.val.(StructMsg)
+		right, rightOK := other.val.(StructMsg)
+		if !leftOK || !rightOK {
+			panic("unexpected Struct value type")
+		}
+		return left.Equal(right)
 	case MsgKindUnion:
-		return msg.Union().Equal(other.Union())
+		left, leftOK := msg.val.(UnionMsg)
+		right, rightOK := other.val.(UnionMsg)
+		if !leftOK || !rightOK {
+			panic("unexpected Union value type")
+		}
+		return left.Equal(right)
 	default:
 		return false
 	}
 }
 
-func (msg Msg) mustKind(kind MsgKind, method string) {
-	if msg.kind != kind {
-		panic(fmt.Sprintf("unexpected %s call on %s message", method, msg.kind))
-	}
+// Cold panic helpers keep hot accessors inline-friendly.
+//
+//go:noinline
+func panicUnexpectedBoolKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Bool call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedIntKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Int call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedFloatKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Float call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedStrKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Str call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedBytesKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Bytes call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedListKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected List call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedDictKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Dict call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedStructKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Struct call on %s message", kind))
+}
+
+//go:noinline
+func panicUnexpectedUnionKind(kind MsgKind) {
+	panic(fmt.Sprintf("unexpected Union call on %s message", kind))
 }
 
 func (kind MsgKind) String() string {
@@ -556,13 +645,35 @@ func Match(msg Msg, pattern Msg) bool {
 	return msgUnion.data.Equal(patternUnion.data)
 }
 
+//nolint:gocognit // hot-path loop intentionally explicit for performance.
 func equalMsgLists(left []Msg, right []Msg) bool {
 	if len(left) != len(right) {
 		return false
 	}
 	for i := range left {
-		if !left[i].Equal(right[i]) {
+		leftItem := left[i]
+		rightItem := right[i]
+		if leftItem.kind != rightItem.kind {
 			return false
+		}
+		//nolint:exhaustive // non-primitive kinds intentionally handled by default fallback.
+		switch leftItem.kind {
+		case MsgKindBool, MsgKindInt:
+			if leftItem.bits != rightItem.bits {
+				return false
+			}
+		case MsgKindFloat:
+			if math.Float64frombits(leftItem.bits) != math.Float64frombits(rightItem.bits) {
+				return false
+			}
+		case MsgKindString:
+			if leftItem.str != rightItem.str {
+				return false
+			}
+		default:
+			if !leftItem.Equal(rightItem) {
+				return false
+			}
 		}
 	}
 	return true
