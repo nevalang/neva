@@ -17,6 +17,6 @@ func Test(t *testing.T) {
 	require.Equal(t, "Enter the name: bob\n", out)
 
 	// Test panic case with "Charlie"
-	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Charlie\n"))
-	require.Equal(t, "Enter the name: panic: Charlie\n", out+stderr)
+	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Charlie\n"), e2e.WithCode(1))
+	require.Contains(t, out+stderr, "Enter the name: panic: Charlie\n")
 }

@@ -26,12 +26,6 @@ func (p panicker) Create(
 			return
 		}
 
-		runtime.ReportProgramPanic(ctx, panicMsg)
-
-		if cancel, ok := runtime.CancelFuncFromContext(ctx); ok {
-			cancel()
-		}
-
 		if _, err := fmt.Fprintln(os.Stderr, "panic:", panicMsg); err != nil {
 			panic(err)
 		}
@@ -41,5 +35,7 @@ func (p panicker) Create(
 				panic(err)
 			}
 		}
+
+		runtime.FailProgram(ctx)
 	}, nil
 }

@@ -216,6 +216,23 @@ Practical implications:
 Status: tracing query/format APIs are still evolving, so behavior may be
 incremental until the runtime tracing track is fully implemented.
 
+## How should graceful shutdown work in Neva runtime?
+
+Neva treats graceful shutdown as a default execution contract, not an optional
+discipline:
+
+1. User-level `panic` in Neva is a valid program scenario, not an internal
+   runtime crash.
+2. Runtime components should signal shutdown via context cancellation and allow
+   goroutines to stop cooperatively.
+3. Internal runtime invariants still use Go `panic` (developer-facing defects),
+   while user-program panic flows through normal error-return paths.
+4. Exit codes are decided at process boundary (`main`), after runtime finishes
+   cooperative teardown.
+
+In short: user panic is semantic program failure with graceful stop; internal
+panic is implementation failure.
+
 ## Why can only primitive messages be used as "literal network senders"?
 
 It enables easier type inference and keeps networks readable.

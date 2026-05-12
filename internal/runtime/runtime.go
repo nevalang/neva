@@ -10,28 +10,13 @@ import (
 //nolint:gochecknoglobals // global monotonic counter shared by all runtime outports.
 var counter atomic.Uint64
 
-type cancelFuncKey struct{}
-
-func contextWithCancelFunc(ctx context.Context, cancel context.CancelFunc) context.Context {
-	return context.WithValue(ctx, cancelFuncKey{}, cancel)
-}
-
-// CancelFuncFromContext returns the cancel function stored by Call, if present.
-func CancelFuncFromContext(ctx context.Context) (context.CancelFunc, bool) {
-	v := ctx.Value(cancelFuncKey{})
-	if v == nil {
-		return nil, false
-	}
-	cancel, ok := v.(context.CancelFunc)
-	return cancel, ok
-}
-
 type FuncCreator interface {
 	Create(IO, Msg) (func(context.Context), error)
 }
 
-func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) {
-	_ = Call(ctx, prog, registry, NewStructMsg(nil))
+func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
+	_, err := Call(ctx, prog, registry, NewStructMsg(nil))
+	return err
 }
 
 // Call runs a single request-response round-trip using program Start/Stop.
@@ -39,27 +24,26 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) {
 // then cancels and waits for all handlers to finish.
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) Msg {
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
 	var out Msg
-	ctx, cancel := context.WithCancel(ctx)
-	programPanics := make(chan Msg, 1)
-	ctx = contextWithProgramPanicChan(ctx, programPanics)
+	ctx, cancel := context.WithCancelCause(ctx)
+	ctx = contextWithProgramCancelCause(ctx, cancel)
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
-		cancel() // normal termination
+		cancel(nil) // normal termination
 	}()
 
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
-		cancel()
-		panic(err)
+		cancel(nil)
+		return nil, err
 	}
 
 	funcsFinished := make(chan struct{})
 
 	go func() {
 		// runFuncs blocks until context is cancelled (by the stop port or by panic)
-		runFuncs(contextWithCancelFunc(ctx, cancel))
+		runFuncs(ctx)
 		close(funcsFinished)
 	}()
 
@@ -67,13 +51,11 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 
 	<-funcsFinished
 
-	select {
-	case panicMsg := <-programPanics:
-		panicWithProgramSignal(panicMsg)
-	default:
+	if cause := context.Cause(ctx); IsProgramPanicError(cause) {
+		return nil, fmt.Errorf("program panic: %w", cause)
 	}
 
-	return out
+	return out, nil
 }
 
 func deferFuncCalls(

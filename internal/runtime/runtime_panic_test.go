@@ -14,18 +14,15 @@ func (testPanicCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 	}
 
 	return func(ctx context.Context) {
-		msg, ok := inport.Receive(ctx)
+		_, ok := inport.Receive(ctx)
 		if !ok {
 			return
 		}
-		ReportProgramPanic(ctx, msg)
-		if cancel, ok := CancelFuncFromContext(ctx); ok {
-			cancel()
-		}
+		FailProgram(ctx)
 	}, nil
 }
 
-func TestCall_PanicsWithProgramPanicSignal(t *testing.T) {
+func TestCall_ReturnsProgramPanicError(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 
 	startToPanic := make(chan OrderedMsg, 1)
@@ -66,18 +63,8 @@ func TestCall_PanicsWithProgramPanicSignal(t *testing.T) {
 		"panic": testPanicCreator{},
 	}
 
-	var recovered any
-	func() {
-		defer func() {
-			recovered = recover()
-		}()
-		_ = Call(context.Background(), prog, registry, NewStringMsg("boom"))
-	}()
-
-	if recovered == nil {
-		t.Fatalf("expected program panic signal")
-	}
-	if !IsProgramPanic(recovered) {
-		t.Fatalf("expected program panic signal, got %T (%v)", recovered, recovered)
+	_, err := Call(context.Background(), prog, registry, NewStringMsg("boom"))
+	if !IsProgramPanicError(err) {
+		t.Fatalf("expected ProgramPanicError, got %T (%v)", err, err)
 	}
 }

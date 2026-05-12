@@ -379,11 +379,14 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 	}
 	startMsg := runtime.NewStringMsg(in.Ref)
 
-	// Run the program
-	res := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
-
 	// Parse output message
 	var out ParseEntityRefOutput
+
+	// Run the program
+	res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
+	if err != nil {
+		return out, err
+	}
 	if res == nil {
 		return out, nil // Should not happen for valid flow
 	}
