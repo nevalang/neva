@@ -190,6 +190,10 @@ func (a Analyzer) analyzeEntity(entityName string, entity src.Entity, scope src.
 		Kind:     entity.Kind,
 	}
 
+	if err := validateEntityComments(&entity); err != nil {
+		return src.Entity{}, err
+	}
+
 	isStd := scope.Location().ModRef.Path == "std"
 
 	switch entity.Kind {
