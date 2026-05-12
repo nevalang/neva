@@ -6,33 +6,41 @@ import (
 	"os"
 )
 
-// traceEventVersion tracks JSONL schema version for trace events.
+// traceEventVersion tracks JSONL schema version for emitted runtime events.
 const traceEventVersion = 1
 
-// traceEventPort identifies a concrete runtime port endpoint.
-type traceEventPort struct {
+// EventKind is a runtime transport event kind.
+type EventKind string
+
+const (
+	EventSent EventKind = "sent"
+	EventRecv EventKind = "recv"
+)
+
+// EventPort identifies a concrete runtime endpoint.
+type EventPort struct {
 	Index *uint8 `json:"index,omitempty"`
 	Path  string `json:"path"`
 	Name  string `json:"name"`
 }
 
-// traceSentEvent is emitted when runtime sends a message through outport.
-type traceSentEvent struct {
-	Port          traceEventPort `json:"port"`
-	Event         string         `json:"event"`
-	Message       string         `json:"message"`
-	Version       int            `json:"v"`
-	TraceID       uint64         `json:"traceId"`
-	ParentTraceID uint64         `json:"parentTraceId"`
+// SentEvent is emitted when runtime sends a message through an outport.
+type SentEvent struct {
+	Port          EventPort `json:"port"`
+	Event         EventKind `json:"event"`
+	Message       string    `json:"message"`
+	Version       int       `json:"v"`
+	TraceID       uint64    `json:"traceId"`
+	ParentTraceID uint64    `json:"parentTraceId"`
 }
 
-// traceRecvEvent is emitted when runtime receives a message from inport.
-type traceRecvEvent struct {
-	Port    traceEventPort `json:"port"`
-	Event   string         `json:"event"`
-	Message string         `json:"message"`
-	Version int            `json:"v"`
-	TraceID uint64         `json:"traceId"`
+// RecvEvent is emitted when runtime receives a message from an inport.
+type RecvEvent struct {
+	Port    EventPort `json:"port"`
+	Event   EventKind `json:"event"`
+	Message string    `json:"message"`
+	Version int       `json:"v"`
+	TraceID uint64    `json:"traceId"`
 }
 
 type ProdInterceptor struct{}
@@ -40,10 +48,16 @@ type ProdInterceptor struct{}
 func (ProdInterceptor) Prepare() error { return nil }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg { return ordered }
+func (ProdInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+	recordOrderedSent(sender, ordered)
+	return ordered
+}
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg { return ordered }
+func (ProdInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+	recordOrderedReceived(receiver, ordered)
+	return ordered
+}
 
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DebugInterceptor struct {
@@ -67,12 +81,13 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	evt := traceSentEvent{
+	recordOrderedSent(sender, ordered)
+	evt := SentEvent{
 		Version:       traceEventVersion,
-		Event:         "sent",
+		Event:         EventSent,
 		TraceID:       ordered.index,
 		ParentTraceID: parentTraceIDFromMsg(ordered.Msg),
-		Port:          traceEventPortFromSlot(sender),
+		Port:          eventPortFromSlot(sender),
 		Message:       d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
@@ -81,11 +96,12 @@ func (d *DebugInterceptor) Sent(sender PortSlotAddr, ordered OrderedMsg) Ordered
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Received(receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	evt := traceRecvEvent{
+	recordOrderedReceived(receiver, ordered)
+	evt := RecvEvent{
 		Version: traceEventVersion,
-		Event:   "recv",
+		Event:   EventRecv,
 		TraceID: ordered.index,
-		Port:    traceEventPortFromSlot(receiver),
+		Port:    eventPortFromSlot(receiver),
 		Message: d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
@@ -112,8 +128,8 @@ func writeTraceEvent(file *os.File, evt any) {
 	}
 }
 
-func traceEventPortFromSlot(slotAddr PortSlotAddr) traceEventPort {
-	return traceEventPort{
+func eventPortFromSlot(slotAddr PortSlotAddr) EventPort {
+	return EventPort{
 		Path:  normalizePortPath(slotAddr.Path),
 		Name:  slotAddr.Port,
 		Index: slotAddr.Index,

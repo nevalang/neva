@@ -99,16 +99,6 @@ func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
 		ordered = v
 	}
 
-	recordReceived(
-		ordered.index,
-		PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: s.addr.Path,
-				Port: s.addr.Port,
-			},
-		},
-	)
-
 	ordered = s.interceptor.Received(
 		PortSlotAddr{
 			PortAddr: PortAddr{
@@ -168,16 +158,6 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		index := Uint8Index(idx)
-		recordReceived(
-			v.index,
-			PortSlotAddr{
-				PortAddr: PortAddr{
-					Path: a.addr.Path,
-					Port: a.addr.Port,
-				},
-				Index: &index,
-			},
-		)
 		ordered := a.interceptor.Received(
 			PortSlotAddr{
 				PortAddr: PortAddr{
@@ -213,16 +193,6 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 				success = false
 			case received := <-a.chans[idx]:
 				index := Uint8Index(idx)
-				recordReceived(
-					received.index,
-					PortSlotAddr{
-						PortAddr: PortAddr{
-							Path: a.addr.Path,
-							Port: a.addr.Port,
-						},
-						Index: &index,
-					},
-				)
 				ordered := a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -282,16 +252,6 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 				return nil, false
 			case orderedMsg := <-ch:
 				index := Uint8Index(slotIdx)
-				recordReceived(
-					orderedMsg.index,
-					PortSlotAddr{
-						PortAddr: PortAddr{
-							Path: a.addr.Path,
-							Port: a.addr.Port,
-						},
-						Index: &index,
-					},
-				)
 				orderedMsg = a.interceptor.Received(
 					PortSlotAddr{
 						PortAddr: PortAddr{
@@ -410,18 +370,6 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
 		Msg:   msg,
 		index: traceID,
 	}
-	recordSent(
-		traceID,
-		parentTraceID,
-		PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: s.addr.Path,
-				Port: s.addr.Port,
-			},
-		},
-		msg,
-	)
-
 	ordered = s.interceptor.Sent(
 		PortSlotAddr{
 			PortAddr: PortAddr{
@@ -471,7 +419,6 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 		},
 		Index: &idx,
 	}
-	recordSent(traceID, parentTraceID, slotAddr, ordered.Msg)
 	ordered = a.interceptor.Sent(slotAddr, ordered)
 	select {
 	case <-ctx.Done():
@@ -505,7 +452,6 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 				PortAddr: a.addr,
 				Index:    &i,
 			}
-			recordSent(traceID, parentTraceID, slotAddr, traceMsg)
 			ordered = a.interceptor.Sent(slotAddr, ordered)
 
 			select {

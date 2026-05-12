@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+// Panic control is a runtime-internal bridge for user-level panic semantics:
+// components can request graceful program stop without using Go panic transport.
 type programCancelCauseKey struct{}
 
 type ProgramPanicError struct{}

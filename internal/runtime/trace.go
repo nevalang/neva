@@ -6,6 +6,10 @@ import (
 	"sync"
 )
 
+type traceCarrier interface {
+	traceMeta() (uint64, uint64)
+}
+
 type TraceHop struct {
 	Sender        *PortSlotAddr
 	Receiver      *PortSlotAddr
@@ -24,28 +28,93 @@ var globalTraceStore = traceStore{
 	hops: make(map[uint64]TraceHop),
 }
 
-func recordSent(traceID, parentTraceID uint64, sender PortSlotAddr, msg Msg) {
+// TraceIDFromMsg extracts runtime Dataflow Trace identity from message payload.
+func TraceIDFromMsg(msg Msg) (uint64, bool) {
+	carrier, ok := msg.(traceCarrier)
+	if !ok {
+		return 0, false
+	}
+	traceID, _ := carrier.traceMeta()
+	return traceID, traceID != 0
+}
+
+func parentTraceIDFromMsg(msg Msg) uint64 {
+	carrier, ok := msg.(traceCarrier)
+	if !ok {
+		return 0
+	}
+	_, parentTraceID := carrier.traceMeta()
+	return parentTraceID
+}
+
+//nolint:ireturn // Msg is runtime contract type.
+func withTrace(msg Msg, traceID, parentTraceID uint64) Msg {
+	switch typedMsg := msg.(type) {
+	case BoolMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case IntMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case FloatMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case StringMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case BytesMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case ListMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case DictMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case StructMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	case UnionMsg:
+		typedMsg.traceID = traceID
+		typedMsg.parentTraceID = parentTraceID
+		return typedMsg
+	default:
+		return msg
+	}
+}
+
+func recordOrderedSent(sender PortSlotAddr, ordered OrderedMsg) {
 	globalTraceStore.mu.Lock()
 	defer globalTraceStore.mu.Unlock()
 
+	traceID := ordered.index
+	parentTraceID := parentTraceIDFromMsg(ordered.Msg)
 	hop := globalTraceStore.hops[traceID]
 	hop.TraceID = traceID
 	hop.ParentTraceID = parentTraceID
 	senderCopy := sender
 	hop.Sender = &senderCopy
-	hop.Message = fmt.Sprint(msg)
+	hop.Message = fmt.Sprint(ordered.Msg)
 	globalTraceStore.hops[traceID] = hop
 }
 
-func recordReceived(traceID uint64, receiver PortSlotAddr) {
+func recordOrderedReceived(receiver PortSlotAddr, ordered OrderedMsg) {
 	globalTraceStore.mu.Lock()
 	defer globalTraceStore.mu.Unlock()
 
-	hop := globalTraceStore.hops[traceID]
-	hop.TraceID = traceID
+	hop := globalTraceStore.hops[ordered.index]
+	hop.TraceID = ordered.index
 	receiverCopy := receiver
 	hop.Receiver = &receiverCopy
-	globalTraceStore.hops[traceID] = hop
+	globalTraceStore.hops[ordered.index] = hop
 }
 
 func traceHopByID(traceID uint64) (TraceHop, bool) {
@@ -170,6 +239,11 @@ func normalizePortPath(path string) string {
 	}
 
 	return strings.Join(parts, "/")
+}
+
+func AsUnion(msg Msg) (UnionMsg, bool) {
+	unionMsg, ok := msg.(UnionMsg)
+	return unionMsg, ok
 }
 
 func resetTraceStoreForTests() {
