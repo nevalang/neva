@@ -262,38 +262,6 @@ func (t *Tracer) TraceCauseTree(msg Msg) (TraceTree, bool) {
 	return t.TraceCauseTreeByID(traceID)
 }
 
-func flattenTraceTree(tree *TraceTree, out *[]TraceHop) {
-	*out = append(*out, tree.Hop)
-	if len(tree.Parents) == 0 {
-		return
-	}
-	firstParent := tree.Parents[0]
-	flattenTraceTree(&firstParent, out)
-}
-
-// TracePathByID reconstructs one deterministic ancestry chain from newest to oldest.
-// For fan-in hops it follows the first parent from the full trace tree.
-func (t *Tracer) TracePathByID(traceID uint64) []TraceHop {
-	tree, ok := t.TraceCauseTreeByID(traceID)
-	if !ok {
-		return nil
-	}
-	path := make([]TraceHop, 0, 8)
-	flattenTraceTree(&tree, &path)
-	return path
-}
-
-// TracePath reconstructs one deterministic ancestry chain from newest to oldest.
-func (t *Tracer) TracePath(msg Msg) []TraceHop {
-	tree, ok := t.TraceCauseTree(msg)
-	if !ok {
-		return nil
-	}
-	path := make([]TraceHop, 0, 8)
-	flattenTraceTree(&tree, &path)
-	return path
-}
-
 // FormatDataflowTrace renders panic-focused Dataflow Trace in a readable flow format.
 func (t *Tracer) FormatDataflowTrace(msg Msg) string {
 	tree, ok := t.TraceCauseTree(msg)
@@ -381,16 +349,8 @@ func AsUnion(msg Msg) (UnionMsg, bool) {
 	return unionMsg, ok
 }
 
-func TracePathByID(traceID uint64) []TraceHop {
-	return globalTracer.TracePathByID(traceID)
-}
-
 func TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
 	return globalTracer.TraceCauseTreeByID(traceID)
-}
-
-func TracePath(msg Msg) []TraceHop {
-	return globalTracer.TracePath(msg)
 }
 
 func TraceCauseTree(msg Msg) (TraceTree, bool) {
