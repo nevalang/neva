@@ -185,7 +185,7 @@ func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Ord
 	rightIn := make(chan runtime.OrderedMsg)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
-	interceptor := runtime.ProdInterceptor{}
+	interceptor := runtime.NoEffectInterceptor{}
 	inports := runtime.NewInports(map[string]runtime.Inport{
 		"left":  runtime.NewInport(nil, runtime.NewSingleInport(leftIn, runtime.PortAddr{Path: "test/in", Port: "left"}, interceptor)),
 		"right": runtime.NewInport(nil, runtime.NewSingleInport(rightIn, runtime.PortAddr{Path: "test/in", Port: "right"}, interceptor)),
@@ -201,7 +201,7 @@ func newUnaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Orde
 	input := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
-	interceptor := runtime.ProdInterceptor{}
+	interceptor := runtime.NoEffectInterceptor{}
 	inports := runtime.NewInports(map[string]runtime.Inport{
 		"data": runtime.NewInport(nil, runtime.NewSingleInport(input, runtime.PortAddr{Path: "test/in", Port: "data"}, interceptor)),
 	})

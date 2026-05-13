@@ -30,7 +30,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	ctx, cancel := context.WithCancelCause(ctx)
 	ctx = contextWithTracer(ctx, tracer)
 	ctx = contextWithProgramCancelCause(ctx, cancel)
-	ctx = contextWithTraceActivation(ctx)
+	prog = attachTracerToProgram(prog, tracer)
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
 		cancel(nil) // normal termination
@@ -76,11 +76,43 @@ func deferFuncCalls(
 		for i := range handlers {
 			routine := handlers[i]
 			wg.Go(func() {
-				routine(contextWithTraceActivation(ctx))
+				routine(ctx)
 			})
 		}
 		wg.Wait()
 	}, nil
+}
+
+func attachTracerToProgram(prog Program, tracer *Tracer) Program {
+	prog.Start.tracer = tracer
+	prog.Stop.tracer = tracer
+	for i := range prog.FuncCalls {
+		attachTracerToInports(prog.FuncCalls[i].IO.In, tracer)
+		attachTracerToOutports(prog.FuncCalls[i].IO.Out, tracer)
+	}
+	return prog
+}
+
+func attachTracerToInports(inports Inports, tracer *Tracer) {
+	for _, inport := range inports.ports {
+		if inport.single != nil {
+			inport.single.tracer = tracer
+		}
+		if inport.array != nil {
+			inport.array.tracer = tracer
+		}
+	}
+}
+
+func attachTracerToOutports(outports Outports, tracer *Tracer) {
+	for _, outport := range outports.ports {
+		if outport.single != nil {
+			outport.single.tracer = tracer
+		}
+		if outport.array != nil {
+			outport.array.tracer = tracer
+		}
+	}
 }
 
 func createHandlers(

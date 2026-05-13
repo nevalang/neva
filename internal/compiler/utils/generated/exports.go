@@ -59,7 +59,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 		fan_in_name_out_res_to_builder_in_name           = make(chan runtime.OrderedMsg)
 		__fan_out__1_out_data_5_to___newv2__4_in_sig     = make(chan runtime.OrderedMsg)
 	)
-	interceptor := runtime.ProdInterceptor{}
+	interceptor := runtime.NoEffectInterceptor{}
 
 	var (
 		startPort = runtime.NewSingleOutport(

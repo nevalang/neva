@@ -31,13 +31,13 @@ func TestCall_ReturnsProgramPanicError(t *testing.T) {
 	prog := Program{
 		Start: NewSingleOutport(
 			PortAddr{Path: "prog", Port: "start"},
-			ProdInterceptor{},
+			NoEffectInterceptor{},
 			startToPanic,
 		),
 		Stop: NewSingleInport(
 			stopChan,
 			PortAddr{Path: "prog", Port: "stop"},
-			ProdInterceptor{},
+			NoEffectInterceptor{},
 		),
 		FuncCalls: []FuncCall{
 			{
@@ -49,7 +49,7 @@ func TestCall_ReturnsProgramPanicError(t *testing.T) {
 							NewSingleInport(
 								startToPanic,
 								PortAddr{Path: "panic/in", Port: "data"},
-								ProdInterceptor{},
+								NoEffectInterceptor{},
 							),
 						),
 					}),

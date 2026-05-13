@@ -430,6 +430,19 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
 }
 
+func AsUnion(msg Msg) (UnionMsg, bool) {
+	unionMsg, ok := orderedPayload(msg).(UnionMsg)
+	return unionMsg, ok
+}
+
+//nolint:ireturn // Msg is runtime contract type.
+func orderedPayload(msg Msg) Msg {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		return ordered.Msg
+	}
+	return msg
+}
+
 // Uint8Index validates idx and returns it as uint8 or panics.
 func Uint8Index(idx int) uint8 {
 	if idx < 0 {

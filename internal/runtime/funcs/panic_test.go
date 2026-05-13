@@ -15,23 +15,23 @@ func TestFormatPanicDataflowTrace_NormalizesPathsAndIncludesComponent(t *testing
 
 	out1 := runtime.NewSingleOutport(
 		runtime.PortAddr{Path: "http/in", Port: "req"},
-		runtime.ProdInterceptor{},
+		runtime.NoEffectInterceptor{},
 		ch1,
 	)
 	in1 := runtime.NewSingleInport(
 		ch1,
 		runtime.PortAddr{Path: "parse/in", Port: "data"},
-		runtime.ProdInterceptor{},
+		runtime.NoEffectInterceptor{},
 	)
 	out2 := runtime.NewSingleOutport(
 		runtime.PortAddr{Path: "parse/out", Port: "req"},
-		runtime.ProdInterceptor{},
+		runtime.NoEffectInterceptor{},
 		ch2,
 	)
 	in2 := runtime.NewSingleInport(
 		ch2,
 		runtime.PortAddr{Path: "checkout/finalize/in", Port: "err"},
-		runtime.ProdInterceptor{},
+		runtime.NoEffectInterceptor{},
 	)
 
 	if !out1.Send(ctx, runtime.NewStringMsg("x")) {
@@ -71,14 +71,14 @@ func TestFormatPanicDataflowTrace_FanInKeepsAllParentBranches(t *testing.T) {
 	thirdCh := make(chan runtime.OrderedMsg, 1)
 	resCh := make(chan runtime.OrderedMsg, 1)
 
-	firstOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "first/out", Port: "res"}, runtime.ProdInterceptor{}, firstCh)
-	secondOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "second/out", Port: "res"}, runtime.ProdInterceptor{}, secondCh)
-	thirdOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "third/out", Port: "res"}, runtime.ProdInterceptor{}, thirdCh)
-	firstIn := runtime.NewSingleInport(firstCh, runtime.PortAddr{Path: "fanin/in", Port: "first"}, runtime.ProdInterceptor{})
-	secondIn := runtime.NewSingleInport(secondCh, runtime.PortAddr{Path: "fanin/in", Port: "second"}, runtime.ProdInterceptor{})
-	thirdIn := runtime.NewSingleInport(thirdCh, runtime.PortAddr{Path: "fanin/in", Port: "third"}, runtime.ProdInterceptor{})
-	resOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "fanin/out", Port: "res"}, runtime.ProdInterceptor{}, resCh)
-	resIn := runtime.NewSingleInport(resCh, runtime.PortAddr{Path: "prog/out", Port: "stop"}, runtime.ProdInterceptor{})
+	firstOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "first/out", Port: "res"}, runtime.NoEffectInterceptor{}, firstCh)
+	secondOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "second/out", Port: "res"}, runtime.NoEffectInterceptor{}, secondCh)
+	thirdOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "third/out", Port: "res"}, runtime.NoEffectInterceptor{}, thirdCh)
+	firstIn := runtime.NewSingleInport(firstCh, runtime.PortAddr{Path: "fanin/in", Port: "first"}, runtime.NoEffectInterceptor{})
+	secondIn := runtime.NewSingleInport(secondCh, runtime.PortAddr{Path: "fanin/in", Port: "second"}, runtime.NoEffectInterceptor{})
+	thirdIn := runtime.NewSingleInport(thirdCh, runtime.PortAddr{Path: "fanin/in", Port: "third"}, runtime.NoEffectInterceptor{})
+	resOut := runtime.NewSingleOutport(runtime.PortAddr{Path: "fanin/out", Port: "res"}, runtime.NoEffectInterceptor{}, resCh)
+	resIn := runtime.NewSingleInport(resCh, runtime.PortAddr{Path: "prog/out", Port: "stop"}, runtime.NoEffectInterceptor{})
 
 	if !firstOut.Send(ctx, runtime.NewStringMsg("a")) {
 		t.Fatalf("first send failed")

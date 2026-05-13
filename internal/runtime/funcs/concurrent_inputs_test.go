@@ -108,7 +108,7 @@ func assertOutputEquals(
 }
 
 func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
-	interceptor := runtime.ProdInterceptor{}
+	interceptor := runtime.NoEffectInterceptor{}
 	inports := make(map[string]runtime.Inport, len(inNames))
 	outports := make(map[string]runtime.Outport, len(outNames))
 	inChans := make(map[string]chan runtime.OrderedMsg, len(inNames))

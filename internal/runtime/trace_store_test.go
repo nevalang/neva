@@ -16,13 +16,13 @@ func TestTraceTree_Linear(t *testing.T) {
 	ch := make(chan OrderedMsg, 1)
 	out := NewSingleOutport(
 		PortAddr{Path: "producer/out", Port: "res"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 		ch,
 	)
 	in := NewSingleInport(
 		ch,
 		PortAddr{Path: "consumer/in", Port: "data"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 	)
 
 	ctx := contextWithTracer(context.Background(), tracer)
@@ -68,23 +68,23 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 
 	out1 := NewSingleOutport(
 		PortAddr{Path: "step1/out", Port: "res"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 		ch1,
 	)
 	in1 := NewSingleInport(
 		ch1,
 		PortAddr{Path: "step2/in", Port: "data"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 	)
 	out2 := NewSingleOutport(
 		PortAddr{Path: "step2/out", Port: "res"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 		ch2,
 	)
 	in2 := NewSingleInport(
 		ch2,
 		PortAddr{Path: "step3/in", Port: "data"},
-		ProdInterceptor{},
+		NoEffectInterceptor{},
 	)
 
 	if !out1.Send(ctx, NewStringMsg("x")) {
@@ -170,7 +170,7 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	tracer := NewTracer()
 
 	baseCtx := contextWithTracer(context.Background(), tracer)
-	handlerCtx := contextWithTraceActivation(baseCtx)
+	handlerCtx := baseCtx
 	sendCtx := baseCtx
 	recvCtx := baseCtx
 	firstCh := make(chan OrderedMsg, 1)
@@ -178,19 +178,19 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	thirdCh := make(chan OrderedMsg, 1)
 	resCh := make(chan OrderedMsg, 1)
 
-	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, ProdInterceptor{}, firstCh)
-	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, ProdInterceptor{}, secondCh)
-	thirdOut := NewSingleOutport(PortAddr{Path: "third/out", Port: "res"}, ProdInterceptor{}, thirdCh)
-	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, ProdInterceptor{})
+	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
+	thirdOut := NewSingleOutport(PortAddr{Path: "third/out", Port: "res"}, NoEffectInterceptor{}, thirdCh)
+	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
 
 	handler, err := testFanInCreator{}.Create(IO{
 		In: NewInports(map[string]Inport{
-			"first":  NewInport(nil, NewSingleInport(firstCh, PortAddr{Path: "fanin/in", Port: "first"}, ProdInterceptor{})),
-			"second": NewInport(nil, NewSingleInport(secondCh, PortAddr{Path: "fanin/in", Port: "second"}, ProdInterceptor{})),
-			"third":  NewInport(nil, NewSingleInport(thirdCh, PortAddr{Path: "fanin/in", Port: "third"}, ProdInterceptor{})),
+			"first":  NewInport(nil, NewSingleInport(firstCh, PortAddr{Path: "fanin/in", Port: "first"}, NoEffectInterceptor{})),
+			"second": NewInport(nil, NewSingleInport(secondCh, PortAddr{Path: "fanin/in", Port: "second"}, NoEffectInterceptor{})),
+			"third":  NewInport(nil, NewSingleInport(thirdCh, PortAddr{Path: "fanin/in", Port: "third"}, NoEffectInterceptor{})),
 		}),
 		Out: NewOutports(map[string]Outport{
-			"res": NewOutport(NewSingleOutport(PortAddr{Path: "fanin/out", Port: "res"}, ProdInterceptor{}, resCh), nil),
+			"res": NewOutport(NewSingleOutport(PortAddr{Path: "fanin/out", Port: "res"}, NoEffectInterceptor{}, resCh), nil),
 		}),
 	}, nil)
 	if err != nil {
@@ -242,12 +242,12 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	secondCh := make(chan OrderedMsg, 1)
 	resCh := make(chan OrderedMsg, 1)
 
-	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, ProdInterceptor{}, firstCh)
-	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, ProdInterceptor{}, secondCh)
-	firstIn := NewSingleInport(firstCh, PortAddr{Path: "join/in", Port: "first"}, ProdInterceptor{})
-	secondIn := NewSingleInport(secondCh, PortAddr{Path: "join/in", Port: "second"}, ProdInterceptor{})
-	resOut := NewSingleOutport(PortAddr{Path: "join/out", Port: "res"}, ProdInterceptor{}, resCh)
-	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, ProdInterceptor{})
+	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
+	firstIn := NewSingleInport(firstCh, PortAddr{Path: "join/in", Port: "first"}, NoEffectInterceptor{})
+	secondIn := NewSingleInport(secondCh, PortAddr{Path: "join/in", Port: "second"}, NoEffectInterceptor{})
+	resOut := NewSingleOutport(PortAddr{Path: "join/out", Port: "res"}, NoEffectInterceptor{}, resCh)
+	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
 
 	if !firstOut.Send(ctx, NewStringMsg("a")) {
 		t.Fatalf("first send failed")

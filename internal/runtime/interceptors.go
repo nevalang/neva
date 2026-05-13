@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // traceEventVersion tracks JSONL schema version for emitted runtime events.
@@ -18,39 +19,33 @@ const (
 	EventRecv EventKind = "recv"
 )
 
-// EventPort identifies a concrete runtime endpoint.
-type EventPort struct {
-	Index *uint8 `json:"index,omitempty"`
-	Path  string `json:"path"`
-	Name  string `json:"name"`
-}
-
 // SentEvent is emitted when runtime sends a message through an outport.
 type SentEvent struct {
-	Port         EventPort `json:"port"`
-	Event        EventKind `json:"event"`
-	Message      string    `json:"message"`
-	CauseIndexes []uint64  `json:"causeIndexes"`
-	Version      int       `json:"v"`
-	Index        uint64    `json:"index"`
+	Msg          Msg          `json:"message"`
+	PortSlotAddr PortSlotAddr `json:"port"`
+	EventKind    EventKind    `json:"event"`
+	CauseIndexes []uint64     `json:"causeIndexes"`
+	Version      int          `json:"v"`
+	Index        uint64       `json:"index"`
 }
 
 // RecvEvent is emitted when runtime receives a message from an inport.
 type RecvEvent struct {
-	Port    EventPort `json:"port"`
-	Event   EventKind `json:"event"`
-	Message string    `json:"message"`
-	Version int       `json:"v"`
-	Index   uint64    `json:"index"`
+	Msg          Msg          `json:"message"`
+	PortSlotAddr PortSlotAddr `json:"port"`
+	Event        EventKind    `json:"event"`
+	Version      int          `json:"v"`
+	Index        uint64       `json:"index"`
 }
 
-type ProdInterceptor struct {
-}
+// NoEffectInterceptor exist to be used as default interceptor
+// when no actual interception is needed. Just to satisfy compiler.
+type NoEffectInterceptor struct{}
 
-func (ProdInterceptor) Prepare() error { return nil }
+func (NoEffectInterceptor) Prepare() error { return nil }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Sent(
+func (p NoEffectInterceptor) Sent(
 	_ context.Context,
 	_ PortSlotAddr,
 	ordered OrderedMsg,
@@ -60,17 +55,21 @@ func (p ProdInterceptor) Sent(
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Received(_ context.Context, _ PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (p NoEffectInterceptor) Received(_ context.Context, _ PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	return ordered
 }
 
+// JSONLTraceFileWriter is an interceptor
+// that writes each tracing event into a file in a JSONL format.
+//
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-type DebugInterceptor struct {
+type JSONLTraceFileWriter struct {
 	file    *os.File
 	comment string
 }
 
-func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
+// Open safely opens the file for writing and returns its close func.
+func (d *JSONLTraceFileWriter) Open(filepath string) (func() error, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0644)
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -84,8 +83,11 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	return file.Close, nil
 }
 
+// Sent implements Interceptor interface.
+// The only thing this interceptor really does - is writes JSONL line to a file.
+//
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Sent(
+func (d *JSONLTraceFileWriter) Sent(
 	_ context.Context,
 	sender PortSlotAddr,
 	ordered OrderedMsg,
@@ -93,40 +95,33 @@ func (d *DebugInterceptor) Sent(
 ) OrderedMsg {
 	evt := SentEvent{
 		Version:      traceEventVersion,
-		Event:        EventSent,
+		EventKind:    EventSent,
 		Index:        ordered.index,
 		CauseIndexes: hop.CauseIndexes,
-		Port:         eventPortFromSlot(sender),
-		Message:      d.formatMsg(ordered.Msg),
+		PortSlotAddr: d.normalizePortSlotAddrPath(sender),
+		Msg:          ordered.Msg,
 	}
 	d.writeTraceEvent(evt)
 	return ordered
 }
 
+// Received implements Interceptor interface.
+// The only thing this interceptor really does - is writes JSONL line to a file.
+//
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Received(_ context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
+func (d *JSONLTraceFileWriter) Received(_ context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	evt := RecvEvent{
-		Version: traceEventVersion,
-		Event:   EventRecv,
-		Index:   ordered.index,
-		Port:    eventPortFromSlot(receiver),
-		Message: d.formatMsg(ordered.Msg),
+		Version:      traceEventVersion,
+		Event:        EventRecv,
+		Index:        ordered.index,
+		PortSlotAddr: d.normalizePortSlotAddrPath(receiver),
+		Msg:          ordered.Msg,
 	}
 	d.writeTraceEvent(evt)
 	return ordered
 }
 
-func (d DebugInterceptor) formatMsg(msg Msg) string {
-	if strMsg, ok := msg.(StringMsg); ok {
-		return fmt.Sprintf("%q", strMsg.Str())
-	}
-	if bytesMsg, ok := msg.(BytesMsg); ok {
-		return fmt.Sprintf("%q", bytesMsg.Bytes())
-	}
-	return fmt.Sprint(msg)
-}
-
-func (d DebugInterceptor) writeTraceEvent(evt any) {
+func (d JSONLTraceFileWriter) writeTraceEvent(evt any) {
 	encoded, err := json.Marshal(evt)
 	if err != nil {
 		panic(err)
@@ -136,16 +131,27 @@ func (d DebugInterceptor) writeTraceEvent(evt any) {
 	}
 }
 
-func eventPortFromSlot(slotAddr PortSlotAddr) EventPort {
-	return EventPort{
-		Path:  normalizePortPath(slotAddr.Path),
-		Name:  slotAddr.Port,
-		Index: slotAddr.Index,
-	}
+func (d JSONLTraceFileWriter) normalizePortSlotAddrPath(slotAddr PortSlotAddr) PortSlotAddr {
+	slotAddr.Path = d.normalizePortPath(slotAddr.Path)
+	return slotAddr
 }
 
-func NewDebugInterceptor(comment string) *DebugInterceptor {
-	return &DebugInterceptor{
+func (d JSONLTraceFileWriter) normalizePortPath(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+
+	lastPart := parts[len(parts)-1]
+	if lastPart == "in" || lastPart == "out" {
+		parts = parts[:len(parts)-1]
+	}
+
+	return strings.Join(parts, "/")
+}
+
+func NewDebugInterceptor(comment string) *JSONLTraceFileWriter {
+	return &JSONLTraceFileWriter{
 		comment: comment,
 	}
 }
@@ -156,10 +162,10 @@ func NewDebugInterceptor(comment string) *DebugInterceptor {
 //nolint:ireturn // Interceptor is the stable runtime transport contract for generated programs.
 func NewInterceptor(tracePath, comment string) (Interceptor, func() error, error) {
 	if tracePath == "" {
-		return ProdInterceptor{}, func() error { return nil }, nil
+		return NoEffectInterceptor{}, func() error { return nil }, nil
 	}
 
-	interceptor := &DebugInterceptor{
+	interceptor := &JSONLTraceFileWriter{
 		comment: comment,
 	}
 	closeFn, err := interceptor.Open(tracePath)
