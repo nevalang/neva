@@ -6,14 +6,12 @@ import (
 	"testing"
 )
 
-func resetRuntimeTraceStateForTests() {
-	resetTraceStoreForTests()
-	counter.Store(0)
-}
+func resetRuntimeTraceStateForTests() { counter.Store(0) }
 
 //nolint:gocyclo,cyclop // test intentionally validates full hop shape in one place.
 func TestTraceTree_Linear(t *testing.T) {
 	resetRuntimeTraceStateForTests()
+	tracer := NewTracer()
 
 	ch := make(chan OrderedMsg, 1)
 	out := NewSingleOutport(
@@ -27,7 +25,7 @@ func TestTraceTree_Linear(t *testing.T) {
 		ProdInterceptor{},
 	)
 
-	ctx := context.Background()
+	ctx := contextWithTracer(context.Background(), tracer)
 	if !out.Send(ctx, NewStringMsg("hello")) {
 		t.Fatalf("send failed")
 	}
@@ -41,7 +39,7 @@ func TestTraceTree_Linear(t *testing.T) {
 		t.Fatalf("expected ordered message index")
 	}
 
-	tree, ok := TraceCauseTree(got)
+	tree, ok := TraceCauseTree(ctx, got)
 	if !ok {
 		t.Fatalf("expected trace tree")
 	}
@@ -62,8 +60,9 @@ func TestTraceTree_Linear(t *testing.T) {
 
 func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 	resetRuntimeTraceStateForTests()
+	tracer := NewTracer()
 
-	ctx := context.Background()
+	ctx := contextWithTracer(context.Background(), tracer)
 	ch1 := make(chan OrderedMsg, 1)
 	ch2 := make(chan OrderedMsg, 1)
 
@@ -103,7 +102,7 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 		t.Fatalf("second receive failed")
 	}
 
-	tree, ok := TraceCauseTree(last)
+	tree, ok := TraceCauseTree(ctx, last)
 	if !ok {
 		t.Fatalf("expected trace tree")
 	}
@@ -168,11 +167,12 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 //nolint:gocyclo,cyclop // test intentionally exercises multi-parent fan-in setup end to end.
 func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	resetRuntimeTraceStateForTests()
+	tracer := NewTracer()
 
-	baseCtx := context.Background()
+	baseCtx := contextWithTracer(context.Background(), tracer)
 	handlerCtx := contextWithTraceActivation(baseCtx)
-	sendCtx := context.Background()
-	recvCtx := context.Background()
+	sendCtx := baseCtx
+	recvCtx := baseCtx
 	firstCh := make(chan OrderedMsg, 1)
 	secondCh := make(chan OrderedMsg, 1)
 	thirdCh := make(chan OrderedMsg, 1)
@@ -213,7 +213,7 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 		t.Fatalf("receive failed")
 	}
 
-	tree, hasTree := TraceCauseTree(last)
+	tree, hasTree := TraceCauseTree(baseCtx, last)
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}
@@ -235,8 +235,9 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 
 func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	resetRuntimeTraceStateForTests()
+	tracer := NewTracer()
 
-	ctx := context.Background()
+	ctx := contextWithTracer(context.Background(), tracer)
 	firstCh := make(chan OrderedMsg, 1)
 	secondCh := make(chan OrderedMsg, 1)
 	resCh := make(chan OrderedMsg, 1)
@@ -265,7 +266,7 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	}
 
 	if !resOut.Send(
-		context.Background(),
+		ctx,
 		NewStringMsg(firstOrdered.Str()+secondOrdered.Str()),
 		firstOrdered,
 		secondOrdered,
@@ -278,7 +279,7 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 		t.Fatalf("result receive failed")
 	}
 
-	tree, hasTree := TraceCauseTree(last)
+	tree, hasTree := TraceCauseTree(ctx, last)
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func TestFormatPanicDataflowTrace_NormalizesPathsAndIncludesComponent(t *testing.T) {
-	ctx := context.Background()
+	ctx := runtime.WithTracer(context.Background())
 	ch1 := make(chan runtime.OrderedMsg, 1)
 	ch2 := make(chan runtime.OrderedMsg, 1)
 
@@ -49,7 +49,7 @@ func TestFormatPanicDataflowTrace_NormalizesPathsAndIncludesComponent(t *testing
 		t.Fatalf("second receive failed")
 	}
 
-	formatted := formatPanicDataflowTrace(last)
+	formatted := formatPanicDataflowTrace(ctx, last)
 	if !strings.Contains(formatted, "panic sink: checkout/finalize:err") {
 		t.Fatalf("expected normalized panic sink, got:\n%s", formatted)
 	}
@@ -65,7 +65,7 @@ func TestFormatPanicDataflowTrace_NormalizesPathsAndIncludesComponent(t *testing
 }
 
 func TestFormatPanicDataflowTrace_FanInKeepsAllParentBranches(t *testing.T) {
-	ctx := context.Background()
+	ctx := runtime.WithTracer(context.Background())
 	firstCh := make(chan runtime.OrderedMsg, 1)
 	secondCh := make(chan runtime.OrderedMsg, 1)
 	thirdCh := make(chan runtime.OrderedMsg, 1)
@@ -118,7 +118,7 @@ func TestFormatPanicDataflowTrace_FanInKeepsAllParentBranches(t *testing.T) {
 		t.Fatalf("result receive failed")
 	}
 
-	formatted := formatPanicDataflowTrace(last)
+	formatted := formatPanicDataflowTrace(ctx, last)
 	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
 		t.Fatalf("expected fan-in output hop in formatted trace, got:\n%s", formatted)
 	}

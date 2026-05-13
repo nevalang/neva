@@ -26,7 +26,9 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
 	var out Msg
+	tracer := NewTracer()
 	ctx, cancel := context.WithCancelCause(ctx)
+	ctx = contextWithTracer(ctx, tracer)
 	ctx = contextWithProgramCancelCause(ctx, cancel)
 	ctx = contextWithTraceActivation(ctx)
 	go func() {

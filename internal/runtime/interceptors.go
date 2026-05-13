@@ -45,39 +45,27 @@ type RecvEvent struct {
 }
 
 type ProdInterceptor struct {
-	tracer *Tracer
 }
 
 func (ProdInterceptor) Prepare() error { return nil }
 
-func (p ProdInterceptor) getTracer() *Tracer {
-	if p.tracer != nil {
-		return p.tracer
-	}
-	return globalTracer
-}
-
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p ProdInterceptor) Sent(
-	ctx context.Context,
-	sender PortSlotAddr,
+	_ context.Context,
+	_ PortSlotAddr,
 	ordered OrderedMsg,
-	causes []OrderedMsg,
+	_ TraceHop,
 ) OrderedMsg {
-	p.getTracer().RecordSent(ctx, sender, ordered, causes)
 	return ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Received(ctx context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	p.getTracer().RecordReceived(receiver, ordered)
-	recordTraceReceive(ctx, ordered)
+func (p ProdInterceptor) Received(_ context.Context, _ PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	return ordered
 }
 
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DebugInterceptor struct {
-	tracer  *Tracer
 	file    *os.File
 	comment string
 }
@@ -96,21 +84,13 @@ func (d *DebugInterceptor) Open(filepath string) (func() error, error) {
 	return file.Close, nil
 }
 
-func (d DebugInterceptor) getTracer() *Tracer {
-	if d.tracer != nil {
-		return d.tracer
-	}
-	return globalTracer
-}
-
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *DebugInterceptor) Sent(
-	ctx context.Context,
+	_ context.Context,
 	sender PortSlotAddr,
 	ordered OrderedMsg,
-	causes []OrderedMsg,
+	hop TraceHop,
 ) OrderedMsg {
-	hop := d.getTracer().RecordSent(ctx, sender, ordered, causes)
 	evt := SentEvent{
 		Version:      traceEventVersion,
 		Event:        EventSent,
@@ -119,14 +99,12 @@ func (d *DebugInterceptor) Sent(
 		Port:         eventPortFromSlot(sender),
 		Message:      d.formatMsg(ordered.Msg),
 	}
-	writeTraceEvent(d.file, evt)
+	d.writeTraceEvent(evt)
 	return ordered
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Received(ctx context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	d.getTracer().RecordReceived(receiver, ordered)
-	recordTraceReceive(ctx, ordered)
+func (d *DebugInterceptor) Received(_ context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	evt := RecvEvent{
 		Version: traceEventVersion,
 		Event:   EventRecv,
@@ -134,7 +112,7 @@ func (d *DebugInterceptor) Received(ctx context.Context, receiver PortSlotAddr, 
 		Port:    eventPortFromSlot(receiver),
 		Message: d.formatMsg(ordered.Msg),
 	}
-	writeTraceEvent(d.file, evt)
+	d.writeTraceEvent(evt)
 	return ordered
 }
 
@@ -148,12 +126,12 @@ func (d DebugInterceptor) formatMsg(msg Msg) string {
 	return fmt.Sprint(msg)
 }
 
-func writeTraceEvent(file *os.File, evt any) {
+func (d DebugInterceptor) writeTraceEvent(evt any) {
 	encoded, err := json.Marshal(evt)
 	if err != nil {
 		panic(err)
 	}
-	if _, err := fmt.Fprintln(file, string(encoded)); err != nil {
+	if _, err := fmt.Fprintln(d.file, string(encoded)); err != nil {
 		panic(err)
 	}
 }
@@ -168,7 +146,6 @@ func eventPortFromSlot(slotAddr PortSlotAddr) EventPort {
 
 func NewDebugInterceptor(comment string) *DebugInterceptor {
 	return &DebugInterceptor{
-		tracer:  globalTracer,
 		comment: comment,
 	}
 }
@@ -178,13 +155,11 @@ func NewDebugInterceptor(comment string) *DebugInterceptor {
 //
 //nolint:ireturn // Interceptor is the stable runtime transport contract for generated programs.
 func NewInterceptor(tracePath, comment string) (Interceptor, func() error, error) {
-	tracer := globalTracer
 	if tracePath == "" {
-		return ProdInterceptor{tracer: tracer}, func() error { return nil }, nil
+		return ProdInterceptor{}, func() error { return nil }, nil
 	}
 
 	interceptor := &DebugInterceptor{
-		tracer:  tracer,
 		comment: comment,
 	}
 	closeFn, err := interceptor.Open(tracePath)

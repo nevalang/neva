@@ -11,8 +11,8 @@ import (
 
 type panicker struct{}
 
-func formatPanicDataflowTrace(msg runtime.OrderedMsg) string {
-	tree, ok := runtime.TraceCauseTree(msg)
+func formatPanicDataflowTrace(ctx context.Context, msg runtime.OrderedMsg) string {
+	tree, ok := runtime.TraceCauseTree(ctx, msg)
 	if !ok {
 		return ""
 	}
@@ -113,7 +113,7 @@ func (p panicker) Create(
 			panic(err)
 		}
 
-		if trace := formatPanicDataflowTrace(panicMsg); trace != "" {
+		if trace := formatPanicDataflowTrace(ctx, panicMsg); trace != "" {
 			if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
 				panic(err)
 			}

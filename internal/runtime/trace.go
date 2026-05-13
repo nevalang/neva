@@ -9,14 +9,18 @@ import (
 )
 
 type TraceHop struct {
-	Sender       *PortSlotAddr
-	Receiver     *PortSlotAddr
-	Message      string
+	Sender   *PortSlotAddr
+	Receiver *PortSlotAddr
+	Message  string
+	// CauseIndexes is the single source of truth for causal edges in traceStore.
+	// Tree views are reconstructed from these indexes on demand.
 	CauseIndexes []uint64
 	Index        uint64
 }
 
 type TraceTree struct {
+	// Parents is a derived, read-only projection rebuilt from traceStore hop links.
+	// It is intentionally denormalized for traversal/formatting APIs.
 	Parents []TraceTree
 	Hop     TraceHop
 }
@@ -29,9 +33,6 @@ type traceStore struct {
 	hops map[uint64]TraceHop
 	mu   sync.RWMutex
 }
-
-//nolint:gochecknoglobals // runtime-wide tracer must be shared across port events.
-var globalTracer = NewTracer()
 
 func NewTracer() *Tracer {
 	return &Tracer{
@@ -71,6 +72,7 @@ func orderedPayload(msg Msg) Msg {
 }
 
 type traceActivationKey struct{}
+type tracerKey struct{}
 
 type traceActivationState struct {
 	causes  map[uint64]struct{}
@@ -82,6 +84,22 @@ func contextWithTraceActivation(ctx context.Context) context.Context {
 	return context.WithValue(ctx, traceActivationKey{}, &traceActivationState{
 		causes: map[uint64]struct{}{},
 	})
+}
+
+func contextWithTracer(ctx context.Context, tracer *Tracer) context.Context {
+	return context.WithValue(ctx, tracerKey{}, tracer)
+}
+
+func WithTracer(ctx context.Context) context.Context {
+	return contextWithTracer(ctx, NewTracer())
+}
+
+func tracerFromContext(ctx context.Context) (*Tracer, bool) {
+	tracer, ok := ctx.Value(tracerKey{}).(*Tracer)
+	if !ok || tracer == nil {
+		return nil, false
+	}
+	return tracer, true
 }
 
 func traceActivationFromContext(ctx context.Context) *traceActivationState {
@@ -193,6 +211,7 @@ func (t *Tracer) traceTreeByIndex(index uint64, visited map[uint64]struct{}) (Tr
 		return TraceTree{}, false
 	}
 
+	// Rebuild tree view from normalized hop links; no second persisted source of truth.
 	tree := TraceTree{
 		Hop:     hop,
 		Parents: make([]TraceTree, 0, len(hop.CauseIndexes)),
@@ -227,12 +246,20 @@ func AsUnion(msg Msg) (UnionMsg, bool) {
 	return unionMsg, ok
 }
 
-func TraceCauseTreeByIndex(index uint64) (TraceTree, bool) {
-	return globalTracer.TraceCauseTreeByIndex(index)
+func TraceCauseTreeByIndex(ctx context.Context, index uint64) (TraceTree, bool) {
+	tracer, ok := tracerFromContext(ctx)
+	if !ok {
+		return TraceTree{}, false
+	}
+	return tracer.TraceCauseTreeByIndex(index)
 }
 
-func TraceCauseTree(ordered OrderedMsg) (TraceTree, bool) {
-	return globalTracer.TraceCauseTree(ordered)
+func TraceCauseTree(ctx context.Context, ordered OrderedMsg) (TraceTree, bool) {
+	tracer, ok := tracerFromContext(ctx)
+	if !ok {
+		return TraceTree{}, false
+	}
+	return tracer.TraceCauseTree(ordered)
 }
 
 func normalizePortPath(path string) string {
@@ -247,10 +274,4 @@ func normalizePortPath(path string) string {
 	}
 
 	return strings.Join(parts, "/")
-}
-
-func resetTraceStoreForTests() {
-	globalTracer.store.mu.Lock()
-	defer globalTracer.store.mu.Unlock()
-	globalTracer.store.hops = make(map[uint64]TraceHop)
 }
