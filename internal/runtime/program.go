@@ -362,12 +362,12 @@ func NewSingleOutport(
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
-	traceID := counter.Add(1)
-	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
-	msg = withTrace(msg, traceID, parentTraceIDs)
+	index := counter.Add(1)
+	causeIndexes := causeIndexesForSend(ctx, msg, causes)
 	ordered := OrderedMsg{
-		Msg:   msg,
-		index: traceID,
+		Msg:          orderedPayload(msg),
+		index:        index,
+		causeIndexes: causeIndexes,
 	}
 	ordered = s.interceptor.Sent(
 		ctx,
@@ -408,10 +408,13 @@ func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- Orde
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...OrderedMsg) bool {
-	traceID := counter.Add(1)
-	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
-	msg = withTrace(msg, traceID, parentTraceIDs)
-	ordered := OrderedMsg{Msg: msg, index: traceID}
+	index := counter.Add(1)
+	causeIndexes := causeIndexesForSend(ctx, msg, causes)
+	ordered := OrderedMsg{
+		Msg:          orderedPayload(msg),
+		index:        index,
+		causeIndexes: causeIndexes,
+	}
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
 			Path: a.addr.Path,
@@ -440,13 +443,17 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
-	parentTraceIDs := parentTraceIDsForSend(ctx, msg, causes)
+	causeIndexes := causeIndexesForSend(ctx, msg, causes)
+	payload := orderedPayload(msg)
 
 	for idx := range a.slots {
 		wg.Go(func() {
-			traceID := counter.Add(1)
-			traceMsg := withTrace(msg, traceID, parentTraceIDs)
-			ordered := OrderedMsg{Msg: traceMsg, index: traceID}
+			index := counter.Add(1)
+			ordered := OrderedMsg{
+				Msg:          payload,
+				index:        index,
+				causeIndexes: causeIndexes,
+			}
 			i := Uint8Index(idx)
 			slotAddr := PortSlotAddr{
 				PortAddr: a.addr,

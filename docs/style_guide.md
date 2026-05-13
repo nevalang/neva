@@ -92,3 +92,13 @@ Example:
 // @example process:res -> :stop
 def Process(start any, data string) (res string, err error)
 ```
+
+## Engineering Rules
+
+### Prefer The Simplest Solution
+
+Always prefer the simplest solution.
+
+1. First, find the simplest solution.
+2. Prove that it is insufficient.
+3. Add complexity only after you proved it is necessary.

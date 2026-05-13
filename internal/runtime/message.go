@@ -7,27 +7,14 @@ import (
 	"strconv"
 )
 
-// OrderedMsg is a message with a chronological index.
-// Ordered messages can be compared and sorted by their index.
+// OrderedMsg is a transport envelope with payload and runtime ordering metadata.
 type OrderedMsg struct {
 	Msg
-	index uint64
+	causeIndexes []uint64
+	index        uint64
 }
 
-func (o OrderedMsg) String() string {
-	return fmt.Sprint(o.Msg)
-}
-
-func (o OrderedMsg) Bool() bool           { return o.Msg.Bool() }
-func (o OrderedMsg) Int() int64           { return o.Msg.Int() }
-func (o OrderedMsg) Float() float64       { return o.Msg.Float() }
-func (o OrderedMsg) Str() string          { return o.Msg.Str() }
-func (o OrderedMsg) Bytes() []byte        { return o.Msg.Bytes() }
-func (o OrderedMsg) List() []Msg          { return o.Msg.List() }
-func (o OrderedMsg) Dict() map[string]Msg { return o.Msg.Dict() }
-func (o OrderedMsg) Struct() StructMsg    { return o.Msg.Struct() }
-func (o OrderedMsg) Union() UnionMsg      { return o.Msg.Union() }
-func (o OrderedMsg) Equal(other Msg) bool { return o.Msg.Equal(other) }
+func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }
 
 type Msg interface {
 	Bool() bool
@@ -46,8 +33,6 @@ type Msg interface {
 // Internal
 
 type internalMsg struct {
-	parentTraceIDs []uint64
-	traceID        uint64
 }
 
 func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
@@ -66,10 +51,6 @@ func (internalMsg) Struct() StructMsg {
 func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on internal message type") }
 func (internalMsg) Equal(other Msg) bool {
 	panic("unexpected Equal method call on internal message type")
-}
-
-func (m internalMsg) traceMeta() (uint64, []uint64) {
-	return m.traceID, m.parentTraceIDs
 }
 
 // Bool
@@ -142,8 +123,8 @@ func NewFloatMsg(n float64) FloatMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StringMsg struct {
-	v string
 	internalMsg
+	v string
 }
 
 func (msg StringMsg) Str() string { return msg.v }
@@ -171,8 +152,8 @@ func NewStringMsg(s string) StringMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type BytesMsg struct {
-	v []byte
 	internalMsg
+	v []byte
 }
 
 func (msg BytesMsg) Bytes() []byte { return msg.v }
@@ -206,8 +187,8 @@ func NewBytesMsg(v []byte) BytesMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type ListMsg struct {
-	v []Msg
 	internalMsg
+	v []Msg
 }
 
 func (msg ListMsg) List() []Msg { return msg.v }
@@ -248,8 +229,8 @@ func NewListMsg(v []Msg) ListMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DictMsg struct {
-	v map[string]Msg
 	internalMsg
+	v map[string]Msg
 }
 
 func (msg DictMsg) Dict() map[string]Msg { return msg.v }
@@ -297,8 +278,8 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StructMsg struct {
-	fields []StructField
 	internalMsg
+	fields []StructField
 }
 
 func (msg StructMsg) Struct() StructMsg { return msg }
@@ -409,9 +390,9 @@ func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) 
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type UnionMsg struct {
+	internalMsg
 	data Msg
 	tag  string
-	internalMsg
 }
 
 func (msg UnionMsg) Union() UnionMsg {

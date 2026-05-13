@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 )
 
 // traceEventVersion tracks JSONL schema version for emitted runtime events.
-const traceEventVersion = 1
+const traceEventVersion = 2
 
 // EventKind is a runtime transport event kind.
 type EventKind string
@@ -27,12 +28,12 @@ type EventPort struct {
 
 // SentEvent is emitted when runtime sends a message through an outport.
 type SentEvent struct {
-	Port           EventPort `json:"port"`
-	Event          EventKind `json:"event"`
-	Message        string    `json:"message"`
-	ParentTraceIDs []uint64  `json:"parentTraceIds"`
-	Version        int       `json:"v"`
-	TraceID        uint64    `json:"traceId"`
+	Port         EventPort `json:"port"`
+	Event        EventKind `json:"event"`
+	Message      string    `json:"message"`
+	CauseIndexes []uint64  `json:"causeIndexes"`
+	Version      int       `json:"v"`
+	Index        uint64    `json:"index"`
 }
 
 // RecvEvent is emitted when runtime receives a message from an inport.
@@ -41,7 +42,7 @@ type RecvEvent struct {
 	Event   EventKind `json:"event"`
 	Message string    `json:"message"`
 	Version int       `json:"v"`
-	TraceID uint64    `json:"traceId"`
+	Index   uint64    `json:"index"`
 }
 
 type ProdInterceptor struct {
@@ -102,12 +103,12 @@ func (d DebugInterceptor) getTracer() *Tracer {
 func (d *DebugInterceptor) Sent(_ context.Context, sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
 	d.getTracer().RecordSent(sender, ordered)
 	evt := SentEvent{
-		Version:        traceEventVersion,
-		Event:          EventSent,
-		TraceID:        ordered.index,
-		ParentTraceIDs: parentTraceIDsFromMsg(ordered.Msg),
-		Port:           eventPortFromSlot(sender),
-		Message:        d.formatMsg(ordered.Msg),
+		Version:      traceEventVersion,
+		Event:        EventSent,
+		Index:        ordered.index,
+		CauseIndexes: slices.Clone(ordered.causeIndexes),
+		Port:         eventPortFromSlot(sender),
+		Message:      d.formatMsg(ordered.Msg),
 	}
 	writeTraceEvent(d.file, evt)
 	return ordered
@@ -120,7 +121,7 @@ func (d *DebugInterceptor) Received(ctx context.Context, receiver PortSlotAddr, 
 	evt := RecvEvent{
 		Version: traceEventVersion,
 		Event:   EventRecv,
-		TraceID: ordered.index,
+		Index:   ordered.index,
 		Port:    eventPortFromSlot(receiver),
 		Message: d.formatMsg(ordered.Msg),
 	}

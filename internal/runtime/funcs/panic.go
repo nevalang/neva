@@ -11,7 +11,7 @@ import (
 
 type panicker struct{}
 
-func formatPanicDataflowTrace(msg runtime.Msg) string {
+func formatPanicDataflowTrace(msg runtime.OrderedMsg) string {
 	tree, ok := runtime.TraceCauseTree(msg)
 	if !ok {
 		return ""

@@ -37,9 +37,8 @@ func TestTraceTree_Linear(t *testing.T) {
 		t.Fatalf("receive failed")
 	}
 
-	traceID, hasTrace := TraceIDFromMsg(got)
-	if !hasTrace || traceID == 0 {
-		t.Fatalf("expected trace metadata on received message")
+	if got.index == 0 {
+		t.Fatalf("expected ordered message index")
 	}
 
 	tree, ok := TraceCauseTree(got)
@@ -47,8 +46,8 @@ func TestTraceTree_Linear(t *testing.T) {
 		t.Fatalf("expected trace tree")
 	}
 	hop := tree.Hop
-	if len(hop.ParentTraceIDs) != 0 {
-		t.Fatalf("expected root hop parents to be empty, got %v", hop.ParentTraceIDs)
+	if len(hop.CauseIndexes) != 0 {
+		t.Fatalf("expected root hop parents to be empty, got %v", hop.CauseIndexes)
 	}
 	if len(tree.Parents) != 0 {
 		t.Fatalf("expected no parent nodes, got %d", len(tree.Parents))
@@ -108,16 +107,16 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected trace tree")
 	}
-	if len(tree.Hop.ParentTraceIDs) != 1 || len(tree.Parents) != 1 {
+	if len(tree.Hop.CauseIndexes) != 1 || len(tree.Parents) != 1 {
 		t.Fatalf(
 			"expected one parent node for hop %d, got ids=%v parents=%d",
-			tree.Hop.TraceID,
-			tree.Hop.ParentTraceIDs,
+			tree.Hop.Index,
+			tree.Hop.CauseIndexes,
 			len(tree.Parents),
 		)
 	}
-	if tree.Hop.ParentTraceIDs[0] != tree.Parents[0].Hop.TraceID {
-		t.Fatalf("expected parent link to parent node trace id, got ids=%v parent=%d", tree.Hop.ParentTraceIDs, tree.Parents[0].Hop.TraceID)
+	if tree.Hop.CauseIndexes[0] != tree.Parents[0].Hop.Index {
+		t.Fatalf("expected parent link to parent node index, got ids=%v parent=%d", tree.Hop.CauseIndexes, tree.Parents[0].Hop.Index)
 	}
 }
 
@@ -218,18 +217,18 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}
-	if len(tree.Hop.ParentTraceIDs) != 3 {
-		t.Fatalf("expected 3 parent trace ids, got %v", tree.Hop.ParentTraceIDs)
+	if len(tree.Hop.CauseIndexes) != 3 {
+		t.Fatalf("expected 3 parent indexes, got %v", tree.Hop.CauseIndexes)
 	}
 	if len(tree.Parents) != 3 {
 		t.Fatalf("expected 3 parent nodes, got %d", len(tree.Parents))
 	}
-	if tree.Hop.ParentTraceIDs[0] == 0 || tree.Hop.ParentTraceIDs[1] == 0 || tree.Hop.ParentTraceIDs[2] == 0 {
-		t.Fatalf("expected non-zero parent trace ids, got %v", tree.Hop.ParentTraceIDs)
+	if tree.Hop.CauseIndexes[0] == 0 || tree.Hop.CauseIndexes[1] == 0 || tree.Hop.CauseIndexes[2] == 0 {
+		t.Fatalf("expected non-zero parent indexes, got %v", tree.Hop.CauseIndexes)
 	}
 	for _, parent := range tree.Parents {
-		if parent.Hop.TraceID == 0 {
-			t.Fatalf("expected non-zero parent hop trace id")
+		if parent.Hop.Index == 0 {
+			t.Fatalf("expected non-zero parent hop index")
 		}
 	}
 }
@@ -283,8 +282,8 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}
-	if len(tree.Hop.ParentTraceIDs) != 2 {
-		t.Fatalf("expected 2 explicit parents, got %v", tree.Hop.ParentTraceIDs)
+	if len(tree.Hop.CauseIndexes) != 2 {
+		t.Fatalf("expected 2 explicit parents, got %v", tree.Hop.CauseIndexes)
 	}
 	if len(tree.Parents) != 2 {
 		t.Fatalf("expected 2 parent nodes, got %d", len(tree.Parents))

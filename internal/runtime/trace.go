@@ -8,16 +8,12 @@ import (
 	"sync"
 )
 
-type traceCarrier interface {
-	traceMeta() (uint64, []uint64)
-}
-
 type TraceHop struct {
-	Sender         *PortSlotAddr
-	Receiver       *PortSlotAddr
-	Message        string
-	ParentTraceIDs []uint64
-	TraceID        uint64
+	Sender       *PortSlotAddr
+	Receiver     *PortSlotAddr
+	Message      string
+	CauseIndexes []uint64
+	Index        uint64
 }
 
 type TraceTree struct {
@@ -45,37 +41,12 @@ func NewTracer() *Tracer {
 	}
 }
 
-// TraceIDFromMsg extracts runtime Dataflow Trace identity from message payload.
-func TraceIDFromMsg(msg Msg) (uint64, bool) {
-	if ordered, ok := msg.(OrderedMsg); ok {
-		return TraceIDFromMsg(ordered.Msg)
-	}
-	carrier, ok := msg.(traceCarrier)
-	if !ok {
-		return 0, false
-	}
-	traceID, _ := carrier.traceMeta()
-	return traceID, traceID != 0
-}
-
-func parentTraceIDsFromMsg(msg Msg) []uint64 {
-	if ordered, ok := msg.(OrderedMsg); ok {
-		return parentTraceIDsFromMsg(ordered.Msg)
-	}
-	carrier, ok := msg.(traceCarrier)
-	if !ok {
-		return nil
-	}
-	_, parentTraceIDs := carrier.traceMeta()
-	return slices.Clone(parentTraceIDs)
-}
-
-func parentTraceIDsFromOrdered(causes []OrderedMsg) []uint64 {
+func causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
 	if len(causes) == 0 {
 		return nil
 	}
 
-	parentTraceIDs := make([]uint64, 0, len(causes))
+	indexes := make([]uint64, 0, len(causes))
 	seen := make(map[uint64]struct{}, len(causes))
 	for _, cause := range causes {
 		if cause.index == 0 {
@@ -85,61 +56,31 @@ func parentTraceIDsFromOrdered(causes []OrderedMsg) []uint64 {
 			continue
 		}
 		seen[cause.index] = struct{}{}
-		parentTraceIDs = append(parentTraceIDs, cause.index)
+		indexes = append(indexes, cause.index)
 	}
-	slices.Sort(parentTraceIDs)
-	return parentTraceIDs
-}
-
-func traceMetaValue(traceID uint64, parentTraceIDs []uint64) internalMsg {
-	return internalMsg{
-		traceID:        traceID,
-		parentTraceIDs: slices.Clone(parentTraceIDs),
-	}
+	slices.Sort(indexes)
+	return indexes
 }
 
 //nolint:ireturn // Msg is runtime contract type.
-func withTrace(msg Msg, traceID uint64, parentTraceIDs []uint64) Msg {
+func orderedPayload(msg Msg) Msg {
 	if ordered, ok := msg.(OrderedMsg); ok {
-		msg = ordered.Msg
+		return ordered.Msg
 	}
-
-	meta := traceMetaValue(traceID, parentTraceIDs)
-	switch typedMsg := msg.(type) {
-	case BoolMsg:
-		return BoolMsg{internalMsg: meta, v: typedMsg.v}
-	case IntMsg:
-		return IntMsg{internalMsg: meta, v: typedMsg.v}
-	case FloatMsg:
-		return FloatMsg{internalMsg: meta, v: typedMsg.v}
-	case StringMsg:
-		return StringMsg{internalMsg: meta, v: typedMsg.v}
-	case BytesMsg:
-		return BytesMsg{internalMsg: meta, v: typedMsg.v}
-	case ListMsg:
-		return ListMsg{internalMsg: meta, v: typedMsg.v}
-	case DictMsg:
-		return DictMsg{internalMsg: meta, v: typedMsg.v}
-	case StructMsg:
-		return StructMsg{internalMsg: meta, fields: typedMsg.fields}
-	case UnionMsg:
-		return UnionMsg{internalMsg: meta, tag: typedMsg.tag, data: typedMsg.data}
-	default:
-		return msg
-	}
+	return msg
 }
 
 type traceActivationKey struct{}
 
 type traceActivationState struct {
-	parents map[uint64]struct{}
+	causes  map[uint64]struct{}
 	mu      sync.Mutex
 	emitted bool
 }
 
 func contextWithTraceActivation(ctx context.Context) context.Context {
 	return context.WithValue(ctx, traceActivationKey{}, &traceActivationState{
-		parents: map[uint64]struct{}{},
+		causes: map[uint64]struct{}{},
 	})
 }
 
@@ -161,70 +102,59 @@ func recordTraceReceive(ctx context.Context, ordered OrderedMsg) {
 	defer state.mu.Unlock()
 
 	if state.emitted {
-		clear(state.parents)
+		clear(state.causes)
 		state.emitted = false
 	}
 
 	if ordered.index != 0 {
-		state.parents[ordered.index] = struct{}{}
+		state.causes[ordered.index] = struct{}{}
 	}
 }
 
-func currentTraceParents(ctx context.Context, msg Msg) []uint64 {
+func currentCauseIndexes(ctx context.Context, msg Msg) []uint64 {
 	state := traceActivationFromContext(ctx)
-	if state == nil {
-		parentTraceIDs := parentTraceIDsFromMsg(msg)
-		if len(parentTraceIDs) == 0 {
-			if traceID, ok := TraceIDFromMsg(msg); ok && traceID != 0 {
-				return []uint64{traceID}
+	if state != nil {
+		state.mu.Lock()
+		defer state.mu.Unlock()
+
+		if len(state.causes) != 0 {
+			indexes := make([]uint64, 0, len(state.causes))
+			for index := range state.causes {
+				indexes = append(indexes, index)
 			}
+			slices.Sort(indexes)
+			state.emitted = true
+			return indexes
 		}
-		return parentTraceIDs
-	}
 
-	state.mu.Lock()
-	defer state.mu.Unlock()
-
-	if len(state.parents) != 0 {
-		parentTraceIDs := make([]uint64, 0, len(state.parents))
-		for traceID := range state.parents {
-			parentTraceIDs = append(parentTraceIDs, traceID)
-		}
-		slices.Sort(parentTraceIDs)
 		state.emitted = true
-		return parentTraceIDs
 	}
 
-	parentTraceIDs := parentTraceIDsFromMsg(msg)
-	if len(parentTraceIDs) == 0 {
-		if traceID, ok := TraceIDFromMsg(msg); ok && traceID != 0 {
-			parentTraceIDs = []uint64{traceID}
-		}
+	if ordered, ok := msg.(OrderedMsg); ok && ordered.index != 0 {
+		return []uint64{ordered.index}
 	}
-	state.emitted = true
-	return parentTraceIDs
+
+	return nil
 }
 
-func parentTraceIDsForSend(ctx context.Context, msg Msg, causes []OrderedMsg) []uint64 {
+func causeIndexesForSend(ctx context.Context, msg Msg, causes []OrderedMsg) []uint64 {
 	if len(causes) != 0 {
-		return parentTraceIDsFromOrdered(causes)
+		return causeIndexesFromOrdered(causes)
 	}
-	return currentTraceParents(ctx, msg)
+	return currentCauseIndexes(ctx, msg)
 }
 
 func (t *Tracer) RecordSent(sender PortSlotAddr, ordered OrderedMsg) {
 	t.store.mu.Lock()
 	defer t.store.mu.Unlock()
 
-	traceID := ordered.index
-	parentTraceIDs := parentTraceIDsFromMsg(ordered.Msg)
-	hop := t.store.hops[traceID]
-	hop.TraceID = traceID
-	hop.ParentTraceIDs = slices.Clone(parentTraceIDs)
+	hop := t.store.hops[ordered.index]
+	hop.Index = ordered.index
+	hop.CauseIndexes = slices.Clone(ordered.causeIndexes)
 	senderCopy := sender
 	hop.Sender = &senderCopy
 	hop.Message = fmt.Sprint(ordered.Msg)
-	t.store.hops[traceID] = hop
+	t.store.hops[ordered.index] = hop
 }
 
 func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
@@ -232,75 +162,74 @@ func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
 	defer t.store.mu.Unlock()
 
 	hop := t.store.hops[ordered.index]
-	hop.TraceID = ordered.index
+	hop.Index = ordered.index
 	receiverCopy := receiver
 	hop.Receiver = &receiverCopy
 	t.store.hops[ordered.index] = hop
 }
 
-func (t *Tracer) traceHopByID(traceID uint64) (TraceHop, bool) {
+func (t *Tracer) traceHopByIndex(index uint64) (TraceHop, bool) {
 	t.store.mu.RLock()
 	defer t.store.mu.RUnlock()
 
-	hop, ok := t.store.hops[traceID]
+	hop, ok := t.store.hops[index]
 	return hop, ok
 }
 
-func (t *Tracer) traceTreeByID(traceID uint64, visited map[uint64]struct{}) (TraceTree, bool) {
-	if traceID == 0 {
+func (t *Tracer) traceTreeByIndex(index uint64, visited map[uint64]struct{}) (TraceTree, bool) {
+	if index == 0 {
 		return TraceTree{}, false
 	}
-	if _, seen := visited[traceID]; seen {
+	if _, seen := visited[index]; seen {
 		return TraceTree{}, false
 	}
-	visited[traceID] = struct{}{}
+	visited[index] = struct{}{}
 
-	hop, ok := t.traceHopByID(traceID)
+	hop, ok := t.traceHopByIndex(index)
 	if !ok {
 		return TraceTree{}, false
 	}
 
 	tree := TraceTree{
 		Hop:     hop,
-		Parents: make([]TraceTree, 0, len(hop.ParentTraceIDs)),
+		Parents: make([]TraceTree, 0, len(hop.CauseIndexes)),
 	}
-	for _, parentTraceID := range hop.ParentTraceIDs {
-		parentTree, ok := t.traceTreeByID(parentTraceID, visited)
+	for _, causeIndex := range hop.CauseIndexes {
+		parentTree, ok := t.traceTreeByIndex(causeIndex, visited)
 		if !ok {
 			continue
 		}
 		tree.Parents = append(tree.Parents, parentTree)
 	}
 
-	delete(visited, traceID)
+	delete(visited, index)
 	return tree, true
 }
 
-// TraceCauseTreeByID reconstructs full multi-parent ancestry for the given trace id.
-func (t *Tracer) TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
-	return t.traceTreeByID(traceID, map[uint64]struct{}{})
+// TraceCauseTreeByIndex reconstructs full multi-parent ancestry for the given message index.
+func (t *Tracer) TraceCauseTreeByIndex(index uint64) (TraceTree, bool) {
+	return t.traceTreeByIndex(index, map[uint64]struct{}{})
 }
 
-// TraceCauseTree reconstructs full multi-parent ancestry for the given message.
-func (t *Tracer) TraceCauseTree(msg Msg) (TraceTree, bool) {
-	traceID, hasTrace := TraceIDFromMsg(msg)
-	if !hasTrace {
+// TraceCauseTree reconstructs full multi-parent ancestry for the given ordered message.
+func (t *Tracer) TraceCauseTree(ordered OrderedMsg) (TraceTree, bool) {
+	if ordered.index == 0 {
 		return TraceTree{}, false
 	}
-	return t.TraceCauseTreeByID(traceID)
+	return t.TraceCauseTreeByIndex(ordered.index)
 }
 
 func AsUnion(msg Msg) (UnionMsg, bool) {
-	unionMsg, ok := msg.(UnionMsg)
+	unionMsg, ok := orderedPayload(msg).(UnionMsg)
 	return unionMsg, ok
 }
 
-func TraceCauseTreeByID(traceID uint64) (TraceTree, bool) {
-	return globalTracer.TraceCauseTreeByID(traceID)
+func TraceCauseTreeByIndex(index uint64) (TraceTree, bool) {
+	return globalTracer.TraceCauseTreeByIndex(index)
 }
 
-func TraceCauseTree(msg Msg) (TraceTree, bool) {
-	return globalTracer.TraceCauseTree(msg)
+func TraceCauseTree(ordered OrderedMsg) (TraceTree, bool) {
+	return globalTracer.TraceCauseTree(ordered)
 }
 
 func normalizePortPath(path string) string {
