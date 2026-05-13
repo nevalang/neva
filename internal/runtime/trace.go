@@ -111,7 +111,7 @@ func recordTraceReceive(ctx context.Context, ordered OrderedMsg) {
 	}
 }
 
-func currentCauseIndexes(ctx context.Context, msg Msg) []uint64 {
+func currentCauseIndexes(ctx context.Context) []uint64 {
 	state := traceActivationFromContext(ctx)
 	if state != nil {
 		state.mu.Lock()
@@ -130,31 +130,34 @@ func currentCauseIndexes(ctx context.Context, msg Msg) []uint64 {
 		state.emitted = true
 	}
 
-	if ordered, ok := msg.(OrderedMsg); ok && ordered.index != 0 {
-		return []uint64{ordered.index}
-	}
-
 	return nil
 }
 
-func causeIndexesForSend(ctx context.Context, msg Msg, causes []OrderedMsg) []uint64 {
+func causeIndexesForSend(ctx context.Context, causes []OrderedMsg) []uint64 {
 	if len(causes) != 0 {
 		return causeIndexesFromOrdered(causes)
 	}
-	return currentCauseIndexes(ctx, msg)
+	return currentCauseIndexes(ctx)
 }
 
-func (t *Tracer) RecordSent(sender PortSlotAddr, ordered OrderedMsg) {
+func (t *Tracer) RecordSent(
+	ctx context.Context,
+	sender PortSlotAddr,
+	ordered OrderedMsg,
+	causes []OrderedMsg,
+) TraceHop {
 	t.store.mu.Lock()
 	defer t.store.mu.Unlock()
 
 	hop := t.store.hops[ordered.index]
 	hop.Index = ordered.index
-	hop.CauseIndexes = slices.Clone(ordered.causeIndexes)
+	hop.CauseIndexes = causeIndexesForSend(ctx, causes)
 	senderCopy := sender
 	hop.Sender = &senderCopy
 	hop.Message = fmt.Sprint(ordered.Msg)
 	t.store.hops[ordered.index] = hop
+
+	return hop
 }
 
 func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {

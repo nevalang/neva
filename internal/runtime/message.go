@@ -10,8 +10,7 @@ import (
 // OrderedMsg is a transport envelope with payload and runtime ordering metadata.
 type OrderedMsg struct {
 	Msg
-	causeIndexes []uint64
-	index        uint64
+	index uint64
 }
 
 func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }

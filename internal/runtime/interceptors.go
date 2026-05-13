@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"slices"
 )
 
 // traceEventVersion tracks JSONL schema version for emitted runtime events.
@@ -59,8 +58,13 @@ func (p ProdInterceptor) getTracer() *Tracer {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ProdInterceptor) Sent(_ context.Context, sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	p.getTracer().RecordSent(sender, ordered)
+func (p ProdInterceptor) Sent(
+	ctx context.Context,
+	sender PortSlotAddr,
+	ordered OrderedMsg,
+	causes []OrderedMsg,
+) OrderedMsg {
+	p.getTracer().RecordSent(ctx, sender, ordered, causes)
 	return ordered
 }
 
@@ -100,13 +104,18 @@ func (d DebugInterceptor) getTracer() *Tracer {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d *DebugInterceptor) Sent(_ context.Context, sender PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	d.getTracer().RecordSent(sender, ordered)
+func (d *DebugInterceptor) Sent(
+	ctx context.Context,
+	sender PortSlotAddr,
+	ordered OrderedMsg,
+	causes []OrderedMsg,
+) OrderedMsg {
+	hop := d.getTracer().RecordSent(ctx, sender, ordered, causes)
 	evt := SentEvent{
 		Version:      traceEventVersion,
 		Event:        EventSent,
 		Index:        ordered.index,
-		CauseIndexes: slices.Clone(ordered.causeIndexes),
+		CauseIndexes: hop.CauseIndexes,
 		Port:         eventPortFromSlot(sender),
 		Message:      d.formatMsg(ordered.Msg),
 	}

@@ -362,13 +362,7 @@ func NewSingleOutport(
 }
 
 func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
-	index := counter.Add(1)
-	causeIndexes := causeIndexesForSend(ctx, msg, causes)
-	ordered := OrderedMsg{
-		Msg:          orderedPayload(msg),
-		index:        index,
-		causeIndexes: causeIndexes,
-	}
+	ordered, causes := newOrderedMsg(msg, causes)
 	ordered = s.interceptor.Sent(
 		ctx,
 		PortSlotAddr{
@@ -378,6 +372,7 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 			},
 		},
 		ordered,
+		causes,
 	)
 	select {
 	case <-ctx.Done():
@@ -388,7 +383,7 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 }
 
 type Interceptor interface {
-	Sent(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
+	Sent(context.Context, PortSlotAddr, OrderedMsg, []OrderedMsg) OrderedMsg
 	Received(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
 }
 
@@ -408,13 +403,7 @@ func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- Orde
 }
 
 func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...OrderedMsg) bool {
-	index := counter.Add(1)
-	causeIndexes := causeIndexesForSend(ctx, msg, causes)
-	ordered := OrderedMsg{
-		Msg:          orderedPayload(msg),
-		index:        index,
-		causeIndexes: causeIndexes,
-	}
+	ordered, causes := newOrderedMsg(msg, causes)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
 			Path: a.addr.Path,
@@ -422,7 +411,7 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...Or
 		},
 		Index: &idx,
 	}
-	ordered = a.interceptor.Sent(ctx, slotAddr, ordered)
+	ordered = a.interceptor.Sent(ctx, slotAddr, ordered, causes)
 	select {
 	case <-ctx.Done():
 		return false
@@ -443,23 +432,16 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
-	causeIndexes := causeIndexesForSend(ctx, msg, causes)
-	payload := orderedPayload(msg)
 
 	for idx := range a.slots {
 		wg.Go(func() {
-			index := counter.Add(1)
-			ordered := OrderedMsg{
-				Msg:          payload,
-				index:        index,
-				causeIndexes: causeIndexes,
-			}
+			ordered, causes := newOrderedMsg(msg, causes)
 			i := Uint8Index(idx)
 			slotAddr := PortSlotAddr{
 				PortAddr: a.addr,
 				Index:    &i,
 			}
-			ordered = a.interceptor.Sent(ctx, slotAddr, ordered)
+			ordered = a.interceptor.Sent(ctx, slotAddr, ordered, causes)
 
 			select {
 			case <-ctx.Done():
@@ -471,6 +453,18 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg
 
 	wg.Wait()
 	return success
+}
+
+func newOrderedMsg(msg Msg, causes []OrderedMsg) (OrderedMsg, []OrderedMsg) {
+	index := counter.Add(1)
+	if ordered, ok := msg.(OrderedMsg); ok {
+		if len(causes) == 0 {
+			causes = []OrderedMsg{ordered}
+		}
+		msg = ordered.Msg
+	}
+
+	return OrderedMsg{Msg: msg, index: index}, causes
 }
 
 func (a ArrayOutport) Len() int {
