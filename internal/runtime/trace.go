@@ -6,6 +6,34 @@ import (
 	"sync"
 )
 
+type Tracer struct {
+	hops map[uint64]TraceHop
+	// NOTE: this lock can become a bottleneck under high message throughput
+	// because every send/receive hop touches shared storage. Keep in mind for
+	// future sharding / lock-reduction work.
+	mu sync.RWMutex
+}
+
+// Runtime funcs are responsible for passing explicit OrderedMsg causes.
+// Tracer does not infer fallback causes from receive-side state.
+func (t *Tracer) recordSent(
+	sender PortSlotAddr,
+	ordered OrderedMsg,
+	causes []OrderedMsg,
+) TraceHop {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	hop := t.hops[ordered.index]
+	hop.CauseIndexes = t.causeIndexesFromOrdered(causes)
+	senderCopy := sender
+	hop.Sender = &senderCopy
+	hop.Message = fmt.Sprint(ordered.Msg)
+	t.hops[ordered.index] = hop
+
+	return hop
+}
+
 type TraceHop struct {
 	Sender   *PortSlotAddr
 	Receiver *PortSlotAddr
@@ -18,31 +46,14 @@ type TraceHop struct {
 	Index uint64
 }
 
-type TraceTree struct {
-	// Parents is a derived, read-only projection rebuilt from traceStore hop links.
-	// It is intentionally denormalized for traversal/formatting APIs.
-	Parents []TraceTree
-	Hop     TraceHop
-}
+func (t *Tracer) recordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 
-type Tracer struct {
-	store traceStore
-}
-
-type traceStore struct {
-	hops map[uint64]TraceHop
-	// NOTE: this lock can become a bottleneck under high message throughput
-	// because every send/receive hop touches shared storage. Keep in mind for
-	// future sharding / lock-reduction work.
-	mu sync.RWMutex
-}
-
-func NewTracer() *Tracer {
-	return &Tracer{
-		store: traceStore{
-			hops: make(map[uint64]TraceHop),
-		},
-	}
+	hop := t.hops[ordered.index]
+	receiverCopy := receiver
+	hop.Receiver = &receiverCopy
+	t.hops[ordered.index] = hop
 }
 
 func (t *Tracer) causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
@@ -66,85 +77,41 @@ func (t *Tracer) causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
 	return indexes
 }
 
-func (t *Tracer) recordSent(
-	sender PortSlotAddr,
-	ordered OrderedMsg,
-	causes []OrderedMsg,
-) TraceHop {
-	t.store.mu.Lock()
-	defer t.store.mu.Unlock()
-
-	hop := t.store.hops[ordered.index]
-	// Runtime funcs are responsible for passing explicit OrderedMsg causes.
-	// Tracer does not infer fallback causes from receive-side state.
-	hop.CauseIndexes = t.causeIndexesFromOrdered(causes)
-	senderCopy := sender
-	hop.Sender = &senderCopy
-	hop.Message = fmt.Sprint(ordered.Msg)
-	t.store.hops[ordered.index] = hop
-
-	return hop
-}
-
-func (t *Tracer) recordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
-	t.store.mu.Lock()
-	defer t.store.mu.Unlock()
-
-	hop := t.store.hops[ordered.index]
-	receiverCopy := receiver
-	hop.Receiver = &receiverCopy
-	t.store.hops[ordered.index] = hop
-}
-
-func (t *Tracer) traceHopByIndex(index uint64) (TraceHop, bool) {
-	t.store.mu.RLock()
-	defer t.store.mu.RUnlock()
-
-	hop, ok := t.store.hops[index]
+func (t *Tracer) hopByIndex(index uint64) (TraceHop, bool) {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	hop, ok := t.hops[index]
 	hop.Index = index
 	return hop, ok
 }
 
-func (t *Tracer) traceTreeByIndex(index uint64, visited map[uint64]struct{}) (TraceTree, bool) {
-	if index == 0 {
-		return TraceTree{}, false
+// HopByOrderedMsg returns a normalized hop for a concrete ordered message.
+func (t *Tracer) HopByOrderedMsg(ordered OrderedMsg) (TraceHop, bool) {
+	if ordered.index == 0 {
+		return TraceHop{}, false
 	}
-	if _, seen := visited[index]; seen {
-		return TraceTree{}, false
-	}
-	visited[index] = struct{}{}
+	return t.hopByIndex(ordered.index)
+}
 
-	hop, ok := t.traceHopByIndex(index)
-	if !ok {
-		return TraceTree{}, false
+// HopsByCauseIndexes resolves parent hops by stored cause indexes.
+// Missing indexes are ignored to keep trace-read path resilient.
+func (t *Tracer) HopsByCauseIndexes(causeIndexes []uint64) []TraceHop {
+	if len(causeIndexes) == 0 {
+		return nil
 	}
-
-	// Rebuild tree view from normalized hop links; no second persisted source of truth.
-	tree := TraceTree{
-		Hop:     hop,
-		Parents: make([]TraceTree, 0, len(hop.CauseIndexes)),
-	}
-	for _, causeIndex := range hop.CauseIndexes {
-		parentTree, ok := t.traceTreeByIndex(causeIndex, visited)
+	parents := make([]TraceHop, 0, len(causeIndexes))
+	for _, causeIndex := range causeIndexes {
+		hop, ok := t.hopByIndex(causeIndex)
 		if !ok {
 			continue
 		}
-		tree.Parents = append(tree.Parents, parentTree)
+		parents = append(parents, hop)
 	}
-
-	delete(visited, index)
-	return tree, true
+	return parents
 }
 
-// TraceCauseTreeByIndex reconstructs full multi-parent ancestry for the given message index.
-func (t *Tracer) TraceCauseTreeByIndex(index uint64) (TraceTree, bool) {
-	return t.traceTreeByIndex(index, map[uint64]struct{}{})
-}
-
-// TraceCauseTree reconstructs full multi-parent ancestry for the given ordered message.
-func (t *Tracer) TraceCauseTree(ordered OrderedMsg) (TraceTree, bool) {
-	if ordered.index == 0 {
-		return TraceTree{}, false
+func NewTracer() *Tracer {
+	return &Tracer{
+		hops: make(map[uint64]TraceHop),
 	}
-	return t.TraceCauseTreeByIndex(ordered.index)
 }

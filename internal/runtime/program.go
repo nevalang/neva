@@ -25,13 +25,13 @@ type IO struct {
 	Out Outports
 }
 
-// Tracer returns the runtime tracer bound to this IO wiring.
+// TracerFromIO returns the runtime tracer bound to this IO wiring.
 //
 // This is a pragmatic bridge used by runtime funcs (for example runtime.Panic)
 // to read the current dataflow trace from runtime state. It is intentionally
 // wiring-based in the current implementation and may be redesigned later.
-func (io IO) Tracer() *Tracer {
-	for _, inport := range io.In.ports {
+func TracerFromIO(runtimeIO IO) *Tracer {
+	for _, inport := range runtimeIO.In.ports {
 		if inport.single != nil {
 			return inport.single.tracer
 		}
@@ -40,7 +40,7 @@ func (io IO) Tracer() *Tracer {
 		}
 	}
 
-	for _, outport := range io.Out.ports {
+	for _, outport := range runtimeIO.Out.ports {
 		if outport.single != nil {
 			return outport.single.tracer
 		}

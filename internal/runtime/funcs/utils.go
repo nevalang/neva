@@ -115,7 +115,7 @@ func receive4(
 // formatTerminationDataflowTrace renders termination-oriented dataflow ancestry
 // for the current message. Missing trace data is treated as invariant violation.
 func formatTerminationDataflowTrace(title string, tracer *runtime.Tracer, msg runtime.OrderedMsg) string {
-	tree, ok := tracer.TraceCauseTree(msg)
+	tree, ok := traceFromOrderedMsg(tracer, msg)
 	if !ok {
 		panic("runtime invariant: missing dataflow trace for termination message")
 	}
@@ -139,9 +139,52 @@ func formatTerminationDataflowTrace(title string, tracer *runtime.Tracer, msg ru
 	return strings.TrimRight(builder.String(), "\n")
 }
 
-func writeTerminationTrace(title string, tracer *runtime.Tracer, msg runtime.OrderedMsg) {
+func writeTerminationTrace(title string, io runtime.IO, msg runtime.OrderedMsg) {
+	tracer := runtime.TracerFromIO(io)
 	trace := formatTerminationDataflowTrace(title, tracer, msg)
 	if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
 		panic(err)
 	}
+}
+
+// traceTree is a derived, read-only projection rebuilt from traceStore hop links.
+// It is intentionally denormalized for traversal/formatting APIs.
+type traceTree struct {
+	Parents []traceTree
+	Hop     runtime.TraceHop
+}
+
+func traceFromOrderedMsg(tracer *runtime.Tracer, ordered runtime.OrderedMsg) (traceTree, bool) {
+	rootHop, ok := tracer.HopByOrderedMsg(ordered)
+	if !ok {
+		return traceTree{}, false
+	}
+	return traceTreeFromHop(tracer, rootHop, map[uint64]struct{}{})
+}
+
+// traceTreeFromHop is just a recursive helper for traceFromOrderedMsg.
+func traceTreeFromHop(tracer *runtime.Tracer, hop runtime.TraceHop, visited map[uint64]struct{}) (traceTree, bool) {
+	if hop.Index == 0 {
+		return traceTree{}, false
+	}
+	if _, seen := visited[hop.Index]; seen {
+		return traceTree{}, false
+	}
+	visited[hop.Index] = struct{}{}
+
+	// Rebuild tree view from normalized hop links; no second persisted source of truth.
+	tree := traceTree{
+		Hop:     hop,
+		Parents: make([]traceTree, 0, len(hop.CauseIndexes)),
+	}
+	for _, parentHop := range tracer.HopsByCauseIndexes(hop.CauseIndexes) {
+		parentTree, ok := traceTreeFromHop(tracer, parentHop, visited)
+		if !ok {
+			continue
+		}
+		tree.Parents = append(tree.Parents, parentTree)
+	}
+
+	delete(visited, hop.Index)
+	return tree, true
 }

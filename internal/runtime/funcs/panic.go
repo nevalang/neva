@@ -11,7 +11,7 @@ import (
 
 type panicker struct{}
 
-func formatPanicTraceTree(builder *strings.Builder, tree *runtime.TraceTree, indent string) {
+func formatPanicTraceTree(builder *strings.Builder, tree *traceTree, indent string) {
 	builder.WriteString(indent + "- " + formatPanicHopFlow(tree.Hop) + "\n")
 	for _, parent := range tree.Parents {
 		formatPanicTraceTree(builder, &parent, indent+"  ")
@@ -88,7 +88,7 @@ func (p panicker) Create(
 			panic(err)
 		}
 
-		writeTerminationTrace("panic cause dataflow trace", runtimeIO.Tracer(), panicMsg)
+		writeTerminationTrace("panic cause dataflow trace", runtimeIO, panicMsg)
 
 		runtime.Terminate(ctx, 1)
 	}, nil

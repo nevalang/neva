@@ -20,12 +20,12 @@ func TestFormatPanicHopFlow_NormalizesSendToReceive(t *testing.T) {
 }
 
 func TestFormatPanicTraceTree_FanInRendersAllParents(t *testing.T) {
-	tree := runtime.TraceTree{
+	tree := traceTree{
 		Hop: runtime.TraceHop{
 			Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/out", Port: "res"}},
 			Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "prog/out", Port: "stop"}},
 		},
-		Parents: []runtime.TraceTree{
+		Parents: []traceTree{
 			{
 				Hop: runtime.TraceHop{
 					Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "first/out", Port: "res"}},
@@ -62,7 +62,7 @@ func TestFormatPanicTraceTree_FanInRendersAllParents(t *testing.T) {
 	}
 }
 
-func buildFormattedPanicTraceForTest(tree *runtime.TraceTree) string {
+func buildFormattedPanicTraceForTest(tree *traceTree) string {
 	var builder strings.Builder
 	panicReceiver := formatPanicPortSlotAddr(*tree.Hop.Receiver)
 	panicComponent := panicComponentName(tree.Hop.Receiver)

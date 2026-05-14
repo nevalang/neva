@@ -13,6 +13,7 @@ type OrderedMsg struct {
 	index uint64
 }
 
+// String is just a simple stringer that ignores index while formatting.
 func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }
 
 type Msg interface {

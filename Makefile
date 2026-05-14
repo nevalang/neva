@@ -13,7 +13,7 @@ antlr:
 
 # fix struct field ordering for optimal padding/pointer data
 .PHONY: align
-betteralign-fix:
+align:
 	betteralign -fix ./...
 
 # apply gofix rewrites across the repo

@@ -9,7 +9,7 @@ import (
 func resetRuntimeTraceStateForTests() { counter.Store(0) }
 
 //nolint:gocyclo,cyclop // test intentionally validates full hop shape in one place.
-func TestTraceTree_Linear(t *testing.T) {
+func TestTraceStore_Linear(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
@@ -39,16 +39,12 @@ func TestTraceTree_Linear(t *testing.T) {
 		t.Fatalf("expected ordered message index")
 	}
 
-	tree, ok := tracer.TraceCauseTree(got)
+	hop, ok := tracer.HopByOrderedMsg(got)
 	if !ok {
-		t.Fatalf("expected trace tree")
+		t.Fatalf("expected trace hop")
 	}
-	hop := tree.Hop
 	if len(hop.CauseIndexes) != 0 {
 		t.Fatalf("expected root hop parents to be empty, got %v", hop.CauseIndexes)
-	}
-	if len(tree.Parents) != 0 {
-		t.Fatalf("expected no parent nodes, got %d", len(tree.Parents))
 	}
 	if hop.Sender == nil || hop.Sender.Path != "producer/out" || hop.Sender.Port != "res" {
 		t.Fatalf("unexpected sender hop: %#v", hop.Sender)
@@ -58,7 +54,7 @@ func TestTraceTree_Linear(t *testing.T) {
 	}
 }
 
-func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
+func TestTraceStore_ForwardedMessageTracksParent(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
@@ -102,20 +98,23 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 		t.Fatalf("second receive failed")
 	}
 
-	tree, ok := tracer.TraceCauseTree(last)
+	hop, ok := tracer.HopByOrderedMsg(last)
 	if !ok {
-		t.Fatalf("expected trace tree")
+		t.Fatalf("expected trace hop")
 	}
-	if len(tree.Hop.CauseIndexes) != 1 || len(tree.Parents) != 1 {
+	if len(hop.CauseIndexes) != 1 {
 		t.Fatalf(
-			"expected one parent node for hop %d, got ids=%v parents=%d",
-			tree.Hop.Index,
-			tree.Hop.CauseIndexes,
-			len(tree.Parents),
+			"expected one parent index for hop %d, got ids=%v",
+			hop.Index,
+			hop.CauseIndexes,
 		)
 	}
-	if tree.Hop.CauseIndexes[0] != tree.Parents[0].Hop.Index {
-		t.Fatalf("expected parent link to parent node index, got ids=%v parent=%d", tree.Hop.CauseIndexes, tree.Parents[0].Hop.Index)
+	parentHops := tracer.HopsByCauseIndexes(hop.CauseIndexes)
+	if len(parentHops) != 1 {
+		t.Fatalf("expected one resolved parent hop, got %d", len(parentHops))
+	}
+	if hop.CauseIndexes[0] != parentHops[0].Index {
+		t.Fatalf("expected parent link to parent hop index, got ids=%v parent=%d", hop.CauseIndexes, parentHops[0].Index)
 	}
 }
 
@@ -165,7 +164,7 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 }
 
 //nolint:gocyclo,cyclop // test intentionally exercises multi-parent fan-in setup end to end.
-func TestTraceTree_FanInTracksAllParents(t *testing.T) {
+func TestTraceStore_FanInTracksAllParents(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
@@ -218,27 +217,28 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 		t.Fatalf("receive failed")
 	}
 
-	tree, hasTree := tracer.TraceCauseTree(last)
-	if !hasTree {
-		t.Fatalf("expected trace tree")
+	hop, ok := tracer.HopByOrderedMsg(last)
+	if !ok {
+		t.Fatalf("expected trace hop")
 	}
-	if len(tree.Hop.CauseIndexes) != 3 {
-		t.Fatalf("expected 3 parent indexes, got %v", tree.Hop.CauseIndexes)
+	if len(hop.CauseIndexes) != 3 {
+		t.Fatalf("expected 3 parent indexes, got %v", hop.CauseIndexes)
 	}
-	if len(tree.Parents) != 3 {
-		t.Fatalf("expected 3 parent nodes, got %d", len(tree.Parents))
+	parentHops := tracer.HopsByCauseIndexes(hop.CauseIndexes)
+	if len(parentHops) != 3 {
+		t.Fatalf("expected 3 resolved parent hops, got %d", len(parentHops))
 	}
-	if tree.Hop.CauseIndexes[0] == 0 || tree.Hop.CauseIndexes[1] == 0 || tree.Hop.CauseIndexes[2] == 0 {
-		t.Fatalf("expected non-zero parent indexes, got %v", tree.Hop.CauseIndexes)
+	if hop.CauseIndexes[0] == 0 || hop.CauseIndexes[1] == 0 || hop.CauseIndexes[2] == 0 {
+		t.Fatalf("expected non-zero parent indexes, got %v", hop.CauseIndexes)
 	}
-	for _, parent := range tree.Parents {
-		if parent.Hop.Index == 0 {
+	for _, parentHop := range parentHops {
+		if parentHop.Index == 0 {
 			t.Fatalf("expected non-zero parent hop index")
 		}
 	}
 }
 
-func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
+func TestTraceStore_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
@@ -284,14 +284,15 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 		t.Fatalf("result receive failed")
 	}
 
-	tree, hasTree := tracer.TraceCauseTree(last)
-	if !hasTree {
-		t.Fatalf("expected trace tree")
+	hop, ok := tracer.HopByOrderedMsg(last)
+	if !ok {
+		t.Fatalf("expected trace hop")
 	}
-	if len(tree.Hop.CauseIndexes) != 2 {
-		t.Fatalf("expected 2 explicit parents, got %v", tree.Hop.CauseIndexes)
+	if len(hop.CauseIndexes) != 2 {
+		t.Fatalf("expected 2 explicit parents, got %v", hop.CauseIndexes)
 	}
-	if len(tree.Parents) != 2 {
-		t.Fatalf("expected 2 parent nodes, got %d", len(tree.Parents))
+	parentHops := tracer.HopsByCauseIndexes(hop.CauseIndexes)
+	if len(parentHops) != 2 {
+		t.Fatalf("expected 2 resolved parent hops, got %d", len(parentHops))
 	}
 }
