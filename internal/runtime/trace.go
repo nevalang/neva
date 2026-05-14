@@ -13,7 +13,9 @@ type TraceHop struct {
 	// CauseIndexes is the single source of truth for causal edges in traceStore.
 	// Tree views are reconstructed from these indexes on demand.
 	CauseIndexes []uint64
-	Index        uint64
+	// Index is materialized on read from traceStore map key.
+	// We do not persist it in storage separately to avoid duplicated state.
+	Index uint64
 }
 
 type TraceTree struct {
@@ -29,7 +31,10 @@ type Tracer struct {
 
 type traceStore struct {
 	hops map[uint64]TraceHop
-	mu   sync.RWMutex
+	// NOTE: this lock can become a bottleneck under high message throughput
+	// because every send/receive hop touches shared storage. Keep in mind for
+	// future sharding / lock-reduction work.
+	mu sync.RWMutex
 }
 
 func NewTracer() *Tracer {
@@ -61,7 +66,7 @@ func (t *Tracer) causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
 	return indexes
 }
 
-func (t *Tracer) RecordSent(
+func (t *Tracer) recordSent(
 	sender PortSlotAddr,
 	ordered OrderedMsg,
 	causes []OrderedMsg,
@@ -70,7 +75,6 @@ func (t *Tracer) RecordSent(
 	defer t.store.mu.Unlock()
 
 	hop := t.store.hops[ordered.index]
-	hop.Index = ordered.index
 	// Runtime funcs are responsible for passing explicit OrderedMsg causes.
 	// Tracer does not infer fallback causes from receive-side state.
 	hop.CauseIndexes = t.causeIndexesFromOrdered(causes)
@@ -82,12 +86,11 @@ func (t *Tracer) RecordSent(
 	return hop
 }
 
-func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
+func (t *Tracer) recordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
 	t.store.mu.Lock()
 	defer t.store.mu.Unlock()
 
 	hop := t.store.hops[ordered.index]
-	hop.Index = ordered.index
 	receiverCopy := receiver
 	hop.Receiver = &receiverCopy
 	t.store.hops[ordered.index] = hop
@@ -98,6 +101,7 @@ func (t *Tracer) traceHopByIndex(index uint64) (TraceHop, bool) {
 	defer t.store.mu.RUnlock()
 
 	hop, ok := t.store.hops[index]
+	hop.Index = index
 	return hop, ok
 }
 

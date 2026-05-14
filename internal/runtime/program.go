@@ -26,6 +26,10 @@ type IO struct {
 }
 
 // Tracer returns the runtime tracer bound to this IO wiring.
+//
+// This is a pragmatic bridge used by runtime funcs (for example runtime.Panic)
+// to read the current dataflow trace from runtime state. It is intentionally
+// wiring-based in the current implementation and may be redesigned later.
 func (io IO) Tracer() *Tracer {
 	for _, inport := range io.In.ports {
 		if inport.single != nil {
@@ -130,7 +134,7 @@ func (s SingleInport) Receive(ctx context.Context) (OrderedMsg, bool) {
 			Port: s.addr.Port,
 		},
 	}
-	s.tracer.RecordReceived(slotAddr, ordered)
+	s.tracer.recordReceived(slotAddr, ordered)
 	ordered = s.interceptor.Received(ctx, slotAddr, ordered)
 	return ordered, true
 }
@@ -187,7 +191,7 @@ func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 			},
 			Index: &index,
 		}
-		a.tracer.RecordReceived(slotAddr, v)
+		a.tracer.recordReceived(slotAddr, v)
 		ordered := a.interceptor.Received(ctx, slotAddr, v)
 		return ordered, true
 	}
@@ -221,7 +225,7 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 					},
 					Index: &index,
 				}
-				a.tracer.RecordReceived(slotAddr, received)
+				a.tracer.recordReceived(slotAddr, received)
 				ordered := a.interceptor.Received(ctx, slotAddr, received)
 				resultChan <- f(idx, ordered)
 			}
@@ -279,7 +283,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 					},
 					Index: &index,
 				}
-				a.tracer.RecordReceived(slotAddr, orderedMsg)
+				a.tracer.recordReceived(slotAddr, orderedMsg)
 				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
 				buf = append(buf, SelectedMsg{
 					OrderedMsg: orderedMsg,
@@ -396,7 +400,7 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 	case <-ctx.Done():
 		return false
 	case s.ch <- ordered:
-		hop := s.tracer.RecordSent(slotAddr, ordered, causes)
+		hop := s.tracer.recordSent(slotAddr, ordered, causes)
 		s.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
@@ -436,7 +440,7 @@ func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...O
 	case <-ctx.Done():
 		return false
 	case a.slots[idx] <- ordered:
-		hop := a.tracer.RecordSent(slotAddr, ordered, causes)
+		hop := a.tracer.recordSent(slotAddr, ordered, causes)
 		a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
@@ -467,7 +471,7 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMs
 			case <-ctx.Done():
 				success = false
 			case a.slots[idx] <- ordered:
-				hop := a.tracer.RecordSent(slotAddr, ordered, causes)
+				hop := a.tracer.recordSent(slotAddr, ordered, causes)
 				a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 			}
 		})
