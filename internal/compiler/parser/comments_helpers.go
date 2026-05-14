@@ -83,8 +83,10 @@ func (s *treeShapeListener) consumeTag(
 		if portName == "" {
 			return s.commentParseError("invalid @inport tag: port name is required", startLine)
 		}
-		if _, ok := ports.In[portName]; !ok {
-			return s.commentParseError("unknown @inport reference: "+portName, startLine)
+		if ports != nil {
+			if _, ok := ports.In[portName]; !ok {
+				return s.commentParseError("unknown @inport reference: "+portName, startLine)
+			}
 		}
 		comments.Inports[portName] = desc
 	case "outport":
@@ -92,8 +94,10 @@ func (s *treeShapeListener) consumeTag(
 		if portName == "" {
 			return s.commentParseError("invalid @outport tag: port name is required", startLine)
 		}
-		if _, ok := ports.Out[portName]; !ok {
-			return s.commentParseError("unknown @outport reference: "+portName, startLine)
+		if ports != nil {
+			if _, ok := ports.Out[portName]; !ok {
+				return s.commentParseError("unknown @outport reference: "+portName, startLine)
+			}
 		}
 		comments.Outports[portName] = desc
 	case "example":

@@ -35,7 +35,7 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), &src.IO{})
+	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +60,7 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), &src.IO{})
+	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), nil)
 	if err != nil {
 		panic(err)
 	}
