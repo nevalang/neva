@@ -7,6 +7,8 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// BenchmarkIntIsLesserHotpath measures the steady-state cost of `int_is_lesser`
+// in a tight in-memory runtime loop.
 func BenchmarkIntIsLesserHotpath(b *testing.B) {
 	runtimeIO, leftInput, rightInput, resultOutput := newBinaryRuntimeIO()
 	var zeroConfig runtime.Msg
@@ -37,6 +39,8 @@ func BenchmarkIntIsLesserHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkSelectHotpath measures the select/then fan-in path for the common
+// two-slot case.
 func BenchmarkSelectHotpath(b *testing.B) {
 	runtimeIO, ifInputs, thenInputs, resultOutput := newSelectRuntimeIO(2)
 	var zeroConfig runtime.Msg
@@ -69,6 +73,8 @@ func BenchmarkSelectHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkStructHotpath measures building a small struct from three single
+// inputs in a tight runtime loop.
 func BenchmarkStructHotpath(b *testing.B) {
 	runtimeIO, inputs, resultOutput := newStructRuntimeIO([]string{"a", "b", "c"})
 	var zeroConfig runtime.Msg
@@ -101,6 +107,7 @@ func BenchmarkStructHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkNotEqHotpath measures `not_eq` in a tight in-memory runtime loop.
 func BenchmarkNotEqHotpath(b *testing.B) {
 	runtimeIO, leftInput, rightInput, resultOutput := newBinaryRuntimeIO()
 	var zeroConfig runtime.Msg
@@ -131,6 +138,8 @@ func BenchmarkNotEqHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkStringSliceHotpath measures string slice extraction with fixed
+// in-range bounds.
 func BenchmarkStringSliceHotpath(b *testing.B) {
 	runtimeIO, dataIn, fromIn, toIn, resultOutput := newStringSliceRuntimeIO()
 	var zeroConfig runtime.Msg
@@ -163,6 +172,7 @@ func BenchmarkStringSliceHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkTernaryElseHotpath measures ternary selector cost on the else path.
 func BenchmarkTernaryElseHotpath(b *testing.B) {
 	runtimeIO, ifIn, thenIn, elseIn, resultOutput := newTernaryRuntimeIO()
 	var zeroConfig runtime.Msg
@@ -195,6 +205,7 @@ func BenchmarkTernaryElseHotpath(b *testing.B) {
 	}
 }
 
+// BenchmarkListSliceHotpath measures list slicing with fixed in-range bounds.
 func BenchmarkListSliceHotpath(b *testing.B) {
 	runtimeIO, dataIn, fromIn, toIn, resultOutput := newListSliceRuntimeIO()
 	var zeroConfig runtime.Msg
@@ -285,22 +296,7 @@ func newStringSliceRuntimeIO() (
 	chan runtime.OrderedMsg,
 	chan runtime.OrderedMsg,
 ) {
-	interceptor := runtime.ProdInterceptor{}
-	dataIn := make(chan runtime.OrderedMsg, 1)
-	fromIn := make(chan runtime.OrderedMsg, 1)
-	toIn := make(chan runtime.OrderedMsg, 1)
-	resultOut := make(chan runtime.OrderedMsg, 1)
-
-	inports := runtime.NewInports(map[string]runtime.Inport{
-		"data": runtime.NewInport(nil, runtime.NewSingleInport(dataIn, runtime.PortAddr{Path: "test/in", Port: "data"}, interceptor)),
-		"from": runtime.NewInport(nil, runtime.NewSingleInport(fromIn, runtime.PortAddr{Path: "test/in", Port: "from"}, interceptor)),
-		"to":   runtime.NewInport(nil, runtime.NewSingleInport(toIn, runtime.PortAddr{Path: "test/in", Port: "to"}, interceptor)),
-	})
-	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
-	})
-
-	return runtime.IO{In: inports, Out: outports}, dataIn, fromIn, toIn, resultOut
+	return newThreeInputsRuntimeIO("data", "from", "to")
 }
 
 func newTernaryRuntimeIO() (
@@ -310,22 +306,7 @@ func newTernaryRuntimeIO() (
 	chan runtime.OrderedMsg,
 	chan runtime.OrderedMsg,
 ) {
-	interceptor := runtime.ProdInterceptor{}
-	ifIn := make(chan runtime.OrderedMsg, 1)
-	thenIn := make(chan runtime.OrderedMsg, 1)
-	elseIn := make(chan runtime.OrderedMsg, 1)
-	resultOut := make(chan runtime.OrderedMsg, 1)
-
-	inports := runtime.NewInports(map[string]runtime.Inport{
-		"if":   runtime.NewInport(nil, runtime.NewSingleInport(ifIn, runtime.PortAddr{Path: "test/in", Port: "if"}, interceptor)),
-		"then": runtime.NewInport(nil, runtime.NewSingleInport(thenIn, runtime.PortAddr{Path: "test/in", Port: "then"}, interceptor)),
-		"else": runtime.NewInport(nil, runtime.NewSingleInport(elseIn, runtime.PortAddr{Path: "test/in", Port: "else"}, interceptor)),
-	})
-	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
-	})
-
-	return runtime.IO{In: inports, Out: outports}, ifIn, thenIn, elseIn, resultOut
+	return newThreeInputsRuntimeIO("if", "then", "else")
 }
 
 func newListSliceRuntimeIO() (
@@ -335,20 +316,26 @@ func newListSliceRuntimeIO() (
 	chan runtime.OrderedMsg,
 	chan runtime.OrderedMsg,
 ) {
+	return newThreeInputsRuntimeIO("data", "from", "to")
+}
+
+func newThreeInputsRuntimeIO(
+	firstName, secondName, thirdName string,
+) (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
 	interceptor := runtime.ProdInterceptor{}
-	dataIn := make(chan runtime.OrderedMsg, 1)
-	fromIn := make(chan runtime.OrderedMsg, 1)
-	toIn := make(chan runtime.OrderedMsg, 1)
+	firstIn := make(chan runtime.OrderedMsg, 1)
+	secondIn := make(chan runtime.OrderedMsg, 1)
+	thirdIn := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		"data": runtime.NewInport(nil, runtime.NewSingleInport(dataIn, runtime.PortAddr{Path: "test/in", Port: "data"}, interceptor)),
-		"from": runtime.NewInport(nil, runtime.NewSingleInport(fromIn, runtime.PortAddr{Path: "test/in", Port: "from"}, interceptor)),
-		"to":   runtime.NewInport(nil, runtime.NewSingleInport(toIn, runtime.PortAddr{Path: "test/in", Port: "to"}, interceptor)),
+		firstName:  runtime.NewInport(nil, runtime.NewSingleInport(firstIn, runtime.PortAddr{Path: "test/in", Port: firstName}, interceptor)),
+		secondName: runtime.NewInport(nil, runtime.NewSingleInport(secondIn, runtime.PortAddr{Path: "test/in", Port: secondName}, interceptor)),
+		thirdName:  runtime.NewInport(nil, runtime.NewSingleInport(thirdIn, runtime.PortAddr{Path: "test/in", Port: thirdName}, interceptor)),
 	})
 	outports := runtime.NewOutports(map[string]runtime.Outport{
 		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
 	})
 
-	return runtime.IO{In: inports, Out: outports}, dataIn, fromIn, toIn, resultOut
+	return runtime.IO{In: inports, Out: outports}, firstIn, secondIn, thirdIn, resultOut
 }

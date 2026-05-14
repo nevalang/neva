@@ -19,18 +19,7 @@ func makeDictMsg(size int) Msg {
 	return NewDictMsg(entries)
 }
 
-//nolint:ireturn // benchmark helper returns runtime.Msg by design.
-func makeDictMsgAndKeys(size int) (Msg, []string) {
-	entries := make(map[string]Msg, size)
-	keys := make([]string, size)
-	for i := range size {
-		key := "k" + strconv.Itoa(i)
-		keys[i] = key
-		entries[key] = NewIntMsg(int64(i))
-	}
-	return NewDictMsg(entries), keys
-}
-
+// BenchmarkMsgListIter measures raw list traversal and integer extraction cost.
 func BenchmarkMsgListIter(b *testing.B) {
 	for _, size := range []int{8, 64, 512, 1024} {
 		b.Run("n="+strconv.Itoa(size), func(b *testing.B) {
@@ -54,6 +43,7 @@ func BenchmarkMsgListIter(b *testing.B) {
 	}
 }
 
+// BenchmarkMsgDictLookup measures dictionary lookup in hot-key and mixed-keys modes.
 func BenchmarkMsgDictLookup(b *testing.B) {
 	for _, size := range []int{16, 128, 1024} {
 		b.Run("hot_n="+strconv.Itoa(size), func(b *testing.B) {
@@ -69,7 +59,14 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 		})
 
 		b.Run("mixed_n="+strconv.Itoa(size), func(b *testing.B) {
-			msg, keys := makeDictMsgAndKeys(size)
+			entries := make(map[string]Msg, size)
+			keys := make([]string, size)
+			for i := range size {
+				key := "k" + strconv.Itoa(i)
+				keys[i] = key
+				entries[key] = NewIntMsg(int64(i))
+			}
+			msg := NewDictMsg(entries)
 
 			b.ReportAllocs()
 			b.ResetTimer()
@@ -86,6 +83,7 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 	}
 }
 
+// BenchmarkMsgEqualList measures list equality for equal and early-unequal inputs.
 func BenchmarkMsgEqualList(b *testing.B) {
 	for _, size := range []int{16, 128, 512} {
 		b.Run("equal_n="+strconv.Itoa(size), func(b *testing.B) {
@@ -129,6 +127,7 @@ func BenchmarkMsgEqualList(b *testing.B) {
 	}
 }
 
+// BenchmarkMsgStructGet measures repeated field lookup in a medium struct.
 func BenchmarkMsgStructGet(b *testing.B) {
 	fields := make([]StructField, 0, 32)
 	for i := range 32 {
