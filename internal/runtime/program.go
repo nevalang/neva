@@ -392,18 +392,18 @@ func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) 
 			Port: s.addr.Port,
 		},
 	}
-	hop := s.tracer.RecordSent(slotAddr, ordered, causes)
-	ordered = s.interceptor.Sent(ctx, slotAddr, ordered, hop)
 	select {
 	case <-ctx.Done():
 		return false
 	case s.ch <- ordered:
+		hop := s.tracer.RecordSent(slotAddr, ordered, causes)
+		s.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
 }
 
 type Interceptor interface {
-	Sent(context.Context, PortSlotAddr, OrderedMsg, TraceHop) OrderedMsg
+	Sent(context.Context, PortSlotAddr, OrderedMsg, TraceHop)
 	Received(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
 }
 
@@ -432,12 +432,12 @@ func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...O
 		},
 		Index: &idx,
 	}
-	hop := a.tracer.RecordSent(slotAddr, ordered, causes)
-	ordered = a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 	select {
 	case <-ctx.Done():
 		return false
 	case a.slots[idx] <- ordered:
+		hop := a.tracer.RecordSent(slotAddr, ordered, causes)
+		a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
 }
@@ -463,13 +463,12 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMs
 				PortAddr: a.addr,
 				Index:    &i,
 			}
-			hop := a.tracer.RecordSent(slotAddr, ordered, causes)
-			ordered = a.interceptor.Sent(ctx, slotAddr, ordered, hop)
-
 			select {
 			case <-ctx.Done():
 				success = false
 			case a.slots[idx] <- ordered:
+				hop := a.tracer.RecordSent(slotAddr, ordered, causes)
+				a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 			}
 		})
 	}

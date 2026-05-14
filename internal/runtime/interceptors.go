@@ -50,8 +50,7 @@ func (p NoEffectInterceptor) Sent(
 	_ PortSlotAddr,
 	ordered OrderedMsg,
 	_ TraceHop,
-) OrderedMsg {
-	return ordered
+) {
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -92,7 +91,7 @@ func (d *JSONLTraceFileWriter) Sent(
 	sender PortSlotAddr,
 	ordered OrderedMsg,
 	hop TraceHop,
-) OrderedMsg {
+) {
 	evt := SentEvent{
 		Version:      traceEventVersion,
 		EventKind:    EventSent,
@@ -102,7 +101,6 @@ func (d *JSONLTraceFileWriter) Sent(
 		Msg:          ordered.Msg,
 	}
 	d.writeTraceEvent(evt)
-	return ordered
 }
 
 // Received implements Interceptor interface.

@@ -5,8 +5,8 @@ import (
 	"errors"
 )
 
-// Panic control is a runtime-internal bridge for user-level panic semantics:
-// components can request graceful program stop without using Go panic transport.
+// Termination control is a runtime-internal bridge for user-level stop semantics:
+// components can request graceful program termination with an explicit exit code.
 type programCancelCauseKey struct{}
 type programExitError struct {
 	exitCode int
