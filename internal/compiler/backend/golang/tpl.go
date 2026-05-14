@@ -126,14 +126,13 @@ func main() {
     runtime.DebugValidation(rprog)
     {{- end }}
 
-	if err := runtime.Run(context.Background(), rprog, funcs.NewRegistry()); err != nil {
-        if !runtime.IsProgramPanicError(err) {
-            fmt.Fprintln(os.Stderr, "runtime error:", err)
-        }
-        // Runtime itself must not call os.Exit to remain embeddable.
-        // Process-level exit policy is applied at generated main boundary.
-		os.Exit(1)
+	exitCode, err := runtime.Run(context.Background(), rprog, funcs.NewRegistry())
+	if err != nil {
+		panic(err)
 	}
+	// Runtime itself must not call os.Exit to remain embeddable.
+	// Process-level exit policy is applied at generated main boundary.
+	os.Exit(exitCode)
 }
 
 `
@@ -362,9 +361,12 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		var out {{.Name}}Output
 		
 		// Run the program
-		res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
+		res, exitCode, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
 		if err != nil {
 			return out, err
+		}
+		if exitCode != 0 {
+			return out, fmt.Errorf("program exited with code %d", exitCode)
 		}
 		if res == nil {
 			return out, nil // Should not happen for valid flow

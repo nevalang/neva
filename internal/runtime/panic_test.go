@@ -22,7 +22,7 @@ func (testPanicCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 	}, nil
 }
 
-func TestCall_ReturnsProgramPanicError(t *testing.T) {
+func TestCall_ReturnsExitCodeOnProgramPanic(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 
 	startToPanic := make(chan OrderedMsg, 1)
@@ -68,8 +68,11 @@ func TestCall_ReturnsProgramPanicError(t *testing.T) {
 		"panic": testPanicCreator{},
 	}
 
-	_, err := Call(context.Background(), prog, registry, NewStringMsg("boom"))
-	if !IsProgramPanicError(err) {
-		t.Fatalf("expected ProgramPanicError, got %T (%v)", err, err)
+	_, exitCode, err := Call(context.Background(), prog, registry, NewStringMsg("boom"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d", exitCode)
 	}
 }

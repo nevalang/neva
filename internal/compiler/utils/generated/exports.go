@@ -382,9 +382,12 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 	var out ParseEntityRefOutput
 
 	// Run the program
-	res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
+	res, exitCode, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
 	if err != nil {
 		return out, err
+	}
+	if exitCode != 0 {
+		return out, fmt.Errorf("program exited with code %d", exitCode)
 	}
 	if res == nil {
 		return out, nil // Should not happen for valid flow

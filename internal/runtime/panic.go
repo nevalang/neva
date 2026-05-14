@@ -2,17 +2,15 @@ package runtime
 
 import (
 	"context"
-	"errors"
 )
 
 // Panic control is a runtime-internal bridge for user-level panic semantics:
 // components can request graceful program stop without using Go panic transport.
 type programCancelCauseKey struct{}
+type programExitCode int
 
-type ProgramPanicError struct{}
-
-func (ProgramPanicError) Error() string {
-	return "program panicked"
+func (c programExitCode) Error() string {
+	return "program exit code"
 }
 
 func contextWithProgramCancelCause(
@@ -30,11 +28,14 @@ func mustProgramCancelCause(ctx context.Context) context.CancelCauseFunc {
 	return cancel
 }
 
-func IsProgramPanicError(err error) bool {
-	var target ProgramPanicError
-	return errors.As(err, &target)
+func ProgramExitCodeFromCause(cause error) (int, bool) {
+	exitCode, ok := cause.(programExitCode)
+	if !ok {
+		return 0, false
+	}
+	return int(exitCode), true
 }
 
 func FailProgram(ctx context.Context) {
-	mustProgramCancelCause(ctx)(ProgramPanicError{})
+	mustProgramCancelCause(ctx)(programExitCode(1))
 }

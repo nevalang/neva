@@ -14,9 +14,9 @@ type FuncCreator interface {
 	Create(IO, Msg) (func(context.Context), error)
 }
 
-func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
-	_, err := Call(ctx, prog, registry, NewStructMsg(nil))
-	return err
+func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (int, error) {
+	_, exitCode, err := Call(ctx, prog, registry, NewStructMsg(nil))
+	return exitCode, err
 }
 
 // Call runs a single request-response round-trip using program Start/Stop.
@@ -24,7 +24,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 // then cancels and waits for all handlers to finish.
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, int, error) {
 	ctx, cancel := context.WithCancelCause(ctx)
 	ctx = contextWithProgramCancelCause(ctx, cancel)
 
@@ -37,7 +37,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
 		cancel(nil)
-		return nil, err
+		return nil, 0, err
 	}
 
 	funcsFinished := make(chan struct{})
@@ -50,11 +50,11 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 
 	<-funcsFinished
 
-	if cause := context.Cause(ctx); IsProgramPanicError(cause) {
-		return nil, fmt.Errorf("program panic: %w", cause)
+	if exitCode, ok := ProgramExitCodeFromCause(context.Cause(ctx)); ok {
+		return nil, exitCode, nil
 	}
 
-	return out, nil
+	return out, 0, nil
 }
 
 func deferFuncCalls(
