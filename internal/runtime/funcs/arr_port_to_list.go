@@ -31,11 +31,11 @@ func (arrayPortToList) Create(
 		for {
 			list := make([]runtime.Msg, 0, l)
 			for idx := range l {
-				msg, ok := portIn.Receive(ctx, idx)
+				ordered, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
 				}
-				list = append(list, msg)
+				list = append(list, ordered.Msg)
 			}
 
 			if !listOut.Send(ctx, runtime.NewListMsg(list)) {
