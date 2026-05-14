@@ -3,7 +3,6 @@ package runtime
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"sync"
 )
 
@@ -25,9 +24,7 @@ type TraceTree struct {
 }
 
 type Tracer struct {
-	pendingMap map[string]*pendingCausesState
-	store      traceStore
-	pendingMu  sync.Mutex
+	store traceStore
 }
 
 type traceStore struct {
@@ -40,7 +37,6 @@ func NewTracer() *Tracer {
 		store: traceStore{
 			hops: make(map[uint64]TraceHop),
 		},
-		pendingMap: map[string]*pendingCausesState{},
 	}
 }
 
@@ -65,56 +61,6 @@ func (t *Tracer) causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
 	return indexes
 }
 
-type pendingCausesState struct {
-	causes  map[uint64]struct{}
-	emitted bool
-}
-
-func nodePathKey(path string) string {
-	return strings.TrimSuffix(strings.TrimSuffix(path, "/in"), "/out")
-}
-
-func (t *Tracer) onReceived(path string, ordered OrderedMsg) {
-	t.pendingMu.Lock()
-	defer t.pendingMu.Unlock()
-
-	key := nodePathKey(path)
-	state, ok := t.pendingMap[key]
-	if !ok {
-		state = &pendingCausesState{causes: map[uint64]struct{}{}}
-		t.pendingMap[key] = state
-	}
-	if state.emitted {
-		clear(state.causes)
-		state.emitted = false
-	}
-	state.causes[ordered.index] = struct{}{}
-}
-
-func (t *Tracer) currentCauseIndexes(path string) []uint64 {
-	key := nodePathKey(path)
-	t.pendingMu.Lock()
-	defer t.pendingMu.Unlock()
-	state, ok := t.pendingMap[key]
-	if !ok || len(state.causes) == 0 {
-		return nil
-	}
-	indexes := make([]uint64, 0, len(state.causes))
-	for index := range state.causes {
-		indexes = append(indexes, index)
-	}
-	slices.Sort(indexes)
-	state.emitted = true
-	return indexes
-}
-
-func (t *Tracer) causeIndexesForSend(path string, causes []OrderedMsg) []uint64 {
-	if len(causes) != 0 {
-		return t.causeIndexesFromOrdered(causes)
-	}
-	return t.currentCauseIndexes(path)
-}
-
 func (t *Tracer) RecordSent(
 	sender PortSlotAddr,
 	ordered OrderedMsg,
@@ -125,7 +71,9 @@ func (t *Tracer) RecordSent(
 
 	hop := t.store.hops[ordered.index]
 	hop.Index = ordered.index
-	hop.CauseIndexes = t.causeIndexesForSend(sender.Path, causes)
+	// Runtime funcs are responsible for passing explicit OrderedMsg causes.
+	// Tracer does not infer fallback causes from receive-side state.
+	hop.CauseIndexes = t.causeIndexesFromOrdered(causes)
 	senderCopy := sender
 	hop.Sender = &senderCopy
 	hop.Message = fmt.Sprint(ordered.Msg)
@@ -143,7 +91,6 @@ func (t *Tracer) RecordReceived(receiver PortSlotAddr, ordered OrderedMsg) {
 	receiverCopy := receiver
 	hop.Receiver = &receiverCopy
 	t.store.hops[ordered.index] = hop
-	t.onReceived(receiver.Path, ordered)
 }
 
 func (t *Tracer) traceHopByIndex(index uint64) (TraceHop, bool) {

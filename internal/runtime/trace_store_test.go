@@ -140,7 +140,7 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 	}
 
 	return func(ctx context.Context) {
-		var firstMsg, secondMsg, thirdMsg Msg
+		var firstMsg, secondMsg, thirdMsg OrderedMsg
 		var firstOK, secondOK, thirdOK bool
 
 		var waitGroup sync.WaitGroup
@@ -160,7 +160,7 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 		}
 
 		outMsg := NewListMsg([]Msg{firstMsg, secondMsg, thirdMsg})
-		_ = resOut.Send(ctx, outMsg)
+		_ = resOut.Send(ctx, outMsg, firstMsg, secondMsg, thirdMsg)
 	}, nil
 }
 
