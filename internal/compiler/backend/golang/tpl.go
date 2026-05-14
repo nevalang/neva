@@ -130,6 +130,8 @@ func main() {
         if !runtime.IsProgramPanicError(err) {
             fmt.Fprintln(os.Stderr, "runtime error:", err)
         }
+        // Runtime itself must not call os.Exit to remain embeddable.
+        // Process-level exit policy is applied at generated main boundary.
 		os.Exit(1)
 	}
 }

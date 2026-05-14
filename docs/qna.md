@@ -237,6 +237,37 @@ discipline:
 In short: user panic is semantic program failure with graceful stop; internal
 panic is implementation failure.
 
+## Why does generated `main` call `os.Exit`, while runtime itself does not?
+
+Because runtime must stay embeddable and should not terminate the host process.
+
+Rules:
+
+1. Runtime core never calls `os.Exit(...)`.
+2. Runtime core is responsible for cooperative shutdown (cancel context, stop
+   goroutines, release owned resources).
+3. Process exit policy belongs to the process boundary (`main` template).
+
+This split allows the same runtime to work both as a standalone executable and
+as an embedded library.
+
+## What is the current runtime exit/return contract?
+
+Current contract:
+
+1. `runtime.Run(...)` / `runtime.Call(...)` return `error`.
+2. If `err != nil`, execution is treated as failed and generated `main` exits
+   with code `1`.
+3. User-level panic in Neva currently propagates through this `error` transport
+   as a temporary compatibility mechanism.
+
+Target direction (planned):
+
+1. Runtime returns `(exitCode int, err error)`.
+2. `err != nil` means runtime/system failure (invalid result).
+3. `err == nil` means valid program termination; caller uses returned
+   `exitCode` (`0`, `1`, or custom code from future `os.exit` component).
+
 ## Why can only primitive messages be used as "literal network senders"?
 
 It enables easier type inference and keeps networks readable.
