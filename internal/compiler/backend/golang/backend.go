@@ -342,7 +342,7 @@ func (b Backend) buildFuncCalls(
 				})
 			} else {
 				funcInports[irAddr.Port] = fmt.Sprintf(
-					"runtime.NewInport(nil, runtime.NewSingleInport(%s, runtime.PortAddr{Path: %q, Port: %q}, interceptor))",
+					"runtime.NewInport(nil, runtime.NewSingleInport(tracer, %s, runtime.PortAddr{Path: %q, Port: %q}, interceptor))",
 					chanVar,
 					irAddr.Path,
 					irAddr.Port,
@@ -369,7 +369,7 @@ func (b Backend) buildFuncCalls(
 				})
 			} else {
 				funcOutports[irAddr.Port] = fmt.Sprintf(
-					"runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, %s), nil)",
+					"runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: %q, Port: %q}, interceptor, %s), nil)",
 					irAddr.Path,
 					irAddr.Port,
 					chanVar,
@@ -389,7 +389,8 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcInports[addr.Port] = fmt.Sprintf(
-				"runtime.NewInport(runtime.NewArrayInport([]<-chan runtime.OrderedMsg{%s}, runtime.PortAddr{Path: %q, Port: %q}, interceptor), nil)",
+				"runtime.NewInport(runtime.NewArrayInport(tracer, []<-chan runtime.OrderedMsg{%s}, "+
+					"runtime.PortAddr{Path: %q, Port: %q}, interceptor), nil)",
 				strings.Join(chans, ", "),
 				addr.Path,
 				addr.Port,
@@ -408,7 +409,7 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcOutports[addr.Port] = fmt.Sprintf(
-				"runtime.NewOutport(nil, runtime.NewArrayOutport("+
+				"runtime.NewOutport(nil, runtime.NewArrayOutport(tracer, "+
 					"runtime.PortAddr{Path: %q, Port: %q}, "+
 					"interceptor, []chan<- runtime.OrderedMsg{%s}))",
 				addr.Path,

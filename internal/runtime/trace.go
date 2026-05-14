@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -36,8 +35,6 @@ type traceStore struct {
 	mu   sync.RWMutex
 }
 
-type tracerKey struct{}
-
 func NewTracer() *Tracer {
 	return &Tracer{
 		store: traceStore{
@@ -45,22 +42,6 @@ func NewTracer() *Tracer {
 		},
 		pendingMap: map[string]*pendingCausesState{},
 	}
-}
-
-func contextWithTracer(ctx context.Context, tracer *Tracer) context.Context {
-	return context.WithValue(ctx, tracerKey{}, tracer)
-}
-
-func tracerFromContext(ctx context.Context) (*Tracer, bool) {
-	tracer, ok := ctx.Value(tracerKey{}).(*Tracer)
-	if !ok || tracer == nil {
-		return nil, false
-	}
-	return tracer, true
-}
-
-func WithTracer(ctx context.Context) context.Context {
-	return contextWithTracer(ctx, NewTracer())
 }
 
 func (t *Tracer) causeIndexesFromOrdered(causes []OrderedMsg) []uint64 {
@@ -94,12 +75,10 @@ func nodePathKey(path string) string {
 }
 
 func (t *Tracer) onReceived(path string, ordered OrderedMsg) {
-	if ordered.index == 0 {
-		return
-	}
-	key := nodePathKey(path)
 	t.pendingMu.Lock()
 	defer t.pendingMu.Unlock()
+
+	key := nodePathKey(path)
 	state, ok := t.pendingMap[key]
 	if !ok {
 		state = &pendingCausesState{causes: map[uint64]struct{}{}}
@@ -217,20 +196,4 @@ func (t *Tracer) TraceCauseTree(ordered OrderedMsg) (TraceTree, bool) {
 		return TraceTree{}, false
 	}
 	return t.TraceCauseTreeByIndex(ordered.index)
-}
-
-func TraceCauseTreeByIndex(ctx context.Context, index uint64) (TraceTree, bool) {
-	tracer, ok := tracerFromContext(ctx)
-	if !ok {
-		return TraceTree{}, false
-	}
-	return tracer.TraceCauseTreeByIndex(index)
-}
-
-func TraceCauseTree(ctx context.Context, ordered OrderedMsg) (TraceTree, bool) {
-	tracer, ok := tracerFromContext(ctx)
-	if !ok {
-		return TraceTree{}, false
-	}
-	return tracer.TraceCauseTree(ordered)
 }

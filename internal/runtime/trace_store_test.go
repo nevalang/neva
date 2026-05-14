@@ -14,18 +14,18 @@ func TestTraceTree_Linear(t *testing.T) {
 	tracer := NewTracer()
 
 	ch := make(chan OrderedMsg, 1)
-	out := NewSingleOutport(
+	out := NewSingleOutport(tracer,
 		PortAddr{Path: "producer/out", Port: "res"},
 		NoEffectInterceptor{},
 		ch,
 	)
-	in := NewSingleInport(
+	in := NewSingleInport(tracer,
 		ch,
 		PortAddr{Path: "consumer/in", Port: "data"},
 		NoEffectInterceptor{},
 	)
 
-	ctx := contextWithTracer(context.Background(), tracer)
+	ctx := context.Background()
 	if !out.Send(ctx, NewStringMsg("hello")) {
 		t.Fatalf("send failed")
 	}
@@ -39,7 +39,7 @@ func TestTraceTree_Linear(t *testing.T) {
 		t.Fatalf("expected ordered message index")
 	}
 
-	tree, ok := TraceCauseTree(ctx, got)
+	tree, ok := tracer.TraceCauseTree(got)
 	if !ok {
 		t.Fatalf("expected trace tree")
 	}
@@ -62,26 +62,26 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
-	ctx := contextWithTracer(context.Background(), tracer)
+	ctx := context.Background()
 	ch1 := make(chan OrderedMsg, 1)
 	ch2 := make(chan OrderedMsg, 1)
 
-	out1 := NewSingleOutport(
+	out1 := NewSingleOutport(tracer,
 		PortAddr{Path: "step1/out", Port: "res"},
 		NoEffectInterceptor{},
 		ch1,
 	)
-	in1 := NewSingleInport(
+	in1 := NewSingleInport(tracer,
 		ch1,
 		PortAddr{Path: "step2/in", Port: "data"},
 		NoEffectInterceptor{},
 	)
-	out2 := NewSingleOutport(
+	out2 := NewSingleOutport(tracer,
 		PortAddr{Path: "step2/out", Port: "res"},
 		NoEffectInterceptor{},
 		ch2,
 	)
-	in2 := NewSingleInport(
+	in2 := NewSingleInport(tracer,
 		ch2,
 		PortAddr{Path: "step3/in", Port: "data"},
 		NoEffectInterceptor{},
@@ -102,7 +102,7 @@ func TestTraceTree_ForwardedMessageTracksParent(t *testing.T) {
 		t.Fatalf("second receive failed")
 	}
 
-	tree, ok := TraceCauseTree(ctx, last)
+	tree, ok := tracer.TraceCauseTree(last)
 	if !ok {
 		t.Fatalf("expected trace tree")
 	}
@@ -169,7 +169,7 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
-	baseCtx := contextWithTracer(context.Background(), tracer)
+	baseCtx := context.Background()
 	handlerCtx := baseCtx
 	sendCtx := baseCtx
 	recvCtx := baseCtx
@@ -178,19 +178,24 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 	thirdCh := make(chan OrderedMsg, 1)
 	resCh := make(chan OrderedMsg, 1)
 
-	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
-	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
-	thirdOut := NewSingleOutport(PortAddr{Path: "third/out", Port: "res"}, NoEffectInterceptor{}, thirdCh)
-	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
+	firstOut := NewSingleOutport(tracer, PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(tracer, PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
+	thirdOut := NewSingleOutport(tracer, PortAddr{Path: "third/out", Port: "res"}, NoEffectInterceptor{}, thirdCh)
+	resIn := NewSingleInport(tracer, resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
+
+	firstIn := NewSingleInport(tracer, firstCh, PortAddr{Path: "fanin/in", Port: "first"}, NoEffectInterceptor{})
+	secondIn := NewSingleInport(tracer, secondCh, PortAddr{Path: "fanin/in", Port: "second"}, NoEffectInterceptor{})
+	thirdIn := NewSingleInport(tracer, thirdCh, PortAddr{Path: "fanin/in", Port: "third"}, NoEffectInterceptor{})
+	resOut := NewSingleOutport(tracer, PortAddr{Path: "fanin/out", Port: "res"}, NoEffectInterceptor{}, resCh)
 
 	handler, err := testFanInCreator{}.Create(IO{
 		In: NewInports(map[string]Inport{
-			"first":  NewInport(nil, NewSingleInport(firstCh, PortAddr{Path: "fanin/in", Port: "first"}, NoEffectInterceptor{})),
-			"second": NewInport(nil, NewSingleInport(secondCh, PortAddr{Path: "fanin/in", Port: "second"}, NoEffectInterceptor{})),
-			"third":  NewInport(nil, NewSingleInport(thirdCh, PortAddr{Path: "fanin/in", Port: "third"}, NoEffectInterceptor{})),
+			"first":  NewInport(nil, firstIn),
+			"second": NewInport(nil, secondIn),
+			"third":  NewInport(nil, thirdIn),
 		}),
 		Out: NewOutports(map[string]Outport{
-			"res": NewOutport(NewSingleOutport(PortAddr{Path: "fanin/out", Port: "res"}, NoEffectInterceptor{}, resCh), nil),
+			"res": NewOutport(resOut, nil),
 		}),
 	}, nil)
 	if err != nil {
@@ -213,7 +218,7 @@ func TestTraceTree_FanInTracksAllParents(t *testing.T) {
 		t.Fatalf("receive failed")
 	}
 
-	tree, hasTree := TraceCauseTree(baseCtx, last)
+	tree, hasTree := tracer.TraceCauseTree(last)
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}
@@ -237,17 +242,17 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	resetRuntimeTraceStateForTests()
 	tracer := NewTracer()
 
-	ctx := contextWithTracer(context.Background(), tracer)
+	ctx := context.Background()
 	firstCh := make(chan OrderedMsg, 1)
 	secondCh := make(chan OrderedMsg, 1)
 	resCh := make(chan OrderedMsg, 1)
 
-	firstOut := NewSingleOutport(PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
-	secondOut := NewSingleOutport(PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
-	firstIn := NewSingleInport(firstCh, PortAddr{Path: "join/in", Port: "first"}, NoEffectInterceptor{})
-	secondIn := NewSingleInport(secondCh, PortAddr{Path: "join/in", Port: "second"}, NoEffectInterceptor{})
-	resOut := NewSingleOutport(PortAddr{Path: "join/out", Port: "res"}, NoEffectInterceptor{}, resCh)
-	resIn := NewSingleInport(resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
+	firstOut := NewSingleOutport(tracer, PortAddr{Path: "first/out", Port: "res"}, NoEffectInterceptor{}, firstCh)
+	secondOut := NewSingleOutport(tracer, PortAddr{Path: "second/out", Port: "res"}, NoEffectInterceptor{}, secondCh)
+	firstIn := NewSingleInport(tracer, firstCh, PortAddr{Path: "join/in", Port: "first"}, NoEffectInterceptor{})
+	secondIn := NewSingleInport(tracer, secondCh, PortAddr{Path: "join/in", Port: "second"}, NoEffectInterceptor{})
+	resOut := NewSingleOutport(tracer, PortAddr{Path: "join/out", Port: "res"}, NoEffectInterceptor{}, resCh)
+	resIn := NewSingleInport(tracer, resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
 
 	if !firstOut.Send(ctx, NewStringMsg("a")) {
 		t.Fatalf("first send failed")
@@ -279,7 +284,7 @@ func TestTraceTree_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 		t.Fatalf("result receive failed")
 	}
 
-	tree, hasTree := TraceCauseTree(ctx, last)
+	tree, hasTree := tracer.TraceCauseTree(last)
 	if !hasTree {
 		t.Fatalf("expected trace tree")
 	}

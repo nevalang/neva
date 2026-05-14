@@ -27,17 +27,21 @@ func TestCall_ReturnsProgramPanicError(t *testing.T) {
 
 	startToPanic := make(chan OrderedMsg, 1)
 	stopChan := make(chan OrderedMsg)
+	tracer := NewTracer()
+	noEffectInterceptor := NoEffectInterceptor{}
 
 	prog := Program{
 		Start: NewSingleOutport(
+			tracer,
 			PortAddr{Path: "prog", Port: "start"},
-			NoEffectInterceptor{},
+			noEffectInterceptor,
 			startToPanic,
 		),
 		Stop: NewSingleInport(
+			tracer,
 			stopChan,
 			PortAddr{Path: "prog", Port: "stop"},
-			NoEffectInterceptor{},
+			noEffectInterceptor,
 		),
 		FuncCalls: []FuncCall{
 			{
@@ -47,9 +51,10 @@ func TestCall_ReturnsProgramPanicError(t *testing.T) {
 						"data": NewInport(
 							nil,
 							NewSingleInport(
+								tracer,
 								startToPanic,
 								PortAddr{Path: "panic/in", Port: "data"},
-								NoEffectInterceptor{},
+								noEffectInterceptor,
 							),
 						),
 					}),

@@ -184,14 +184,18 @@ func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Ord
 	leftIn := make(chan runtime.OrderedMsg)
 	rightIn := make(chan runtime.OrderedMsg)
 	resultOut := make(chan runtime.OrderedMsg, 1)
+	tracer := runtime.NewTracer()
 
 	interceptor := runtime.NoEffectInterceptor{}
+	leftPort := runtime.NewSingleInport(tracer, leftIn, runtime.PortAddr{Path: "test/in", Port: "left"}, interceptor)
+	rightPort := runtime.NewSingleInport(tracer, rightIn, runtime.PortAddr{Path: "test/in", Port: "right"}, interceptor)
+	resPort := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut)
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		"left":  runtime.NewInport(nil, runtime.NewSingleInport(leftIn, runtime.PortAddr{Path: "test/in", Port: "left"}, interceptor)),
-		"right": runtime.NewInport(nil, runtime.NewSingleInport(rightIn, runtime.PortAddr{Path: "test/in", Port: "right"}, interceptor)),
+		"left":  runtime.NewInport(nil, leftPort),
+		"right": runtime.NewInport(nil, rightPort),
 	})
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(resPort, nil),
 	})
 
 	return runtime.IO{In: inports, Out: outports}, leftIn, rightIn, resultOut
@@ -200,13 +204,16 @@ func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Ord
 func newUnaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
 	input := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
+	tracer := runtime.NewTracer()
 
 	interceptor := runtime.NoEffectInterceptor{}
+	dataPort := runtime.NewSingleInport(tracer, input, runtime.PortAddr{Path: "test/in", Port: "data"}, interceptor)
+	resPort := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut)
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		"data": runtime.NewInport(nil, runtime.NewSingleInport(input, runtime.PortAddr{Path: "test/in", Port: "data"}, interceptor)),
+		"data": runtime.NewInport(nil, dataPort),
 	})
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(resPort, nil),
 	})
 
 	return runtime.IO{In: inports, Out: outports}, input, resultOut

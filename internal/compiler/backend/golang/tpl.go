@@ -82,14 +82,14 @@ func main() {
         }
     }()
 
+    tracer := runtime.NewTracer()
+
     var (
-        startPort = runtime.NewSingleOutport(
-            runtime.PortAddr{Path: "in", Port: "start"},
+        startPort = runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "in", Port: "start"},
             interceptor,
             {{getPortChanNameByAddr "in" "start"}},
         )
-        stopPort = runtime.NewSingleInport(
-            {{getPortChanNameByAddr "out" "stop"}},
+        stopPort = runtime.NewSingleInport(tracer, {{getPortChanNameByAddr "out" "stop"}},
             runtime.PortAddr{Path: "out", Port: "stop"},
             interceptor,
         )
@@ -303,14 +303,14 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		_ = close()
 	}()
 
+	tracer := runtime.NewTracer()
+
 	var (
-		startPort = runtime.NewSingleOutport(
-			runtime.PortAddr{Path: "in", Port: "start"},
+		startPort = runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "in", Port: "start"},
 			interceptor,
 			{{.StartPortChan}},
 		)
-		stopPort = runtime.NewSingleInport(
-			{{.StopPortChan}},
+		stopPort = runtime.NewSingleInport(tracer, {{.StopPortChan}},
 			runtime.PortAddr{Path: "out", Port: "stop"},
 			interceptor,
 		)

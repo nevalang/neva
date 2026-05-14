@@ -25,12 +25,10 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
-	var out Msg
-	tracer := NewTracer()
 	ctx, cancel := context.WithCancelCause(ctx)
-	ctx = contextWithTracer(ctx, tracer)
 	ctx = contextWithProgramCancelCause(ctx, cancel)
-	prog = attachTracerToProgram(prog, tracer)
+
+	var out Msg
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
 		cancel(nil) // normal termination
@@ -43,10 +41,8 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	}
 
 	funcsFinished := make(chan struct{})
-
 	go func() {
-		// runFuncs blocks until context is cancelled (by the stop port or by panic)
-		runFuncs(ctx)
+		runFuncs(ctx) // blocks until context is cancelled
 		close(funcsFinished)
 	}()
 
@@ -81,38 +77,6 @@ func deferFuncCalls(
 		}
 		wg.Wait()
 	}, nil
-}
-
-func attachTracerToProgram(prog Program, tracer *Tracer) Program {
-	prog.Start.tracer = tracer
-	prog.Stop.tracer = tracer
-	for i := range prog.FuncCalls {
-		attachTracerToInports(prog.FuncCalls[i].IO.In, tracer)
-		attachTracerToOutports(prog.FuncCalls[i].IO.Out, tracer)
-	}
-	return prog
-}
-
-func attachTracerToInports(inports Inports, tracer *Tracer) {
-	for _, inport := range inports.ports {
-		if inport.single != nil {
-			inport.single.tracer = tracer
-		}
-		if inport.array != nil {
-			inport.array.tracer = tracer
-		}
-	}
-}
-
-func attachTracerToOutports(outports Outports, tracer *Tracer) {
-	for _, outport := range outports.ports {
-		if outport.single != nil {
-			outport.single.tracer = tracer
-		}
-		if outport.array != nil {
-			outport.array.tracer = tracer
-		}
-	}
 }
 
 func createHandlers(

@@ -11,8 +11,8 @@ import (
 
 type panicker struct{}
 
-func formatPanicDataflowTrace(ctx context.Context, msg runtime.OrderedMsg) string {
-	tree, ok := runtime.TraceCauseTree(ctx, msg)
+func formatPanicDataflowTrace(tracer *runtime.Tracer, msg runtime.OrderedMsg) string {
+	tree, ok := tracer.TraceCauseTree(msg)
 	if !ok {
 		return ""
 	}
@@ -94,10 +94,10 @@ func normalizePanicPortPath(path string) string {
 }
 
 func (p panicker) Create(
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	msgIn, err := io.In.Single("data")
+	msgIn, err := runtimeIO.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
@@ -113,7 +113,7 @@ func (p panicker) Create(
 			panic(err)
 		}
 
-		if trace := formatPanicDataflowTrace(ctx, panicMsg); trace != "" {
+		if trace := formatPanicDataflowTrace(runtimeIO.Tracer(), panicMsg); trace != "" {
 			if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
 				panic(err)
 			}
