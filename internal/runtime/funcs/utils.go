@@ -123,9 +123,9 @@ func formatTerminationDataflowTrace(title string, tracer *runtime.Tracer, msg ru
 	var builder strings.Builder
 	receiver := "<?>"
 	if tree.Hop.Receiver != nil {
-		receiver = formatPanicPortSlotAddr(*tree.Hop.Receiver)
+		receiver = formatTracePortSlotAddr(*tree.Hop.Receiver)
 	}
-	component := panicComponentName(tree.Hop.Receiver)
+	component := traceComponentName(tree.Hop.Receiver)
 
 	builder.WriteString(title + "\n")
 	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
@@ -134,7 +134,7 @@ func formatTerminationDataflowTrace(title string, tracer *runtime.Tracer, msg ru
 		builder.WriteString("component: " + component + "\n")
 	}
 	builder.WriteString("events:\n")
-	formatPanicTraceTree(&builder, &tree, "  ")
+	formatTraceTree(&builder, &tree, "  ")
 
 	return strings.TrimRight(builder.String(), "\n")
 }
@@ -152,6 +152,63 @@ func writeTerminationTrace(title string, io runtime.IO, msg runtime.OrderedMsg) 
 type traceTree struct {
 	Parents []traceTree
 	Hop     runtime.TraceHop
+}
+
+func formatTraceTree(builder *strings.Builder, tree *traceTree, indent string) {
+	builder.WriteString(indent + "- " + formatTraceHopFlow(tree.Hop) + "\n")
+	for _, parent := range tree.Parents {
+		formatTraceTree(builder, &parent, indent+"  ")
+	}
+}
+
+func formatTraceHopFlow(hop runtime.TraceHop) string {
+	recv := "<?>"
+	send := "<?>"
+	if hop.Receiver != nil {
+		recv = formatTracePortSlotAddr(*hop.Receiver)
+	}
+	if hop.Sender != nil {
+		send = formatTracePortSlotAddr(*hop.Sender)
+	}
+	return fmt.Sprintf("%s -> %s", send, recv)
+}
+
+func traceComponentName(receiver *runtime.PortSlotAddr) string {
+	if receiver == nil {
+		return ""
+	}
+
+	path := receiver.Path
+	path = strings.TrimSuffix(path, "/in")
+	path = strings.TrimSuffix(path, "/out")
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+	return parts[len(parts)-1]
+}
+
+func formatTracePortSlotAddr(slot runtime.PortSlotAddr) string {
+	slot.Path = normalizeTracePortPath(slot.Path)
+	s := fmt.Sprintf("%s:%s", slot.Path, slot.Port)
+	if slot.Index != nil {
+		s = fmt.Sprintf("%s[%d]", s, *slot.Index)
+	}
+	return s
+}
+
+func normalizeTracePortPath(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+
+	lastPart := parts[len(parts)-1]
+	if lastPart == "in" || lastPart == "out" {
+		parts = parts[:len(parts)-1]
+	}
+
+	return strings.Join(parts, "/")
 }
 
 func traceFromOrderedMsg(tracer *runtime.Tracer, ordered runtime.OrderedMsg) (traceTree, bool) {

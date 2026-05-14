@@ -7,19 +7,19 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func TestFormatPanicHopFlow_NormalizesSendToReceive(t *testing.T) {
+func TestFormatTraceHopFlow_NormalizesSendToReceive(t *testing.T) {
 	hop := runtime.TraceHop{
 		Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "http/in", Port: "req"}},
 		Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "parse/in", Port: "data"}},
 	}
 
-	got := formatPanicHopFlow(hop)
+	got := formatTraceHopFlow(hop)
 	if got != "http:req -> parse:data" {
 		t.Fatalf("unexpected hop flow: %s", got)
 	}
 }
 
-func TestFormatPanicTraceTree_FanInRendersAllParents(t *testing.T) {
+func TestFormatTraceTree_FanInRendersAllParents(t *testing.T) {
 	tree := traceTree{
 		Hop: runtime.TraceHop{
 			Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/out", Port: "res"}},
@@ -64,8 +64,8 @@ func TestFormatPanicTraceTree_FanInRendersAllParents(t *testing.T) {
 
 func buildFormattedPanicTraceForTest(tree *traceTree) string {
 	var builder strings.Builder
-	panicReceiver := formatPanicPortSlotAddr(*tree.Hop.Receiver)
-	panicComponent := panicComponentName(tree.Hop.Receiver)
+	panicReceiver := formatTracePortSlotAddr(*tree.Hop.Receiver)
+	panicComponent := traceComponentName(tree.Hop.Receiver)
 	builder.WriteString("panic cause dataflow trace\n")
 	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
 	builder.WriteString("sink: " + panicReceiver + "\n")
@@ -73,6 +73,6 @@ func buildFormattedPanicTraceForTest(tree *traceTree) string {
 		builder.WriteString("component: " + panicComponent + "\n")
 	}
 	builder.WriteString("events:\n")
-	formatPanicTraceTree(&builder, tree, "  ")
+	formatTraceTree(&builder, tree, "  ")
 	return strings.TrimRight(builder.String(), "\n")
 }
