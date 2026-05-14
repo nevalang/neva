@@ -17,17 +17,18 @@ func startHandler(ctx context.Context, handler func(context.Context)) (context.C
 }
 
 func benchNewBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
-	interceptor := runtime.ProdInterceptor{}
+	tracer := runtime.NewTracer()
+	interceptor := runtime.NoEffectInterceptor{}
 	leftIn := make(chan runtime.OrderedMsg, 1)
 	rightIn := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		"left":  runtime.NewInport(nil, runtime.NewSingleInport(leftIn, runtime.PortAddr{Path: "test/in", Port: "left"}, interceptor)),
-		"right": runtime.NewInport(nil, runtime.NewSingleInport(rightIn, runtime.PortAddr{Path: "test/in", Port: "right"}, interceptor)),
+		"left":  runtime.NewInport(nil, runtime.NewSingleInport(tracer, leftIn, runtime.PortAddr{Path: "test/in", Port: "left"}, interceptor)),
+		"right": runtime.NewInport(nil, runtime.NewSingleInport(tracer, rightIn, runtime.PortAddr{Path: "test/in", Port: "right"}, interceptor)),
 	})
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
 	})
 
 	return runtime.IO{In: inports, Out: outports}, leftIn, rightIn, resultOut
@@ -46,34 +47,36 @@ func benchNewSelectRuntimeIO(size int) (runtime.IO, []chan runtime.OrderedMsg, [
 		thenRead[i] = thenInputs[i]
 	}
 
-	interceptor := runtime.ProdInterceptor{}
+	tracer := runtime.NewTracer()
+	interceptor := runtime.NoEffectInterceptor{}
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		"if":   runtime.NewInport(runtime.NewArrayInport(ifRead, runtime.PortAddr{Path: "test/in", Port: "if"}, interceptor), nil),
-		"then": runtime.NewInport(runtime.NewArrayInport(thenRead, runtime.PortAddr{Path: "test/in", Port: "then"}, interceptor), nil),
+		"if":   runtime.NewInport(runtime.NewArrayInport(tracer, ifRead, runtime.PortAddr{Path: "test/in", Port: "if"}, interceptor), nil),
+		"then": runtime.NewInport(runtime.NewArrayInport(tracer, thenRead, runtime.PortAddr{Path: "test/in", Port: "then"}, interceptor), nil),
 	})
 
 	resultOut := make(chan runtime.OrderedMsg, 1)
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
 	})
 
 	return runtime.IO{In: inports, Out: outports}, ifInputs, thenInputs, resultOut
 }
 
 func benchNewStructRuntimeIO(names []string) (runtime.IO, map[string]chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
-	interceptor := runtime.ProdInterceptor{}
+	tracer := runtime.NewTracer()
+	interceptor := runtime.NoEffectInterceptor{}
 	inputs := make(map[string]chan runtime.OrderedMsg, len(names))
 	inportsMap := make(map[string]runtime.Inport, len(names))
 
 	for _, name := range names {
 		ch := make(chan runtime.OrderedMsg, 1)
 		inputs[name] = ch
-		inportsMap[name] = runtime.NewInport(nil, runtime.NewSingleInport(ch, runtime.PortAddr{Path: "test/in", Port: name}, interceptor))
+		inportsMap[name] = runtime.NewInport(nil, runtime.NewSingleInport(tracer, ch, runtime.PortAddr{Path: "test/in", Port: name}, interceptor))
 	}
 
 	resultOut := make(chan runtime.OrderedMsg, 1)
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
 	})
 
 	return runtime.IO{In: runtime.NewInports(inportsMap), Out: outports}, inputs, resultOut
@@ -86,19 +89,20 @@ func benchNewThreeInputsRuntimeIO(firstName, secondName, thirdName string) (
 	chan runtime.OrderedMsg,
 	chan runtime.OrderedMsg,
 ) {
-	interceptor := runtime.ProdInterceptor{}
+	tracer := runtime.NewTracer()
+	interceptor := runtime.NoEffectInterceptor{}
 	firstIn := make(chan runtime.OrderedMsg, 1)
 	secondIn := make(chan runtime.OrderedMsg, 1)
 	thirdIn := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 
 	inports := runtime.NewInports(map[string]runtime.Inport{
-		firstName:  runtime.NewInport(nil, runtime.NewSingleInport(firstIn, runtime.PortAddr{Path: "test/in", Port: firstName}, interceptor)),
-		secondName: runtime.NewInport(nil, runtime.NewSingleInport(secondIn, runtime.PortAddr{Path: "test/in", Port: secondName}, interceptor)),
-		thirdName:  runtime.NewInport(nil, runtime.NewSingleInport(thirdIn, runtime.PortAddr{Path: "test/in", Port: thirdName}, interceptor)),
+		firstName:  runtime.NewInport(nil, runtime.NewSingleInport(tracer, firstIn, runtime.PortAddr{Path: "test/in", Port: firstName}, interceptor)),
+		secondName: runtime.NewInport(nil, runtime.NewSingleInport(tracer, secondIn, runtime.PortAddr{Path: "test/in", Port: secondName}, interceptor)),
+		thirdName:  runtime.NewInport(nil, runtime.NewSingleInport(tracer, thirdIn, runtime.PortAddr{Path: "test/in", Port: thirdName}, interceptor)),
 	})
 	outports := runtime.NewOutports(map[string]runtime.Outport{
-		"res": runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
+		"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resultOut), nil),
 	})
 
 	return runtime.IO{In: inports, Out: outports}, firstIn, secondIn, thirdIn, resultOut
