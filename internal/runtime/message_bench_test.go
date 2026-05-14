@@ -10,6 +10,7 @@ var (
 	boolSink bool
 )
 
+//nolint:ireturn // benchmark helper returns runtime.Msg by design.
 func makeDictMsg(size int) Msg {
 	entries := make(map[string]Msg, size)
 	for i := range size {
@@ -18,6 +19,7 @@ func makeDictMsg(size int) Msg {
 	return NewDictMsg(entries)
 }
 
+//nolint:ireturn // benchmark helper returns runtime.Msg by design.
 func makeDictMsgAndKeys(size int) (Msg, []string) {
 	entries := make(map[string]Msg, size)
 	keys := make([]string, size)
