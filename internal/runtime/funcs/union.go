@@ -36,7 +36,7 @@ func (unionWrapper) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			}
 
 			tag := tagMsg.Union().Tag()
-			if !resOut.Send(ctx, runtime.NewUnionMsg(tag, dataMsg)) {
+			if !resOut.Send(ctx, runtime.NewUnionMsg(tag, dataMsg.Msg), dataMsg, tagMsg) {
 				return
 			}
 		}

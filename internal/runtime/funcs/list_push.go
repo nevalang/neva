@@ -40,8 +40,10 @@ func (p listPush) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 			if !resOut.Send(
 				ctx,
 				runtime.NewListMsg(
-					append(lstCopy, dataMsg),
+					append(lstCopy, dataMsg.Msg),
 				),
+				dataMsg,
+				lstMsg,
 			) {
 				return
 			}

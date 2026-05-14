@@ -45,17 +45,19 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			var (
 				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				wg              sync.WaitGroup
-				dataMsg         runtime.Msg
+				dataOrdered     runtime.OrderedMsg
 				cases           = make([]runtime.Msg, caseArrIn.Len())
+				caseOrdereds    = make([]runtime.OrderedMsg, caseArrIn.Len())
 				dataOk, casesOk bool
 			)
 
 			wg.Go(func() {
-				dataMsg, dataOk = dataIn.Receive(ctx)
+				dataOrdered, dataOk = dataIn.Receive(ctx)
 			})
 
 			wg.Go(func() {
 				casesOk = caseArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+					caseOrdereds[idx] = ordered
 					cases[idx] = ordered.Msg
 					return true
 				})
@@ -66,6 +68,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			if !dataOk || !casesOk {
 				return
 			}
+			dataMsg := dataOrdered.Msg
 
 			matchIdx := -1
 			for i, caseMsg := range cases {
@@ -81,6 +84,8 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 					ctx,
 					caseIdx,
 					tryToUnboxIfUnion(dataMsg),
+					dataOrdered,
+					caseOrdereds[matchIdx],
 				) {
 					return
 				}
@@ -88,7 +93,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			}
 
 			// For unions: we never unbox even if possible when sending to :else
-			if !elseOut.Send(ctx, dataMsg) {
+			if !elseOut.Send(ctx, dataMsg, dataOrdered) {
 				return
 			}
 		}
