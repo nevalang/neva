@@ -16,14 +16,14 @@ func (e programExitError) Error() string {
 	return "program terminated"
 }
 
-func contextWithProgramCancelCause(
+func contextWithCancelFunc(
 	ctx context.Context,
 	cancel context.CancelCauseFunc,
 ) context.Context {
 	return context.WithValue(ctx, programCancelCauseKey{}, cancel)
 }
 
-func mustProgramCancelCause(ctx context.Context) context.CancelCauseFunc {
+func mustCancelFuncFromCtx(ctx context.Context) context.CancelCauseFunc {
 	cancel, ok := ctx.Value(programCancelCauseKey{}).(context.CancelCauseFunc)
 	if !ok || cancel == nil {
 		panic("runtime invariant: program cancel cause func is missing")
@@ -31,7 +31,7 @@ func mustProgramCancelCause(ctx context.Context) context.CancelCauseFunc {
 	return cancel
 }
 
-func ProgramExitCodeFromCause(cause error) (int, bool) {
+func programExitCodeFromCause(cause error) (int, bool) {
 	var exitErr programExitError
 	ok := errors.As(cause, &exitErr)
 	if !ok {
@@ -42,5 +42,5 @@ func ProgramExitCodeFromCause(cause error) (int, bool) {
 
 // Terminate requests graceful runtime termination with the provided process exit code.
 func Terminate(ctx context.Context, exitCode int) {
-	mustProgramCancelCause(ctx)(programExitError{exitCode: exitCode})
+	mustCancelFuncFromCtx(ctx)(programExitError{exitCode: exitCode})
 }

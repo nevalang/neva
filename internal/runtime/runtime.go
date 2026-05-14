@@ -26,7 +26,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (in
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, int, error) {
 	ctx, cancel := context.WithCancelCause(ctx)
-	ctx = contextWithProgramCancelCause(ctx, cancel)
+	ctx = contextWithCancelFunc(ctx, cancel)
 
 	var out Msg
 	go func() {
@@ -50,7 +50,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 
 	<-funcsFinished
 
-	if exitCode, ok := ProgramExitCodeFromCause(context.Cause(ctx)); ok {
+	if exitCode, ok := programExitCodeFromCause(context.Cause(ctx)); ok {
 		return nil, exitCode, nil
 	}
 

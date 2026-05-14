@@ -3,7 +3,6 @@ package funcs
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -28,10 +27,6 @@ func (osExit) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(context.Context)
 			panic(fmt.Sprintf("runtime invariant: os.exit code must be non-negative, got %d", exitCode))
 		}
 
-		if _, err := fmt.Fprintf(os.Stderr, "exit: %d\n", exitCode); err != nil {
-			panic(err)
-		}
-		writeTerminationTrace("exit cause dataflow trace", runtimeIO.Tracer(), codeMsg)
 		runtime.Terminate(ctx, int(exitCode))
 	}, nil
 }
