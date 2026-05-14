@@ -8,35 +8,8 @@ import (
 	"strings"
 )
 
-// traceEventVersion tracks JSONL schema version for emitted runtime events.
-const traceEventVersion = 2
-
-// EventKind is a runtime transport event kind.
-type EventKind string
-
-const (
-	EventSent EventKind = "sent"
-	EventRecv EventKind = "recv"
-)
-
-// SentEvent is emitted when runtime sends a message through an outport.
-type SentEvent struct {
-	Msg          Msg          `json:"message"`
-	PortSlotAddr PortSlotAddr `json:"port"`
-	EventKind    EventKind    `json:"event"`
-	CauseIndexes []uint64     `json:"causeIndexes"`
-	Version      int          `json:"v"`
-	Index        uint64       `json:"index"`
-}
-
-// RecvEvent is emitted when runtime receives a message from an inport.
-type RecvEvent struct {
-	Msg          Msg          `json:"message"`
-	PortSlotAddr PortSlotAddr `json:"port"`
-	Event        EventKind    `json:"event"`
-	Version      int          `json:"v"`
-	Index        uint64       `json:"index"`
-}
+// jsonlTraceEventVersion tracks JSONL schema version for emitted runtime events.
+const jsonlTraceEventVersion = 2
 
 // NoEffectInterceptor exist to be used as default interceptor
 // when no actual interception is needed. Just to satisfy compiler.
@@ -92,9 +65,9 @@ func (d *JSONLTraceFileWriter) Sent(
 	ordered OrderedMsg,
 	hop TraceHop,
 ) {
-	evt := SentEvent{
-		Version:      traceEventVersion,
-		EventKind:    EventSent,
+	evt := jsonlSentEvent{
+		Version:      jsonlTraceEventVersion,
+		EventKind:    jsonlEventSent,
 		Index:        ordered.index,
 		CauseIndexes: hop.CauseIndexes,
 		PortSlotAddr: d.normalizePortSlotAddrPath(sender),
@@ -108,9 +81,9 @@ func (d *JSONLTraceFileWriter) Sent(
 //
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (d *JSONLTraceFileWriter) Received(_ context.Context, receiver PortSlotAddr, ordered OrderedMsg) OrderedMsg {
-	evt := RecvEvent{
-		Version:      traceEventVersion,
-		Event:        EventRecv,
+	evt := jsonlRecvEvent{
+		Version:      jsonlTraceEventVersion,
+		Event:        jsonlEventRecv,
 		Index:        ordered.index,
 		PortSlotAddr: d.normalizePortSlotAddrPath(receiver),
 		Msg:          ordered.Msg,
@@ -149,9 +122,35 @@ func (d JSONLTraceFileWriter) normalizePortPath(path string) string {
 }
 
 func NewDebugInterceptor(comment string) *JSONLTraceFileWriter {
+	// Kept for backward compatibility: historically this constructor
+	// exposed the debug interceptor naming in generated/runtime usage.
 	return &JSONLTraceFileWriter{
 		comment: comment,
 	}
+}
+
+type jsonlEventKind string
+
+const (
+	jsonlEventSent jsonlEventKind = "sent"
+	jsonlEventRecv jsonlEventKind = "recv"
+)
+
+type jsonlSentEvent struct {
+	Msg          Msg            `json:"message"`
+	PortSlotAddr PortSlotAddr   `json:"port"`
+	EventKind    jsonlEventKind `json:"event"`
+	CauseIndexes []uint64       `json:"causeIndexes"`
+	Version      int            `json:"v"`
+	Index        uint64         `json:"index"`
+}
+
+type jsonlRecvEvent struct {
+	Msg          Msg            `json:"message"`
+	PortSlotAddr PortSlotAddr   `json:"port"`
+	Event        jsonlEventKind `json:"event"`
+	Version      int            `json:"v"`
+	Index        uint64         `json:"index"`
 }
 
 // NewInterceptor always enables in-memory tracing.

@@ -479,13 +479,14 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMs
 
 func newOrderedMsg(msg Msg, causes []OrderedMsg) (OrderedMsg, []OrderedMsg) {
 	index := counter.Add(1)
-	if ordered, ok := msg.(OrderedMsg); ok {
-		if len(causes) == 0 {
-			causes = []OrderedMsg{ordered}
-		}
-		msg = ordered.Msg
+	ordered, ok := msg.(OrderedMsg)
+	if !ok {
+		return OrderedMsg{Msg: msg, index: index}, causes
 	}
-	return OrderedMsg{Msg: msg, index: index}, causes
+	if len(causes) == 0 {
+		causes = []OrderedMsg{ordered}
+	}
+	return OrderedMsg{Msg: ordered.Msg, index: index}, causes
 }
 
 func (a *ArrayOutport) Len() int {
