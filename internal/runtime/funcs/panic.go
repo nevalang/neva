@@ -11,10 +11,12 @@ import (
 
 type panicker struct{}
 
+// formatPanicDataflowTrace renders panic-oriented dataflow ancestry for the current message.
+// Missing trace data is treated as runtime invariant violation and causes Go panic.
 func formatPanicDataflowTrace(tracer *runtime.Tracer, msg runtime.OrderedMsg) string {
 	tree, ok := tracer.TraceCauseTree(msg)
 	if !ok {
-		return ""
+		panic("runtime invariant: missing dataflow trace for panic message")
 	}
 
 	var builder strings.Builder
@@ -26,9 +28,9 @@ func formatPanicDataflowTrace(tracer *runtime.Tracer, msg runtime.OrderedMsg) st
 
 	builder.WriteString("panic cause dataflow trace\n")
 	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
-	_, _ = fmt.Fprintf(&builder, "panic sink: %s\n", panicReceiver)
+	builder.WriteString("panic sink: " + panicReceiver + "\n")
 	if panicComponent != "" {
-		_, _ = fmt.Fprintf(&builder, "panic component: %s\n", panicComponent)
+		builder.WriteString("panic component: " + panicComponent + "\n")
 	}
 	builder.WriteString("events:\n")
 	formatPanicTraceTree(&builder, &tree, "  ")
@@ -37,7 +39,7 @@ func formatPanicDataflowTrace(tracer *runtime.Tracer, msg runtime.OrderedMsg) st
 }
 
 func formatPanicTraceTree(builder *strings.Builder, tree *runtime.TraceTree, indent string) {
-	_, _ = fmt.Fprintf(builder, "%s- %s\n", indent, formatPanicHopFlow(tree.Hop))
+	builder.WriteString(indent + "- " + formatPanicHopFlow(tree.Hop) + "\n")
 	for _, parent := range tree.Parents {
 		formatPanicTraceTree(builder, &parent, indent+"  ")
 	}
@@ -113,12 +115,11 @@ func (p panicker) Create(
 			panic(err)
 		}
 
-		if trace := formatPanicDataflowTrace(runtimeIO.Tracer(), panicMsg); trace != "" {
-			if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
-				panic(err)
-			}
+		trace := formatPanicDataflowTrace(runtimeIO.Tracer(), panicMsg)
+		if _, err := fmt.Fprintln(os.Stderr, trace); err != nil {
+			panic(err)
 		}
 
-		runtime.FailProgram(ctx)
+		runtime.TerminateProgram(ctx, 1)
 	}, nil
 }

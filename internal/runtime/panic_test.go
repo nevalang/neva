@@ -18,7 +18,7 @@ func (testPanicCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 		if !ok {
 			return
 		}
-		FailProgram(ctx)
+		TerminateProgram(ctx, 1)
 	}, nil
 }
 
