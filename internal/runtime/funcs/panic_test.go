@@ -48,11 +48,11 @@ func TestFormatPanicTraceTree_FanInRendersAllParents(t *testing.T) {
 	}
 
 	formatted := buildFormattedPanicTraceForTest(&tree)
-	if !strings.Contains(formatted, "panic sink: prog:stop") {
-		t.Fatalf("expected normalized panic sink, got:\n%s", formatted)
+	if !strings.Contains(formatted, "sink: prog:stop") {
+		t.Fatalf("expected normalized sink, got:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "panic component: prog") {
-		t.Fatalf("expected panic component, got:\n%s", formatted)
+	if !strings.Contains(formatted, "component: prog") {
+		t.Fatalf("expected component, got:\n%s", formatted)
 	}
 	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
 		t.Fatalf("expected fan-in output hop, got:\n%s", formatted)
@@ -68,9 +68,9 @@ func buildFormattedPanicTraceForTest(tree *runtime.TraceTree) string {
 	panicComponent := panicComponentName(tree.Hop.Receiver)
 	builder.WriteString("panic cause dataflow trace\n")
 	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
-	builder.WriteString("panic sink: " + panicReceiver + "\n")
+	builder.WriteString("sink: " + panicReceiver + "\n")
 	if panicComponent != "" {
-		builder.WriteString("panic component: " + panicComponent + "\n")
+		builder.WriteString("component: " + panicComponent + "\n")
 	}
 	builder.WriteString("events:\n")
 	formatPanicTraceTree(&builder, tree, "  ")

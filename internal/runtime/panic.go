@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 )
 
 // Panic control is a runtime-internal bridge for user-level panic semantics:
@@ -39,7 +40,7 @@ func ProgramExitCodeFromCause(cause error) (int, bool) {
 	return exitErr.exitCode, true
 }
 
-// TerminateProgram requests graceful runtime termination with the provided process exit code.
-func TerminateProgram(ctx context.Context, exitCode int) {
+// Terminate requests graceful runtime termination with the provided process exit code.
+func Terminate(ctx context.Context, exitCode int) {
 	mustProgramCancelCause(ctx)(programExitError{exitCode: exitCode})
 }

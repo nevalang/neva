@@ -119,6 +119,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"scanln":                    scanln{},
 		"args":                      args{},
+		"os_exit":                   osExit{},
 		"os_environ":                osEnviron{},
 		"dotenv_load":               dotenvLoad{},
 		"dotenv_load_from":          dotenvLoadFrom{},
