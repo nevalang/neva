@@ -99,18 +99,3 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 		}
 	}, nil
 }
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func tryToUnboxIfUnion(dataMsg runtime.Msg) runtime.Msg {
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	u, ok := runtime.AsUnion(dataMsg)
-	if !ok {
-		return dataMsg
-	}
-
-	if u.Data() == nil {
-		return u
-	}
-
-	return u.Data()
-}

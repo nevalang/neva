@@ -249,8 +249,8 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 
 // SelectedMsg is a message selected from available messages on all array inport slots.
 type SelectedMsg struct {
-	OrderedMsg
-	SlotIdx uint8
+	OrderedMsg OrderedMsg
+	SlotIdx    uint8
 }
 
 func (s SelectedMsg) String() string {
@@ -294,7 +294,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	}
 
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].index < buf[j].index
+		return buf[i].OrderedMsg.index < buf[j].OrderedMsg.index
 	})
 
 	return buf, true
