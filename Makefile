@@ -1,4 +1,5 @@
 # === Development ===
+GOLANGCI_LINT_VERSION ?= v2.5.0
 
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
@@ -29,7 +30,7 @@ gofix-check:
 
 .PHONY: lint
 lint:
-	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0 run ./...
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run ./...
 
 .PHONY: test-unit
 test-unit:
