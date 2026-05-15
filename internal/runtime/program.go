@@ -248,14 +248,13 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 }
 
 // SelectedMsg is a message selected from available messages on all array inport slots.
-// Keep fields explicit to avoid promoted-field access in hot paths.
 type SelectedMsg struct {
-	Ordered OrderedMsg
-	SlotIdx uint8
+	OrderedMsg OrderedMsg
+	SlotIdx    uint8
 }
 
 func (s SelectedMsg) String() string {
-	return fmt.Sprint(s.Ordered)
+	return fmt.Sprint(s.OrderedMsg)
 }
 
 // Select returns the oldest
@@ -287,15 +286,15 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 				a.tracer.recordReceived(slotAddr, orderedMsg)
 				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
 				buf = append(buf, SelectedMsg{
-					Ordered: orderedMsg,
-					SlotIdx: index,
+					OrderedMsg: orderedMsg,
+					SlotIdx:    index,
 				})
 			}
 		}
 	}
 
 	sort.Slice(buf, func(i, j int) bool {
-		return buf[i].Ordered.index < buf[j].Ordered.index
+		return buf[i].OrderedMsg.index < buf[j].OrderedMsg.index
 	})
 
 	return buf, true

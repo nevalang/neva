@@ -48,7 +48,7 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				return
 			}
 
-			if !resOut.Send(ctx, then[ifMsg.SlotIdx], ifMsg.Ordered) {
+			if !resOut.Send(ctx, then[ifMsg.SlotIdx], ifMsg.OrderedMsg) {
 				return
 			}
 		}

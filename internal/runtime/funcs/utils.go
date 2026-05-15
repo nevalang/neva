@@ -112,7 +112,7 @@ func receive4(
 
 // --- Message utils ---
 
-// Runtime style note: keep OrderedMsg access explicit (selected.Ordered.Msg),
+// Runtime style note: keep OrderedMsg access explicit (selected.OrderedMsg.Msg),
 // do not rely on promoted fields from embedded structs in hot paths.
 //
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

@@ -1,14 +1,17 @@
 package funcs
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// newNamedRuntimeIO creates test runtime IO with single in/out ports.
-func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
+// helpers_test.go contains shared test helpers for runtime func unit tests.
+
+// newIO creates test IO with named single inports and outports.
+func newIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
 	interceptor := runtime.NoEffectInterceptor{}
 	tracer := runtime.NewTracer()
 	inports := make(map[string]runtime.Inport, len(inNames))
@@ -33,7 +36,8 @@ func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[str
 	return runtime.IO{In: runtime.NewInports(inports), Out: runtime.NewOutports(outports)}, inChans, outChans
 }
 
-func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
+// newBinaryIO creates test IO for binary operators.
+func newBinaryIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
 	leftIn := make(chan runtime.OrderedMsg)
 	rightIn := make(chan runtime.OrderedMsg)
 	resultOut := make(chan runtime.OrderedMsg, 1)
@@ -53,7 +57,8 @@ func newBinaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Ord
 	return runtime.IO{In: inports, Out: outports}, leftIn, rightIn, resultOut
 }
 
-func newUnaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
+// newUnaryIO creates test IO for unary operators.
+func newUnaryIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.OrderedMsg) {
 	input := make(chan runtime.OrderedMsg, 1)
 	resultOut := make(chan runtime.OrderedMsg, 1)
 	tracer := runtime.NewTracer()
@@ -70,6 +75,7 @@ func newUnaryRuntimeIO() (runtime.IO, chan runtime.OrderedMsg, chan runtime.Orde
 	return runtime.IO{In: inports, Out: outports}, input, resultOut
 }
 
+// sendInOrder pushes named payloads in a specified order and fails on blocking send.
 func sendInOrder(
 	t *testing.T,
 	inChans map[string]chan runtime.OrderedMsg,
@@ -93,6 +99,7 @@ func sendInOrder(
 	}
 }
 
+// assertOutputEquals asserts expected message on selected output channel.
 func assertOutputEquals(
 	t *testing.T,
 	outChans map[string]chan runtime.OrderedMsg,
@@ -110,4 +117,106 @@ func assertOutputEquals(
 	case <-time.After(time.Second):
 		t.Fatalf("no result for order %v", order)
 	}
+}
+
+// assertHopCauseCount checks trace parent count for emitted ordered message.
+func assertHopCauseCount(t *testing.T, tracer *runtime.Tracer, msg runtime.OrderedMsg, want int) {
+	t.Helper()
+
+	hop, ok := tracer.HopByOrderedMsg(msg)
+	if !ok {
+		t.Fatal("hop not found for ordered message")
+	}
+	if len(hop.CauseIndexes) != want {
+		t.Fatalf("cause count = %d, want %d (indexes=%v)", len(hop.CauseIndexes), want, hop.CauseIndexes)
+	}
+}
+
+// assertBinaryOperatorResult checks binary runtime func correctness for both send orders.
+func assertBinaryOperatorResult(
+	t *testing.T,
+	creator runtime.FuncCreator,
+	left runtime.Msg,
+	right runtime.Msg,
+	expected runtime.Msg,
+) {
+	t.Helper()
+
+	io, leftInput, rightInput, resultOutput := newBinaryIO()
+	handler, err := creator.Create(io, nil)
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		handler(ctx)
+		close(done)
+	}()
+
+	for _, sendRightFirst := range []bool{false, true} {
+		sendDone := make(chan struct{})
+		go func(sendRightFirst bool) {
+			if sendRightFirst {
+				rightInput <- runtime.OrderedMsg{Msg: right}
+				leftInput <- runtime.OrderedMsg{Msg: left}
+			} else {
+				leftInput <- runtime.OrderedMsg{Msg: left}
+				rightInput <- runtime.OrderedMsg{Msg: right}
+			}
+			close(sendDone)
+		}(sendRightFirst)
+
+		select {
+		case <-sendDone:
+		case <-time.After(time.Second):
+			t.Fatalf("sending inputs blocked (sendRightFirst=%v)", sendRightFirst)
+		}
+
+		select {
+		case result := <-resultOutput:
+			if !result.Equal(expected) {
+				t.Fatalf("result = %v, want %v (sendRightFirst=%v)", result, expected, sendRightFirst)
+			}
+		case <-time.After(time.Second):
+			t.Fatalf("operator did not produce output in time (sendRightFirst=%v)", sendRightFirst)
+		}
+	}
+
+	cancel()
+	<-done
+}
+
+// assertUnaryOperatorResult checks unary runtime func correctness.
+func assertUnaryOperatorResult(
+	t *testing.T,
+	creator runtime.FuncCreator,
+	input runtime.Msg,
+	expected runtime.Msg,
+) {
+	t.Helper()
+
+	io, dataInput, resultOutput := newUnaryIO()
+	handler, err := creator.Create(io, nil)
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		handler(ctx)
+		close(done)
+	}()
+
+	dataInput <- runtime.OrderedMsg{Msg: input}
+
+	result := <-resultOutput
+	if !result.Equal(expected) {
+		t.Fatalf("result = %v, want %v", result, expected)
+	}
+
+	cancel()
+	<-done
 }

@@ -54,7 +54,7 @@ func (race) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 			if !dataOk || !caseOk {
 				return
 			}
-			if !casesOut.Send(ctx, caseMsg.SlotIdx, dataMsg.Msg, dataMsg, caseMsg.Ordered) {
+			if !casesOut.Send(ctx, caseMsg.SlotIdx, dataMsg.Msg, dataMsg, caseMsg.OrderedMsg) {
 				return
 			}
 		}
