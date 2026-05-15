@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-: "${GOLANGCI_LINT_VERSION:=v2.5.0}"
+: "${GOLANGCI_LINT_VERSION:=latest}"
 
 files=$(git diff --cached --name-only -- '*.go')
 if [ -z "$files" ]; then

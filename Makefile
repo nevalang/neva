@@ -1,5 +1,5 @@
 # === Development ===
-GOLANGCI_LINT_VERSION ?= v2.5.0
+GOLANGCI_LINT_VERSION ?= latest
 
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
