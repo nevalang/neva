@@ -41,8 +41,8 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			}
 
 			then := make([]runtime.Msg, thenArrIn.Len())
-			if !thenArrIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				then[idx] = msg
+			if !thenArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+				then[idx] = ordered.Msg
 				return true
 			}) {
 				return

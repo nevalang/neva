@@ -33,18 +33,18 @@ func (arrayPortToStream) Create(
 
 		for {
 			for idx := range l {
-				msg, ok := portIn.Receive(ctx, idx)
+				ordered, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
 				}
 
 				item := streamItem(
-					msg,
+					ordered.Msg,
 					int64(idx),
 					idx == l-1,
 				)
 
-				if !resOut.Send(ctx, item) {
+				if !resOut.Send(ctx, item, ordered) {
 					return
 				}
 			}

@@ -43,25 +43,27 @@ func (structBuilder) Handle(
 	return func(ctx context.Context) {
 		for {
 			fields := make([]runtime.StructField, 0, len(inports))
+			causes := make([]runtime.OrderedMsg, 0, len(inports))
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var mu sync.Mutex
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			for inportName, inportChan := range inports {
 				wg.Go(func() {
-					msg, ok := inportChan.Receive(ctx)
+					ordered, ok := inportChan.Receive(ctx)
 					if !ok {
 						return
 					}
 					mu.Lock()
-					fields = append(fields, runtime.NewStructField(inportName, msg))
+					fields = append(fields, runtime.NewStructField(inportName, ordered.Msg))
+					causes = append(causes, ordered)
 					mu.Unlock()
 				})
 			}
 
 			wg.Wait()
 
-			if !outport.Send(ctx, runtime.NewStructMsg(fields)) {
+			if !outport.Send(ctx, runtime.NewStructMsg(fields), causes...) {
 				return
 			}
 		}

@@ -7,16 +7,14 @@ import (
 	"strconv"
 )
 
-// OrderedMsg is a message with a chronological index.
-// Ordered messages can be compared and sorted by their index.
+// OrderedMsg is a transport envelope with payload and runtime ordering metadata.
 type OrderedMsg struct {
 	Msg
 	index uint64
 }
 
-func (o OrderedMsg) String() string {
-	return fmt.Sprint(o.Msg)
-}
+// String is just a simple stringer that ignores index while formatting.
+func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }
 
 type Msg interface {
 	Bool() bool
@@ -34,7 +32,8 @@ type Msg interface {
 
 // Internal
 
-type internalMsg struct{}
+type internalMsg struct {
+}
 
 func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
 func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
@@ -430,6 +429,19 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 	dataJSON = addJSONSpaces(dataJSON)
 
 	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
+}
+
+func AsUnion(msg Msg) (UnionMsg, bool) {
+	unionMsg, ok := orderedPayload(msg).(UnionMsg)
+	return unionMsg, ok
+}
+
+//nolint:ireturn // Msg is runtime contract type.
+func orderedPayload(msg Msg) Msg {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		return ordered.Msg
+	}
+	return msg
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.

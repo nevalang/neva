@@ -108,7 +108,8 @@ func assertOutputEquals(
 }
 
 func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
-	interceptor := runtime.ProdInterceptor{}
+	interceptor := runtime.NoEffectInterceptor{}
+	tracer := runtime.NewTracer()
 	inports := make(map[string]runtime.Inport, len(inNames))
 	outports := make(map[string]runtime.Outport, len(outNames))
 	inChans := make(map[string]chan runtime.OrderedMsg, len(inNames))
@@ -117,13 +118,15 @@ func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[str
 	for _, name := range inNames {
 		ch := make(chan runtime.OrderedMsg)
 		inChans[name] = ch
-		inports[name] = runtime.NewInport(nil, runtime.NewSingleInport(ch, runtime.PortAddr{Path: "test/in", Port: name}, interceptor))
+		port := runtime.NewSingleInport(tracer, ch, runtime.PortAddr{Path: "test/in", Port: name}, interceptor)
+		inports[name] = runtime.NewInport(nil, port)
 	}
 
 	for _, name := range outNames {
 		ch := make(chan runtime.OrderedMsg, 1)
 		outChans[name] = ch
-		outports[name] = runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: "test/out", Port: name}, interceptor, ch), nil)
+		port := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: name}, interceptor, ch)
+		outports[name] = runtime.NewOutport(port, nil)
 	}
 
 	return runtime.IO{In: runtime.NewInports(inports), Out: runtime.NewOutports(outports)}, inChans, outChans

@@ -10,29 +10,13 @@ import (
 //nolint:gochecknoglobals // global monotonic counter shared by all runtime outports.
 var counter atomic.Uint64
 
-type cancelFuncKey struct{}
-
-func contextWithCancelFunc(ctx context.Context, cancel context.CancelFunc) context.Context {
-	return context.WithValue(ctx, cancelFuncKey{}, cancel)
-}
-
-// CancelFuncFromContext returns the cancel function stored by Call, if present.
-func CancelFuncFromContext(ctx context.Context) (context.CancelFunc, bool) {
-	v := ctx.Value(cancelFuncKey{})
-	if v == nil {
-		return nil, false
-	}
-	cancel, ok := v.(context.CancelFunc)
-	return cancel, ok
-}
-
 type FuncCreator interface {
 	Create(IO, Msg) (func(context.Context), error)
 }
 
-func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) error {
-	_, err := Call(ctx, prog, registry, NewStructMsg(nil))
-	return err
+func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (int, error) {
+	_, exitCode, err := call(ctx, prog, registry, NewStructMsg(nil))
+	return exitCode, err
 }
 
 // Call runs a single request-response round-trip using program Start/Stop.
@@ -40,33 +24,51 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) err
 // then cancels and waits for all handlers to finish.
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, error) {
-	var out Msg
-	ctx, cancel := context.WithCancel(ctx)
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, input Msg) (Msg, int, error) {
+	orderedOut, exitCode, err := call(ctx, prog, registry, input)
+	if err != nil || exitCode != 0 {
+		return nil, exitCode, err
+	}
+	return orderedOut.Msg, 0, nil
+}
+
+// call executes one runtime round-trip and returns the stop-port envelope.
+func call(
+	ctx context.Context,
+	prog Program,
+	registry map[string]FuncCreator,
+	input Msg,
+) (OrderedMsg, int, error) {
+	ctx, cancel := context.WithCancelCause(ctx)
+	ctx = contextWithCancelFunc(ctx, cancel)
+
+	var out OrderedMsg
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
-		cancel() // normal termination
+		cancel(nil) // normal termination
 	}()
 
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
-		cancel()
-		return nil, err
+		cancel(nil)
+		return OrderedMsg{}, 0, err
 	}
 
 	funcsFinished := make(chan struct{})
-
 	go func() {
-		// runFuncs blocks until context is cancelled (by the stop port or by panic)
-		runFuncs(contextWithCancelFunc(ctx, cancel))
+		runFuncs(ctx) // blocks until context is cancelled
 		close(funcsFinished)
 	}()
 
-	prog.Start.Send(ctx, in)
+	prog.Start.Send(ctx, input)
 
 	<-funcsFinished
 
-	return out, nil
+	if exitCode, ok := programExitCodeFromCause(context.Cause(ctx)); ok {
+		return OrderedMsg{}, exitCode, nil
+	}
+
+	return out, 0, nil
 }
 
 func deferFuncCalls(

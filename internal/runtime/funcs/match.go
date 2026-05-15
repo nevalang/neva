@@ -53,17 +53,17 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				return
 			}
 
-			ifMsgs := make([]runtime.Msg, ifIn.Len())
-			if !ifIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				ifMsgs[idx] = msg
+			ifMsgs := make([]runtime.OrderedMsg, ifIn.Len())
+			if !ifIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+				ifMsgs[idx] = ordered
 				return true
 			}) {
 				return
 			}
 
-			thenMsgs := make([]runtime.Msg, thenOut.Len())
-			if !thenOut.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				thenMsgs[idx] = msg
+			thenMsgs := make([]runtime.OrderedMsg, thenOut.Len())
+			if !thenOut.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+				thenMsgs[idx] = ordered
 				return true
 			}) {
 				return
@@ -74,19 +74,21 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 				return
 			}
 
-			resMsg := elseInMsg
+			resMsg := elseInMsg.Msg
+			causes := []runtime.OrderedMsg{dataMsg, elseInMsg}
 			for i, ifMsg := range ifMsgs {
-				if runtime.Match(dataMsg, ifMsg) {
-					resMsg = thenMsgs[i]
+				if runtime.Match(dataMsg.Msg, ifMsg.Msg) {
+					resMsg = thenMsgs[i].Msg
+					causes = []runtime.OrderedMsg{dataMsg, ifMsg, thenMsgs[i]}
 					break
 				}
 			}
 
-			if u, ok := resMsg.(runtime.UnionMsg); ok {
+			if u, ok := runtime.AsUnion(resMsg); ok {
 				resMsg = u.Data()
 			}
 
-			if !resOut.Send(ctx, resMsg) {
+			if !resOut.Send(ctx, resMsg, causes...) {
 				return
 			}
 		}

@@ -63,34 +63,33 @@ func main() {
         {{.}} = make(chan runtime.OrderedMsg)
         {{- end}}
     )
-    {{- if .Trace }}
-
-    interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
-
-    close, err := interceptor.Open("trace.log")
+    interceptor, close, err := runtime.NewInterceptor(
+        {{- if .Trace }}
+        "trace.log",
+        {{- else }}
+        "",
+        {{- end }}
+        {{printf "%q" .TraceComment}},
+    )
     if err != nil {
-        fmt.Fprintln(os.Stderr, "can't open trace file:", err.Error())
+        fmt.Fprintln(os.Stderr, "runtime error:", err)
         os.Exit(1)
     }
     defer func() {
         if err := close(); err != nil {
-            fmt.Fprintln(os.Stderr, "can't close trace file:", err.Error())
+            fmt.Fprintln(os.Stderr, "runtime error:", err)
             os.Exit(1)
         }
     }()
-    {{- else }}
 
-    interceptor := runtime.ProdInterceptor{}
-    {{- end }}
+    tracer := runtime.NewTracer()
 
     var (
-        startPort = runtime.NewSingleOutport(
-            runtime.PortAddr{Path: "in", Port: "start"},
+        startPort = runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "in", Port: "start"},
             interceptor,
             {{getPortChanNameByAddr "in" "start"}},
         )
-        stopPort = runtime.NewSingleInport(
-            {{getPortChanNameByAddr "out" "stop"}},
+        stopPort = runtime.NewSingleInport(tracer, {{getPortChanNameByAddr "out" "stop"}},
             runtime.PortAddr{Path: "out", Port: "stop"},
             interceptor,
         )
@@ -127,10 +126,13 @@ func main() {
     runtime.DebugValidation(rprog)
     {{- end }}
 
-    if err := runtime.Run(context.Background(), rprog, funcs.NewRegistry()); err != nil {
-		fmt.Fprintln(os.Stderr, "runtime error:", err.Error())
-		os.Exit(1)
+	exitCode, err := runtime.Run(context.Background(), rprog, funcs.NewRegistry())
+	if err != nil {
+		panic(err)
 	}
+	// Runtime itself must not call os.Exit to remain embeddable.
+	// Process-level exit policy is applied at generated main boundary.
+	os.Exit(exitCode)
 }
 
 `
@@ -287,27 +289,29 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 		{{- end}}
 	)
 
-	{{- if .Trace }}
-	interceptor := runtime.NewDebugInterceptor({{printf "%q" .TraceComment}})
-	close, err := interceptor.Open("trace_{{.Name}}.log")
+	interceptor, close, err := runtime.NewInterceptor(
+		{{- if .Trace }}
+		"trace_{{.Name}}.log",
+		{{- else }}
+		"",
+		{{- end }}
+		{{printf "%q" .TraceComment}},
+	)
 	if err != nil {
 		return {{.Name}}Output{}, fmt.Errorf("open trace: %w", err)
 	}
 	defer func() {
 		_ = close()
 	}()
-	{{- else }}
-	interceptor := runtime.ProdInterceptor{}
-	{{- end }}
+
+	tracer := runtime.NewTracer()
 
 	var (
-		startPort = runtime.NewSingleOutport(
-			runtime.PortAddr{Path: "in", Port: "start"},
+		startPort = runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "in", Port: "start"},
 			interceptor,
 			{{.StartPortChan}},
 		)
-		stopPort = runtime.NewSingleInport(
-			{{.StopPortChan}},
+		stopPort = runtime.NewSingleInport(tracer, {{.StopPortChan}},
 			runtime.PortAddr{Path: "out", Port: "stop"},
 			interceptor,
 		)
@@ -353,17 +357,20 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 	startMsg := runtime.NewStructMsg(inFields)
 	{{- end}}
 
-	// Run the program
-	res, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
-	if err != nil {
-		return {{.Name}}Output{}, err
-	}
-
-	// Parse output message
-	var out {{.Name}}Output
-	if res == nil {
-		return out, nil // Should not happen for valid flow
-	}
+		// Parse output message
+		var out {{.Name}}Output
+		
+		// Run the program
+		res, exitCode, err := runtime.Call(ctx, rprog, funcs.NewRegistry(), startMsg)
+		if err != nil {
+			return out, err
+		}
+		if exitCode != 0 {
+			return out, fmt.Errorf("program exited with code %d", exitCode)
+		}
+		if res == nil {
+			return out, nil // Should not happen for valid flow
+		}
 	
 	{{- if eq (len .OutFields) 1}}
 	{{- $field := index .OutFields 0}}

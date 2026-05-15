@@ -55,27 +55,27 @@ func (printf) handle(
 				return
 			}
 
-			args, received := receivePrintfArgs(ctx, &argsIn)
+			args, causes, received := receivePrintfArgs(ctx, &argsIn)
 			if !received {
 				return
 			}
 
 			res, err := format(templateMsg.Str(), args)
 			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
+				if !errOut.Send(ctx, errFromErr(err), append(causes, templateMsg)...) {
 					return
 				}
 				continue
 			}
 
 			if _, err := fmt.Print(res); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
+				if !errOut.Send(ctx, errFromErr(err), append(causes, templateMsg)...) {
 					return
 				}
 				continue
 			}
 
-			if !sigOut.Send(ctx, runtime.NewStringMsg(res)) {
+			if !sigOut.Send(ctx, runtime.NewStringMsg(res), append(causes, templateMsg)...) {
 				return
 			}
 		}
@@ -120,15 +120,17 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 	return result.String(), nil
 }
 
-func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]runtime.Msg, bool) {
+func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]runtime.Msg, []runtime.OrderedMsg, bool) {
 	args := make([]runtime.Msg, argsIn.Len())
-	if !argsIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-		args[idx] = msg
+	causes := make([]runtime.OrderedMsg, argsIn.Len())
+	if !argsIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+		args[idx] = ordered.Msg
+		causes[idx] = ordered
 		return true
 	}) {
-		return nil, false
+		return nil, nil, false
 	}
-	return args, true
+	return args, causes, true
 }
 
 func parsePlaceholderAt(template string, startIdx int) (int, int, bool, error) {

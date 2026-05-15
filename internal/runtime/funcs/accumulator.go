@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -60,23 +59,8 @@ func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 			acc = initMsg
 
 			for !last {
-				var dataMsg, lastMsg runtime.Msg
-				var dataOk, lastOk bool
-
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				var wg sync.WaitGroup
-
-				wg.Go(func() {
-					dataMsg, dataOk = updIn.Receive(ctx)
-				})
-
-				wg.Go(func() {
-					lastMsg, lastOk = lastIn.Receive(ctx)
-				})
-
-				wg.Wait()
-
-				if !dataOk || !lastOk {
+				dataMsg, lastMsg, ok := receive2(ctx, updIn, lastIn)
+				if !ok {
 					return
 				}
 

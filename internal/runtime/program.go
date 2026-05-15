@@ -25,6 +25,33 @@ type IO struct {
 	Out Outports
 }
 
+// TracerFromIO returns the runtime tracer bound to this IO wiring.
+//
+// This is a pragmatic bridge used by runtime funcs (for example runtime.Panic)
+// to read the current dataflow trace from runtime state. It is intentionally
+// wiring-based in the current implementation and may be redesigned later.
+func TracerFromIO(runtimeIO IO) *Tracer {
+	for _, inport := range runtimeIO.In.ports {
+		if inport.single != nil {
+			return inport.single.tracer
+		}
+		if inport.array != nil {
+			return inport.array.tracer
+		}
+	}
+
+	for _, outport := range runtimeIO.Out.ports {
+		if outport.single != nil {
+			return outport.single.tracer
+		}
+		if outport.array != nil {
+			return outport.array.tracer
+		}
+	}
+
+	panic("runtime tracer not found in IO ports")
+}
+
 type Inports struct {
 	ports map[string]Inport
 }
@@ -76,40 +103,40 @@ func NewInport(
 }
 
 type SingleInport struct {
+	tracer      *Tracer
 	interceptor Interceptor
 	ch          <-chan OrderedMsg
 	addr        PortAddr
 }
 
 func NewSingleInport(
+	tracer *Tracer,
 	ch <-chan OrderedMsg,
 	addr PortAddr,
 	interceptor Interceptor,
 ) *SingleInport {
-	return &SingleInport{addr: addr, interceptor: interceptor, ch: ch}
+	return &SingleInport{tracer: tracer, addr: addr, interceptor: interceptor, ch: ch}
 }
 
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s SingleInport) Receive(ctx context.Context) (Msg, bool) {
-	var msg Msg
+// Receive returns the next incoming transport envelope with its runtime ordering metadata.
+func (s SingleInport) Receive(ctx context.Context) (OrderedMsg, bool) {
+	var ordered OrderedMsg
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return OrderedMsg{}, false
 	case v := <-s.ch:
-		msg = v.Msg
+		ordered = v
 	}
 
-	msg = s.interceptor.Received(
-		PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: s.addr.Path,
-				Port: s.addr.Port,
-			},
+	slotAddr := PortSlotAddr{
+		PortAddr: PortAddr{
+			Path: s.addr.Path,
+			Port: s.addr.Port,
 		},
-		msg,
-	)
-
-	return msg, true
+	}
+	s.tracer.recordReceived(slotAddr, ordered)
+	ordered = s.interceptor.Received(ctx, slotAddr, ordered)
+	return ordered, true
 }
 
 func (f Inports) Array(name string) (ArrayInport, error) {
@@ -128,17 +155,20 @@ func (f Inports) Array(name string) (ArrayInport, error) {
 //nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type ArrayInport struct {
 	addr        PortAddr
+	tracer      *Tracer
 	interceptor Interceptor
 	chans       []<-chan OrderedMsg
 	buf         []SelectedMsg // Select functionality needs buffer to guarantee correct order.
 }
 
 func NewArrayInport(
+	tracer *Tracer,
 	chans []<-chan OrderedMsg,
 	addr PortAddr,
 	interceptor Interceptor,
 ) *ArrayInport {
 	return &ArrayInport{
+		tracer:      tracer,
 		addr:        addr,
 		interceptor: interceptor,
 		chans:       chans,
@@ -146,29 +176,24 @@ func NewArrayInport(
 	}
 }
 
-// Receive receives a message from a specific slot of the array inport.
-// It returns the received message and a boolean indicating success.
-// It returns false if the context is done or if the channel is closed.
-//
-//nolint:gocritic,ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
+// Receive receives a message from a specific array slot together with its runtime ordering metadata.
+func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 	select {
 	case <-ctx.Done():
-		return nil, false
+		return OrderedMsg{}, false
 		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		index := Uint8Index(idx)
-		msg := a.interceptor.Received(
-			PortSlotAddr{
-				PortAddr: PortAddr{
-					Path: a.addr.Path,
-					Port: a.addr.Port,
-				},
-				Index: &index,
+		slotAddr := PortSlotAddr{
+			PortAddr: PortAddr{
+				Path: a.addr.Path,
+				Port: a.addr.Port,
 			},
-			v.Msg,
-		)
-		return msg, true
+			Index: &index,
+		}
+		a.tracer.recordReceived(slotAddr, v)
+		ordered := a.interceptor.Received(ctx, slotAddr, v)
+		return ordered, true
 	}
 }
 
@@ -176,10 +201,10 @@ func (a ArrayInport) Receive(ctx context.Context, idx int) (Msg, bool) {
 // It returns false if context is done or if the provided function returns false.
 // The function is called for each message received.
 // The function should return false if it wants to stop receiving messages.
-// Functions are called in order of incoming messages, not in order of slots.
+// Functions receive full transport envelopes and are called in order of incoming messages, not in order of slots.
 //
 //nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bool) bool {
+func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered OrderedMsg) bool) bool {
 	// IDEA return channel instead of taking function
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
@@ -193,17 +218,16 @@ func (a ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, msg Msg) bo
 				success = false
 			case received := <-a.chans[idx]:
 				index := Uint8Index(idx)
-				msg := a.interceptor.Received(
-					PortSlotAddr{
-						PortAddr: PortAddr{
-							Path: a.addr.Path,
-							Port: a.addr.Port,
-						},
-						Index: &index,
+				slotAddr := PortSlotAddr{
+					PortAddr: PortAddr{
+						Path: a.addr.Path,
+						Port: a.addr.Port,
 					},
-					received.Msg,
-				)
-				resultChan <- f(idx, msg)
+					Index: &index,
+				}
+				a.tracer.recordReceived(slotAddr, received)
+				ordered := a.interceptor.Received(ctx, slotAddr, received)
+				resultChan <- f(idx, ordered)
 			}
 		})
 	}
@@ -252,22 +276,18 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 				return nil, false
 			case orderedMsg := <-ch:
 				index := Uint8Index(slotIdx)
-				msg := a.interceptor.Received(
-					PortSlotAddr{
-						PortAddr: PortAddr{
-							Path: a.addr.Path,
-							Port: a.addr.Port,
-						},
-						Index: &index,
+				slotAddr := PortSlotAddr{
+					PortAddr: PortAddr{
+						Path: a.addr.Path,
+						Port: a.addr.Port,
 					},
-					orderedMsg.Msg,
-				)
+					Index: &index,
+				}
+				a.tracer.recordReceived(slotAddr, orderedMsg)
+				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
 				buf = append(buf, SelectedMsg{
-					OrderedMsg: OrderedMsg{
-						Msg:   msg,
-						index: orderedMsg.index,
-					},
-					SlotIdx: index,
+					OrderedMsg: orderedMsg,
+					SlotIdx:    index,
 				})
 			}
 		}
@@ -348,47 +368,47 @@ func NewOutport(
 }
 
 type SingleOutport struct {
+	tracer      *Tracer
 	interceptor Interceptor
 	ch          chan<- OrderedMsg
 	addr        PortAddr // TODO Meta{PortAddr, IntermediateConnections}
 }
 
 func NewSingleOutport(
+	tracer *Tracer,
 	addr PortAddr,
 	interceptor Interceptor,
-	ch chan<- OrderedMsg,
+	outCh chan<- OrderedMsg,
 ) *SingleOutport {
 	return &SingleOutport{
+		tracer:      tracer,
 		addr:        addr,
 		interceptor: interceptor,
-		ch:          ch,
+		ch:          outCh,
 	}
 }
 
-func (s SingleOutport) Send(ctx context.Context, msg Msg) bool {
-	msg = s.interceptor.Sent(
-		PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: s.addr.Path,
-				Port: s.addr.Port,
-			},
+func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
+	ordered, causes := newOrderedMsg(msg, causes)
+	slotAddr := PortSlotAddr{
+		PortAddr: PortAddr{
+			Path: s.addr.Path,
+			Port: s.addr.Port,
 		},
-		msg,
-	)
+	}
 	select {
 	case <-ctx.Done():
 		return false
-	case s.ch <- OrderedMsg{
-		Msg:   msg,
-		index: counter.Add(1),
-	}:
+	case s.ch <- ordered:
+		hop := s.tracer.recordSent(slotAddr, ordered, causes)
+		s.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
 }
 
 type Interceptor interface {
-	Sent(PortSlotAddr, Msg) Msg
-	Received(PortSlotAddr, Msg) Msg
+	Sent(context.Context, PortSlotAddr, OrderedMsg, TraceHop)
+	Received(context.Context, PortSlotAddr, OrderedMsg) OrderedMsg
 }
 
 type PortSlotAddr struct {
@@ -397,30 +417,31 @@ type PortSlotAddr struct {
 }
 
 type ArrayOutport struct {
+	tracer      *Tracer
 	interceptor Interceptor
 	addr        PortAddr
 	slots       []chan<- OrderedMsg
 }
 
-func NewArrayOutport(addr PortAddr, interceptor Interceptor, slots []chan<- OrderedMsg) *ArrayOutport {
-	return &ArrayOutport{interceptor: interceptor, addr: addr, slots: slots}
+func NewArrayOutport(tracer *Tracer, addr PortAddr, interceptor Interceptor, slots []chan<- OrderedMsg) *ArrayOutport {
+	return &ArrayOutport{tracer: tracer, interceptor: interceptor, addr: addr, slots: slots}
 }
 
-func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
-	a.interceptor.Sent(
-		PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: a.addr.Path,
-				Port: a.addr.Port,
-			},
-			Index: &idx,
+func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...OrderedMsg) bool {
+	ordered, causes := newOrderedMsg(msg, causes)
+	slotAddr := PortSlotAddr{
+		PortAddr: PortAddr{
+			Path: a.addr.Path,
+			Port: a.addr.Port,
 		},
-		msg,
-	)
+		Index: &idx,
+	}
 	select {
 	case <-ctx.Done():
 		return false
-	case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
+	case a.slots[idx] <- ordered:
+		hop := a.tracer.recordSent(slotAddr, ordered, causes)
+		a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 		return true
 	}
 }
@@ -433,23 +454,25 @@ func (a ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg) bool {
 // TODO: figure out why this is the only working version of `SendAll`
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
+func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
 
 	for idx := range a.slots {
 		wg.Go(func() {
+			ordered, causes := newOrderedMsg(msg, causes)
+			i := Uint8Index(idx)
+			slotAddr := PortSlotAddr{
+				PortAddr: a.addr,
+				Index:    &i,
+			}
 			select {
 			case <-ctx.Done():
 				success = false
-			case a.slots[idx] <- OrderedMsg{Msg: msg, index: counter.Add(1)}:
-				i := Uint8Index(idx)
-				slotAddr := PortSlotAddr{
-					PortAddr: a.addr,
-					Index:    &i,
-				}
-				a.interceptor.Sent(slotAddr, msg)
+			case a.slots[idx] <- ordered:
+				hop := a.tracer.recordSent(slotAddr, ordered, causes)
+				a.interceptor.Sent(ctx, slotAddr, ordered, hop)
 			}
 		})
 	}
@@ -458,7 +481,19 @@ func (a ArrayOutport) SendAll(ctx context.Context, msg Msg) bool {
 	return success
 }
 
-func (a ArrayOutport) Len() int {
+func newOrderedMsg(msg Msg, causes []OrderedMsg) (OrderedMsg, []OrderedMsg) {
+	index := counter.Add(1)
+	ordered, ok := msg.(OrderedMsg)
+	if !ok {
+		return OrderedMsg{Msg: msg, index: index}, causes
+	}
+	if len(causes) == 0 {
+		causes = []OrderedMsg{ordered}
+	}
+	return OrderedMsg{Msg: ordered.Msg, index: index}, causes
+}
+
+func (a *ArrayOutport) Len() int {
 	return len(a.slots)
 }
 
