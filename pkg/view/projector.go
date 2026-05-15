@@ -66,7 +66,7 @@ func ProjectFileByID(build ast.Build, wantedFileID string) (File, bool) {
 				if fileID(loc) != wantedFileID {
 					continue
 				}
-				return projectFile(loc, file), true
+				return projectFile(build, loc, file), true
 			}
 		}
 	}
@@ -153,7 +153,7 @@ func projectFileSummary(loc core.Location, file ast.File) FileSummary {
 	return summary
 }
 
-func projectFile(loc core.Location, file ast.File) File {
+func projectFile(build ast.Build, loc core.Location, file ast.File) File {
 	view := File{
 		ID:       fileID(loc),
 		Name:     loc.Filename,
@@ -201,7 +201,7 @@ func projectFile(loc core.Location, file ast.File) File {
 			view.Interfaces = append(view.Interfaces, projectInterface(loc, entityName, entity.IsPublic, entity.Interface))
 		case ast.ComponentEntity:
 			for overloadIndex, component := range entity.Component {
-				view.Components = append(view.Components, projectComponent(loc, entityName, overloadIndex, entity.IsPublic, component))
+				view.Components = append(view.Components, projectComponent(build, loc, entityName, overloadIndex, entity.IsPublic, component))
 			}
 		}
 	}
@@ -228,7 +228,14 @@ func projectInterface(loc core.Location, name string, isPublic bool, iface ast.I
 	}
 }
 
-func projectComponent(loc core.Location, name string, overloadIndex int, isPublic bool, component ast.Component) Component {
+func projectComponent(
+	build ast.Build,
+	loc core.Location,
+	name string,
+	overloadIndex int,
+	isPublic bool,
+	component ast.Component,
+) Component {
 	componentRefID := componentID(loc, name, overloadIndex)
 	out := Component{
 		ID:            componentRefID,
@@ -255,6 +262,7 @@ func projectComponent(loc core.Location, name string, overloadIndex int, isPubli
 			Name:          nodeName,
 			EntityRef:     node.EntityRef,
 			EntityRefText: node.EntityRef.String(),
+			ResolvedRef:   resolveNodeRef(build, loc, node),
 			TypeArgs:      typeArgs(node.TypeArgs),
 			OverloadIndex: node.OverloadIndex,
 			ErrGuard:      node.ErrGuard,
@@ -512,4 +520,36 @@ func locationFromCore(loc core.Location) SourceLocation {
 		Package:       loc.Package,
 		File:          loc.Filename,
 	}
+}
+
+func resolveNodeRef(build ast.Build, sourceLoc core.Location, node ast.Node) *ResolvedRef {
+	scope := ast.NewScope(build, sourceLoc)
+	entity, resolvedLoc, err := scope.Entity(node.EntityRef)
+	if err != nil {
+		return nil
+	}
+
+	targetName := node.EntityRef.Name
+	var anchor SourceAnchor
+	if meta := entity.Meta(); meta != nil {
+		anchor = anchorFromMeta(*meta)
+	}
+
+	canonical := canonicalEntityRef(node.EntityRef, resolvedLoc)
+	entityID := ResolveEntityID(resolvedLoc, targetName, entity.Kind, node.OverloadIndex)
+
+	return &ResolvedRef{
+		CanonicalRef: canonical,
+		EntityKind:   string(entity.Kind),
+		FileID:       ResolveFileID(resolvedLoc),
+		EntityID:     entityID,
+		Anchor:       anchor,
+	}
+}
+
+func canonicalEntityRef(ref core.EntityRef, resolvedLoc core.Location) string {
+	if resolvedLoc.ModRef.Path == "@" {
+		return fmt.Sprintf("@:/%s/%s", resolvedLoc.Package, ref.Name)
+	}
+	return fmt.Sprintf("%s/%s/%s", resolvedLoc.ModRef.Path, resolvedLoc.Package, ref.Name)
 }

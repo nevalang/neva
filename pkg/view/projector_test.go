@@ -86,6 +86,8 @@ def Main(start any) (stop any) {
 	require.Len(t, fileView.Interfaces, 1)
 	require.Len(t, fileView.Components, 1)
 	require.NotEmpty(t, fileView.Components[0].Nodes)
+	require.NotNil(t, fileView.Components[0].Nodes[0].ResolvedRef)
+	require.Contains(t, fileView.Components[0].Nodes[0].ResolvedRef.CanonicalRef, "@:/")
 }
 
 func TestEdgeIDStableAcrossConnectionBlockReorder(t *testing.T) {

@@ -147,9 +147,19 @@ type Node struct {
 	// EntityRef keeps original source reference and can point to any entity kind.
 	EntityRef     core.EntityRef `json:"entityRef"`
 	EntityRefText string         `json:"entityRefText"`
+	ResolvedRef   *ResolvedRef   `json:"resolvedRef,omitempty"`
 	TypeArgs      []string       `json:"typeArgs"`
 	OverloadIndex *int           `json:"overloadIndex,omitempty"`
 	ErrGuard      bool           `json:"errGuard"`
+}
+
+// ResolvedRef is a canonical resolved reference target for node navigation.
+type ResolvedRef struct {
+	CanonicalRef string       `json:"canonicalRef"`
+	EntityKind   string       `json:"entityKind"`
+	FileID       string       `json:"fileId"`
+	EntityID     string       `json:"entityId"`
+	Anchor       SourceAnchor `json:"anchor"`
 }
 
 // Connection describes a source-level connection between sender and receiver.
