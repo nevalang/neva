@@ -3,9 +3,9 @@ package graphdoc
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/nevalang/neva/pkg/ast"
