@@ -28,15 +28,10 @@ func ParseEntityRef(ctx context.Context, ref string) (core.EntityRef, error) {
 		return core.EntityRef{}, err
 	}
 
-	// Unmarshal the result.
-	// Runtime may wrap payloads into OrderedMsg on transport boundaries.
-	raw := out.Res
-	if ordered, ok := raw.(runtime.OrderedMsg); ok {
-		raw = ordered.Msg
-	}
-	msg, ok := raw.(runtime.StructMsg)
+	// Unmarshal the result
+	msg, ok := out.Res.(runtime.StructMsg)
 	if !ok {
-		return core.EntityRef{}, fmt.Errorf("expected struct msg, got %T", raw)
+		return core.EntityRef{}, fmt.Errorf("expected struct msg, got %T", out.Res)
 	}
 
 	return core.EntityRef{

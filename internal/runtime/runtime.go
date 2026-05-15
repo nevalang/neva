@@ -15,7 +15,7 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (int, error) {
-	_, exitCode, err := Call(ctx, prog, registry, NewStructMsg(nil))
+	_, exitCode, err := callOrdered(ctx, prog, registry, NewStructMsg(nil))
 	return exitCode, err
 }
 
@@ -24,11 +24,25 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (in
 // then cancels and waits for all handlers to finish.
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in Msg) (Msg, int, error) {
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, input Msg) (Msg, int, error) {
+	orderedOut, exitCode, err := callOrdered(ctx, prog, registry, input)
+	if err != nil || exitCode != 0 {
+		return nil, exitCode, err
+	}
+	return orderedOut.Msg, 0, nil
+}
+
+// callOrdered executes one runtime round-trip and returns the stop-port envelope.
+func callOrdered(
+	ctx context.Context,
+	prog Program,
+	registry map[string]FuncCreator,
+	input Msg,
+) (OrderedMsg, int, error) {
 	ctx, cancel := context.WithCancelCause(ctx)
 	ctx = contextWithCancelFunc(ctx, cancel)
 
-	var out Msg
+	var out OrderedMsg
 	go func() {
 		out, _ = prog.Stop.Receive(ctx)
 		cancel(nil) // normal termination
@@ -37,7 +51,7 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 	runFuncs, err := deferFuncCalls(prog.FuncCalls, registry)
 	if err != nil {
 		cancel(nil)
-		return nil, 0, err
+		return OrderedMsg{}, 0, err
 	}
 
 	funcsFinished := make(chan struct{})
@@ -46,12 +60,12 @@ func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, in
 		close(funcsFinished)
 	}()
 
-	prog.Start.Send(ctx, in)
+	prog.Start.Send(ctx, input)
 
 	<-funcsFinished
 
 	if exitCode, ok := programExitCodeFromCause(context.Cause(ctx)); ok {
-		return nil, exitCode, nil
+		return OrderedMsg{}, exitCode, nil
 	}
 
 	return out, 0, nil
