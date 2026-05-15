@@ -37,23 +37,18 @@ func TestSelectorSendsIfCause(t *testing.T) {
 		t.Fatalf("Create returned error: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() { handler(ctx); close(done) }()
-
-	srcIf := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, interceptor, ifInputs[1])
-	srcThen0 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, interceptor, thenInputs[0])
-	srcThen1 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, interceptor, thenInputs[1])
-	if !srcIf.Send(ctx, runtime.NewBoolMsg(true)) || !srcThen0.Send(ctx, runtime.NewStringMsg("zero")) || !srcThen1.Send(ctx, runtime.NewStringMsg("one")) {
-		t.Fatal("failed to send selector inputs")
-	}
+	cancel, done := runHandler(handler)
+	ctx := context.Background()
+	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, runtime.NewBoolMsg(true), ifInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, runtime.NewStringMsg("zero"), thenInputs[0])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, runtime.NewStringMsg("one"), thenInputs[1])
 
 	select {
 	case out := <-resOutCh:
 		if !out.Equal(runtime.NewStringMsg("one")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
 		}
-		assertHopCauseCount(t, tracer, out, 1)
+		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{ifCause})
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting result")
 	}

@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 
@@ -119,16 +120,76 @@ func assertOutputEquals(
 	}
 }
 
-// assertHopCauseCount checks trace parent count for emitted ordered message.
-func assertHopCauseCount(t *testing.T, tracer *runtime.Tracer, msg runtime.OrderedMsg, want int) {
+// assertHopCauseIndexes checks exact parent hop indexes for output message.
+func assertHopCauseIndexes(t *testing.T, tracer *runtime.Tracer, msg runtime.OrderedMsg, expected []runtime.OrderedMsg) {
 	t.Helper()
 
 	hop, ok := tracer.HopByOrderedMsg(msg)
 	if !ok {
 		t.Fatal("hop not found for ordered message")
 	}
-	if len(hop.CauseIndexes) != want {
-		t.Fatalf("cause count = %d, want %d (indexes=%v)", len(hop.CauseIndexes), want, hop.CauseIndexes)
+
+	want := make([]uint64, 0, len(expected))
+	for _, expectedCause := range expected {
+		causeHop, ok := tracer.HopByOrderedMsg(expectedCause)
+		if !ok {
+			t.Fatalf("cause hop not found for ordered message: %v", expectedCause)
+		}
+		want = append(want, causeHop.Index)
+	}
+
+	got := append([]uint64(nil), hop.CauseIndexes...)
+	slices.Sort(got)
+	slices.Sort(want)
+
+	if !slices.Equal(got, want) {
+		t.Fatalf("cause indexes = %v, want %v", got, want)
+	}
+}
+
+// runHandler starts runtime function loop and returns cancel+done hooks.
+func runHandler(handler func(context.Context)) (context.CancelFunc, <-chan struct{}) {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		handler(ctx)
+		close(done)
+	}()
+
+	return cancel, done
+}
+
+// sendTracked sends a message through a source outport and returns its ordered wrapper.
+func sendTracked(
+	t *testing.T,
+	ctx context.Context,
+	tracer *runtime.Tracer,
+	addr runtime.PortAddr,
+	msg runtime.Msg,
+	dst chan runtime.OrderedMsg,
+) runtime.OrderedMsg {
+	t.Helper()
+
+	srcCh := make(chan runtime.OrderedMsg, 1)
+	srcOut := runtime.NewSingleOutport(tracer, addr, runtime.NoEffectInterceptor{}, srcCh)
+	forwarded := make(chan runtime.OrderedMsg, 1)
+
+	go func() {
+		ordered := <-srcCh
+		forwarded <- ordered
+		dst <- ordered
+	}()
+
+	if !srcOut.Send(ctx, msg) {
+		t.Fatalf("send failed from %s:%s", addr.Path, addr.Port)
+	}
+
+	select {
+	case ordered := <-forwarded:
+		return ordered
+	case <-time.After(time.Second):
+		t.Fatalf("timed out tracking send from %s:%s", addr.Path, addr.Port)
+		return runtime.OrderedMsg{}
 	}
 }
 

@@ -40,23 +40,18 @@ func TestSwitchMatchedCaseSendsTwoCauses(t *testing.T) {
 		t.Fatalf("Create returned error: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() { handler(ctx); close(done) }()
-
-	srcData := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, interceptor, dataIn)
-	srcCase0 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "case0"}, interceptor, caseInputs[0])
-	srcCase1 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, interceptor, caseInputs[1])
-	if !srcData.Send(ctx, runtime.NewStringMsg("match")) || !srcCase0.Send(ctx, runtime.NewStringMsg("nope")) || !srcCase1.Send(ctx, runtime.NewStringMsg("match")) {
-		t.Fatal("failed to send switch inputs")
-	}
+	cancel, done := runHandler(handler)
+	ctx := context.Background()
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewStringMsg("match"), dataIn)
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case0"}, runtime.NewStringMsg("nope"), caseInputs[0])
+	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, runtime.NewStringMsg("match"), caseInputs[1])
 
 	select {
 	case out := <-caseOut1:
 		if !out.Equal(runtime.NewStringMsg("match")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("match"))
 		}
-		assertHopCauseCount(t, tracer, out, 2)
+		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting case[1] result")
 	}

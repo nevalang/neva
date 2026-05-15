@@ -41,32 +41,22 @@ func TestMatchSendsDataIfThenCauses(t *testing.T) {
 		t.Fatalf("Create returned error: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() { handler(ctx); close(done) }()
+	cancel, done := runHandler(handler)
+	ctx := context.Background()
 
-	srcData := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, interceptor, dataIn)
-	srcIf0 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "if0"}, interceptor, ifInputs[0])
-	srcIf1 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, interceptor, ifInputs[1])
-	srcThen0 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, interceptor, thenInputs[0])
-	srcThen1 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, interceptor, thenInputs[1])
-	srcElse := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "else"}, interceptor, elseIn)
-
-	if !srcData.Send(ctx, runtime.NewStringMsg("k")) ||
-		!srcIf0.Send(ctx, runtime.NewStringMsg("x")) ||
-		!srcIf1.Send(ctx, runtime.NewStringMsg("k")) ||
-		!srcThen0.Send(ctx, runtime.NewStringMsg("zero")) ||
-		!srcThen1.Send(ctx, runtime.NewStringMsg("one")) ||
-		!srcElse.Send(ctx, runtime.NewStringMsg("fallback")) {
-		t.Fatal("failed to send match inputs")
-	}
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewStringMsg("k"), dataIn)
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if0"}, runtime.NewStringMsg("x"), ifInputs[0])
+	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, runtime.NewStringMsg("k"), ifInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, runtime.NewStringMsg("zero"), thenInputs[0])
+	thenCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, runtime.NewStringMsg("one"), thenInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "else"}, runtime.NewStringMsg("fallback"), elseIn)
 
 	select {
 	case out := <-resOut:
 		if !out.Equal(runtime.NewStringMsg("one")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
 		}
-		assertHopCauseCount(t, tracer, out, 3)
+		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, ifCause, thenCause})
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting result")
 	}

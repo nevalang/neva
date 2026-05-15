@@ -38,22 +38,17 @@ func TestRaceSendsDataAndCaseCauses(t *testing.T) {
 		t.Fatalf("Create returned error: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() { handler(ctx); close(done) }()
-
-	srcData := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, interceptor, dataIn)
-	srcCase1 := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, interceptor, caseInputs[1])
-	if !srcData.Send(ctx, runtime.NewIntMsg(42)) || !srcCase1.Send(ctx, runtime.NewStringMsg("pick-1")) {
-		t.Fatal("failed to send race inputs")
-	}
+	cancel, done := runHandler(handler)
+	ctx := context.Background()
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewIntMsg(42), dataIn)
+	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, runtime.NewStringMsg("pick-1"), caseInputs[1])
 
 	select {
 	case out := <-caseOut1:
 		if !out.Equal(runtime.NewIntMsg(42)) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewIntMsg(42))
 		}
-		assertHopCauseCount(t, tracer, out, 2)
+		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting case[1] result")
 	}

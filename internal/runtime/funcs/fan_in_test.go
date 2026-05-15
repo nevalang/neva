@@ -37,21 +37,23 @@ func TestFanInSendsSingleExplicitCause(t *testing.T) {
 		t.Fatalf("Create returned error: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() { handler(ctx); close(done) }()
-
-	src := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "src/out", Port: "data1"}, interceptor, dataInputs[1])
-	if !src.Send(ctx, runtime.NewStringMsg("v")) {
-		t.Fatal("failed to send source data")
-	}
+	cancel, done := runHandler(handler)
+	ctx := context.Background()
+	cause := sendTracked(
+		t,
+		ctx,
+		tracer,
+		runtime.PortAddr{Path: "src/out", Port: "data1"},
+		runtime.NewStringMsg("v"),
+		dataInputs[1],
+	)
 
 	select {
 	case out := <-resOutCh:
 		if !out.Equal(runtime.NewStringMsg("v")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("v"))
 		}
-		assertHopCauseCount(t, tracer, out, 1)
+		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{cause})
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting result")
 	}
