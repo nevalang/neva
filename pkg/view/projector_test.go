@@ -1,3 +1,4 @@
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package view
 
 import (
@@ -145,20 +146,20 @@ def Pass(data any) (res any) {
 	file2, found := ProjectFileByID(build2, fileIDByName(t, ProjectProgram(build2), "main"))
 	require.True(t, found)
 
-	edges1 := componentEdgeIDsByName(t, file1, "Echo")
-	edges2 := componentEdgeIDsByName(t, file2, "Echo")
-	require.Equal(t, edges1, edges2)
+	connections1 := componentConnectionIDsByName(t, file1, "Echo")
+	connections2 := componentConnectionIDsByName(t, file2, "Echo")
+	require.Equal(t, connections1, connections2)
 }
 
-func componentEdgeIDsByName(t *testing.T, fileView FileView, name string) []string {
+func componentConnectionIDsByName(t *testing.T, fileView File, name string) []string {
 	t.Helper()
 	for _, component := range fileView.Components {
 		if component.Name != name {
 			continue
 		}
-		ids := make([]string, 0, len(component.Edges))
-		for _, edge := range component.Edges {
-			ids = append(ids, edge.ID)
+		ids := make([]string, 0, len(component.Connections))
+		for _, connection := range component.Connections {
+			ids = append(ids, connection.ID)
 		}
 		sort.Strings(ids)
 		return ids
@@ -167,7 +168,7 @@ func componentEdgeIDsByName(t *testing.T, fileView FileView, name string) []stri
 	return nil
 }
 
-func fileIDByName(t *testing.T, program ProgramView, fileName string) string {
+func fileIDByName(t *testing.T, program Program, fileName string) string {
 	t.Helper()
 	for _, module := range program.Modules {
 		for _, pkg := range module.Packages {

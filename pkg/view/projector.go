@@ -1,3 +1,4 @@
+//nolint:gocritic,govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package view
 
 import (
@@ -12,8 +13,8 @@ import (
 )
 
 // ProjectProgram projects analyzed AST build into explorer-friendly view payload.
-func ProjectProgram(build ast.Build) ProgramView {
-	program := ProgramView{Version: Version}
+func ProjectProgram(build ast.Build) Program {
+	program := Program{Version: Version}
 
 	moduleRefs := make([]core.ModuleRef, 0, len(build.Modules))
 	for modRef := range build.Modules {
@@ -25,7 +26,7 @@ func ProjectProgram(build ast.Build) ProgramView {
 
 	for _, modRef := range moduleRefs {
 		mod := build.Modules[modRef]
-		modView := ModuleView{
+		modView := Module{
 			ID:      moduleID(modRef),
 			Path:    modRef.Path,
 			Version: modRef.Version,
@@ -34,7 +35,7 @@ func ProjectProgram(build ast.Build) ProgramView {
 		packageNames := sortedKeys(mod.Packages)
 		for _, packageName := range packageNames {
 			pkg := mod.Packages[packageName]
-			pkgView := PackageView{
+			pkgView := Package{
 				ID:       packageID(modRef, packageName),
 				ModuleID: modView.ID,
 				Name:     packageName,
@@ -57,7 +58,7 @@ func ProjectProgram(build ast.Build) ProgramView {
 }
 
 // ProjectFileByID projects one file view for the given file ID.
-func ProjectFileByID(build ast.Build, wantedFileID string) (FileView, bool) {
+func ProjectFileByID(build ast.Build, wantedFileID string) (File, bool) {
 	for modRef, mod := range build.Modules {
 		for packageName, pkg := range mod.Packages {
 			for fileName, file := range pkg {
@@ -65,20 +66,20 @@ func ProjectFileByID(build ast.Build, wantedFileID string) (FileView, bool) {
 				if fileID(loc) != wantedFileID {
 					continue
 				}
-				return projectFileView(loc, file), true
+				return projectFile(loc, file), true
 			}
 		}
 	}
-	return FileView{}, false
+	return File{}, false
 }
 
-// ResolveFileViewID converts source location into file view ID.
-func ResolveFileViewID(loc core.Location) string {
+// ResolveFileID converts source location into file ID.
+func ResolveFileID(loc core.Location) string {
 	return fileID(loc)
 }
 
-// ResolveEntityViewID converts resolved entity into view identity.
-func ResolveEntityViewID(loc core.Location, entityName string, kind ast.EntityKind, overloadIndex *int) string {
+// ResolveEntityID converts resolved entity into view identity.
+func ResolveEntityID(loc core.Location, entityName string, kind ast.EntityKind, overloadIndex *int) string {
 	switch kind {
 	case ast.ConstEntity:
 		return constID(loc, entityName)
@@ -152,8 +153,8 @@ func projectFileSummary(loc core.Location, file ast.File) FileSummary {
 	return summary
 }
 
-func projectFileView(loc core.Location, file ast.File) FileView {
-	view := FileView{
+func projectFile(loc core.Location, file ast.File) File {
+	view := File{
 		ID:       fileID(loc),
 		Name:     loc.Filename,
 		Path:     filepath.Join(loc.Package, loc.Filename+".neva"),
@@ -197,10 +198,10 @@ func projectFileView(loc core.Location, file ast.File) FileView {
 				Anchor: anchorFromMeta(entity.Type.Meta),
 			})
 		case ast.InterfaceEntity:
-			view.Interfaces = append(view.Interfaces, projectInterfaceView(loc, entityName, entity.IsPublic, entity.Interface))
+			view.Interfaces = append(view.Interfaces, projectInterface(loc, entityName, entity.IsPublic, entity.Interface))
 		case ast.ComponentEntity:
 			for overloadIndex, component := range entity.Component {
-				view.Components = append(view.Components, projectComponentView(loc, entityName, overloadIndex, entity.IsPublic, component))
+				view.Components = append(view.Components, projectComponent(loc, entityName, overloadIndex, entity.IsPublic, component))
 			}
 		}
 	}
@@ -214,31 +215,31 @@ func projectFileView(loc core.Location, file ast.File) FileView {
 	return view
 }
 
-func projectInterfaceView(loc core.Location, name string, isPublic bool, iface ast.Interface) InterfaceView {
-	fileViewID := fileID(loc)
-	return InterfaceView{
+func projectInterface(loc core.Location, name string, isPublic bool, iface ast.Interface) Interface {
+	fileRefID := fileID(loc)
+	return Interface{
 		ID:       interfaceID(loc, name),
 		Name:     name,
 		Public:   isPublic,
 		TypeArgs: typeParamNames(iface.TypeParams),
-		InPorts:  projectPorts(fileViewID, "in", iface.IO.In),
-		OutPorts: projectPorts(fileViewID, "out", iface.IO.Out),
+		InPorts:  projectPorts(fileRefID, "in", iface.IO.In),
+		OutPorts: projectPorts(fileRefID, "out", iface.IO.Out),
 		Anchor:   anchorFromMeta(iface.Meta),
 	}
 }
 
-func projectComponentView(loc core.Location, name string, overloadIndex int, isPublic bool, component ast.Component) ComponentView {
-	componentViewID := componentID(loc, name, overloadIndex)
-	out := ComponentView{
-		ID:            componentViewID,
+func projectComponent(loc core.Location, name string, overloadIndex int, isPublic bool, component ast.Component) Component {
+	componentRefID := componentID(loc, name, overloadIndex)
+	out := Component{
+		ID:            componentRefID,
 		Name:          name,
 		OverloadIndex: overloadIndex,
 		Public:        isPublic,
 		TypeArgs:      typeParamNames(component.TypeParams),
-		InPorts:       projectPorts(componentViewID, "in", component.IO.In),
-		OutPorts:      projectPorts(componentViewID, "out", component.IO.Out),
-		Nodes:         make([]GraphNode, 0, len(component.Nodes)),
-		Edges:         []GraphEdge{},
+		InPorts:       projectPorts(componentRefID, "in", component.IO.In),
+		OutPorts:      projectPorts(componentRefID, "out", component.IO.Out),
+		Nodes:         make([]Node, 0, len(component.Nodes)),
+		Connections:   []Connection{},
 		Anchor:        anchorFromMeta(component.Meta),
 	}
 
@@ -249,8 +250,8 @@ func projectComponentView(loc core.Location, name string, overloadIndex int, isP
 		for key, value := range node.Directives {
 			directives[string(key)] = value
 		}
-		out.Nodes = append(out.Nodes, GraphNode{
-			ID:            nodeID(componentViewID, nodeName),
+		out.Nodes = append(out.Nodes, Node{
+			ID:            nodeID(componentRefID, nodeName),
 			Name:          nodeName,
 			EntityRef:     node.EntityRef,
 			EntityRefText: node.EntityRef.String(),
@@ -262,28 +263,28 @@ func projectComponentView(loc core.Location, name string, overloadIndex int, isP
 		})
 	}
 
-	rawEdges := []rawEdge{}
+	rawConnections := []rawConnection{}
 	for _, conn := range component.Net {
-		projectConnectionEdges(&rawEdges, conn, 0, nil)
+		projectConnectionEdges(&rawConnections, conn, 0, nil)
 	}
 
-	materialized := materializeEdges(componentViewID, rawEdges)
-	out.Edges = append(out.Edges, materialized...)
-	sort.Slice(out.Edges, func(i, j int) bool { return out.Edges[i].ID < out.Edges[j].ID })
+	materialized := materializeConnections(componentRefID, rawConnections)
+	out.Connections = append(out.Connections, materialized...)
+	sort.Slice(out.Connections, func(i, j int) bool { return out.Connections[i].ID < out.Connections[j].ID })
 
 	return out
 }
 
-type rawEdge struct {
-	sender     EdgeEndpoint
-	receiver   EdgeEndpoint
+type rawConnection struct {
+	sender     ConnectionEndpoint
+	receiver   ConnectionEndpoint
 	anchor     SourceAnchor
 	chainDepth int
 	chainPath  []string
 	signature  string
 }
 
-func projectConnectionEdges(edges *[]rawEdge, conn ast.Connection, depth int, chainPath []string) {
+func projectConnectionEdges(connections *[]rawConnection, conn ast.Connection, depth int, chainPath []string) {
 	for _, sender := range conn.Senders {
 		senderEndpoint := endpointFromSender(sender)
 		for _, receiver := range conn.Receivers {
@@ -291,7 +292,7 @@ func projectConnectionEdges(edges *[]rawEdge, conn ast.Connection, depth int, ch
 
 			if receiver.PortAddr != nil {
 				signature := edgeSignature(senderEndpoint, receiverEndpoint, chainPath, depth)
-				*edges = append(*edges, rawEdge{
+				*connections = append(*connections, rawConnection{
 					sender:     senderEndpoint,
 					receiver:   receiverEndpoint,
 					anchor:     anchorFromMeta(conn.Meta),
@@ -303,41 +304,41 @@ func projectConnectionEdges(edges *[]rawEdge, conn ast.Connection, depth int, ch
 
 			if receiver.ChainedConnection != nil {
 				nextPath := append(append([]string{}, chainPath...), chainSegment(receiver))
-				projectConnectionEdges(edges, *receiver.ChainedConnection, depth+1, nextPath)
+				projectConnectionEdges(connections, *receiver.ChainedConnection, depth+1, nextPath)
 			}
 		}
 	}
 }
 
-func materializeEdges(componentViewID string, raw []rawEdge) []GraphEdge {
+func materializeConnections(componentRefID string, raw []rawConnection) []Connection {
 	if len(raw) == 0 {
 		return nil
 	}
 
-	sort.Slice(raw, func(i, j int) bool {
-		if raw[i].signature != raw[j].signature {
-			return raw[i].signature < raw[j].signature
+	sort.Slice(raw, func(left, right int) bool {
+		if raw[left].signature != raw[right].signature {
+			return raw[left].signature < raw[right].signature
 		}
-		if raw[i].anchor.StartLine != raw[j].anchor.StartLine {
-			return raw[i].anchor.StartLine < raw[j].anchor.StartLine
+		if raw[left].anchor.StartLine != raw[right].anchor.StartLine {
+			return raw[left].anchor.StartLine < raw[right].anchor.StartLine
 		}
-		if raw[i].anchor.StartCol != raw[j].anchor.StartCol {
-			return raw[i].anchor.StartCol < raw[j].anchor.StartCol
+		if raw[left].anchor.StartCol != raw[right].anchor.StartCol {
+			return raw[left].anchor.StartCol < raw[right].anchor.StartCol
 		}
-		if endpointSignature(raw[i].sender) != endpointSignature(raw[j].sender) {
-			return endpointSignature(raw[i].sender) < endpointSignature(raw[j].sender)
+		if endpointSignature(raw[left].sender) != endpointSignature(raw[right].sender) {
+			return endpointSignature(raw[left].sender) < endpointSignature(raw[right].sender)
 		}
-		return endpointSignature(raw[i].receiver) < endpointSignature(raw[j].receiver)
+		return endpointSignature(raw[left].receiver) < endpointSignature(raw[right].receiver)
 	})
 
 	duplicates := map[string]int{}
-	out := make([]GraphEdge, 0, len(raw))
+	out := make([]Connection, 0, len(raw))
 	for _, candidate := range raw {
 		ordinal := duplicates[candidate.signature]
 		duplicates[candidate.signature]++
 
-		id := fmt.Sprintf("%s/edge/%s#%d", componentViewID, sanitizeSegment(candidate.signature), ordinal)
-		out = append(out, GraphEdge{
+		id := fmt.Sprintf("%s/connection/%s#%d", componentRefID, sanitizeSegment(candidate.signature), ordinal)
+		out = append(out, Connection{
 			ID:               id,
 			Sender:           candidate.sender,
 			Receiver:         candidate.receiver,
@@ -352,12 +353,12 @@ func materializeEdges(componentViewID string, raw []rawEdge) []GraphEdge {
 	return out
 }
 
-func edgeSignature(sender EdgeEndpoint, receiver EdgeEndpoint, chainPath []string, depth int) string {
+func edgeSignature(sender ConnectionEndpoint, receiver ConnectionEndpoint, chainPath []string, depth int) string {
 	chain := strings.Join(chainPath, "|")
 	return fmt.Sprintf("%s->%s|chain:%s|depth:%d", endpointSignature(sender), endpointSignature(receiver), chain, depth)
 }
 
-func endpointSignature(endpoint EdgeEndpoint) string {
+func endpointSignature(endpoint ConnectionEndpoint) string {
 	selector := strings.Join(endpoint.Selector, ".")
 	idx := ""
 	if endpoint.Index != nil {
@@ -371,20 +372,20 @@ func endpointSignature(endpoint EdgeEndpoint) string {
 	return fmt.Sprintf("port:%s:%s%s.%s", endpoint.Node, endpoint.Port, idx, selector)
 }
 
-func endpointFromReceiver(receiver ast.ConnectionReceiver) EdgeEndpoint {
+func endpointFromReceiver(receiver ast.ConnectionReceiver) ConnectionEndpoint {
 	if receiver.PortAddr == nil {
-		return EdgeEndpoint{Kind: "port", Anchor: anchorFromMeta(receiver.Meta)}
+		return ConnectionEndpoint{Kind: "port", Anchor: anchorFromMeta(receiver.Meta)}
 	}
 	endpoint := endpointFromPortAddr(receiver.PortAddr)
 	endpoint.Anchor = anchorFromMeta(receiver.Meta)
 	return endpoint
 }
 
-func endpointFromPortAddr(addr *ast.PortAddr) EdgeEndpoint {
+func endpointFromPortAddr(addr *ast.PortAddr) ConnectionEndpoint {
 	if addr == nil {
-		return EdgeEndpoint{Kind: "port"}
+		return ConnectionEndpoint{Kind: "port"}
 	}
-	return EdgeEndpoint{
+	return ConnectionEndpoint{
 		Kind:     "port",
 		Node:     addr.Node,
 		Port:     addr.Port,
@@ -394,9 +395,9 @@ func endpointFromPortAddr(addr *ast.PortAddr) EdgeEndpoint {
 	}
 }
 
-func endpointFromSender(sender ast.ConnectionSender) EdgeEndpoint {
+func endpointFromSender(sender ast.ConnectionSender) ConnectionEndpoint {
 	if sender.Const != nil {
-		return EdgeEndpoint{
+		return ConnectionEndpoint{
 			Kind:       "const",
 			ConstType:  exprString(sender.Const.TypeExpr),
 			ConstValue: sender.Const.Value.String(),
@@ -420,16 +421,16 @@ func chainSegment(receiver ast.ConnectionReceiver) string {
 	return "via:chain"
 }
 
-func projectPorts(parentID, direction string, ports map[string]ast.Port) []GraphPort {
+func projectPorts(parentID, direction string, ports map[string]ast.Port) []Port {
 	if len(ports) == 0 {
 		return nil
 	}
 
 	portNames := sortedKeys(ports)
-	out := make([]GraphPort, 0, len(portNames))
+	out := make([]Port, 0, len(portNames))
 	for _, portName := range portNames {
 		port := ports[portName]
-		out = append(out, GraphPort{
+		out = append(out, Port{
 			ID:      portID(parentID, direction, portName),
 			Name:    portName,
 			Type:    exprString(port.TypeExpr),

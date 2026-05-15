@@ -1,3 +1,4 @@
+//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package view
 
 import "github.com/nevalang/neva/pkg/core"
@@ -5,22 +6,22 @@ import "github.com/nevalang/neva/pkg/core"
 // Version is the schema version for visual view payloads.
 const Version = "v1"
 
-// ProgramView is the top-level view payload for explorer navigation.
-type ProgramView struct {
-	Version string       `json:"version"`
-	Modules []ModuleView `json:"modules"`
+// Program is the top-level view payload for explorer navigation.
+type Program struct {
+	Version string   `json:"version"`
+	Modules []Module `json:"modules"`
 }
 
-// ModuleView groups packages by module reference.
-type ModuleView struct {
-	ID       string        `json:"id"`
-	Path     string        `json:"path"`
-	Version  string        `json:"version,omitempty"`
-	Packages []PackageView `json:"packages"`
+// Module groups packages by module reference.
+type Module struct {
+	ID       string    `json:"id"`
+	Path     string    `json:"path"`
+	Version  string    `json:"version,omitempty"`
+	Packages []Package `json:"packages"`
 }
 
-// PackageView groups files in one package.
-type PackageView struct {
+// Package groups files in one package.
+type Package struct {
 	ID       string        `json:"id"`
 	ModuleID string        `json:"moduleId"`
 	Name     string        `json:"name"`
@@ -53,18 +54,18 @@ type ComponentRef struct {
 	OverloadIndex int `json:"overloadIndex"`
 }
 
-// FileView is a full file payload for readonly visual rendering.
-type FileView struct {
-	Anchor     SourceAnchor    `json:"anchor"`
-	ID         string          `json:"id"`
-	Name       string          `json:"name"`
-	Path       string          `json:"path"`
-	Location   SourceLocation  `json:"location"`
-	Imports    []ImportRef     `json:"imports"`
-	Consts     []ConstDecl     `json:"consts"`
-	Types      []TypeDecl      `json:"types"`
-	Interfaces []InterfaceView `json:"interfaces"`
-	Components []ComponentView `json:"components"`
+// File is a full file payload for readonly visual rendering.
+type File struct {
+	Anchor     SourceAnchor   `json:"anchor"`
+	ID         string         `json:"id"`
+	Name       string         `json:"name"`
+	Path       string         `json:"path"`
+	Location   SourceLocation `json:"location"`
+	Imports    []ImportRef    `json:"imports"`
+	Consts     []ConstDecl    `json:"consts"`
+	Types      []TypeDecl     `json:"types"`
+	Interfaces []Interface    `json:"interfaces"`
+	Components []Component    `json:"components"`
 }
 
 // SourceLocation identifies a source file in build coordinates.
@@ -103,33 +104,33 @@ type TypeDecl struct {
 	Public bool         `json:"public"`
 }
 
-// InterfaceView is a source-level interface declaration.
-type InterfaceView struct {
+// Interface is a source-level interface declaration.
+type Interface struct {
 	Anchor   SourceAnchor `json:"anchor"`
 	ID       string       `json:"id"`
 	Name     string       `json:"name"`
 	TypeArgs []string     `json:"typeArgs"`
-	InPorts  []GraphPort  `json:"inPorts"`
-	OutPorts []GraphPort  `json:"outPorts"`
+	InPorts  []Port       `json:"inPorts"`
+	OutPorts []Port       `json:"outPorts"`
 	Public   bool         `json:"public"`
 }
 
-// ComponentView is a source-level component graph.
-type ComponentView struct {
+// Component is a source-level component graph.
+type Component struct {
 	Anchor        SourceAnchor `json:"anchor"`
 	ID            string       `json:"id"`
 	Name          string       `json:"name"`
 	OverloadIndex int          `json:"overloadIndex"`
 	TypeArgs      []string     `json:"typeArgs"`
-	InPorts       []GraphPort  `json:"inPorts"`
-	OutPorts      []GraphPort  `json:"outPorts"`
-	Nodes         []GraphNode  `json:"nodes"`
-	Edges         []GraphEdge  `json:"edges"`
+	InPorts       []Port       `json:"inPorts"`
+	OutPorts      []Port       `json:"outPorts"`
+	Nodes         []Node       `json:"nodes"`
+	Connections   []Connection `json:"connections"`
 	Public        bool         `json:"public"`
 }
 
-// GraphPort describes one input/output port.
-type GraphPort struct {
+// Port describes one input/output port.
+type Port struct {
 	Anchor  SourceAnchor `json:"anchor"`
 	ID      string       `json:"id"`
 	Name    string       `json:"name"`
@@ -137,33 +138,34 @@ type GraphPort struct {
 	IsArray bool         `json:"isArray"`
 }
 
-// GraphNode describes a component node instance.
-type GraphNode struct {
-	Directives    map[string]string `json:"directives"`
-	Anchor        SourceAnchor      `json:"anchor"`
-	ID            string            `json:"id"`
-	Name          string            `json:"name"`
-	EntityRef     core.EntityRef    `json:"entityRef"`
-	EntityRefText string            `json:"entityRefText"`
-	TypeArgs      []string          `json:"typeArgs"`
-	OverloadIndex *int              `json:"overloadIndex,omitempty"`
-	ErrGuard      bool              `json:"errGuard"`
+// Node describes a component node instance.
+type Node struct {
+	Directives map[string]string `json:"directives"`
+	Anchor     SourceAnchor      `json:"anchor"`
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	// EntityRef keeps original source reference and can point to any entity kind.
+	EntityRef     core.EntityRef `json:"entityRef"`
+	EntityRefText string         `json:"entityRefText"`
+	TypeArgs      []string       `json:"typeArgs"`
+	OverloadIndex *int           `json:"overloadIndex,omitempty"`
+	ErrGuard      bool           `json:"errGuard"`
 }
 
-// GraphEdge describes a source-level connection between sender and receiver.
-type GraphEdge struct {
-	Sender           EdgeEndpoint `json:"sender"`
-	Receiver         EdgeEndpoint `json:"receiver"`
-	Anchor           SourceAnchor `json:"anchor"`
-	ID               string       `json:"id"`
-	ChainDepth       int          `json:"chainDepth"`
-	ChainPath        []string     `json:"chainPath"`
-	Signature        string       `json:"signature"`
-	DuplicateOrdinal int          `json:"duplicateOrdinal"`
+// Connection describes a source-level connection between sender and receiver.
+type Connection struct {
+	Sender           ConnectionEndpoint `json:"sender"`
+	Receiver         ConnectionEndpoint `json:"receiver"`
+	Anchor           SourceAnchor       `json:"anchor"`
+	ID               string             `json:"id"`
+	ChainDepth       int                `json:"chainDepth"`
+	ChainPath        []string           `json:"chainPath"`
+	Signature        string             `json:"signature"`
+	DuplicateOrdinal int                `json:"duplicateOrdinal"`
 }
 
-// EdgeEndpoint describes one edge endpoint.
-type EdgeEndpoint struct {
+// ConnectionEndpoint describes one connection endpoint.
+type ConnectionEndpoint struct {
 	Index      *uint8       `json:"index,omitempty"`
 	Anchor     SourceAnchor `json:"anchor"`
 	Kind       string       `json:"kind"`
