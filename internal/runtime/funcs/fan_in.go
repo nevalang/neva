@@ -29,7 +29,7 @@ func (fanIn) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), er
 				return
 			}
 
-			if !resOut.Send(ctx, dataMsg.Msg, dataMsg.OrderedMsg) {
+			if !resOut.Send(ctx, dataMsg.Ordered.Msg, dataMsg.Ordered) {
 				return
 			}
 		}

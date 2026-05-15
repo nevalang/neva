@@ -3,11 +3,11 @@ package funcs
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// TestFormatIntReceivesInputsConcurrently checks that formatInt does not depend on input arrival order.
 func TestFormatIntReceivesInputsConcurrently(t *testing.T) {
 	t.Parallel()
 
@@ -36,6 +36,7 @@ func TestFormatIntReceivesInputsConcurrently(t *testing.T) {
 	<-done
 }
 
+// TestTernaryReceivesInputsConcurrently checks that ternarySelector consumes all inputs concurrently.
 func TestTernaryReceivesInputsConcurrently(t *testing.T) {
 	t.Parallel()
 
@@ -63,71 +64,4 @@ func TestTernaryReceivesInputsConcurrently(t *testing.T) {
 
 	cancel()
 	<-done
-}
-
-func sendInOrder(
-	t *testing.T,
-	inChans map[string]chan runtime.OrderedMsg,
-	order []string,
-	payload map[string]runtime.Msg,
-) {
-	t.Helper()
-
-	sendDone := make(chan struct{})
-	go func() {
-		for _, name := range order {
-			inChans[name] <- runtime.OrderedMsg{Msg: payload[name]}
-		}
-		close(sendDone)
-	}()
-
-	select {
-	case <-sendDone:
-	case <-time.After(time.Second):
-		t.Fatalf("sending blocked for order %v", order)
-	}
-}
-
-func assertOutputEquals(
-	t *testing.T,
-	outChans map[string]chan runtime.OrderedMsg,
-	outName string,
-	want runtime.Msg,
-	order []string,
-) {
-	t.Helper()
-
-	select {
-	case got := <-outChans[outName]:
-		if !got.Equal(want) {
-			t.Fatalf("result = %v, want %v", got, want)
-		}
-	case <-time.After(time.Second):
-		t.Fatalf("no result for order %v", order)
-	}
-}
-
-func newNamedRuntimeIO(inNames []string, outNames []string) (runtime.IO, map[string]chan runtime.OrderedMsg, map[string]chan runtime.OrderedMsg) {
-	interceptor := runtime.NoEffectInterceptor{}
-	tracer := runtime.NewTracer()
-	inports := make(map[string]runtime.Inport, len(inNames))
-	outports := make(map[string]runtime.Outport, len(outNames))
-	inChans := make(map[string]chan runtime.OrderedMsg, len(inNames))
-	outChans := make(map[string]chan runtime.OrderedMsg, len(outNames))
-
-	for _, name := range inNames {
-		ch := make(chan runtime.OrderedMsg)
-		inChans[name] = ch
-		port := runtime.NewSingleInport(tracer, ch, runtime.PortAddr{Path: "test/in", Port: name}, interceptor)
-		inports[name] = runtime.NewInport(nil, port)
-	}
-
-	for _, name := range outNames {
-		ch := make(chan runtime.OrderedMsg, 1)
-		outChans[name] = ch
-		port := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: name}, interceptor, ch)
-		outports[name] = runtime.NewOutport(port, nil)
-	}
-
-	return runtime.IO{In: runtime.NewInports(inports), Out: runtime.NewOutports(outports)}, inChans, outChans
 }
