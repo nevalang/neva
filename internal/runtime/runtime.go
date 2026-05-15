@@ -15,7 +15,7 @@ type FuncCreator interface {
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (int, error) {
-	_, exitCode, err := callOrdered(ctx, prog, registry, NewStructMsg(nil))
+	_, exitCode, err := call(ctx, prog, registry, NewStructMsg(nil))
 	return exitCode, err
 }
 
@@ -25,15 +25,15 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (in
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, input Msg) (Msg, int, error) {
-	orderedOut, exitCode, err := callOrdered(ctx, prog, registry, input)
+	orderedOut, exitCode, err := call(ctx, prog, registry, input)
 	if err != nil || exitCode != 0 {
 		return nil, exitCode, err
 	}
 	return orderedOut.Msg, 0, nil
 }
 
-// callOrdered executes one runtime round-trip and returns the stop-port envelope.
-func callOrdered(
+// call executes one runtime round-trip and returns the stop-port envelope.
+func call(
 	ctx context.Context,
 	prog Program,
 	registry map[string]FuncCreator,
