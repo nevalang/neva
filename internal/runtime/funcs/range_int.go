@@ -38,24 +38,16 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			var (
 				from = fromMsg.Int()
 				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				to = toMsg.Int()
-
-				idx  = int64(0)
-				last = false
-				data = from
+				to  = toMsg.Int()
+				idx = int64(0)
 			)
 
-			//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			if from < to {
-				for !last {
-					if data == to-1 {
-						last = true
-					}
-
+				for data := from; data < to; data++ {
 					item := streamItem(
 						runtime.NewIntMsg(data),
 						idx,
-						last,
+						data == to-1,
 					)
 
 					if !resOut.Send(ctx, item) {
@@ -63,18 +55,13 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					}
 
 					idx++
-					data++
 				}
 			} else {
-				for !last {
-					if data == toMsg.Int()+1 {
-						last = true
-					}
-
+				for data := from; data > to; data-- {
 					item := streamItem(
 						runtime.NewIntMsg(data),
 						idx,
-						last,
+						data == to+1,
 					)
 
 					if !resOut.Send(ctx, item) {
@@ -82,7 +69,6 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					}
 
 					idx++
-					data--
 				}
 			}
 		}
