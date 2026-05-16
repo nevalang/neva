@@ -1,14 +1,9 @@
-//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package view
 
 import "github.com/nevalang/neva/pkg/core"
 
-// Version is the schema version for visual view payloads.
-const Version = "v1"
-
 // Program is the top-level view payload for explorer navigation.
 type Program struct {
-	Version string   `json:"version"`
 	Modules []Module `json:"modules"`
 }
 
@@ -29,6 +24,8 @@ type Package struct {
 }
 
 // FileSummary is lightweight metadata for explorer trees.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type FileSummary struct {
 	Anchor     SourceAnchor   `json:"anchor"`
 	ID         string         `json:"id"`
@@ -50,11 +47,14 @@ type EntityRef struct {
 
 // ComponentRef references one overload of a component.
 type ComponentRef struct {
-	EntityRef
-	OverloadIndex int `json:"overloadIndex"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	OverloadIndex int    `json:"overloadIndex"`
 }
 
 // File is a full file payload for readonly visual rendering.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type File struct {
 	Anchor     SourceAnchor   `json:"anchor"`
 	ID         string         `json:"id"`
@@ -86,6 +86,8 @@ type ImportRef struct {
 }
 
 // ConstDecl is a source-level const declaration.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type ConstDecl struct {
 	Anchor SourceAnchor `json:"anchor"`
 	ID     string       `json:"id"`
@@ -96,6 +98,8 @@ type ConstDecl struct {
 }
 
 // TypeDecl is a source-level type declaration.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type TypeDecl struct {
 	Anchor SourceAnchor `json:"anchor"`
 	ID     string       `json:"id"`
@@ -105,6 +109,8 @@ type TypeDecl struct {
 }
 
 // Interface is a source-level interface declaration.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type Interface struct {
 	Anchor   SourceAnchor `json:"anchor"`
 	ID       string       `json:"id"`
@@ -116,6 +122,8 @@ type Interface struct {
 }
 
 // Component is a source-level component graph.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type Component struct {
 	Anchor        SourceAnchor `json:"anchor"`
 	ID            string       `json:"id"`
@@ -130,6 +138,8 @@ type Component struct {
 }
 
 // Port describes one input/output port.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type Port struct {
 	Anchor  SourceAnchor `json:"anchor"`
 	ID      string       `json:"id"`
@@ -139,6 +149,8 @@ type Port struct {
 }
 
 // Node describes a component node instance.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type Node struct {
 	Directives map[string]string `json:"directives"`
 	Anchor     SourceAnchor      `json:"anchor"`
@@ -146,14 +158,13 @@ type Node struct {
 	Name       string            `json:"name"`
 	// EntityRef keeps original source reference and can point to any entity kind.
 	EntityRef     core.EntityRef `json:"entityRef"`
-	EntityRefText string         `json:"entityRefText"`
 	ResolvedRef   *ResolvedRef   `json:"resolvedRef,omitempty"`
 	TypeArgs      []string       `json:"typeArgs"`
 	OverloadIndex *int           `json:"overloadIndex,omitempty"`
 	ErrGuard      bool           `json:"errGuard"`
 }
 
-// ResolvedRef is a canonical resolved reference target for node navigation.
+// ResolvedRef is a canonical resolved reference target for entity navigation.
 type ResolvedRef struct {
 	CanonicalRef string       `json:"canonicalRef"`
 	EntityKind   string       `json:"entityKind"`
@@ -163,6 +174,8 @@ type ResolvedRef struct {
 }
 
 // Connection describes a source-level connection between sender and receiver.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type Connection struct {
 	Sender           ConnectionEndpoint `json:"sender"`
 	Receiver         ConnectionEndpoint `json:"receiver"`
@@ -175,6 +188,8 @@ type Connection struct {
 }
 
 // ConnectionEndpoint describes one connection endpoint.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
 type ConnectionEndpoint struct {
 	Index      *uint8       `json:"index,omitempty"`
 	Anchor     SourceAnchor `json:"anchor"`

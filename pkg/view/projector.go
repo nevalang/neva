@@ -1,4 +1,3 @@
-//nolint:gocritic,govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package view
 
 import (
@@ -14,7 +13,7 @@ import (
 
 // ProjectProgram projects analyzed AST build into explorer-friendly view payload.
 func ProjectProgram(build ast.Build) Program {
-	program := Program{Version: Version}
+	program := Program{}
 
 	moduleRefs := make([]core.ModuleRef, 0, len(build.Modules))
 	for modRef := range build.Modules {
@@ -133,11 +132,10 @@ func projectFileSummary(loc core.Location, file ast.File) FileSummary {
 			summary.Interfaces = append(summary.Interfaces, EntityRef{ID: interfaceID(loc, entityName), Name: entityName})
 		case ast.ComponentEntity:
 			for overloadIndex := range entity.Component {
+				//nolint:gocritic // map element address cannot be taken; value copy here is acceptable in projection path.
 				summary.Components = append(summary.Components, ComponentRef{
-					EntityRef: EntityRef{
-						ID:   componentID(loc, entityName, overloadIndex),
-						Name: entityName,
-					},
+					ID:            componentID(loc, entityName, overloadIndex),
+					Name:          entityName,
 					OverloadIndex: overloadIndex,
 				})
 			}
@@ -200,6 +198,7 @@ func projectFile(build ast.Build, loc core.Location, file ast.File) File {
 		case ast.InterfaceEntity:
 			view.Interfaces = append(view.Interfaces, projectInterface(loc, entityName, entity.IsPublic, entity.Interface))
 		case ast.ComponentEntity:
+			//nolint:gocritic // map element address cannot be taken; value copy here is acceptable in projection path.
 			for overloadIndex, component := range entity.Component {
 				view.Components = append(view.Components, projectComponent(build, loc, entityName, overloadIndex, entity.IsPublic, component))
 			}
@@ -215,6 +214,7 @@ func projectFile(build ast.Build, loc core.Location, file ast.File) File {
 	return view
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func projectInterface(loc core.Location, name string, isPublic bool, iface ast.Interface) Interface {
 	fileRefID := fileID(loc)
 	return Interface{
@@ -228,6 +228,7 @@ func projectInterface(loc core.Location, name string, isPublic bool, iface ast.I
 	}
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func projectComponent(
 	build ast.Build,
 	loc core.Location,
@@ -261,7 +262,6 @@ func projectComponent(
 			ID:            nodeID(componentRefID, nodeName),
 			Name:          nodeName,
 			EntityRef:     node.EntityRef,
-			EntityRefText: node.EntityRef.String(),
 			ResolvedRef:   resolveNodeRef(build, loc, node),
 			TypeArgs:      typeArgs(node.TypeArgs),
 			OverloadIndex: node.OverloadIndex,
@@ -272,6 +272,7 @@ func projectComponent(
 	}
 
 	rawConnections := []rawConnection{}
+	//nolint:gocritic // value copy is acceptable for deterministic projection; not a hot runtime path.
 	for _, conn := range component.Net {
 		projectConnectionEdges(&rawConnections, conn, 0, nil)
 	}
@@ -283,6 +284,7 @@ func projectComponent(
 	return out
 }
 
+//nolint:govet // local helper shape is kept explicit for readability in projection pipeline.
 type rawConnection struct {
 	sender     ConnectionEndpoint
 	receiver   ConnectionEndpoint
@@ -292,9 +294,12 @@ type rawConnection struct {
 	signature  string
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func projectConnectionEdges(connections *[]rawConnection, conn ast.Connection, depth int, chainPath []string) {
+	//nolint:gocritic // value copy is acceptable in this deterministic projection pass.
 	for _, sender := range conn.Senders {
 		senderEndpoint := endpointFromSender(sender)
+		//nolint:gocritic // value copy is acceptable in this deterministic projection pass.
 		for _, receiver := range conn.Receivers {
 			receiverEndpoint := endpointFromReceiver(receiver)
 
@@ -341,6 +346,7 @@ func materializeConnections(componentRefID string, raw []rawConnection) []Connec
 
 	duplicates := map[string]int{}
 	out := make([]Connection, 0, len(raw))
+	//nolint:gocritic // value copy is acceptable in this deterministic projection pass.
 	for _, candidate := range raw {
 		ordinal := duplicates[candidate.signature]
 		duplicates[candidate.signature]++
@@ -361,11 +367,13 @@ func materializeConnections(componentRefID string, raw []rawConnection) []Connec
 	return out
 }
 
+//nolint:gocritic // endpoint structs are small enough for this non-hot projection path.
 func edgeSignature(sender ConnectionEndpoint, receiver ConnectionEndpoint, chainPath []string, depth int) string {
 	chain := strings.Join(chainPath, "|")
 	return fmt.Sprintf("%s->%s|chain:%s|depth:%d", endpointSignature(sender), endpointSignature(receiver), chain, depth)
 }
 
+//nolint:gocritic // endpoint structs are small enough for this non-hot projection path.
 func endpointSignature(endpoint ConnectionEndpoint) string {
 	selector := strings.Join(endpoint.Selector, ".")
 	idx := ""
@@ -380,6 +388,7 @@ func endpointSignature(endpoint ConnectionEndpoint) string {
 	return fmt.Sprintf("port:%s:%s%s.%s", endpoint.Node, endpoint.Port, idx, selector)
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func endpointFromReceiver(receiver ast.ConnectionReceiver) ConnectionEndpoint {
 	if receiver.PortAddr == nil {
 		return ConnectionEndpoint{Kind: "port", Anchor: anchorFromMeta(receiver.Meta)}
@@ -403,6 +412,7 @@ func endpointFromPortAddr(addr *ast.PortAddr) ConnectionEndpoint {
 	}
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func endpointFromSender(sender ast.ConnectionSender) ConnectionEndpoint {
 	if sender.Const != nil {
 		return ConnectionEndpoint{
@@ -419,6 +429,7 @@ func endpointFromSender(sender ast.ConnectionSender) ConnectionEndpoint {
 	return endpoint
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func chainSegment(receiver ast.ConnectionReceiver) string {
 	if receiver.PortAddr != nil {
 		return "via:" + endpointSignature(endpointFromPortAddr(receiver.PortAddr))
@@ -449,12 +460,14 @@ func projectPorts(parentID, direction string, ports map[string]ast.Port) []Port 
 	return out
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func typeParamNames(params ast.TypeParams) []string {
 	if len(params.Params) == 0 {
 		return nil
 	}
 
 	out := make([]string, 0, len(params.Params))
+	//nolint:gocritic // value copy is acceptable in this deterministic projection pass.
 	for _, param := range params.Params {
 		out = append(out, param.Name)
 	}
@@ -468,12 +481,14 @@ func typeArgs(args ast.TypeArgs) []string {
 	}
 
 	out := make([]string, 0, len(args))
+	//nolint:gocritic // value copy is acceptable in this deterministic projection pass.
 	for _, arg := range args {
 		out = append(out, arg.String())
 	}
 	return out
 }
 
+//nolint:gocritic // Type-system defs are passed by value in current API.
 func defString(def ts.Def) string {
 	if def.BodyExpr == nil {
 		return ""
@@ -499,6 +514,7 @@ func sortedKeys[V any](m map[string]V) []string {
 	return keys
 }
 
+//nolint:gocritic // Meta is passed by value in current AST API.
 func anchorFromMeta(meta core.Meta) SourceAnchor {
 	return SourceAnchor{
 		ModulePath:    meta.Location.ModRef.Path,
@@ -522,6 +538,7 @@ func locationFromCore(loc core.Location) SourceLocation {
 	}
 }
 
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
 func resolveNodeRef(build ast.Build, sourceLoc core.Location, node ast.Node) *ResolvedRef {
 	scope := ast.NewScope(build, sourceLoc)
 	entity, resolvedLoc, err := scope.Entity(node.EntityRef)
@@ -547,6 +564,7 @@ func resolveNodeRef(build ast.Build, sourceLoc core.Location, node ast.Node) *Re
 	}
 }
 
+//nolint:gocritic // EntityRef is passed by value in current AST API.
 func canonicalEntityRef(ref core.EntityRef, resolvedLoc core.Location) string {
 	if resolvedLoc.ModRef.Path == "@" {
 		return fmt.Sprintf("@:/%s/%s", resolvedLoc.Package, ref.Name)
