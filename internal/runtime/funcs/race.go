@@ -38,7 +38,7 @@ func (race) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 		var (
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			wg      sync.WaitGroup
-			dataMsg runtime.Msg
+			dataMsg runtime.OrderedMsg
 			dataOk  bool
 			caseMsg runtime.SelectedMsg
 			caseOk  bool
@@ -54,7 +54,7 @@ func (race) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), err
 			if !dataOk || !caseOk {
 				return
 			}
-			if !casesOut.Send(ctx, caseMsg.SlotIdx, dataMsg) {
+			if !casesOut.Send(ctx, caseMsg.SlotIdx, dataMsg.Msg, dataMsg, caseMsg.OrderedMsg) {
 				return
 			}
 		}
