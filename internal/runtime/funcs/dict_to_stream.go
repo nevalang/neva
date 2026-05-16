@@ -32,7 +32,7 @@ func (dictToStream) Create(
 				return
 			}
 
-			dict := dataMsg.Dict().Msgs()
+			dict := dictToMsgs(dataMsg.Dict())
 			// Go map iteration order is intentionally non-deterministic.
 			size := len(dict)
 
@@ -54,4 +54,36 @@ func (dictToStream) Create(
 			}
 		}
 	}, nil
+}
+
+func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
+	if values, ok := runtime.AsDictInts(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewIntMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictStrings(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewStringMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictBools(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewBoolMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictFloats(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewFloatMsg(value)
+		}
+		return msgs
+	}
+	return dict.Msgs()
 }

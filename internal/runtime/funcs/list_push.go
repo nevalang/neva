@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"slices"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -35,7 +34,7 @@ func (p listPush) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				return
 			}
 
-			lstCopy := slices.Clone(lstMsg.List().Msgs())
+			lstCopy := listToMsgs(lstMsg.List())
 
 			if !resOut.Send(
 				ctx,

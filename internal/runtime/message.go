@@ -259,7 +259,7 @@ func (msg genericListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 func (msg genericListMsg) Equal(other ListMsg) bool {
-	return listEqual(msg, other)
+	return listEqualGeneric(msg.v, other)
 }
 
 func (boolListMsg) Msgs() []Msg        { panic("unexpected Msgs method call on bool list message") }
@@ -274,7 +274,7 @@ func (msg boolListMsg) String() string { return mustJSON(msg) }
 func (msg boolListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg boolListMsg) Equal(other ListMsg) bool { return listEqual(msg, other) }
+func (msg boolListMsg) Equal(other ListMsg) bool { return listEqualBool(msg.v, other) }
 
 func (intListMsg) Msgs() []Msg        { panic("unexpected Msgs method call on int list message") }
 func (intListMsg) Bools() []bool      { panic("unexpected Bools method call on int list message") }
@@ -288,7 +288,7 @@ func (msg intListMsg) String() string { return mustJSON(msg) }
 func (msg intListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg intListMsg) Equal(other ListMsg) bool { return listEqual(msg, other) }
+func (msg intListMsg) Equal(other ListMsg) bool { return listEqualInt(msg.v, other) }
 
 func (floatListMsg) Msgs() []Msg   { panic("unexpected Msgs method call on float list message") }
 func (floatListMsg) Bools() []bool { panic("unexpected Bools method call on float list message") }
@@ -304,7 +304,7 @@ func (msg floatListMsg) String() string { return mustJSON(msg) }
 func (msg floatListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg floatListMsg) Equal(other ListMsg) bool { return listEqual(msg, other) }
+func (msg floatListMsg) Equal(other ListMsg) bool { return listEqualFloat(msg.v, other) }
 
 func (stringListMsg) Msgs() []Msg   { panic("unexpected Msgs method call on string list message") }
 func (stringListMsg) Bools() []bool { panic("unexpected Bools method call on string list message") }
@@ -320,7 +320,7 @@ func (msg stringListMsg) String() string    { return mustJSON(msg) }
 func (msg stringListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg stringListMsg) Equal(other ListMsg) bool { return listEqual(msg, other) }
+func (msg stringListMsg) Equal(other ListMsg) bool { return listEqualString(msg.v, other) }
 
 //nolint:ireturn // Msg contract type.
 func NewListMsg(v []Msg) Msg {
@@ -517,15 +517,20 @@ func listEqual(left ListMsg, right ListMsg) bool {
 		return false
 	}
 
-	leftMsgs := asGenericList(left)
-	rightMsgs := asGenericList(right)
-	for i := range leftMsgs {
-		if !leftMsgs[i].Equal(rightMsgs[i]) {
-			return false
-		}
+	switch leftTyped := left.(type) {
+	case genericListMsg:
+		return listEqualGeneric(leftTyped.v, right)
+	case boolListMsg:
+		return listEqualBool(leftTyped.v, right)
+	case intListMsg:
+		return listEqualInt(leftTyped.v, right)
+	case floatListMsg:
+		return listEqualFloat(leftTyped.v, right)
+	case stringListMsg:
+		return listEqualString(leftTyped.v, right)
+	default:
+		panic("unexpected list implementation")
 	}
-
-	return true
 }
 
 func dictEqual(left DictMsg, right DictMsg) bool {
@@ -544,37 +549,122 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 	return true
 }
 
-func asGenericList(list ListMsg) []Msg {
-	switch typed := list.(type) {
+func listEqualGeneric(left []Msg, right ListMsg) bool {
+	switch rightTyped := right.(type) {
 	case genericListMsg:
-		return typed.v
+		for i := range left {
+			if !left[i].Equal(rightTyped.v[i]) {
+				return false
+			}
+		}
 	case boolListMsg:
-		out := make([]Msg, len(typed.v))
-		for i := range typed.v {
-			out[i] = NewBoolMsg(typed.v[i])
+		for i := range left {
+			if !left[i].Equal(NewBoolMsg(rightTyped.v[i])) {
+				return false
+			}
 		}
-		return out
 	case intListMsg:
-		out := make([]Msg, len(typed.v))
-		for i := range typed.v {
-			out[i] = NewIntMsg(typed.v[i])
+		for i := range left {
+			if !left[i].Equal(NewIntMsg(rightTyped.v[i])) {
+				return false
+			}
 		}
-		return out
 	case floatListMsg:
-		out := make([]Msg, len(typed.v))
-		for i := range typed.v {
-			out[i] = NewFloatMsg(typed.v[i])
+		for i := range left {
+			if !left[i].Equal(NewFloatMsg(rightTyped.v[i])) {
+				return false
+			}
 		}
-		return out
 	case stringListMsg:
-		out := make([]Msg, len(typed.v))
-		for i := range typed.v {
-			out[i] = NewStringMsg(typed.v[i])
+		for i := range left {
+			if !left[i].Equal(NewStringMsg(rightTyped.v[i])) {
+				return false
+			}
 		}
-		return out
 	default:
 		panic("unexpected list implementation")
 	}
+	return true
+}
+
+func listEqualBool(left []bool, right ListMsg) bool {
+	switch rightTyped := right.(type) {
+	case boolListMsg:
+		for i := range left {
+			if left[i] != rightTyped.v[i] {
+				return false
+			}
+		}
+	case genericListMsg:
+		for i := range left {
+			if !NewBoolMsg(left[i]).Equal(rightTyped.v[i]) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func listEqualInt(left []int64, right ListMsg) bool {
+	switch rightTyped := right.(type) {
+	case intListMsg:
+		for i := range left {
+			if left[i] != rightTyped.v[i] {
+				return false
+			}
+		}
+	case genericListMsg:
+		for i := range left {
+			if !NewIntMsg(left[i]).Equal(rightTyped.v[i]) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func listEqualFloat(left []float64, right ListMsg) bool {
+	switch rightTyped := right.(type) {
+	case floatListMsg:
+		for i := range left {
+			if left[i] != rightTyped.v[i] {
+				return false
+			}
+		}
+	case genericListMsg:
+		for i := range left {
+			if !NewFloatMsg(left[i]).Equal(rightTyped.v[i]) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func listEqualString(left []string, right ListMsg) bool {
+	switch rightTyped := right.(type) {
+	case stringListMsg:
+		for i := range left {
+			if left[i] != rightTyped.v[i] {
+				return false
+			}
+		}
+	case genericListMsg:
+		for i := range left {
+			if !NewStringMsg(left[i]).Equal(rightTyped.v[i]) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
 }
 
 func asGenericDict(dict DictMsg) map[string]Msg {
