@@ -16,8 +16,18 @@ Legacy alias:
 
 - IDs are readable path-like IDs (`module/package/file/entity/...`).
 - Node/entity IDs are semantic-path based.
-- Edge IDs use endpoint-signature + chain-path + duplicate-ordinal.
+- Connection IDs use endpoint-signature + chain-path + duplicate-ordinal.
 - Deterministic ordering is required in all payloads.
+
+## Current status (implementation)
+
+- `pkg/view` projections are AST-first and deterministic for:
+  - modules/packages/files (sorted keys),
+  - entities per file (sorted keys),
+  - component overloads (sorted overload indices),
+  - connections (signature + anchor ordering + duplicate ordinal).
+- Node `entityRef` is pre-resolved during projection into canonical references
+  (`ResolvedRef`) so `resolveEntityRef` transport can be a direct lookup path.
 
 ## Ownership
 
