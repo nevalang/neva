@@ -174,7 +174,7 @@ func fileIDByName(t *testing.T, program Program, fileName string) string {
 	t.Helper()
 	for _, module := range program.Modules {
 		for _, pkg := range module.Packages {
-			for _, file := range pkg.Files {
+			for _, file := range pkg.FileSummaries {
 				if file.Name == fileName {
 					return file.ID
 				}

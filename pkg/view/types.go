@@ -11,16 +11,15 @@ type Program struct {
 type Module struct {
 	ID       string    `json:"id"`
 	Path     string    `json:"path"`
-	Version  string    `json:"version,omitempty"`
 	Packages []Package `json:"packages"`
 }
 
 // Package groups files in one package.
 type Package struct {
-	ID       string        `json:"id"`
-	ModuleID string        `json:"moduleId"`
-	Name     string        `json:"name"`
-	Files    []FileSummary `json:"files"`
+	ID            string        `json:"id"`
+	ModuleID      string        `json:"moduleId"`
+	Name          string        `json:"name"`
+	FileSummaries []FileSummary `json:"fileSummaries"`
 }
 
 // FileSummary is lightweight metadata for explorer trees.
@@ -70,10 +69,9 @@ type File struct {
 
 // SourceLocation identifies a source file in build coordinates.
 type SourceLocation struct {
-	ModulePath    string `json:"modulePath"`
-	ModuleVersion string `json:"moduleVersion,omitempty"`
-	Package       string `json:"package"`
-	File          string `json:"file"`
+	ModulePath string `json:"modulePath"`
+	Package    string `json:"package"`
+	File       string `json:"file"`
 }
 
 // ImportRef is a source-level import declaration.
@@ -203,13 +201,12 @@ type ConnectionEndpoint struct {
 
 // SourceAnchor maps visual elements back to source ranges.
 type SourceAnchor struct {
-	ModulePath    string `json:"modulePath"`
-	ModuleVersion string `json:"moduleVersion,omitempty"`
-	Package       string `json:"package"`
-	File          string `json:"file"`
-	Text          string `json:"text"`
-	StartLine     int    `json:"startLine"`
-	StartCol      int    `json:"startCol"`
-	EndLine       int    `json:"endLine"`
-	EndCol        int    `json:"endCol"`
+	ModulePath string `json:"modulePath"`
+	Package    string `json:"package"`
+	File       string `json:"file"`
+	Text       string `json:"text"`
+	StartLine  int    `json:"startLine"`
+	StartCol   int    `json:"startCol"`
+	EndLine    int    `json:"endLine"`
+	EndCol     int    `json:"endCol"`
 }

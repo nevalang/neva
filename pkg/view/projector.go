@@ -26,9 +26,8 @@ func ProjectProgram(build ast.Build) Program {
 	for _, modRef := range moduleRefs {
 		mod := build.Modules[modRef]
 		modView := Module{
-			ID:      moduleID(modRef),
-			Path:    modRef.Path,
-			Version: modRef.Version,
+			ID:   moduleID(modRef),
+			Path: modRef.Path,
 		}
 
 		packageNames := sortedKeys(mod.Packages)
@@ -44,7 +43,7 @@ func ProjectProgram(build ast.Build) Program {
 			for _, fileName := range fileNames {
 				file := pkg[fileName]
 				loc := core.Location{ModRef: modRef, Package: packageName, Filename: fileName}
-				pkgView.Files = append(pkgView.Files, projectFileSummary(loc, file))
+				pkgView.FileSummaries = append(pkgView.FileSummaries, projectFileSummary(loc, file))
 			}
 
 			modView.Packages = append(modView.Packages, pkgView)
@@ -517,24 +516,22 @@ func sortedKeys[V any](m map[string]V) []string {
 //nolint:gocritic // Meta is passed by value in current AST API.
 func anchorFromMeta(meta core.Meta) SourceAnchor {
 	return SourceAnchor{
-		ModulePath:    meta.Location.ModRef.Path,
-		ModuleVersion: meta.Location.ModRef.Version,
-		Package:       meta.Location.Package,
-		File:          meta.Location.Filename,
-		Text:          meta.Text,
-		StartLine:     meta.Start.Line,
-		StartCol:      meta.Start.Column,
-		EndLine:       meta.Stop.Line,
-		EndCol:        meta.Stop.Column,
+		ModulePath: meta.Location.ModRef.Path,
+		Package:    meta.Location.Package,
+		File:       meta.Location.Filename,
+		Text:       meta.Text,
+		StartLine:  meta.Start.Line,
+		StartCol:   meta.Start.Column,
+		EndLine:    meta.Stop.Line,
+		EndCol:     meta.Stop.Column,
 	}
 }
 
 func locationFromCore(loc core.Location) SourceLocation {
 	return SourceLocation{
-		ModulePath:    loc.ModRef.Path,
-		ModuleVersion: loc.ModRef.Version,
-		Package:       loc.Package,
-		File:          loc.Filename,
+		ModulePath: loc.ModRef.Path,
+		Package:    loc.Package,
+		File:       loc.Filename,
 	}
 }
 
