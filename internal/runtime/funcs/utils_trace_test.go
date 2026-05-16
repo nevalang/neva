@@ -91,4 +91,7 @@ func TestFormatTerminationDataflowTrace_ContainsSinkAndComponent(t *testing.T) {
 	if !strings.Contains(got, "component: prog") {
 		t.Fatalf("expected component in formatted trace, got:\n%s", got)
 	}
+	if !strings.Contains(got, "prog:stop <- producer") {
+		t.Fatalf("expected rtl flow in formatted trace, got:\n%s", got)
+	}
 }

@@ -145,15 +145,18 @@ func formatTerminationDataflowTrace(title string, tracer *runtime.Tracer, msg ru
 		receiver = formatTracePortSlotAddr(*tree.Hop.Receiver)
 	}
 	component := traceComponentName(tree.Hop.Receiver)
+	stats := collectTraceRenderStats(&tree)
 
 	builder.WriteString(title + "\n")
-	builder.WriteString("direction: newest -> oldest (top -> bottom)\n")
+	builder.WriteString("direction: newest <- oldest (top -> bottom)\n")
 	builder.WriteString("sink: " + receiver + "\n")
 	if component != "" {
 		builder.WriteString("component: " + component + "\n")
 	}
-	builder.WriteString("events:\n")
-	formatTraceTree(&builder, &tree, "  ")
+	builder.WriteString(formatTraceHopFlow(tree.Hop, stats, true) + "\n")
+	for i := range tree.Parents {
+		formatTraceTree(&builder, &tree.Parents[i], "", i == len(tree.Parents)-1, stats)
+	}
 
 	return strings.TrimRight(builder.String(), "\n")
 }
@@ -173,23 +176,72 @@ type traceTree struct {
 	Hop     runtime.TraceHop
 }
 
-func formatTraceTree(builder *strings.Builder, tree *traceTree, indent string) {
-	builder.WriteString(indent + "- " + formatTraceHopFlow(tree.Hop) + "\n")
-	for _, parent := range tree.Parents {
-		formatTraceTree(builder, &parent, indent+"  ")
+type traceRenderStats struct {
+	senderPortsByPath   map[string]map[string]struct{}
+	receiverPortsByPath map[string]map[string]struct{}
+}
+
+func collectTraceRenderStats(tree *traceTree) traceRenderStats {
+	stats := traceRenderStats{
+		senderPortsByPath:   map[string]map[string]struct{}{},
+		receiverPortsByPath: map[string]map[string]struct{}{},
+	}
+
+	var visit func(*traceTree)
+	visit = func(node *traceTree) {
+		if node.Hop.Sender != nil {
+			addPort(stats.senderPortsByPath, normalizeTracePortPath(node.Hop.Sender.Path), node.Hop.Sender.Port)
+		}
+		if node.Hop.Receiver != nil {
+			addPort(stats.receiverPortsByPath, normalizeTracePortPath(node.Hop.Receiver.Path), node.Hop.Receiver.Port)
+		}
+		for i := range node.Parents {
+			visit(&node.Parents[i])
+		}
+	}
+	visit(tree)
+
+	return stats
+}
+
+func addPort(portsByPath map[string]map[string]struct{}, path, port string) {
+	ports, ok := portsByPath[path]
+	if !ok {
+		ports = map[string]struct{}{}
+		portsByPath[path] = ports
+	}
+	ports[port] = struct{}{}
+}
+
+func formatTraceTree(
+	builder *strings.Builder,
+	tree *traceTree,
+	prefix string,
+	isLast bool,
+	stats traceRenderStats,
+) {
+	connector := "├─ "
+	nextPrefix := prefix + "│  "
+	if isLast {
+		connector = "└─ "
+		nextPrefix = prefix + "   "
+	}
+	builder.WriteString(prefix + connector + formatTraceHopFlow(tree.Hop, stats, false) + "\n")
+	for i := range tree.Parents {
+		formatTraceTree(builder, &tree.Parents[i], nextPrefix, i == len(tree.Parents)-1, stats)
 	}
 }
 
-func formatTraceHopFlow(hop runtime.TraceHop) string {
+func formatTraceHopFlow(hop runtime.TraceHop, stats traceRenderStats, forceReceiverPort bool) string {
 	recv := "<?>"
 	send := "<?>"
 	if hop.Receiver != nil {
-		recv = formatTracePortSlotAddr(*hop.Receiver)
+		recv = formatTraceEndpoint(*hop.Receiver, false, stats, forceReceiverPort)
 	}
 	if hop.Sender != nil {
-		send = formatTracePortSlotAddr(*hop.Sender)
+		send = formatTraceEndpoint(*hop.Sender, true, stats, false)
 	}
-	return fmt.Sprintf("%s -> %s", send, recv)
+	return fmt.Sprintf("%s <- %s", recv, send)
 }
 
 func traceComponentName(receiver *runtime.PortSlotAddr) string {
@@ -228,6 +280,41 @@ func normalizeTracePortPath(path string) string {
 	}
 
 	return strings.Join(parts, "/")
+}
+
+func formatTraceEndpoint(
+	slot runtime.PortSlotAddr,
+	isSender bool,
+	stats traceRenderStats,
+	forcePort bool,
+) string {
+	path := normalizeTracePortPath(slot.Path)
+	if path == "" && slot.Port == "start" {
+		return ":start"
+	}
+
+	includePort := forcePort || slot.Index != nil || shouldIncludePort(path, slot.Port, isSender, stats)
+	formatted := path
+	if includePort {
+		formatted = fmt.Sprintf("%s:%s", path, slot.Port)
+	}
+	if slot.Index != nil {
+		formatted = fmt.Sprintf("%s[%d]", formatted, *slot.Index)
+	}
+	return formatted
+}
+
+func shouldIncludePort(path, port string, isSender bool, stats traceRenderStats) bool {
+	// Keep sink and panic port explicit for readability in termination traces.
+	if path == "panic" || port == "data" {
+		return true
+	}
+	portsByPath := stats.receiverPortsByPath
+	if isSender {
+		portsByPath = stats.senderPortsByPath
+	}
+	ports := portsByPath[path]
+	return len(ports) > 1
 }
 
 func traceFromOrderedMsg(tracer *runtime.Tracer, ordered runtime.OrderedMsg) (traceTree, bool) {

@@ -412,7 +412,7 @@ type Interceptor interface {
 }
 
 type PortSlotAddr struct {
-	Index *uint8 // nil means single port
+	Index *uint8 `json:",omitempty"` // nil means single port
 	PortAddr
 }
 
@@ -498,6 +498,6 @@ func (a *ArrayOutport) Len() int {
 }
 
 type PortAddr struct {
-	Path string
-	Port string
+	Path string `json:"Path"`
+	Port string `json:"Port"`
 }
