@@ -32,7 +32,7 @@ func (c listToStream) Create(
 				return
 			}
 
-			list := data.List()
+			list := data.List().Msgs()
 
 			for idx := range list {
 				item := streamItem(

@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -440,7 +441,7 @@ func (b Backend) buildFuncCalls(
 	return result, nil
 }
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo,maintidx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	switch msg.Type {
 	case ir.MsgTypeBool:
@@ -463,6 +464,56 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		}
 		return fmt.Sprintf("runtime.NewUnionMsg(%q, %s)", msg.Union.Tag, payload), nil
 	case ir.MsgTypeList:
+		if len(msg.List) > 0 { //nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			//nolint:exhaustive // Only scalar lists are optimized here; others fallback to generic path.
+			switch msg.List[0].Type {
+			case ir.MsgTypeBool:
+				values := make([]string, len(msg.List))
+				for i := range msg.List {
+					if msg.List[i].Type != ir.MsgTypeBool {
+						break
+					}
+					values[i] = strconv.FormatBool(msg.List[i].Bool)
+					if i == len(msg.List)-1 {
+						return fmt.Sprintf("runtime.NewListBoolMsg([]bool{%s})", strings.Join(values, ", ")), nil
+					}
+				}
+			case ir.MsgTypeInt:
+				values := make([]string, len(msg.List))
+				for i := range msg.List {
+					if msg.List[i].Type != ir.MsgTypeInt {
+						break
+					}
+					values[i] = strconv.FormatInt(msg.List[i].Int, 10)
+					if i == len(msg.List)-1 {
+						return fmt.Sprintf("runtime.NewListIntMsg([]int64{%s})", strings.Join(values, ", ")), nil
+					}
+				}
+			case ir.MsgTypeFloat:
+				values := make([]string, len(msg.List))
+				for i := range msg.List {
+					if msg.List[i].Type != ir.MsgTypeFloat {
+						break
+					}
+					values[i] = fmt.Sprintf("%v", msg.List[i].Float)
+					if i == len(msg.List)-1 {
+						return fmt.Sprintf("runtime.NewListFloatMsg([]float64{%s})", strings.Join(values, ", ")), nil
+					}
+				}
+			case ir.MsgTypeString:
+				values := make([]string, len(msg.List))
+				for i := range msg.List {
+					if msg.List[i].Type != ir.MsgTypeString {
+						break
+					}
+					values[i] = fmt.Sprintf("%q", msg.List[i].String)
+					if i == len(msg.List)-1 {
+						return fmt.Sprintf("runtime.NewListStringMsg([]string{%s})", strings.Join(values, ", ")), nil
+					}
+				}
+			}
+		}
+
 		elements := make([]string, len(msg.List))
 		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for i, v := range msg.List {
@@ -474,6 +525,53 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		}
 		return fmt.Sprintf("runtime.NewListMsg([]runtime.Msg{%s})", strings.Join(elements, ", ")), nil
 	case ir.MsgTypeDict:
+		if len(msg.DictOrStruct) > 0 { //nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			var sameType ir.MsgType
+			hasType := false
+			homogeneous := true
+			values := make([]string, 0, len(msg.DictOrStruct))
+			//nolint:gocritic // map iteration by value is acceptable in code generation path.
+			for key, valueMsg := range msg.DictOrStruct {
+				if !hasType {
+					sameType = valueMsg.Type
+					hasType = true
+				}
+				if valueMsg.Type != sameType {
+					homogeneous = false
+					break
+				}
+				//nolint:exhaustive // Only scalar dicts are optimized here; others fallback to generic path.
+				switch sameType {
+				case ir.MsgTypeBool:
+					values = append(values, fmt.Sprintf("%q: %v", key, valueMsg.Bool))
+				case ir.MsgTypeInt:
+					values = append(values, fmt.Sprintf("%q: %v", key, valueMsg.Int))
+				case ir.MsgTypeFloat:
+					values = append(values, fmt.Sprintf("%q: %v", key, valueMsg.Float))
+				case ir.MsgTypeString:
+					values = append(values, fmt.Sprintf("%q: %q", key, valueMsg.String))
+				default:
+					homogeneous = false
+				}
+				if !homogeneous {
+					break
+				}
+			}
+			if homogeneous {
+				//nolint:exhaustive // Only scalar dicts are optimized here; others fallback to generic path.
+				switch sameType {
+				case ir.MsgTypeBool:
+					return fmt.Sprintf("runtime.NewDictBoolMsg(map[string]bool{%s})", strings.Join(values, ", ")), nil
+				case ir.MsgTypeInt:
+					return fmt.Sprintf("runtime.NewDictIntMsg(map[string]int64{%s})", strings.Join(values, ", ")), nil
+				case ir.MsgTypeFloat:
+					return fmt.Sprintf("runtime.NewDictFloatMsg(map[string]float64{%s})", strings.Join(values, ", ")), nil
+				case ir.MsgTypeString:
+					return fmt.Sprintf("runtime.NewDictStringMsg(map[string]string{%s})", strings.Join(values, ", ")), nil
+				}
+			}
+		}
+
 		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
 		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for k, v := range msg.DictOrStruct {

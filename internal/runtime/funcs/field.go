@@ -11,7 +11,7 @@ type structField struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
-	path := cfg.List()
+	path := cfg.List().Msgs()
 	if len(path) == 0 {
 		return nil, errors.New("field path cannot be empty")
 	}
