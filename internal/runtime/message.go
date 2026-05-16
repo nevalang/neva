@@ -512,27 +512,6 @@ func NewDictStringMsg(d map[string]string) Msg {
 	return dictValueMsg{internalMsg: internalMsg{}, v: stringDictMsg{v: d}}
 }
 
-func listEqual(left ListMsg, right ListMsg) bool {
-	if left.Len() != right.Len() {
-		return false
-	}
-
-	switch leftTyped := left.(type) {
-	case genericListMsg:
-		return listEqualGeneric(leftTyped.v, right)
-	case boolListMsg:
-		return listEqualBool(leftTyped.v, right)
-	case intListMsg:
-		return listEqualInt(leftTyped.v, right)
-	case floatListMsg:
-		return listEqualFloat(leftTyped.v, right)
-	case stringListMsg:
-		return listEqualString(leftTyped.v, right)
-	default:
-		panic("unexpected list implementation")
-	}
-}
-
 func dictEqual(left DictMsg, right DictMsg) bool {
 	if left.Len() != right.Len() {
 		return false
