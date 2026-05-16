@@ -531,37 +531,61 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 func listEqualGeneric(left []Msg, right ListMsg) bool {
 	switch rightTyped := right.(type) {
 	case genericListMsg:
-		for i := range left {
-			if !left[i].Equal(rightTyped.v[i]) {
-				return false
-			}
-		}
+		return listEqualGenericToGeneric(left, rightTyped.v)
 	case boolListMsg:
-		for i := range left {
-			if !left[i].Equal(NewBoolMsg(rightTyped.v[i])) {
-				return false
-			}
-		}
+		return listEqualGenericToBools(left, rightTyped.v)
 	case intListMsg:
-		for i := range left {
-			if !left[i].Equal(NewIntMsg(rightTyped.v[i])) {
-				return false
-			}
-		}
+		return listEqualGenericToInts(left, rightTyped.v)
 	case floatListMsg:
-		for i := range left {
-			if !left[i].Equal(NewFloatMsg(rightTyped.v[i])) {
-				return false
-			}
-		}
+		return listEqualGenericToFloats(left, rightTyped.v)
 	case stringListMsg:
-		for i := range left {
-			if !left[i].Equal(NewStringMsg(rightTyped.v[i])) {
-				return false
-			}
-		}
+		return listEqualGenericToStrings(left, rightTyped.v)
 	default:
 		panic("unexpected list implementation")
+	}
+}
+
+func listEqualGenericToGeneric(left []Msg, right []Msg) bool {
+	for i := range left {
+		if !left[i].Equal(right[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func listEqualGenericToBools(left []Msg, right []bool) bool {
+	for i := range left {
+		if !left[i].Equal(NewBoolMsg(right[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+func listEqualGenericToInts(left []Msg, right []int64) bool {
+	for i := range left {
+		if !left[i].Equal(NewIntMsg(right[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+func listEqualGenericToFloats(left []Msg, right []float64) bool {
+	for i := range left {
+		if !left[i].Equal(NewFloatMsg(right[i])) {
+			return false
+		}
+	}
+	return true
+}
+
+func listEqualGenericToStrings(left []Msg, right []string) bool {
+	for i := range left {
+		if !left[i].Equal(NewStringMsg(right[i])) {
+			return false
+		}
 	}
 	return true
 }
