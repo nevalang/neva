@@ -41,6 +41,7 @@ It is intentionally short and stable. Use linked docs for deep details.
 - Architecture map: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Contributor workflow and release basics: [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Documentation index: [docs/README.md](./docs/README.md)
+- `docs/` is user-facing documentation; agent/RFC/progress notes belong in `.agent/plans/`.
 - Language rationale and design decisions: [docs/qna.md](./docs/qna.md)
 - Neva style rules: [docs/style_guide.md](./docs/style_guide.md)
 - Language deep dive: [docs/book/README.md](./docs/book/README.md)
