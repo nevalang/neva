@@ -24,10 +24,11 @@ func (c newV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context)
 
 	return func(ctx context.Context) {
 		for {
-			if _, ok := sigIn.Receive(ctx); !ok {
+			sigMsg, ok := sigIn.Receive(ctx)
+			if !ok {
 				return
 			}
-			if !resOut.Send(ctx, cfg) {
+			if !resOut.Send(ctx, cfg, sigMsg) {
 				return
 			}
 		}

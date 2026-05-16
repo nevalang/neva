@@ -13,8 +13,9 @@ func TestFormatTraceHopFlow_NormalizesSendToReceive(t *testing.T) {
 		Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "parse/in", Port: "data"}},
 	}
 
-	got := formatTraceHopFlow(hop)
-	if got != "http:req -> parse:data" {
+	stats := collectTraceRenderStats(&traceTree{Hop: hop})
+	got := formatTraceHopFlow(hop, stats, false)
+	if got != "parse:data <- http" {
 		t.Fatalf("unexpected hop flow: %s", got)
 	}
 }
@@ -54,10 +55,10 @@ func TestFormatTraceTree_FanInRendersAllParents(t *testing.T) {
 	if !strings.Contains(formatted, "component: prog") {
 		t.Fatalf("expected component, got:\n%s", formatted)
 	}
-	if !strings.Contains(formatted, "fanin:res -> prog:stop") {
+	if !strings.Contains(formatted, "prog:stop <- fanin") {
 		t.Fatalf("expected fan-in output hop, got:\n%s", formatted)
 	}
-	if strings.Count(formatted, "first:res -> fanin:first")+strings.Count(formatted, "second:res -> fanin:second")+strings.Count(formatted, "third:res -> fanin:third") < 3 {
+	if strings.Count(formatted, "fanin:first <- first")+strings.Count(formatted, "fanin:second <- second")+strings.Count(formatted, "fanin:third <- third") < 3 {
 		t.Fatalf("expected all fan-in parents, got:\n%s", formatted)
 	}
 }
@@ -72,7 +73,10 @@ func buildFormattedPanicTraceForTest(tree *traceTree) string {
 	if panicComponent != "" {
 		builder.WriteString("component: " + panicComponent + "\n")
 	}
-	builder.WriteString("events:\n")
-	formatTraceTree(&builder, tree, "  ")
+	stats := collectTraceRenderStats(tree)
+	builder.WriteString(formatTraceHopFlow(tree.Hop, stats, true) + "\n")
+	for i := range tree.Parents {
+		formatTraceTree(&builder, &tree.Parents[i], "", i == len(tree.Parents)-1, stats)
+	}
 	return strings.TrimRight(builder.String(), "\n")
 }
