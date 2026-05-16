@@ -32,7 +32,7 @@ func (c listToStream) Create(
 				return
 			}
 
-			list := data.List()
+			list := listToMsgs(data.List())
 
 			for idx := range list {
 				item := streamItem(
@@ -47,4 +47,36 @@ func (c listToStream) Create(
 			}
 		}
 	}, nil
+}
+
+func listToMsgs(list runtime.ListMsg) []runtime.Msg {
+	if values, ok := runtime.AsListInts(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewIntMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListStrings(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewStringMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListBools(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewBoolMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListFloats(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewFloatMsg(values[i])
+		}
+		return msgs
+	}
+	return list.Msgs()
 }

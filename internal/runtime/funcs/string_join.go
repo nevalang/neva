@@ -40,11 +40,21 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 			sep := sepMsg.Str()
 
 			list := dataMsg.List()
-			for i := range list {
-				if i > 0 {
-					builder.WriteString(sep)
+			if stringsList, ok := runtime.AsListStrings(list); ok {
+				for i := range stringsList {
+					if i > 0 {
+						builder.WriteString(sep)
+					}
+					builder.WriteString(stringsList[i])
 				}
-				builder.WriteString(list[i].Str())
+			} else {
+				msgList := list.Msgs()
+				for i := range msgList {
+					if i > 0 {
+						builder.WriteString(sep)
+					}
+					builder.WriteString(msgList[i].Str())
+				}
 			}
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
