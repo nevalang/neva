@@ -14,30 +14,34 @@ var (
 
 //nolint:ireturn // benchmark helper returns runtime.Msg by design.
 func makeDictMsg(size int) Msg {
-	entries := make(map[string]Msg, size)
+	entries := make(map[string]int64, size)
 	for i := range size {
-		entries["k"+strconv.Itoa(i)] = NewIntMsg(int64(i))
+		entries["k"+strconv.Itoa(i)] = int64(i)
 	}
-	return NewDictMsg(entries)
+	return NewDictIntMsg(entries)
 }
 
 // BenchmarkMsgListIter measures raw list traversal and integer extraction cost.
 func BenchmarkMsgListIter(b *testing.B) {
 	for _, size := range []int{8, 64, 512, 1024} {
 		b.Run("n="+strconv.Itoa(size), func(b *testing.B) {
-			items := make([]Msg, size)
+			items := make([]int64, size)
 			for i := range items {
-				items[i] = NewIntMsg(int64(i))
+				items[i] = int64(i)
 			}
-			listMsg := NewListMsg(items)
+			listMsg := NewListIntMsg(items)
+			data, ok := AsListInts(listMsg.List())
+			if !ok {
+				b.Fatal("expected int list message")
+			}
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 			for i := 0; i < b.N; i++ {
 				var sum int64
-				for _, item := range listMsg.List().Msgs() {
-					sum += item.Int()
+				for _, item := range data {
+					sum += item
 				}
 				intSink = sum
 			}
@@ -51,33 +55,40 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 		b.Run("hot_n="+strconv.Itoa(size), func(b *testing.B) {
 			msg := makeDictMsg(size)
 			hotKey := "k" + strconv.Itoa(size-1)
+			data, ok := AsDictInts(msg.Dict())
+			if !ok {
+				b.Fatal("expected int dict message")
+			}
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 			for i := 0; i < b.N; i++ {
-				intSink = msg.Dict().Msgs()[hotKey].Int()
+				intSink = data[hotKey]
 			}
 		})
 
 		b.Run("mixed_n="+strconv.Itoa(size), func(b *testing.B) {
-			entries := make(map[string]Msg, size)
+			entries := make(map[string]int64, size)
 			keys := make([]string, size)
 			for i := range size {
 				key := "k" + strconv.Itoa(i)
 				keys[i] = key
-				entries[key] = NewIntMsg(int64(i))
+				entries[key] = int64(i)
 			}
-			msg := NewDictMsg(entries)
+			msg := NewDictIntMsg(entries)
+			data, ok := AsDictInts(msg.Dict())
+			if !ok {
+				b.Fatal("expected int dict message")
+			}
 
 			b.ReportAllocs()
 			b.ResetTimer()
 			//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 			for i := 0; i < b.N; i++ {
 				var sum int64
-				data := msg.Dict().Msgs()
 				for _, key := range keys {
-					sum += data[key].Int()
+					sum += data[key]
 				}
 				intSink = sum
 			}
@@ -168,17 +179,21 @@ func BenchmarkMsgDictLookupScalars(b *testing.B) {
 
 func benchListIterInt(b *testing.B, size int) {
 	b.Helper()
-	items := make([]Msg, size)
+	items := make([]int64, size)
 	for i := range items {
-		items[i] = NewIntMsg(int64(i))
+		items[i] = int64(i)
 	}
-	msg := NewListMsg(items)
+	msg := NewListIntMsg(items)
+	data, ok := AsListInts(msg.List())
+	if !ok {
+		b.Fatal("expected int list message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		var sum int64
-		for _, item := range msg.List() {
-			sum += item.Int()
+		for _, item := range data {
+			sum += item
 		}
 		intSink = sum
 	}
@@ -186,17 +201,21 @@ func benchListIterInt(b *testing.B, size int) {
 
 func benchListIterFloat(b *testing.B, size int) {
 	b.Helper()
-	items := make([]Msg, size)
+	items := make([]float64, size)
 	for i := range items {
-		items[i] = NewFloatMsg(float64(i) + 0.25)
+		items[i] = float64(i) + 0.25
 	}
-	msg := NewListMsg(items)
+	msg := NewListFloatMsg(items)
+	data, ok := AsListFloats(msg.List())
+	if !ok {
+		b.Fatal("expected float list message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		var sum float64
-		for _, item := range msg.List() {
-			sum += item.Float()
+		for _, item := range data {
+			sum += item
 		}
 		floatSink = sum
 	}
@@ -204,17 +223,21 @@ func benchListIterFloat(b *testing.B, size int) {
 
 func benchListIterBool(b *testing.B, size int) {
 	b.Helper()
-	items := make([]Msg, size)
+	items := make([]bool, size)
 	for i := range items {
-		items[i] = NewBoolMsg(i%2 == 0)
+		items[i] = i%2 == 0
 	}
-	msg := NewListMsg(items)
+	msg := NewListBoolMsg(items)
+	data, ok := AsListBools(msg.List())
+	if !ok {
+		b.Fatal("expected bool list message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		var count int64
-		for _, item := range msg.List() {
-			if item.Bool() {
+		for _, item := range data {
+			if item {
 				count++
 			}
 		}
@@ -224,17 +247,21 @@ func benchListIterBool(b *testing.B, size int) {
 
 func benchListIterString(b *testing.B, size int) {
 	b.Helper()
-	items := make([]Msg, size)
+	items := make([]string, size)
 	for i := range items {
-		items[i] = NewStringMsg("v" + strconv.Itoa(i))
+		items[i] = "v" + strconv.Itoa(i)
 	}
-	msg := NewListMsg(items)
+	msg := NewListStringMsg(items)
+	data, ok := AsListStrings(msg.List())
+	if !ok {
+		b.Fatal("expected string list message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		var total int64
-		for _, item := range msg.List() {
-			total += int64(len(item.Str()))
+		for _, item := range data {
+			total += int64(len(item))
 		}
 		intSink = total
 	}
@@ -242,56 +269,72 @@ func benchListIterString(b *testing.B, size int) {
 
 func benchDictLookupInt(b *testing.B, size int, hotKey string) {
 	b.Helper()
-	entries := make(map[string]Msg, size)
+	entries := make(map[string]int64, size)
 	for i := range size {
-		entries["k"+strconv.Itoa(i)] = NewIntMsg(int64(i))
+		entries["k"+strconv.Itoa(i)] = int64(i)
 	}
-	msg := NewDictMsg(entries)
+	msg := NewDictIntMsg(entries)
+	data, ok := AsDictInts(msg.Dict())
+	if !ok {
+		b.Fatal("expected int dict message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		intSink = msg.Dict()[hotKey].Int()
+		intSink = data[hotKey]
 	}
 }
 
 func benchDictLookupFloat(b *testing.B, size int, hotKey string) {
 	b.Helper()
-	entries := make(map[string]Msg, size)
+	entries := make(map[string]float64, size)
 	for i := range size {
-		entries["k"+strconv.Itoa(i)] = NewFloatMsg(float64(i) + 0.25)
+		entries["k"+strconv.Itoa(i)] = float64(i) + 0.25
 	}
-	msg := NewDictMsg(entries)
+	msg := NewDictFloatMsg(entries)
+	data, ok := AsDictFloats(msg.Dict())
+	if !ok {
+		b.Fatal("expected float dict message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		floatSink = msg.Dict()[hotKey].Float()
+		floatSink = data[hotKey]
 	}
 }
 
 func benchDictLookupBool(b *testing.B, size int, hotKey string) {
 	b.Helper()
-	entries := make(map[string]Msg, size)
+	entries := make(map[string]bool, size)
 	for i := range size {
-		entries["k"+strconv.Itoa(i)] = NewBoolMsg(i%2 == 0)
+		entries["k"+strconv.Itoa(i)] = i%2 == 0
 	}
-	msg := NewDictMsg(entries)
+	msg := NewDictBoolMsg(entries)
+	data, ok := AsDictBools(msg.Dict())
+	if !ok {
+		b.Fatal("expected bool dict message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		boolSink = msg.Dict()[hotKey].Bool()
+		boolSink = data[hotKey]
 	}
 }
 
 func benchDictLookupString(b *testing.B, size int, hotKey string) {
 	b.Helper()
-	entries := make(map[string]Msg, size)
+	entries := make(map[string]string, size)
 	for i := range size {
-		entries["k"+strconv.Itoa(i)] = NewStringMsg("v" + strconv.Itoa(i))
+		entries["k"+strconv.Itoa(i)] = "v" + strconv.Itoa(i)
 	}
-	msg := NewDictMsg(entries)
+	msg := NewDictStringMsg(entries)
+	data, ok := AsDictStrings(msg.Dict())
+	if !ok {
+		b.Fatal("expected string dict message")
+	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		stringSink = msg.Dict()[hotKey].Str()
+		stringSink = data[hotKey]
 	}
 }

@@ -202,8 +202,6 @@ type ListMsg interface {
 	Floats() []float64
 	Strings() []string
 	Len() int
-	String() string
-	MarshalJSON() ([]byte, error)
 	Equal(ListMsg) bool
 }
 
@@ -217,12 +215,11 @@ type listValueMsg struct {
 func (msg listValueMsg) List() ListMsg { return msg.v }
 
 func (msg listValueMsg) String() string {
-	return msg.v.String()
+	return listToString(msg.v)
 }
 
-//nolint:wrapcheck // Delegates to list implementation.
 func (msg listValueMsg) MarshalJSON() ([]byte, error) {
-	return msg.v.MarshalJSON()
+	return listMarshalJSON(msg.v)
 }
 
 func (msg listValueMsg) Equal(other Msg) bool {
@@ -357,8 +354,6 @@ type DictMsg interface {
 	Floats() map[string]float64
 	Strings() map[string]string
 	Len() int
-	String() string
-	MarshalJSON() ([]byte, error)
 	Equal(DictMsg) bool
 }
 
@@ -370,10 +365,9 @@ type dictValueMsg struct {
 
 //nolint:ireturn // Msg contract uses interfaces.
 func (msg dictValueMsg) Dict() DictMsg  { return msg.v }
-func (msg dictValueMsg) String() string { return msg.v.String() }
+func (msg dictValueMsg) String() string { return dictToString(msg.v) }
 
-//nolint:wrapcheck // Delegates to dict implementation.
-func (msg dictValueMsg) MarshalJSON() ([]byte, error) { return msg.v.MarshalJSON() }
+func (msg dictValueMsg) MarshalJSON() ([]byte, error) { return dictMarshalJSON(msg.v) }
 func (msg dictValueMsg) Equal(other Msg) bool {
 	otherDict, ok := other.(dictValueMsg)
 	return ok && msg.v.Equal(otherDict.v)
@@ -705,6 +699,56 @@ func asGenericDict(dict DictMsg) map[string]Msg {
 
 func mustJSON(msg interface{ MarshalJSON() ([]byte, error) }) string {
 	b, err := msg.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+func listMarshalJSON(list ListMsg) ([]byte, error) {
+	switch typed := list.(type) {
+	case genericListMsg:
+		return typed.MarshalJSON()
+	case boolListMsg:
+		return typed.MarshalJSON()
+	case intListMsg:
+		return typed.MarshalJSON()
+	case floatListMsg:
+		return typed.MarshalJSON()
+	case stringListMsg:
+		return typed.MarshalJSON()
+	default:
+		panic("unexpected list implementation")
+	}
+}
+
+func listToString(list ListMsg) string {
+	b, err := listMarshalJSON(list)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
+func dictMarshalJSON(dict DictMsg) ([]byte, error) {
+	switch typed := dict.(type) {
+	case genericDictMsg:
+		return typed.MarshalJSON()
+	case boolDictMsg:
+		return typed.MarshalJSON()
+	case intDictMsg:
+		return typed.MarshalJSON()
+	case floatDictMsg:
+		return typed.MarshalJSON()
+	case stringDictMsg:
+		return typed.MarshalJSON()
+	default:
+		panic("unexpected dict implementation")
+	}
+}
+
+func dictToString(dict DictMsg) string {
+	b, err := dictMarshalJSON(dict)
 	if err != nil {
 		panic(err)
 	}

@@ -257,7 +257,7 @@ func (s SelectedMsg) String() string {
 	return fmt.Sprint(s.OrderedMsg)
 }
 
-func (a *ArrayInport) selectedFromCtx(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
+func (a *ArrayInport) selectedFromContext(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
 	index := Uint8Index(slotIdx)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -274,10 +274,10 @@ func (a *ArrayInport) selectedFromCtx(ctx context.Context, slotIdx int, ordered 
 	}
 }
 
-func (a *ArrayInport) tryReceiveSlot(ctx context.Context, slotIdx int) (SelectedMsg, bool) {
+func (a *ArrayInport) receiveSlotIfReady(ctx context.Context, slotIdx int) (SelectedMsg, bool) {
 	select {
 	case ordered := <-a.chans[slotIdx]:
-		return a.selectedFromCtx(ctx, slotIdx, ordered), true
+		return a.selectedFromContext(ctx, slotIdx, ordered), true
 	default:
 		return SelectedMsg{}, false
 	}
@@ -301,7 +301,7 @@ func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				buf = append(buf, a.selectedFromCtx(ctx, slotIdx, orderedMsg))
+				buf = append(buf, a.selectedFromContext(ctx, slotIdx, orderedMsg))
 			}
 		}
 	}
@@ -322,25 +322,29 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				return a.selectedFromCtx(ctx, 0, ordered), true
+				return a.selectedFromContext(ctx, 0, ordered), true
 			}
 		}
 
 		// Fast path: two slots can avoid batched polling + sort.
+		// Strategy:
+		// 1) Block until first message is received from either slot.
+		// 2) Try one non-blocking read from each slot to collect a possible competitor.
+		// 3) If competitor exists, return older one and buffer the newer one.
 		if len(a.chans) == 2 {
 			var first SelectedMsg
 			select {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				first = a.selectedFromCtx(ctx, 0, ordered)
+				first = a.selectedFromContext(ctx, 0, ordered)
 			case ordered := <-a.chans[1]:
-				first = a.selectedFromCtx(ctx, 1, ordered)
+				first = a.selectedFromContext(ctx, 1, ordered)
 			}
 
-			second, ok := a.tryReceiveSlot(ctx, 0)
+			second, ok := a.receiveSlotIfReady(ctx, 0)
 			if !ok {
-				second, ok = a.tryReceiveSlot(ctx, 1)
+				second, ok = a.receiveSlotIfReady(ctx, 1)
 			}
 			if ok {
 				if second.OrderedMsg.index < first.OrderedMsg.index {

@@ -129,6 +129,70 @@ func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
 	return unionMsg.Data()
 }
 
+func listToMsgs(list runtime.ListMsg) []runtime.Msg {
+	if values, ok := runtime.AsListInts(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewIntMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListStrings(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewStringMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListBools(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewBoolMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListFloats(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewFloatMsg(values[i])
+		}
+		return msgs
+	}
+	return list.Msgs()
+}
+
+func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
+	if values, ok := runtime.AsDictInts(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewIntMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictStrings(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewStringMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictBools(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewBoolMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictFloats(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewFloatMsg(value)
+		}
+		return msgs
+	}
+	return dict.Msgs()
+}
+
 // --- Trace ---
 
 // formatTerminationDataflowTrace renders termination-oriented dataflow ancestry
