@@ -11,6 +11,7 @@ paths:
 - Prefer modern Go idioms available in the target version over legacy patterns.
 - Always run `gofmt` on changed Go files.
 - Respect active lints.
+- Never add file-wide or package-wide `nolint` directives. If suppression is unavoidable, keep it narrowly scoped to the exact line/rule and add a short justification.
 - Prefer `Makefile` targets for standard checks when applicable.
 - Runtime boundary rule is strict:
   - `internal/runtime/*.go`: stdlib imports only
