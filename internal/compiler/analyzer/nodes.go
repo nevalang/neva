@@ -208,18 +208,6 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 		}
 	}
 
-	// default any
-	// TODO: Remove this! See github issue about implicit any in nodes.
-	if len(resolvedNodeArgs) == 0 && len(nodeIface.TypeParams.Params) == 1 {
-		resolvedNodeArgs = []typesystem.Expr{
-			{
-				Inst: &typesystem.InstExpr{
-					Ref: core.EntityRef{Name: "any"},
-				},
-			},
-		}
-	}
-
 	// Finally check that every argument is compatible
 	// with corresponding parameter of the node's interface.
 	if err = a.resolver.CheckArgsCompatibility(

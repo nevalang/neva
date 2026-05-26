@@ -9,7 +9,7 @@ const d dict<string> = {
 }
 
 def Main(start any) (stop any) {
-    get Get, println fmt.Println, panic runtime.Panic
+    get Get<any>, println fmt.Println<any>, panic runtime.Panic
     ---
     :start -> [
         'name' -> get:key,

@@ -30,8 +30,8 @@ def Main(start any) (stop any) {
 }
 
 def PrintAfter1Sec(data any) (res any) {
-	delay time.Delay
-	println fmt.Println
+	delay time.Delay<any>
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:data -> [
