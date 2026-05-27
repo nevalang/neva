@@ -19,6 +19,8 @@ jobs:
         with:
           go-version: '1.26.1'
           cache: false
+      - name: download modules (retry)
+        run: bash scripts/ci/go-mod-download-with-retry.sh
       - name: gofix-check
         run: |
           go fix ./...
@@ -33,6 +35,8 @@ jobs:
         with:
           go-version: '1.26.1'
           cache: false
+      - name: download modules (retry)
+        run: bash scripts/ci/go-mod-download-with-retry.sh
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
@@ -44,7 +48,12 @@ jobs:
     name: govulncheck
     runs-on: ubuntu-latest
     steps:
-      - uses: golang/govulncheck-action@v1
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-          output-format: text
+          go-version: '1.26.1'
+          cache: false
+      - name: download modules (retry)
+        run: bash scripts/ci/go-mod-download-with-retry.sh
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
