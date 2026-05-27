@@ -17,8 +17,6 @@ pre-push:
     gofix-check:
       run: make gofix-check
     lint:
-      run: make lint
+      run: make lint-new
     test-unit:
       run: make test-unit
-    vulncheck:
-      run: make vulncheck

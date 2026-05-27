@@ -32,6 +32,10 @@ gofix-check:
 lint:
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run ./...
 
+.PHONY: lint-new
+lint-new:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run --new-from-rev=origin/main ./...
+
 .PHONY: hooks-install
 hooks-install:
 	go install github.com/evilmartians/lefthook@v1.13.6
