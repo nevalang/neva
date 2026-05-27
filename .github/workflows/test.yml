@@ -14,7 +14,7 @@ jobs:
     - name: setup go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.1'
+        go-version: '1.26.3'
     - name: download modules (retry)
       run: bash scripts/ci/go-mod-download-with-retry.sh
     - name: test (unit and non-e2e integration)
@@ -31,7 +31,7 @@ jobs:
     - name: setup go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.1'
+        go-version: '1.26.3'
     - name: download modules (retry)
       run: bash scripts/ci/go-mod-download-with-retry.sh
     - name: test (e2e and examples)
