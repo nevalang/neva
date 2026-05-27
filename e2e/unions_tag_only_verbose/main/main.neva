@@ -20,7 +20,7 @@ type Day union {
 }
 
 def DayPrinter(day Day) (sig any) {
-    println fmt.Println
+    println fmt.Println<any>
     panic runtime.Panic
     ---
     :day -> println:data

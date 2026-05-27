@@ -4,8 +4,8 @@ import {
 }
 
 def Main(start any) (stop any) {
-    eq Eq
-    println fmt.Println
+    eq Eq<any>
+    println fmt.Println<any>
     panic runtime.Panic
     ---
     :start -> [
