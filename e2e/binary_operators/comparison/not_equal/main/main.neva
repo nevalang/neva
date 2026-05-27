@@ -4,8 +4,8 @@ import {
 }
 
 def Main(start any) (stop any) {
-    ne Ne
-    println fmt.Println
+    ne Ne<any>
+    println fmt.Println<any>
     panic runtime.Panic
     ---
     :start -> [
