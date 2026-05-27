@@ -26,7 +26,6 @@ Install git hooks once after clone:
 
 ```bash
 make hooks-install
-make hooks-check
 ```
 
 Without installed `lefthook`, pre-commit/pre-push checks are not enforced locally.
