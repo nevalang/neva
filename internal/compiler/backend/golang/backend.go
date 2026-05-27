@@ -469,12 +469,13 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		}
 
 		elements := make([]string, len(msg.List))
-		for i, v := range msg.List {
-			el, err := b.getMessageString(&v)
+		for idx := range msg.List {
+			value := msg.List[idx]
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}
-			elements[i] = el
+			elements[idx] = el
 		}
 		return fmt.Sprintf("runtime.NewListMsg([]runtime.Msg{%s})", strings.Join(elements, ", ")), nil
 	case ir.MsgTypeDict:
@@ -524,27 +525,28 @@ func scalarListCtor(list []ir.Message) (string, bool) {
 	}
 
 	values := make([]string, len(list))
+
+	build := func(
+		convert func(ir.Message) string,
+		ctorFmt string,
+	) (string, bool) {
+		for i := range list {
+			values[i] = convert(list[i])
+		}
+		return fmt.Sprintf(ctorFmt, strings.Join(values, ", ")), true
+	}
+
+	// Only scalar homogeneous lists are typed in this fast-path.
+	//nolint:exhaustive
 	switch sameType {
 	case ir.MsgTypeBool:
-		for i := range list {
-			values[i] = strconv.FormatBool(list[i].Bool)
-		}
-		return fmt.Sprintf("runtime.NewListBoolMsg([]bool{%s})", strings.Join(values, ", ")), true
+		return build(func(m ir.Message) string { return strconv.FormatBool(m.Bool) }, "runtime.NewListBoolMsg([]bool{%s})")
 	case ir.MsgTypeInt:
-		for i := range list {
-			values[i] = strconv.FormatInt(list[i].Int, 10)
-		}
-		return fmt.Sprintf("runtime.NewListIntMsg([]int64{%s})", strings.Join(values, ", ")), true
+		return build(func(m ir.Message) string { return strconv.FormatInt(m.Int, 10) }, "runtime.NewListIntMsg([]int64{%s})")
 	case ir.MsgTypeFloat:
-		for i := range list {
-			values[i] = fmt.Sprintf("%v", list[i].Float)
-		}
-		return fmt.Sprintf("runtime.NewListFloatMsg([]float64{%s})", strings.Join(values, ", ")), true
+		return build(func(m ir.Message) string { return fmt.Sprintf("%v", m.Float) }, "runtime.NewListFloatMsg([]float64{%s})")
 	case ir.MsgTypeString:
-		for i := range list {
-			values[i] = fmt.Sprintf("%q", list[i].String)
-		}
-		return fmt.Sprintf("runtime.NewListStringMsg([]string{%s})", strings.Join(values, ", ")), true
+		return build(func(m ir.Message) string { return fmt.Sprintf("%q", m.String) }, "runtime.NewListStringMsg([]string{%s})")
 	default:
 		return "", false
 	}
@@ -563,7 +565,8 @@ func scalarDictCtor(dict map[string]ir.Message) (string, bool) {
 		values   = make([]string, 0, len(dict))
 	)
 
-	for key, value := range dict {
+	for key := range dict {
+		value := dict[key]
 		if !hasType {
 			sameType = value.Type
 			hasType = true
@@ -571,29 +574,44 @@ func scalarDictCtor(dict map[string]ir.Message) (string, bool) {
 		if value.Type != sameType {
 			return "", false
 		}
-		switch sameType {
-		case ir.MsgTypeBool:
-			values = append(values, fmt.Sprintf("%q: %v", key, value.Bool))
-		case ir.MsgTypeInt:
-			values = append(values, fmt.Sprintf("%q: %v", key, value.Int))
-		case ir.MsgTypeFloat:
-			values = append(values, fmt.Sprintf("%q: %v", key, value.Float))
-		case ir.MsgTypeString:
-			values = append(values, fmt.Sprintf("%q: %q", key, value.String))
-		default:
+		entry, ok := scalarDictEntryCtor(key, &value, sameType)
+		if !ok {
 			return "", false
 		}
+		values = append(values, entry)
 	}
 
+	return scalarDictRootCtor(sameType, values)
+}
+
+func scalarDictEntryCtor(key string, value *ir.Message, sameType ir.MsgType) (string, bool) {
+	//nolint:exhaustive // typed fast-path handles scalar dict values only.
 	switch sameType {
 	case ir.MsgTypeBool:
-		return fmt.Sprintf("runtime.NewDictBoolMsg(map[string]bool{%s})", strings.Join(values, ", ")), true
+		return fmt.Sprintf("%q: %v", key, value.Bool), true
 	case ir.MsgTypeInt:
-		return fmt.Sprintf("runtime.NewDictIntMsg(map[string]int64{%s})", strings.Join(values, ", ")), true
+		return fmt.Sprintf("%q: %v", key, value.Int), true
 	case ir.MsgTypeFloat:
-		return fmt.Sprintf("runtime.NewDictFloatMsg(map[string]float64{%s})", strings.Join(values, ", ")), true
+		return fmt.Sprintf("%q: %v", key, value.Float), true
 	case ir.MsgTypeString:
-		return fmt.Sprintf("runtime.NewDictStringMsg(map[string]string{%s})", strings.Join(values, ", ")), true
+		return fmt.Sprintf("%q: %q", key, value.String), true
+	default:
+		return "", false
+	}
+}
+
+func scalarDictRootCtor(sameType ir.MsgType, values []string) (string, bool) {
+	joined := strings.Join(values, ", ")
+	//nolint:exhaustive // typed fast-path handles scalar dict values only.
+	switch sameType {
+	case ir.MsgTypeBool:
+		return fmt.Sprintf("runtime.NewDictBoolMsg(map[string]bool{%s})", joined), true
+	case ir.MsgTypeInt:
+		return fmt.Sprintf("runtime.NewDictIntMsg(map[string]int64{%s})", joined), true
+	case ir.MsgTypeFloat:
+		return fmt.Sprintf("runtime.NewDictFloatMsg(map[string]float64{%s})", joined), true
+	case ir.MsgTypeString:
+		return fmt.Sprintf("runtime.NewDictStringMsg(map[string]string{%s})", joined), true
 	default:
 		return "", false
 	}
