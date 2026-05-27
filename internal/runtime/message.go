@@ -363,7 +363,10 @@ type dictValueMsg struct {
 }
 
 //nolint:ireturn // Msg contract uses interfaces.
-func (msg dictValueMsg) Dict() DictMsg  { return msg.v }
+func (msg dictValueMsg) Dict() DictMsg { return msg.v }
+
+// String delegates to shared dict formatter because DictMsg contract
+// intentionally does not require fmt.Stringer.
 func (msg dictValueMsg) String() string { return dictToString(msg.v) }
 
 func (msg dictValueMsg) MarshalJSON() ([]byte, error) { return dictMarshalJSON(msg.v) }

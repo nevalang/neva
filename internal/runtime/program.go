@@ -257,7 +257,8 @@ func (s SelectedMsg) String() string {
 	return fmt.Sprint(s.OrderedMsg)
 }
 
-func (a *ArrayInport) orderedToSelectedMsg(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
+// recordAndSelectMsg enriches received transport envelope with runtime trace/interceptor side effects.
+func (a *ArrayInport) recordAndSelectMsg(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
 	index := Uint8Index(slotIdx)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -277,7 +278,7 @@ func (a *ArrayInport) orderedToSelectedMsg(ctx context.Context, slotIdx int, ord
 func (a *ArrayInport) receiveSlotIfReady(ctx context.Context, slotIdx int) (SelectedMsg, bool) {
 	select {
 	case ordered := <-a.chans[slotIdx]:
-		return a.orderedToSelectedMsg(ctx, slotIdx, ordered), true
+		return a.recordAndSelectMsg(ctx, slotIdx, ordered), true
 	default:
 		return SelectedMsg{}, false
 	}
@@ -301,7 +302,7 @@ func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				buf = append(buf, a.orderedToSelectedMsg(ctx, slotIdx, orderedMsg))
+				buf = append(buf, a.recordAndSelectMsg(ctx, slotIdx, orderedMsg))
 			}
 		}
 	}
@@ -322,7 +323,7 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				return a.orderedToSelectedMsg(ctx, 0, ordered), true
+				return a.recordAndSelectMsg(ctx, 0, ordered), true
 			}
 		}
 
@@ -337,9 +338,9 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				first = a.orderedToSelectedMsg(ctx, 0, ordered)
+				first = a.recordAndSelectMsg(ctx, 0, ordered)
 			case ordered := <-a.chans[1]:
-				first = a.orderedToSelectedMsg(ctx, 1, ordered)
+				first = a.recordAndSelectMsg(ctx, 1, ordered)
 			}
 
 			// We intentionally probe both slots once after the blocking receive.
