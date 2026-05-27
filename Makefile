@@ -34,7 +34,15 @@ lint:
 
 .PHONY: hooks-install
 hooks-install:
-	lefthook install
+	go install github.com/evilmartians/lefthook@v1.13.6
+	"$$(go env GOPATH)/bin/lefthook" install
+
+.PHONY: hooks-check
+hooks-check:
+	@hooks_path="$$(git rev-parse --git-path hooks)"; \
+	test -x "$$hooks_path/pre-commit" || (echo "pre-commit hook is not installed"; exit 1); \
+	test -x "$$hooks_path/pre-push" || (echo "pre-push hook is not installed"; exit 1)
+	@echo "hooks are installed"
 
 .PHONY: test-unit
 test-unit:
