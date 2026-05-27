@@ -14,9 +14,7 @@ jobs:
     - name: setup go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.3'
-    - name: download modules (retry)
-      run: bash scripts/ci/go-mod-download-with-retry.sh
+        go-version: '1.26.1'
     - name: test (unit and non-e2e integration)
       run: |
         go list ./... \
@@ -31,9 +29,7 @@ jobs:
     - name: setup go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.3'
-    - name: download modules (retry)
-      run: bash scripts/ci/go-mod-download-with-retry.sh
+        go-version: '1.26.1'
     - name: test (e2e and examples)
       # Run with default Go package parallelism; isolation hardening is tracked in #1064.
       run: go test -v ./e2e/... ./examples/...

@@ -28,7 +28,6 @@ type Msg interface {
 	Struct() StructMsg
 	Union() UnionMsg
 
-	MarshalJSON() ([]byte, error)
 	Equal(Msg) bool
 }
 

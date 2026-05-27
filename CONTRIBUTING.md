@@ -22,14 +22,6 @@ Not required but recommended:
 
 ## Development
 
-Install git hooks once after clone:
-
-```bash
-make hooks-install
-```
-
-Without installed `lefthook`, pre-commit/pre-push checks are not enforced locally.
-
 ## Engineering Harness (`AGENTS.md`)
 
 This repository uses hierarchical `AGENTS.md` files as an engineering harness

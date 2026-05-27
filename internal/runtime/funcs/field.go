@@ -11,16 +11,11 @@ type structField struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
-	var pathStrings []string
-	if typedPath, ok := runtime.AsListStrings(cfg.List()); ok {
-		pathStrings = append(pathStrings, typedPath...)
-	} else {
-		path := cfg.List().Msgs()
-		pathStrings = make([]string, 0, len(path))
-		for _, el := range path {
-			pathStrings = append(pathStrings, el.Str())
-		}
+	typedPath, ok := runtime.AsListStrings(cfg.List())
+	if !ok {
+		return nil, errors.New("field config must be list<string>")
 	}
+	pathStrings := append([]string(nil), typedPath...)
 
 	if len(pathStrings) == 0 {
 		return nil, errors.New("field path cannot be empty")

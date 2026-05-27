@@ -257,7 +257,7 @@ func (s SelectedMsg) String() string {
 	return fmt.Sprint(s.OrderedMsg)
 }
 
-func (a *ArrayInport) selectedFromContext(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
+func (a *ArrayInport) orderedToSelectedMsg(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
 	index := Uint8Index(slotIdx)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -277,7 +277,7 @@ func (a *ArrayInport) selectedFromContext(ctx context.Context, slotIdx int, orde
 func (a *ArrayInport) receiveSlotIfReady(ctx context.Context, slotIdx int) (SelectedMsg, bool) {
 	select {
 	case ordered := <-a.chans[slotIdx]:
-		return a.selectedFromContext(ctx, slotIdx, ordered), true
+		return a.orderedToSelectedMsg(ctx, slotIdx, ordered), true
 	default:
 		return SelectedMsg{}, false
 	}
@@ -301,7 +301,7 @@ func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				buf = append(buf, a.selectedFromContext(ctx, slotIdx, orderedMsg))
+				buf = append(buf, a.orderedToSelectedMsg(ctx, slotIdx, orderedMsg))
 			}
 		}
 	}
@@ -322,7 +322,7 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				return a.selectedFromContext(ctx, 0, ordered), true
+				return a.orderedToSelectedMsg(ctx, 0, ordered), true
 			}
 		}
 
@@ -337,11 +337,15 @@ func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 			case <-ctx.Done():
 				return SelectedMsg{}, false
 			case ordered := <-a.chans[0]:
-				first = a.selectedFromContext(ctx, 0, ordered)
+				first = a.orderedToSelectedMsg(ctx, 0, ordered)
 			case ordered := <-a.chans[1]:
-				first = a.selectedFromContext(ctx, 1, ordered)
+				first = a.orderedToSelectedMsg(ctx, 1, ordered)
 			}
 
+			// We intentionally probe both slots once after the blocking receive.
+			// If a new message arrived meanwhile, it competes by OrderedMsg.index.
+			// Reading from the same slot twice is valid and preserves ordering:
+			// older index is returned now, newer one is buffered.
 			second, ok := a.receiveSlotIfReady(ctx, 0)
 			if !ok {
 				second, ok = a.receiveSlotIfReady(ctx, 1)
