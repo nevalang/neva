@@ -192,6 +192,47 @@ It reduces code, especially for mappings between records, vectors, and dictionar
 
 Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary for certain critical cases where the alternative would be an overly complicated type system.
 
+Practical semantics:
+
+1. `any` is the top type (`T <: any` for any concrete `T`), and `any <: any`.
+2. `any` is intentionally opaque at use sites: you cannot safely treat `any`
+   as `int`/`string`/`list`/`dict` without explicit narrowing.
+3. `T: any` remains a valid generic constraint.
+
+So `any` keeps APIs composable without weakening compile-time safety.
+
+## Should `any` be forbidden as a generic type argument?
+
+Current policy: no, not at language level.
+
+`List<any>`, `Dict<string, any>`, or `Foo<any>` are valid but may reduce
+optimization opportunities for runtime container specialization.
+
+This is treated as a performance tradeoff, not a type-safety violation. If
+needed, this can be enforced later as a linter warning rather than a compiler
+error.
+
+## How should runtime specialize generic container operations?
+
+Public API should stay generic (for example `Get<T>(List<T>, idx) -> T`), while
+compiler lowering selects an internal runtime path by representation kind.
+
+Current practical strategy:
+
+1. Keep fast specialized paths for common scalar containers (`int`, `string`,
+   `bool`, `float`).
+2. Use boxed/generic fallback for complex, nested, union-heavy, or `any`-typed
+   containers unless profiling justifies deeper specialization.
+3. Treat this as an implementation detail, not a user-visible API split.
+
+This keeps language surface simple and allows performance work to evolve
+incrementally.
+
+## Are union tag checks avoidable?
+
+No. Tagged unions are sum types; runtime must inspect discriminants to choose a
+case branch. These checks are semantic, not accidental runtime guessing.
+
 ## How should errors and execution traces relate in Neva?
 
 Treat them as different layers:
