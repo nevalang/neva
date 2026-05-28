@@ -88,8 +88,8 @@ func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
 	net := got.Entities["C1"].Component[0].Net
 	conn := net[0]
 
-	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Senders[0].PortAddr.Idx)
-	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, arrayBypassIdxPointer(), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, arrayBypassIdxPointer(), conn.Receivers[0].PortAddr.Idx)
 }
 
 func TestParser_ParseFile_ReservedArrayBypassIdx(t *testing.T) {
@@ -134,6 +134,23 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	senderPortAddr := net[1].Senders[0].PortAddr
 	require.Equal(t, "lonely", senderPortAddr.Node)
 	require.Equal(t, "", senderPortAddr.Port)
+}
+
+func TestParser_ParseFile_PortOrder(t *testing.T) {
+	text := []byte(`
+		def Range(from int, to int) (res int, err error) {}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.True(t, err == nil)
+
+	io := got.Entities["Range"].Component[0].IO
+	require.Equal(t, 0, io.In["from"].Order)
+	require.Equal(t, 1, io.In["to"].Order)
+	require.Equal(t, 0, io.Out["res"].Order)
+	require.Equal(t, 1, io.Out["err"].Order)
 }
 
 func TestParser_ParseFile_ChainedConnections(t *testing.T) {

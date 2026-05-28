@@ -134,6 +134,8 @@ func (a Analyzer) analyzePort(params []ts.Param, port src.Port, scope src.Scope)
 
 	return src.Port{
 		TypeExpr: *resolvedDef.BodyExpr,
+		Meta:     port.Meta,
+		Order:    port.Order,
 		IsArray:  port.IsArray,
 	}, nil
 }

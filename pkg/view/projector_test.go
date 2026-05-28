@@ -76,7 +76,7 @@ def Main(start any) (stop any) {
 
 	build := scanBuild(t, workspace)
 	program := ProjectProgram(build)
-	fileID := fileIDByName(t, program, "main")
+	fileID := mainFileID(t, program)
 	fileView, found := ProjectFileByID(build, fileID)
 	require.True(t, found)
 
@@ -88,6 +88,74 @@ def Main(start any) (stop any) {
 	require.NotEmpty(t, fileView.Components[0].Nodes)
 	require.NotNil(t, fileView.Components[0].Nodes[0].ResolvedRef)
 	require.Contains(t, fileView.Components[0].Nodes[0].ResolvedRef.CanonicalRef, "@:/")
+}
+
+func TestProjectFileByIDPreservesPortDeclarationOrder(t *testing.T) {
+	t.Parallel()
+
+	workspace := writeWorkspace(t, map[string]string{
+		"neva.yml": manifestYAML(),
+		"main.neva": `
+def Range(from int, to int) (res int, alt int) {
+	:from -> :res
+	:to -> :alt
+}
+`,
+	})
+
+	build := scanBuild(t, workspace)
+	fileView, found := ProjectFileByID(build, mainFileID(t, ProjectProgram(build)))
+	require.True(t, found)
+
+	rangeView := componentByName(t, fileView, "Range")
+	require.Equal(t, []string{"from", "to"}, portNames(rangeView.InPorts))
+	require.Equal(t, []string{"res", "alt"}, portNames(rangeView.OutPorts))
+}
+
+func TestProjectFileByIDIncludesDependencyInjectionArgs(t *testing.T) {
+	t.Parallel()
+
+	workspace := writeWorkspace(t, map[string]string{
+		"neva.yml": manifestYAML(),
+		"main.neva": `
+import { streams }
+import { fmt }
+
+def Main(data stream<int>) (res stream<int>, err error) {
+	for_each streams.ForEach<int>{Print2Lines}
+	---
+	:data -> for_each:data
+	for_each:res -> :res
+	for_each:err -> :err
+}
+
+def Print2Lines(data int) (res any, err error) {
+	print fmt.Println<int>?
+	---
+	:data -> print:data
+	print:res -> :res
+}
+`,
+	})
+
+	build := scanBuild(t, workspace)
+	fileView, found := ProjectFileByID(build, mainFileID(t, ProjectProgram(build)))
+	require.True(t, found)
+
+	mainView := componentByName(t, fileView, "Main")
+	var forEach Node
+	for _, node := range mainView.Nodes {
+		if node.Name == "for_each" {
+			forEach = node
+			break
+		}
+	}
+	require.Equal(t, "for_each", forEach.Name)
+	require.Len(t, forEach.DIArgs, 1)
+	require.Equal(t, "handler", forEach.DIArgs[0].Name)
+	require.Equal(t, "Print2Lines", forEach.DIArgs[0].EntityRef.Name)
+	require.NotNil(t, forEach.DIArgs[0].ResolvedRef)
+	require.Contains(t, forEach.DIArgs[0].ResolvedRef.Anchor.Text, "Print2Lines")
 }
 
 func TestEdgeIDStableAcrossConnectionBlockReorder(t *testing.T) {
@@ -143,14 +211,33 @@ def Pass(data any) (res any) {
 	build1 := scanBuild(t, workspace1)
 	build2 := scanBuild(t, workspace2)
 
-	file1, found := ProjectFileByID(build1, fileIDByName(t, ProjectProgram(build1), "main"))
+	file1, found := ProjectFileByID(build1, mainFileID(t, ProjectProgram(build1)))
 	require.True(t, found)
-	file2, found := ProjectFileByID(build2, fileIDByName(t, ProjectProgram(build2), "main"))
+	file2, found := ProjectFileByID(build2, mainFileID(t, ProjectProgram(build2)))
 	require.True(t, found)
 
 	connections1 := componentConnectionIDsByName(t, file1, "Echo")
 	connections2 := componentConnectionIDsByName(t, file2, "Echo")
 	require.Equal(t, connections1, connections2)
+}
+
+func componentByName(t *testing.T, fileView File, name string) Component {
+	t.Helper()
+	for _, component := range fileView.Components {
+		if component.Name == name {
+			return component
+		}
+	}
+	t.Fatalf("component %q not found", name)
+	return Component{}
+}
+
+func portNames(ports []Port) []string {
+	names := make([]string, 0, len(ports))
+	for _, port := range ports {
+		names = append(names, port.Name)
+	}
+	return names
 }
 
 func componentConnectionIDsByName(t *testing.T, fileView File, name string) []string {
@@ -170,8 +257,9 @@ func componentConnectionIDsByName(t *testing.T, fileView File, name string) []st
 	return nil
 }
 
-func fileIDByName(t *testing.T, program Program, fileName string) string {
+func mainFileID(t *testing.T, program Program) string {
 	t.Helper()
+	fileName := "main"
 	for _, module := range program.Modules {
 		for _, pkg := range module.Packages {
 			for _, file := range pkg.FileSummaries {

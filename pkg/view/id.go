@@ -42,6 +42,10 @@ func nodeID(componentViewID string, nodeName string) string {
 	return componentViewID + "/node/" + sanitizeSegment(nodeName)
 }
 
+func diNodeID(componentViewID string, nodeName string, diName string) string {
+	return nodeID(componentViewID, nodeName) + "/di/" + sanitizeSegment(diName)
+}
+
 func portID(parentID string, direction string, portName string) string {
 	return parentID + "/" + sanitizeSegment(direction) + "/port/" + sanitizeSegment(portName)
 }
