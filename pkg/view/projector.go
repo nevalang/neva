@@ -263,6 +263,7 @@ func projectComponent(
 			EntityRef:     node.EntityRef,
 			ResolvedRef:   resolveNodeRef(build, loc, node),
 			TypeArgs:      typeArgs(node.TypeArgs),
+			DIArgs:        projectDIArgs(build, loc, componentRefID, nodeName, node),
 			OverloadIndex: node.OverloadIndex,
 			ErrGuard:      node.ErrGuard,
 			Directives:    directives,
@@ -281,6 +282,86 @@ func projectComponent(
 	sort.Slice(out.Connections, func(i, j int) bool { return out.Connections[i].ID < out.Connections[j].ID })
 
 	return out
+}
+
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
+func projectDIArgs(
+	build ast.Build,
+	loc core.Location,
+	componentRefID string,
+	nodeName string,
+	node ast.Node,
+) []DINode {
+	args := node.DIArgs
+	if len(args) == 0 {
+		return nil
+	}
+
+	argNames := make([]string, 0, len(args))
+	for name := range args {
+		argNames = append(argNames, name)
+	}
+	sort.Slice(argNames, func(leftIdx, rightIdx int) bool {
+		left := args[argNames[leftIdx]].Meta
+		right := args[argNames[rightIdx]].Meta
+		if left.Start.Line != right.Start.Line {
+			return left.Start.Line < right.Start.Line
+		}
+		if left.Start.Column != right.Start.Column {
+			return left.Start.Column < right.Start.Column
+		}
+		return argNames[leftIdx] < argNames[rightIdx]
+	})
+
+	out := make([]DINode, 0, len(argNames))
+	for _, argName := range argNames {
+		arg := args[argName]
+		displayName := argName
+		if displayName == "" {
+			displayName = anonymousDIName(build, loc, node)
+		}
+		out = append(out, DINode{
+			ID:            diNodeID(componentRefID, nodeName, displayName),
+			Name:          displayName,
+			NodeName:      displayName,
+			EntityRef:     arg.EntityRef,
+			ResolvedRef:   resolveNodeRef(build, loc, arg),
+			TypeArgs:      typeArgs(arg.TypeArgs),
+			OverloadIndex: arg.OverloadIndex,
+			ErrGuard:      arg.ErrGuard,
+			Anchor:        anchorFromMeta(arg.Meta),
+		})
+	}
+	return out
+}
+
+//nolint:gocritic // AST values are passed by value in projection helpers for simpler call sites.
+func anonymousDIName(build ast.Build, loc core.Location, node ast.Node) string {
+	scope := ast.NewScope(build, loc)
+	entity, resolvedLoc, err := scope.Entity(node.EntityRef)
+	if err != nil || entity.Kind != ast.ComponentEntity || len(entity.Component) == 0 {
+		return ""
+	}
+
+	overloadIndex := 0
+	if node.OverloadIndex != nil {
+		overloadIndex = *node.OverloadIndex
+	}
+	if overloadIndex < 0 || overloadIndex >= len(entity.Component) {
+		return ""
+	}
+
+	targetScope := ast.NewScope(build, resolvedLoc)
+	component := entity.Component[overloadIndex]
+	nodeNames := sortedKeys(component.Nodes)
+	for _, candidateName := range nodeNames {
+		candidate := component.Nodes[candidateName]
+		candidateEntity, _, err := targetScope.Entity(candidate.EntityRef)
+		if err == nil && candidateEntity.Kind == ast.InterfaceEntity {
+			return candidateName
+		}
+	}
+	return ""
 }
 
 //nolint:govet // local helper shape is kept explicit for readability in projection pipeline.
@@ -445,6 +526,20 @@ func projectPorts(parentID, direction string, ports map[string]ast.Port) []Port 
 	}
 
 	portNames := sortedKeys(ports)
+	sort.SliceStable(portNames, func(leftIdx, rightIdx int) bool {
+		left := ports[portNames[leftIdx]]
+		right := ports[portNames[rightIdx]]
+		if left.Order != right.Order {
+			return left.Order < right.Order
+		}
+		if left.Meta.Start.Line != right.Meta.Start.Line {
+			return left.Meta.Start.Line < right.Meta.Start.Line
+		}
+		if left.Meta.Start.Column != right.Meta.Start.Column {
+			return left.Meta.Start.Column < right.Meta.Start.Column
+		}
+		return portNames[leftIdx] < portNames[rightIdx]
+	})
 	out := make([]Port, 0, len(portNames))
 	for _, portName := range portNames {
 		port := ports[portName]
@@ -452,6 +547,7 @@ func projectPorts(parentID, direction string, ports map[string]ast.Port) []Port 
 			ID:      portID(parentID, direction, portName),
 			Name:    portName,
 			Type:    exprString(port.TypeExpr),
+			Order:   port.Order,
 			IsArray: port.IsArray,
 			Anchor:  anchorFromMeta(port.Meta),
 		})

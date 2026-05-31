@@ -409,7 +409,7 @@ func (s *treeShapeListener) parsePorts(
 	in []generated.IPortDefContext,
 ) (map[string]src.Port, *compiler.Error) {
 	parsedInports := map[string]src.Port{}
-	for _, port := range in {
+	for order, port := range in {
 		single := port.SinglePortDef()
 		arr := port.ArrayPortDef()
 
@@ -442,6 +442,7 @@ func (s *treeShapeListener) parsePorts(
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
 			TypeExpr: v,
+			Order:    order,
 			Meta: core.Meta{
 				Text: port.GetText(),
 				Start: core.Position{
@@ -705,7 +706,7 @@ func (s *treeShapeListener) parsePortAddrIdx(
 	meta core.Meta,
 ) (*uint8, *compiler.Error) {
 	if idxText == "*" {
-		return compiler.Pointer(src.ArrayBypassIdx), nil
+		return arrayBypassIdxPointer(), nil
 	}
 
 	idxUint, err := strconv.ParseUint(idxText, 10, 8)
@@ -724,6 +725,11 @@ func (s *treeShapeListener) parsePortAddrIdx(
 
 	idxUint8 := uint8(idxUint)
 	return &idxUint8, nil
+}
+
+func arrayBypassIdxPointer() *uint8 {
+	idx := src.ArrayBypassIdx
+	return &idx
 }
 
 func (s *treeShapeListener) parseSinglePortAddr(

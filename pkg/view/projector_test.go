@@ -119,6 +119,74 @@ def Over(data string) (res string) {
 	require.Equal(t, 1, fileView.Components[1].OverloadIndex)
 }
 
+func TestProjectFileByIDPreservesPortDeclarationOrder(t *testing.T) {
+	t.Parallel()
+
+	workspace := writeWorkspace(t, map[string]string{
+		"neva.yml": manifestYAML(),
+		"main.neva": `
+def Range(from int, to int) (res int, alt int) {
+	:from -> :res
+	:to -> :alt
+}
+`,
+	})
+
+	build := scanBuild(t, workspace)
+	fileView, found := ProjectFileByID(build, mainFileID(t, ProjectProgram(build)))
+	require.True(t, found)
+
+	rangeView := componentByName(t, fileView, "Range")
+	require.Equal(t, []string{"from", "to"}, portNames(rangeView.InPorts))
+	require.Equal(t, []string{"res", "alt"}, portNames(rangeView.OutPorts))
+}
+
+func TestProjectFileByIDIncludesDependencyInjectionArgs(t *testing.T) {
+	t.Parallel()
+
+	workspace := writeWorkspace(t, map[string]string{
+		"neva.yml": manifestYAML(),
+		"main.neva": `
+import { streams }
+import { fmt }
+
+def Main(data stream<int>) (res stream<int>, err error) {
+	for_each streams.ForEach<int>{Print2Lines}
+	---
+	:data -> for_each:data
+	for_each:res -> :res
+	for_each:err -> :err
+}
+
+def Print2Lines(data int) (res any, err error) {
+	print fmt.Println<int>?
+	---
+	:data -> print:data
+	print:res -> :res
+}
+`,
+	})
+
+	build := scanBuild(t, workspace)
+	fileView, found := ProjectFileByID(build, mainFileID(t, ProjectProgram(build)))
+	require.True(t, found)
+
+	mainView := componentByName(t, fileView, "Main")
+	var forEach Node
+	for _, node := range mainView.Nodes {
+		if node.Name == "for_each" {
+			forEach = node
+			break
+		}
+	}
+	require.Equal(t, "for_each", forEach.Name)
+	require.Len(t, forEach.DIArgs, 1)
+	require.Equal(t, "handler", forEach.DIArgs[0].Name)
+	require.Equal(t, "Print2Lines", forEach.DIArgs[0].EntityRef.Name)
+	require.NotNil(t, forEach.DIArgs[0].ResolvedRef)
+	require.Contains(t, forEach.DIArgs[0].ResolvedRef.Anchor.Text, "Print2Lines")
+}
+
 func TestEdgeIDStableAcrossConnectionBlockReorder(t *testing.T) {
 	t.Parallel()
 
@@ -180,6 +248,25 @@ def Pass(data any) (res any) {
 	connections1 := componentConnectionIDsByName(t, file1, "Echo")
 	connections2 := componentConnectionIDsByName(t, file2, "Echo")
 	require.Equal(t, connections1, connections2)
+}
+
+func componentByName(t *testing.T, fileView File, name string) Component {
+	t.Helper()
+	for _, component := range fileView.Components {
+		if component.Name == name {
+			return component
+		}
+	}
+	t.Fatalf("component %q not found", name)
+	return Component{}
+}
+
+func portNames(ports []Port) []string {
+	names := make([]string, 0, len(ports))
+	for _, port := range ports {
+		names = append(names, port.Name)
+	}
+	return names
 }
 
 func componentConnectionIDsByName(t *testing.T, fileView File, name string) []string {

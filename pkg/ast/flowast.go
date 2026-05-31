@@ -313,6 +313,7 @@ type IO struct {
 type Port struct {
 	TypeExpr ts.Expr   `json:"typeExpr"`
 	Meta     core.Meta `json:"meta"`
+	Order    int       `json:"order"`
 	IsArray  bool      `json:"isArray,omitempty"`
 }
 
