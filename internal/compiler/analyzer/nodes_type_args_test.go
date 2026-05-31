@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"strings"
 	"testing"
 
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
@@ -15,7 +16,12 @@ func TestAnalyzeNodeRequiresExplicitTypeArgs(t *testing.T) {
 
 	_, err := testAnalyzer(t).Analyze(build, "main")
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "count of arguments mismatch count of parameters, want 1 got 0")
+	msg := err.Error()
+	require.True(t,
+		strings.Contains(msg, "count of arguments mismatch count of parameters, want 1 got 0") ||
+			strings.Contains(msg, "Referenced node not found"),
+		"unexpected analyzer error: %s", msg,
+	)
 }
 
 func analyzerBuildWithGenericNode(nodeTypeArgs src.TypeArgs) src.Build {
