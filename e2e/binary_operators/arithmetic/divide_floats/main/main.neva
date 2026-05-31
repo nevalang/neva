@@ -5,7 +5,7 @@ import {
 
 def Main(start any) (stop any) {
     div Div
-    println fmt.Println
+    println fmt.Println<any>
     panic runtime.Panic
     ---
     :start -> [

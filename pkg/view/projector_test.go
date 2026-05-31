@@ -90,6 +90,35 @@ def Main(start any) (stop any) {
 	require.Contains(t, fileView.Components[0].Nodes[0].ResolvedRef.CanonicalRef, "@:/")
 }
 
+func TestProjectFileByIDComponentOverloadsDeterministicOrder(t *testing.T) {
+	t.Parallel()
+
+	workspace := writeWorkspace(t, map[string]string{
+		"neva.yml": manifestYAML(),
+		"main.neva": `
+def Over(data any) (res any) {
+	:data -> :res
+}
+
+def Over(data string) (res string) {
+	:data -> :res
+}
+`,
+	})
+
+	build := scanBuild(t, workspace)
+	program := ProjectProgram(build)
+	fileID := mainFileID(t, program)
+	fileView, found := ProjectFileByID(build, fileID)
+	require.True(t, found)
+
+	require.Len(t, fileView.Components, 2)
+	require.Equal(t, "Over", fileView.Components[0].Name)
+	require.Equal(t, "Over", fileView.Components[1].Name)
+	require.Equal(t, 0, fileView.Components[0].OverloadIndex)
+	require.Equal(t, 1, fileView.Components[1].OverloadIndex)
+}
+
 func TestProjectFileByIDPreservesPortDeclarationOrder(t *testing.T) {
 	t.Parallel()
 
@@ -259,17 +288,16 @@ func componentConnectionIDsByName(t *testing.T, fileView File, name string) []st
 
 func mainFileID(t *testing.T, program Program) string {
 	t.Helper()
-	fileName := "main"
 	for _, module := range program.Modules {
 		for _, pkg := range module.Packages {
 			for _, file := range pkg.FileSummaries {
-				if file.Name == fileName {
+				if file.Name == "main" {
 					return file.ID
 				}
 			}
 		}
 	}
-	t.Fatalf("file %q not found", fileName)
+	t.Fatalf("file %q not found", "main")
 	return ""
 }
 
