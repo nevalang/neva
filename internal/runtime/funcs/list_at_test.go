@@ -65,7 +65,7 @@ func TestListAtGenericFallback(t *testing.T) {
 	}
 }
 
-// TestListAtOutOfBounds verifies out-of-bounds invariant is routed to err outport.
+// TestListAtOutOfBounds verifies invariant: out-of-bounds index emits `err` and no success result.
 func TestListAtOutOfBounds(t *testing.T) {
 	t.Parallel()
 
@@ -100,6 +100,7 @@ func TestListAtOutOfBounds(t *testing.T) {
 	}
 }
 
+// TestListItem verifies index normalization helper for negative and out-of-bounds indexes.
 func TestListItem(t *testing.T) {
 	t.Parallel()
 
@@ -114,6 +115,7 @@ func TestListItem(t *testing.T) {
 	}
 }
 
+// BenchmarkListAtTypedInt measures typed int-list access throughput in list_at.
 func BenchmarkListAtTypedInt(b *testing.B) {
 	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})
 	handler, err := (listAt{}).Create(io, nil)

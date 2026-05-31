@@ -68,6 +68,7 @@ func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				if !errOut.Send(ctx, errFromString("index out of bounds")) {
 					return
 				}
+				continue
 			}
 
 			if idx < 0 {
