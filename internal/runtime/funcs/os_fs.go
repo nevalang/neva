@@ -12,556 +12,172 @@ type osMkdir struct{}
 
 // Create creates runtime function for os.Mkdir wrapper.
 func (osMkdir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	permIn, err := rio.In.Single("perm")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			permMsg, ok := permIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			mode, err := fileModeFromRuntimeMsg(permMsg)
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if err := os.Mkdir(pathMsg.Str(), mode); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		mode, err := fileModeFromRuntimeMsg(permMsg)
+		if err != nil {
+			return nil, err
 		}
-	}, nil
+
+		if err := os.Mkdir(pathMsg.Str(), mode); err != nil {
+			return nil, fmt.Errorf("os.Mkdir: %w", err)
+		}
+
+		return emptyStruct(), nil
+	})
 }
 
 type osMkdirAll struct{}
 
 // Create creates runtime function for os.MkdirAll wrapper.
 func (osMkdirAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	permIn, err := rio.In.Single("perm")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			permMsg, ok := permIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			mode, err := fileModeFromRuntimeMsg(permMsg)
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if err := os.MkdirAll(pathMsg.Str(), mode); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		mode, err := fileModeFromRuntimeMsg(permMsg)
+		if err != nil {
+			return nil, err
 		}
-	}, nil
+
+		if err := os.MkdirAll(pathMsg.Str(), mode); err != nil {
+			return nil, fmt.Errorf("os.MkdirAll: %w", err)
+		}
+
+		return emptyStruct(), nil
+	})
 }
 
 type osReadDir struct{}
 
 // Create creates runtime function for os.ReadDir wrapper.
 func (osReadDir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			entries, err := os.ReadDir(pathMsg.Str())
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, dirEntriesMsg(entries)) {
-				return
-			}
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		entries, err := os.ReadDir(pathMsg.Str())
+		if err != nil {
+			return nil, fmt.Errorf("os.ReadDir: %w", err)
 		}
-	}, nil
+
+		return dirEntriesMsg(entries), nil
+	})
 }
 
 type osRemove struct{}
 
 // Create creates runtime function for os.Remove wrapper.
 func (osRemove) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.Remove(pathMsg.Str()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.Remove(pathMsg.Str()); err != nil {
+			return nil, fmt.Errorf("os.Remove: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osRemoveAll struct{}
 
 // Create creates runtime function for os.RemoveAll wrapper.
 func (osRemoveAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.RemoveAll(pathMsg.Str()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.RemoveAll(pathMsg.Str()); err != nil {
+			return nil, fmt.Errorf("os.RemoveAll: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osRename struct{}
 
 // Create creates runtime function for os.Rename wrapper.
 func (osRename) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	oldPathIn, err := rio.In.Single("oldPath")
-	if err != nil {
-		return nil, err
-	}
-
-	newPathIn, err := rio.In.Single("newPath")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			oldPathMsg, ok := oldPathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			newPathMsg, ok := newPathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.Rename(oldPathMsg.Str(), newPathMsg.Str()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createBinaryLoop(rio, "oldPath", "newPath", func(oldPathMsg, newPathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.Rename(oldPathMsg.Str(), newPathMsg.Str()); err != nil {
+			return nil, fmt.Errorf("os.Rename: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osStat struct{}
 
 // Create creates runtime function for os.Stat wrapper.
 func (osStat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			info, err := os.Stat(pathMsg.Str())
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, fileInfoMsg(info)) {
-				return
-			}
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		info, err := os.Stat(pathMsg.Str())
+		if err != nil {
+			return nil, fmt.Errorf("os.Stat: %w", err)
 		}
-	}, nil
+
+		return fileInfoMsg(info), nil
+	})
 }
 
 type osLstat struct{}
 
 // Create creates runtime function for os.Lstat wrapper.
 func (osLstat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			info, err := os.Lstat(pathMsg.Str())
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, fileInfoMsg(info)) {
-				return
-			}
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		info, err := os.Lstat(pathMsg.Str())
+		if err != nil {
+			return nil, fmt.Errorf("os.Lstat: %w", err)
 		}
-	}, nil
+
+		return fileInfoMsg(info), nil
+	})
 }
 
 type osTruncate struct{}
 
 // Create creates runtime function for os.Truncate wrapper.
 func (osTruncate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pathIn, err := rio.In.Single("path")
-	if err != nil {
-		return nil, err
-	}
-
-	sizeIn, err := rio.In.Single("size")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			pathMsg, ok := pathIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			sizeMsg, ok := sizeIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.Truncate(pathMsg.Str(), sizeMsg.Int()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createBinaryLoop(rio, "path", "size", func(pathMsg, sizeMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.Truncate(pathMsg.Str(), sizeMsg.Int()); err != nil {
+			return nil, fmt.Errorf("os.Truncate: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osTempDir struct{}
 
 // Create creates runtime function for os.TempDir wrapper.
 func (osTempDir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := rio.In.Single("sig")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			if _, ok := sigIn.Receive(ctx); !ok {
-				return
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(os.TempDir())) {
-				return
-			}
-		}
-	}, nil
+	return createSignalLoop(rio, false, func() (runtime.Msg, error) {
+		return runtime.NewStringMsg(os.TempDir()), nil
+	})
 }
 
 type osMkdirTemp struct{}
 
 // Create creates runtime function for os.MkdirTemp wrapper.
 func (osMkdirTemp) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dirIn, err := rio.In.Single("dir")
-	if err != nil {
-		return nil, err
-	}
-
-	patternIn, err := rio.In.Single("pattern")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			dirMsg, ok := dirIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			patternMsg, ok := patternIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			path, err := os.MkdirTemp(dirMsg.Str(), patternMsg.Str())
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(path)) {
-				return
-			}
+	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		path, err := os.MkdirTemp(dirMsg.Str(), patternMsg.Str())
+		if err != nil {
+			return nil, fmt.Errorf("os.MkdirTemp: %w", err)
 		}
-	}, nil
+
+		return runtime.NewStringMsg(path), nil
+	})
 }
 
 type osCreateTemp struct{}
 
 // Create creates runtime function for os.CreateTemp wrapper.
 func (osCreateTemp) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dirIn, err := rio.In.Single("dir")
-	if err != nil {
-		return nil, err
-	}
-
-	patternIn, err := rio.In.Single("pattern")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			dirMsg, ok := dirIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			patternMsg, ok := patternIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			file, err := os.CreateTemp(dirMsg.Str(), patternMsg.Str())
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			fileName := file.Name()
-			if err := file.Close(); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(fileName)) {
-				return
-			}
+	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		file, err := os.CreateTemp(dirMsg.Str(), patternMsg.Str())
+		if err != nil {
+			return nil, fmt.Errorf("os.CreateTemp: %w", err)
 		}
-	}, nil
+
+		fileName := file.Name()
+		if err := file.Close(); err != nil {
+			return nil, fmt.Errorf("close temp file: %w", err)
+		}
+
+		return runtime.NewStringMsg(fileName), nil
+	})
 }
 
 const maxUint32AsInt64 = int64(^uint32(0))

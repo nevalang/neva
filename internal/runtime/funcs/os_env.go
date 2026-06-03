@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -11,204 +12,64 @@ type osGetenv struct{}
 
 // Create creates runtime function for os.Getenv wrapper.
 func (osGetenv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	keyIn, err := rio.In.Single("key")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			keyMsg, ok := keyIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(os.Getenv(keyMsg.Str()))) {
-				return
-			}
-		}
-	}, nil
+	return createUnaryLoop(rio, "key", false, func(keyMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		return runtime.NewStringMsg(os.Getenv(keyMsg.Str())), nil
+	})
 }
 
 type osLookupEnv struct{}
 
 // Create creates runtime function for os.LookupEnv wrapper.
 func (osLookupEnv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	keyIn, err := rio.In.Single("key")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			keyMsg, ok := keyIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			value, exists := os.LookupEnv(keyMsg.Str())
-			if !resOut.Send(ctx, lookupEnvResultMsg(value, exists)) {
-				return
-			}
-		}
-	}, nil
+	return createUnaryLoop(rio, "key", false, func(keyMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		value, exists := os.LookupEnv(keyMsg.Str())
+		return lookupEnvResultMsg(value, exists), nil
+	})
 }
 
 type osSetenv struct{}
 
 // Create creates runtime function for os.Setenv wrapper.
 func (osSetenv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	keyIn, err := rio.In.Single("key")
-	if err != nil {
-		return nil, err
-	}
-
-	valueIn, err := rio.In.Single("value")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			keyMsg, ok := keyIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			valueMsg, ok := valueIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.Setenv(keyMsg.Str(), valueMsg.Str()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createBinaryLoop(rio, "key", "value", func(keyMsg, valueMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.Setenv(keyMsg.Str(), valueMsg.Str()); err != nil {
+			return nil, fmt.Errorf("os.Setenv: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osUnsetenv struct{}
 
 // Create creates runtime function for os.Unsetenv wrapper.
 func (osUnsetenv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	keyIn, err := rio.In.Single("key")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	errOut, err := rio.Out.Single("err")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			keyMsg, ok := keyIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if err := os.Unsetenv(keyMsg.Str()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
+	return createUnaryLoop(rio, "key", true, func(keyMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		if err := os.Unsetenv(keyMsg.Str()); err != nil {
+			return nil, fmt.Errorf("os.Unsetenv: %w", err)
 		}
-	}, nil
+
+		return emptyStruct(), nil
+	})
 }
 
 type osClearenv struct{}
 
 // Create creates runtime function for os.Clearenv wrapper.
 func (osClearenv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	sigIn, err := rio.In.Single("sig")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			if _, ok := sigIn.Receive(ctx); !ok {
-				return
-			}
-
-			os.Clearenv()
-			if !resOut.Send(ctx, emptyStruct()) {
-				return
-			}
-		}
-	}, nil
+	return createSignalLoop(rio, false, func() (runtime.Msg, error) {
+		os.Clearenv()
+		return emptyStruct(), nil
+	})
 }
 
 type osExpandEnv struct{}
 
 // Create creates runtime function for os.ExpandEnv wrapper.
 func (osExpandEnv) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := rio.In.Single("data")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := rio.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			expanded := os.ExpandEnv(dataMsg.Str())
-			if !resOut.Send(ctx, runtime.NewStringMsg(expanded)) {
-				return
-			}
-		}
-	}, nil
+	return createUnaryLoop(rio, "data", false, func(dataMsg runtime.OrderedMsg) (runtime.Msg, error) {
+		return runtime.NewStringMsg(os.ExpandEnv(dataMsg.Str())), nil
+	})
 }
 
 // lookupEnvResultMsg builds std/os.LookupEnvResult payload.
