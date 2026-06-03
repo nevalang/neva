@@ -23,12 +23,11 @@ func (streamIsData) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Co
 
 	return func(ctx context.Context) {
 		for {
-			msg, dataOK := dataIn.Receive(ctx)
+			_, dataOK := dataIn.Receive(ctx)
 			if !dataOK {
 				return
 			}
-			item := msg.Struct()
-			if !resOut.Send(ctx, runtime.NewBoolMsg(!item.Get("last").Bool())) {
+			if !resOut.Send(ctx, runtime.NewBoolMsg(true)) {
 				return
 			}
 		}
