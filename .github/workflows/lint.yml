@@ -46,5 +46,7 @@ jobs:
     steps:
       - uses: golang/govulncheck-action@v1
         with:
+          go-version-input: '1.26.4'
+          check-latest: false
           go-version-file: go.mod
           output-format: text

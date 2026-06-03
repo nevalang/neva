@@ -393,6 +393,7 @@ func isStreamClose(msg runtime.Msg) bool {
 	return streamUnion(msg).Tag() == streamTagClose
 }
 
+//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
 func streamDataValue(msg runtime.Msg) runtime.Msg {
 	u := streamUnion(msg)
 	if u.Tag() != streamTagData {

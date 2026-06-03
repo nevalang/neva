@@ -10,59 +10,64 @@ import (
 // For each Data event it waits for mapped payload before forwarding Data.
 type streamMapController struct{}
 
-func (streamMapController) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamMapController) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
 	}
 
-	mappedIn, err := io.In.Single("mapped")
+	mappedIn, err := singleInport(runtimeIO, "mapped")
 	if err != nil {
 		return nil, err
 	}
 
-	itemOut, err := io.Out.Single("item")
+	itemOut, err := singleOutport(runtimeIO, "item")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				if !resOut.Send(ctx, streamOpen()) {
-					return
-				}
-			case isStreamData(msg):
-				if !itemOut.Send(ctx, streamDataValue(msg)) {
-					return
-				}
-
-				mappedMsg, ok := mappedIn.Receive(ctx)
-				if !ok {
-					return
-				}
-
-				if !resOut.Send(ctx, streamData(mappedMsg)) {
-					return
-				}
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, streamClose()) {
-					return
-				}
-			default:
-				panic("stream_map_controller: unexpected stream tag")
+			if !forwardMappedMessage(ctx, mappedIn, itemOut, resOut, msg) {
+				return
 			}
 		}
 	}, nil
+}
+
+func forwardMappedMessage(
+	ctx context.Context,
+	mappedIn runtime.SingleInport,
+	itemOut, resOut runtime.SingleOutport,
+	msg runtime.Msg,
+) bool {
+	switch {
+	case isStreamOpen(msg):
+		return resOut.Send(ctx, streamOpen())
+	case isStreamData(msg):
+		if !itemOut.Send(ctx, streamDataValue(msg)) {
+			return false
+		}
+
+		mappedMsg, received := mappedIn.Receive(ctx)
+		if !received {
+			return false
+		}
+
+		return resOut.Send(ctx, streamData(mappedMsg))
+	case isStreamClose(msg):
+		return resOut.Send(ctx, streamClose())
+	default:
+		panic("stream_map_controller: unexpected stream tag")
+	}
 }

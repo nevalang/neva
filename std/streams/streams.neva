@@ -39,27 +39,19 @@ pub def Range(from int, to int) (res stream<int>)
 #extern(stream_enumerate)
 pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
-// IsData returns true when stream item has Data tag.
-#extern(stream_is_data)
-def IsData<T>(data stream<T>) (res bool)
-
-// UnwrapData extracts payload from stream<T>::Data item.
-#extern(stream_unwrap_data)
-def UnwrapData<T>(data stream<T>) (res T)
-
 // --- Synchronization ---
 
 // Wait blocks until stream close item arrives, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
     del Del
-    s Switch<stream<any>>
+    switch Switch<stream<any>>
     ---
     :data -> [
-        s:data,
-        stream<any>::Close -> s:case[0]
+        switch:data,
+        stream<any>::Close -> switch:case[0]
     ]
-    s:case[0] -> :sig
-    s:else -> del
+    switch:case[0] -> :sig
+    switch:else -> del
 }
 
 // --- Combinators ---

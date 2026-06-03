@@ -11,15 +11,15 @@ import (
 type streamZipMany struct{}
 
 func (streamZipMany) Create(
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Array("data")
+	dataIn, err := runtimeIO.In.Array("data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (streamZipMany) Create(
 
 					collected := make([]runtime.Msg, 0)
 
-					if !waitStreamOpen(ctx, dataInSlot{arr: dataIn, idx: idx}) {
+					if !waitStreamOpen(ctx, &dataInSlot{arr: dataIn, idx: idx}) {
 						aborted.Store(true)
 						return
 					}
@@ -112,6 +112,6 @@ type dataInSlot struct {
 	idx int
 }
 
-func (d dataInSlot) Receive(ctx context.Context) (runtime.OrderedMsg, bool) {
-	return d.arr.Receive(ctx, d.idx)
+func (slot *dataInSlot) Receive(ctx context.Context) (runtime.OrderedMsg, bool) {
+	return slot.arr.Receive(ctx, slot.idx)
 }

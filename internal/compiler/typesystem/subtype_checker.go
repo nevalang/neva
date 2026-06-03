@@ -92,9 +92,9 @@ func (s SubtypeChecker) Check(
 			expr.Inst.Ref,
 			constr.Inst.Ref,
 		)
-		for i := range constr.Inst.Args {
-			newExpr := expr.Inst.Args[i]
-			newConstr := constr.Inst.Args[i]
+		for argIndex := range constr.Inst.Args {
+			newExpr := expr.Inst.Args[argIndex]
+			newConstr := constr.Inst.Args[argIndex]
 			if err := s.Check(
 				newExpr,
 				newConstr,
@@ -104,8 +104,8 @@ func (s SubtypeChecker) Check(
 					ErrArgNotSubtype,
 					fmt.Errorf(
 						"got %v, want %v: %w",
-						expr.Inst.Args[i].String(),
-						constr.Inst.Args[i].String(),
+						expr.Inst.Args[argIndex].String(),
+						constr.Inst.Args[argIndex].String(),
 						err,
 					),
 				)
@@ -191,7 +191,8 @@ func (s SubtypeChecker) Check(
 			}
 			// HACK: we copy-paste this loop to avoid re-assigning to params variable
 			// because that leads to infinite nesting inside that struct because of recursive pointers
-			for constrFieldName, constrField := range constr.Lit.Struct {
+			for constrFieldName := range constr.Lit.Struct {
+				constrField := constr.Lit.Struct[constrFieldName]
 				exprField, ok := expr.Lit.Struct[constrFieldName]
 				if !ok {
 					return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)
@@ -205,7 +206,8 @@ func (s SubtypeChecker) Check(
 			}
 			break
 		}
-		for constrFieldName, constrField := range constr.Lit.Struct {
+		for constrFieldName := range constr.Lit.Struct {
+			constrField := constr.Lit.Struct[constrFieldName]
 			exprField, ok := expr.Lit.Struct[constrFieldName]
 			if !ok {
 				return fmt.Errorf("%w: %v", ErrStructNoField, constrFieldName)

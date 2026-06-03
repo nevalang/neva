@@ -9,44 +9,37 @@ import (
 
 type stringJoinList struct{}
 
-func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
 	}
 
-	sepIn, err := io.In.Single("sep")
+	sepIn, err := singleInport(runtimeIO, "sep")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
+			dataMsg, dataReceived := dataIn.Receive(ctx)
+			if !dataReceived {
 				return
 			}
 
-			sepMsg, ok := sepIn.Receive(ctx)
-			if !ok {
+			sepMsg, sepReceived := sepIn.Receive(ctx)
+			if !sepReceived {
 				return
 			}
 
 			builder := strings.Builder{}
 			sep := sepMsg.Str()
-
-			list := dataMsg.List()
-			for i := range list {
-				if i > 0 {
-					builder.WriteString(sep)
-				}
-				builder.WriteString(list[i].Str())
-			}
+			writeJoinedList(&builder, dataMsg.List(), sep)
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
 				return
@@ -57,60 +50,109 @@ func (stringJoinList) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 type stringJoinStream struct{}
 
-func (stringJoinStream) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (stringJoinStream) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
 	}
 
-	sepIn, err := io.In.Single("sep")
+	sepIn, err := singleInport(runtimeIO, "sep")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		builder := strings.Builder{}
-		var (
-			sep    string
-			hasSep bool
-		)
+		runStringJoinStream(ctx, dataIn, sepIn, resOut)
+	}, nil
+}
 
-		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+func writeJoinedList(builder *strings.Builder, list []runtime.Msg, sep string) {
+	for idx := range list {
+		appendStreamItem(builder, list[idx].Str(), sep)
+	}
+}
+
+func appendStreamItem(builder *strings.Builder, item, sep string) {
+	if builder.Len() > 0 {
+		builder.WriteString(sep)
+	}
+
+	builder.WriteString(item)
+}
+
+func receiveJoinSeparator(ctx context.Context, sepIn runtime.SingleInport) (string, bool) {
+	sepMsg, sepReceived := sepIn.Receive(ctx)
+	if !sepReceived {
+		return "", false
+	}
+
+	return sepMsg.Str(), true
+}
+
+func handleJoinedStreamMessage(
+	ctx context.Context,
+	builder *strings.Builder,
+	resOut runtime.SingleOutport,
+	msg runtime.Msg,
+	sep string,
+	hasSep bool,
+) (bool, bool) {
+	switch {
+	case isStreamOpen(msg):
+		builder.Reset()
+		return hasSep, true
+	case isStreamData(msg):
+		appendStreamItem(builder, streamDataValue(msg).Str(), sep)
+		return hasSep, true
+	case isStreamClose(msg):
+		if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+			return false, false
+		}
+
+		builder.Reset()
+		return false, true
+	default:
+		panic("strings_join_stream: unexpected stream tag")
+	}
+}
+
+func runStringJoinStream(
+	ctx context.Context,
+	dataIn, sepIn runtime.SingleInport,
+	resOut runtime.SingleOutport,
+) {
+	builder := strings.Builder{}
+	var (
+		sep    string
+		hasSep bool
+	)
+
+	for {
+		msg, dataReceived := dataIn.Receive(ctx)
+		if !dataReceived {
+			return
+		}
+
+		if !hasSep {
+			nextSep, sepReceived := receiveJoinSeparator(ctx, sepIn)
+			if !sepReceived {
 				return
 			}
 
-			if !hasSep {
-				sepMsg, ok := sepIn.Receive(ctx)
-				if !ok {
-					return
-				}
-
-				sep = sepMsg.Str()
-				hasSep = true
-			}
-
-			switch {
-			case isStreamOpen(msg):
-				builder.Reset()
-			case isStreamData(msg):
-				if builder.Len() > 0 {
-					builder.WriteString(sep)
-				}
-				builder.WriteString(streamDataValue(msg).Str())
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
-					return
-				}
-				builder.Reset()
-				hasSep = false
-			}
+			sep = nextSep
+			hasSep = true
 		}
-	}, nil
+
+		nextHasSep, keepRunning := handleJoinedStreamMessage(ctx, &builder, resOut, msg, sep, hasSep)
+		if !keepRunning {
+			return
+		}
+
+		hasSep = nextHasSep
+	}
 }

@@ -10,59 +10,61 @@ import (
 // It forwards Open/Close immediately and forwards Data only after done signal.
 type streamForEachController struct{}
 
-func (streamForEachController) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamForEachController) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
 	}
 
-	doneIn, err := io.In.Single("done")
+	doneIn, err := singleInport(runtimeIO, "done")
 	if err != nil {
 		return nil, err
 	}
 
-	itemOut, err := io.Out.Single("item")
+	itemOut, err := singleOutport(runtimeIO, "item")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			case isStreamData(msg):
-				item := streamDataValue(msg)
-				if !itemOut.Send(ctx, item) {
-					return
-				}
-
-				if _, ok := doneIn.Receive(ctx); !ok {
-					return
-				}
-
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			default:
-				panic("stream_for_each_controller: unexpected stream tag")
+			if !forwardForEachMessage(ctx, doneIn, itemOut, resOut, msg) {
+				return
 			}
 		}
 	}, nil
+}
+
+func forwardForEachMessage(
+	ctx context.Context,
+	doneIn runtime.SingleInport,
+	itemOut, resOut runtime.SingleOutport,
+	msg runtime.Msg,
+) bool {
+	switch {
+	case isStreamOpen(msg), isStreamClose(msg):
+		return resOut.Send(ctx, msg)
+	case isStreamData(msg):
+		if !itemOut.Send(ctx, streamDataValue(msg)) {
+			return false
+		}
+
+		if _, received := doneIn.Receive(ctx); !received {
+			return false
+		}
+
+		return resOut.Send(ctx, msg)
+	default:
+		panic("stream_for_each_controller: unexpected stream tag")
+	}
 }

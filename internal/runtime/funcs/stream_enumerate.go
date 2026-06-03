@@ -8,13 +8,13 @@ import (
 
 type streamEnumerate struct{}
 
-func (streamEnumerate) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamEnumerate) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
 		return nil, err
 	}
@@ -22,31 +22,42 @@ func (streamEnumerate) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Co
 	return func(ctx context.Context) {
 		var idx int64
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				idx = 0
-				if !resOut.Send(ctx, streamOpen()) {
-					return
-				}
-			case isStreamData(msg):
-				item := runtime.NewStructMsg([]runtime.StructField{
-					runtime.NewStructField("idx", runtime.NewIntMsg(idx)),
-					runtime.NewStructField("data", streamDataValue(msg)),
-				})
-				if !resOut.Send(ctx, streamData(item)) {
-					return
-				}
-				idx++
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, streamClose()) {
-					return
-				}
+			if !forwardEnumeratedMessage(ctx, resOut, msg, &idx) {
+				return
 			}
 		}
 	}, nil
+}
+
+func forwardEnumeratedMessage(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	msg runtime.Msg,
+	idx *int64,
+) bool {
+	switch {
+	case isStreamOpen(msg):
+		*idx = 0
+		return resOut.Send(ctx, streamOpen())
+	case isStreamData(msg):
+		item := runtime.NewStructMsg([]runtime.StructField{
+			runtime.NewStructField("idx", runtime.NewIntMsg(*idx)),
+			runtime.NewStructField("item", streamDataValue(msg)),
+		})
+		if !resOut.Send(ctx, streamData(item)) {
+			return false
+		}
+
+		*idx++
+		return true
+	case isStreamClose(msg):
+		return resOut.Send(ctx, streamClose())
+	default:
+		panic("stream_enumerate: unexpected stream tag")
+	}
 }
