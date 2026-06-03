@@ -53,6 +53,7 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 
 	tmpl, err := template.New("tpl.go").Funcs(funcmap).Parse(mainGoTemplate)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 
@@ -82,13 +83,16 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 		files["runtime/debug_validation.go"] = []byte(debugValidationGoTemplate)
 	}
 
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return pkgos.SaveFilesToDir(dst, files)
 }
 
 //nolint:gocyclo // Export emission spans multiple steps; refactor later.
-func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error {
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace bool) error { //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	exportList := make([]exportTemplateData, 0, len(exports))
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, export := range exports {
 		prog := export.Program
 		prog.Connections = ir.GraphReduction(prog.Connections)
@@ -173,12 +177,16 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 			case "int":
 				return fmt.Sprintf("int(%s.Int())", msgVar)
 			case "string":
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Sprintf("%s.Str()", msgVar)
 			case "[]byte":
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Sprintf("%s.Bytes()", msgVar)
 			case "bool":
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Sprintf("%s.Bool()", msgVar)
 			case "float64":
+				//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return fmt.Sprintf("%s.Float()", msgVar)
 			default:
 				return msgVar
@@ -206,6 +214,7 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 
 	tmpl, err := template.New("exports.go").Funcs(funcmap).Parse(libraryGoTemplate)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return err
 	}
 
@@ -238,11 +247,14 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 		}
 	}
 
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return pkgos.SaveFilesToDir(dst, files)
 }
 
+//nolint:cyclop,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 	fields := make([]fieldTemplateData, 0, len(ports))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for name, port := range ports {
 		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
 		if port.TypeExpr.Inst != nil {
@@ -291,6 +303,7 @@ func Title(s string) string {
 	return string(r)
 }
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (b Backend) buildFuncCalls(
 	funcs []ir.FuncCall,
 	addrToChanVar map[ir.PortAddr]string,
@@ -298,9 +311,9 @@ func (b Backend) buildFuncCalls(
 	result := make([]templateFuncCall, 0, len(funcs))
 
 	type localPortAddr struct{ Path, Port string }
-	type arrPortSlot struct { //nolint:govet // fieldalignment: tiny local struct.
-		idx uint8
+	type arrPortSlot struct {
 		ch  string
+		idx uint8
 	}
 
 	for _, call := range funcs {
@@ -329,7 +342,7 @@ func (b Backend) buildFuncCalls(
 				})
 			} else {
 				funcInports[irAddr.Port] = fmt.Sprintf(
-					"runtime.NewInport(nil, runtime.NewSingleInport(%s, runtime.PortAddr{Path: %q, Port: %q}, interceptor))",
+					"runtime.NewInport(nil, runtime.NewSingleInport(tracer, %s, runtime.PortAddr{Path: %q, Port: %q}, interceptor))",
 					chanVar,
 					irAddr.Path,
 					irAddr.Port,
@@ -356,7 +369,7 @@ func (b Backend) buildFuncCalls(
 				})
 			} else {
 				funcOutports[irAddr.Port] = fmt.Sprintf(
-					"runtime.NewOutport(runtime.NewSingleOutport(runtime.PortAddr{Path: %q, Port: %q}, interceptor, %s), nil)",
+					"runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: %q, Port: %q}, interceptor, %s), nil)",
 					irAddr.Path,
 					irAddr.Port,
 					chanVar,
@@ -376,7 +389,8 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcInports[addr.Port] = fmt.Sprintf(
-				"runtime.NewInport(runtime.NewArrayInport([]<-chan runtime.OrderedMsg{%s}, runtime.PortAddr{Path: %q, Port: %q}, interceptor), nil)",
+				"runtime.NewInport(runtime.NewArrayInport(tracer, []<-chan runtime.OrderedMsg{%s}, "+
+					"runtime.PortAddr{Path: %q, Port: %q}, interceptor), nil)",
 				strings.Join(chans, ", "),
 				addr.Path,
 				addr.Port,
@@ -395,7 +409,7 @@ func (b Backend) buildFuncCalls(
 			}
 
 			funcOutports[addr.Port] = fmt.Sprintf(
-				"runtime.NewOutport(nil, runtime.NewArrayOutport("+
+				"runtime.NewOutport(nil, runtime.NewArrayOutport(tracer, "+
 					"runtime.PortAddr{Path: %q, Port: %q}, "+
 					"interceptor, []chan<- runtime.OrderedMsg{%s}))",
 				addr.Path,
@@ -426,6 +440,7 @@ func (b Backend) buildFuncCalls(
 	return result, nil
 }
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	switch msg.Type {
 	case ir.MsgTypeBool:
@@ -449,6 +464,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewUnionMsg(%q, %s)", msg.Union.Tag, payload), nil
 	case ir.MsgTypeList:
 		elements := make([]string, len(msg.List))
+		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for i, v := range msg.List {
 			el, err := b.getMessageString(&v)
 			if err != nil {
@@ -459,8 +475,10 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewListMsg([]runtime.Msg{%s})", strings.Join(elements, ", ")), nil
 	case ir.MsgTypeDict:
 		keyValuePairs := make([]string, 0, len(msg.DictOrStruct))
+		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(new(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}
@@ -469,8 +487,10 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
 		fields := make([]string, 0, len(msg.DictOrStruct))
+		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for k, v := range msg.DictOrStruct {
-			el, err := b.getMessageString(new(v))
+			value := v
+			el, err := b.getMessageString(&value)
 			if err != nil {
 				return "", err
 			}
@@ -482,6 +502,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 }
 
 func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[string]string) error {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return fs.WalkDir(
 		internal.Efs,
 		"runtime",
@@ -494,8 +515,10 @@ func (b Backend) insertRuntimeFiles(files map[string][]byte, replacements map[st
 				return nil
 			}
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			bb, err := internal.Efs.ReadFile(path)
 			if err != nil {
+				//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return err
 			}
 
@@ -533,6 +556,7 @@ func (b Backend) buildPortChanMap(connections map[ir.PortAddr]ir.PortAddr) (map[
 }
 
 func (b Backend) chanVarNameFromPortAddr(addr ir.PortAddr) string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s string
 	if addr.IsArray {
 		s = fmt.Sprintf("%s_%s_%d", addr.Path, addr.Port, addr.Idx)

@@ -6,11 +6,11 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:govet // fieldalignment: keep semantic grouping.
+//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Error struct {
-	Message string
 	Meta    *core.Meta
 	child   *Error
+	Message string
 }
 
 func (e Error) Wrap(child *Error) *Error {
@@ -26,6 +26,7 @@ func (e Error) Unwrap() *Error {
 }
 
 func (e *Error) Error() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s string
 
 	current := e.Unwrap()

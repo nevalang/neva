@@ -63,12 +63,11 @@ func (p Port) Format() string {
 	return fmt.Sprintf("%q:%q", path, portStr)
 }
 
-//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type Node struct {
-	Name  string
-	Extra string
 	In    map[Port]struct{}
 	Out   map[Port]struct{}
+	Name  string
+	Extra string
 }
 
 func (n Node) Format() string {
@@ -88,12 +87,11 @@ type Edge struct {
 	Recv Port
 }
 
-//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type Cluster struct {
-	Index    int
-	Prefix   string
 	Nodes    map[string]*Node
 	Clusters map[string]*Cluster
+	Prefix   string
+	Index    int
 }
 
 func (c *Cluster) getOrCreateClusterNode(b *ClusterBuilder, path string) *Node {
@@ -101,12 +99,14 @@ func (c *Cluster) getOrCreateClusterNode(b *ClusterBuilder, path string) *Node {
 	return c.getOrCreateClusterNodeRec(b, path, "", path)
 }
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (c *Cluster) getOrCreateClusterNodeRec(b *ClusterBuilder, path, prefix, remaining string) *Node {
 	before, after, found := strings.Cut(remaining, "/")
 	if !found {
 		if c.Nodes == nil {
 			c.Nodes = map[string]*Node{}
 		}
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		n, ok := c.Nodes[before]
 		if ok {
 			return n
@@ -142,15 +142,13 @@ func (c *Cluster) Label() string {
 	return c.Prefix[i+1:]
 }
 
-//nolint:govet // fieldalignment: graphviz layout fields grouped.
 type ClusterBuilder struct {
-	Main  *Cluster
-	Edges []Edge
-
+	err    error
+	Main   *Cluster
+	tmpl   *template.Template
+	Edges  []Edge
 	nextId int
 	once   sync.Once
-	tmpl   *template.Template
-	err    error
 }
 
 func (b *ClusterBuilder) initTemplates() {
@@ -163,6 +161,7 @@ func (b *ClusterBuilder) insertClusterNode(addr ir.PortAddr) {
 		b.Main = cluster
 		b.nextId++
 	}
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	switch n := b.Main.getOrCreateClusterNode(b, addr.Path); {
 	case strings.HasSuffix(addr.Path, "/in"):
 		if n.In == nil {
@@ -187,5 +186,6 @@ func (b *ClusterBuilder) Build(w io.Writer) error {
 	if b.once.Do(b.initTemplates); b.err != nil {
 		return b.err
 	}
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return b.tmpl.ExecuteTemplate(w, "graph.dot.tmpl", b)
 }

@@ -1,0 +1,126 @@
+name: Release Marketing Telegram
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  send-release-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OUTPUT_DIR: .opencode/context/release-marketing-output
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Validate required runtime configuration
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TELEGRAM_BOT_API_TOKEN: ${{ secrets.TELEGRAM_BOT_API_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$OPENROUTER_API_KEY" || { echo "Missing OPENROUTER_API_KEY secret"; exit 1; }
+          test -n "$TELEGRAM_BOT_API_TOKEN" || { echo "Missing TELEGRAM_BOT_API_TOKEN secret"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
+          mkdir -p "$OUTPUT_DIR"
+
+      - name: Install OpenCode CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
+      - name: Generate Telegram post with OpenCode
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          PROMPT_FILE="${OUTPUT_DIR}/release-prompt.txt"
+
+          {
+            echo 'Use the `release-telegram-post` skill.'
+            echo
+            echo "Generate a Telegram release post using this release payload:"
+            echo "- Repository: ${RELEASE_REPOSITORY}"
+            echo "- Tag: ${RELEASE_TAG}"
+            echo "- Name: ${RELEASE_NAME}"
+            echo "- URL: ${RELEASE_URL}"
+            echo "- Notes:"
+            printf '%s\n' "${RELEASE_NOTES}"
+            echo
+            echo "Save the final post body to \`${OUTPUT_DIR}/telegram-message.html\`."
+            echo "Important: this file is sent as-is in Telegram API JSON \`text\` field; output body only, no wrappers."
+          } >"${PROMPT_FILE}"
+
+          opencode run \
+            --model openrouter/anthropic/claude-sonnet-4.6 \
+            --prompt "$(cat "${PROMPT_FILE}")"
+
+      - name: Ensure generated message exists
+        run: |
+          set -euo pipefail
+          test -s "${OUTPUT_DIR}/telegram-message.html" || {
+            echo "Missing generated file: ${OUTPUT_DIR}/telegram-message.html"
+            exit 1
+          }
+
+      - name: Validate generated message shape
+        run: |
+          set -euo pipefail
+          FILE="${OUTPUT_DIR}/telegram-message.html"
+
+          # Reject obvious non-production LLM wrappers and markdown fences.
+          if grep -q '```' "$FILE"; then
+            echo "Generated message contains markdown code fences."
+            exit 1
+          fi
+          if head -n 1 "$FILE" | grep -Eiq "^(here( is|'s)|result:|output:|sure[,!:]?)"; then
+            echo "Generated message starts with an LLM wrapper line."
+            exit 1
+          fi
+
+      - name: Upload generated marketing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-marketing-output
+          path: ${{ env.OUTPUT_DIR }}
+
+      - name: Send Telegram message
+        env:
+          TELEGRAM_BOT_API_TOKEN: ${{ secrets.TELEGRAM_BOT_API_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
+          MESSAGE="$(cat "${OUTPUT_DIR}/telegram-message.html")"
+          test -n "$MESSAGE" || { echo "Generated message is empty"; exit 1; }
+
+          payload="$(
+            jq -n \
+              --arg chat_id "$TELEGRAM_CHAT_ID" \
+              --arg text "$MESSAGE" \
+              '{
+                chat_id: $chat_id,
+                text: $text,
+                parse_mode: "HTML",
+                disable_web_page_preview: true
+              }'
+          )"
+
+          curl --fail --silent --show-error \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_API_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "$payload" >/dev/null

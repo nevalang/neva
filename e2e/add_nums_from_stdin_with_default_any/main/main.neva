@@ -6,7 +6,7 @@ import {
 
 def Main(start any) (stop any) {
 	aux Aux
-	println fmt.Println
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> aux:sig

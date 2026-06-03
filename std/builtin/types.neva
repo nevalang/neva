@@ -6,7 +6,10 @@ pub type string
 pub type bytes
 pub type dict<T>
 pub type list<T>
-pub type maybe<T>
+pub type maybe<T> union {
+    Some T
+    None
+}
 
 type Type any
 

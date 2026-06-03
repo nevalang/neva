@@ -20,7 +20,7 @@ def Main(start any) (stop any) {
 }
 
 def PrintDay(day Day) (sig any) {
-    println fmt.Println
+    println fmt.Println<any>
     panic runtime.Panic
     ---
     :day -> println:data

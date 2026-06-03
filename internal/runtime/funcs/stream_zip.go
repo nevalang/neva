@@ -8,34 +8,34 @@ import (
 
 type streamZip struct{}
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamZip) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	leftIn, err := io.In.Single("left")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	rightIn, err := io.In.Single("right")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		var idx int64
 		for {
-			leftMsg, ok := leftIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			rightMsg, ok := rightIn.Receive(ctx)
+			leftMsg, rightMsg, ok := receive2(ctx, leftIn, rightIn)
 			if !ok {
 				return
 			}

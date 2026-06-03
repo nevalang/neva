@@ -7,16 +7,14 @@ import (
 	"strconv"
 )
 
-// OrderedMsg is a message with a chronological index.
-// Ordered messages can be compared and sorted by their index.
+// OrderedMsg is a transport envelope with payload and runtime ordering metadata.
 type OrderedMsg struct {
 	Msg
 	index uint64
 }
 
-func (o OrderedMsg) String() string {
-	return fmt.Sprint(o.Msg)
-}
+// String is just a simple stringer that ignores index while formatting.
+func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }
 
 type Msg interface {
 	Bool() bool
@@ -34,7 +32,8 @@ type Msg interface {
 
 // Internal
 
-type internalMsg struct{}
+type internalMsg struct {
+}
 
 func (internalMsg) String() string { panic("unexpected String method call on internal message type") }
 func (internalMsg) Bool() bool     { panic("unexpected Bool method call on internal message type") }
@@ -121,6 +120,8 @@ func NewFloatMsg(n float64) FloatMsg {
 }
 
 // --- STRING ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StringMsg struct {
 	internalMsg
 	v string
@@ -131,6 +132,7 @@ func (msg StringMsg) Str() string { return msg.v }
 func (msg StringMsg) String() string { return msg.v }
 
 func (msg StringMsg) MarshalJSON() ([]byte, error) {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return json.Marshal(msg.String())
 }
 
@@ -147,6 +149,8 @@ func NewStringMsg(s string) StringMsg {
 }
 
 // --- BYTES ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type BytesMsg struct {
 	internalMsg
 	v []byte
@@ -163,6 +167,7 @@ func (msg BytesMsg) String() string {
 }
 
 func (msg BytesMsg) MarshalJSON() ([]byte, error) {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return json.Marshal(msg.v)
 }
 
@@ -179,6 +184,8 @@ func NewBytesMsg(v []byte) BytesMsg {
 }
 
 // --- LIST ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type ListMsg struct {
 	internalMsg
 	v []Msg
@@ -192,6 +199,8 @@ func (msg ListMsg) String() string {
 	}
 	return string(bb)
 }
+
+//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg ListMsg) MarshalJSON() ([]byte, error) { return json.Marshal(msg.v) }
 func (msg ListMsg) Equal(other Msg) bool {
 	otherList, ok := other.(ListMsg)
@@ -217,6 +226,8 @@ func NewListMsg(v []Msg) ListMsg {
 }
 
 // --- DICT ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type DictMsg struct {
 	internalMsg
 	v map[string]Msg
@@ -226,6 +237,7 @@ func (msg DictMsg) Dict() map[string]Msg { return msg.v }
 func (msg DictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -263,6 +275,8 @@ func NewDictMsg(d map[string]Msg) DictMsg {
 }
 
 // --- STRUCT ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StructMsg struct {
 	internalMsg
 	fields []StructField
@@ -273,13 +287,17 @@ func (msg StructMsg) Struct() StructMsg { return msg }
 // get returns the value of a field by name.
 // it panics if the field is not found.
 // it uses linear scan to find the field.
-func (msg StructMsg) Get(name string) Msg {
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (msg StructMsg) Get(name string) Msg { //nolint:ireturn,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	if field, ok := msg.get(name); ok {
 		return field
 	}
 	panic(fmt.Sprintf("field %q not found", name))
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg StructMsg) get(name string) (Msg, bool) {
 	for i := range msg.fields {
 		if msg.fields[i].name == name {
@@ -297,6 +315,7 @@ func (msg StructMsg) MarshalJSON() ([]byte, error) {
 
 	jsonData, err := json.Marshal(m)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -347,21 +366,29 @@ func newStructMsg(fields []StructField) StructMsg {
 }
 
 // structfield is a helper to construct structs via runtime.newstruct api without exposing fields.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StructField struct {
 	value Msg
 	name  string
 }
 
 // newstructfield constructs a structfield with provided name and value.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewStructField(name string, value Msg) StructField {
 	return StructField{name: name, value: value}
 }
 
 // newstruct builds a struct message from a slice of structfield.
 // underlying struct representation remains unchanged for now.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
 
 // --- UNION ---
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type UnionMsg struct {
 	internalMsg
 	data Msg
@@ -376,6 +403,7 @@ func (msg UnionMsg) Tag() string {
 	return msg.tag
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg UnionMsg) Data() Msg {
 	return msg.data
 }
@@ -395,11 +423,25 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 
 	dataJSON, err := json.Marshal(msg.data)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 	dataJSON = addJSONSpaces(dataJSON)
 
 	return fmt.Appendf(nil, `{ "tag": %q, "data": %s }`, msg.tag, dataJSON), nil
+}
+
+func AsUnion(msg Msg) (UnionMsg, bool) {
+	unionMsg, ok := orderedPayload(msg).(UnionMsg)
+	return unionMsg, ok
+}
+
+//nolint:ireturn // Msg is runtime contract type.
+func orderedPayload(msg Msg) Msg {
+	if ordered, ok := msg.(OrderedMsg); ok {
+		return ordered.Msg
+	}
+	return msg
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -457,6 +499,7 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 func Match(msg Msg, pattern Msg) bool {
 	// at the moment we only match unions
 	// maybe in the future we'll add support for more types e.g. structs
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	msgUnion, ok := msg.(UnionMsg)
 	if !ok {
 		return msg.Equal(pattern)
@@ -499,6 +542,7 @@ func addJSONSpaces(jsonData []byte) []byte {
 	inString := false
 	isEscaped := false
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, b := range jsonData {
 		if inString {
 			spaced = append(spaced, b)

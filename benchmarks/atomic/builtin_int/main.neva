@@ -1,0 +1,6 @@
+// Benchmarks builtin component `Int` in one-shot mode.
+def Main(start any) (stop any) {
+	to_int Int
+	---
+	:start -> 1.9 -> to_int -> :stop
+}

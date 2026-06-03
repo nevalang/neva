@@ -39,11 +39,11 @@ func (a stubArgs) Slice() []string {
 }
 
 func TestParseDocArgs(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
 		name      string
-		args      []string
 		wantPkg   string
 		wantPat   string
+		args      []string
 		wantError bool
 	}{
 		{

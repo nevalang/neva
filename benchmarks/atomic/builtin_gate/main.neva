@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Gate` in one-shot mode.
+def Main(start any) (stop any) {
+	gate Gate<int>
+	---
+	:start -> [
+		42 -> gate:data,
+		true -> gate:if
+	]
+	gate -> :stop
+}

@@ -1,0 +1,13 @@
+// Benchmarks builtin component `Slice` in one-shot mode.
+const value string = 'abcd'
+
+def Main(start any) (stop any) {
+	slice Slice
+	---
+	:start -> [
+		$value -> slice:data,
+		1 -> slice:from,
+		3 -> slice:to
+	]
+	slice -> :stop
+}

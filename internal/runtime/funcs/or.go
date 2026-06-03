@@ -8,42 +8,8 @@ import (
 
 type or struct{}
 
-func (p or) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	aIn, err := io.In.Single("left")
-	if err != nil {
-		return nil, err
-	}
-
-	bIn, err := io.In.Single("right")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := io.Out.Single("res")
-	if err != nil {
-		return nil, err
-	}
-
-	return func(ctx context.Context) {
-		for {
-			aMsg, ok := aIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			bMsg, ok := bIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			if !resOut.Send(
-				ctx,
-				runtime.NewBoolMsg(
-					aMsg.Bool() || bMsg.Bool(),
-				),
-			) {
-				return
-			}
-		}
-	}, nil
+func (or) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
+		return runtime.NewBoolMsg(left.Bool() || right.Bool())
+	})
 }

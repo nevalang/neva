@@ -1,0 +1,21 @@
+import {
+    builtin
+    fmt
+    os
+}
+
+def Main(start any) (stop any) {
+    args os.Args
+    len builtin.Len
+    exit os.Exit
+    lock builtin.Lock<int>
+    scan fmt.Scanln
+    del builtin.Del
+    ---
+    :start -> [args, scan]
+    args:res -> len
+    len:res -> [exit:code, lock:data]
+    scan:res -> lock:sig
+    scan:err -> del
+    lock:res -> :stop
+}

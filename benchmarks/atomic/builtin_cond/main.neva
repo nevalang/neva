@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Cond` in one-shot mode.
+def Main(start any) (stop any) {
+	cond Cond<int>
+	---
+	:start -> [
+		42 -> cond:data,
+		true -> cond:if
+	]
+	cond:then -> :stop
+}

@@ -20,7 +20,15 @@ pub type FileInfo struct {
 #extern(args)
 pub def Args(sig any) (res list<string>)
 
+// Exit terminates the program with the provided exit code.
+#extern(os_exit)
+pub def Exit(code int) ()
+
 // Environ returns all environment variables in KEY=VALUE form.
+//
+// It returns a list of strings (not a stream) because the runtime function
+// produces a full list at once. If you need only specific values, filter the
+// returned list in your flow.
 #extern(os_environ)
 pub def Environ(sig any) (res list<string>)
 
