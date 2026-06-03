@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -11,12 +12,12 @@ type fileStdin struct{}
 func (fileStdin) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve sig inport: %w", err)
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve res outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
@@ -37,12 +38,12 @@ type fileStdout struct{}
 func (fileStdout) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve sig inport: %w", err)
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve res outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
@@ -63,12 +64,12 @@ type fileStderr struct{}
 func (fileStderr) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve sig inport: %w", err)
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve res outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
