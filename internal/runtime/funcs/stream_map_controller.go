@@ -10,24 +10,29 @@ import (
 // For each Data event it waits for mapped payload before forwarding Data.
 type streamMapController struct{}
 
-func (streamMapController) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (streamMapController) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := input.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	mappedIn, err := io.In.Single("mapped")
+	mappedIn, err := input.In.Single("mapped")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	itemOut, err := io.Out.Single("item")
+	itemOut, err := input.Out.Single("item")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := input.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

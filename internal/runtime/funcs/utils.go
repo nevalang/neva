@@ -63,6 +63,7 @@ func isStreamClose(msg runtime.Msg) bool {
 	return streamUnion(msg).Tag() == streamTagClose
 }
 
+//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func streamDataValue(msg runtime.Msg) runtime.Msg {
 	u := streamUnion(msg)
 	if u.Tag() != streamTagData {

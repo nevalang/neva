@@ -8,14 +8,16 @@ import (
 
 type streamIsData struct{}
 
-func (streamIsData) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamIsData) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := input.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := input.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -34,14 +36,16 @@ func (streamIsData) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 type streamIsClose struct{}
 
-func (streamIsClose) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamIsClose) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := input.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := input.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -60,14 +64,16 @@ func (streamIsClose) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 
 type streamUnwrapData struct{}
 
-func (streamUnwrapData) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+func (streamUnwrapData) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := input.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := input.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 

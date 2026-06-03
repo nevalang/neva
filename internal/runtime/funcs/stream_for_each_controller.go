@@ -10,24 +10,29 @@ import (
 // It forwards Open/Close immediately and forwards Data only after done signal.
 type streamForEachController struct{}
 
-func (streamForEachController) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Single("data")
+//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (streamForEachController) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := input.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	doneIn, err := io.In.Single("done")
+	doneIn, err := input.In.Single("done")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	itemOut, err := io.Out.Single("item")
+	itemOut, err := input.Out.Single("item")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := input.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
