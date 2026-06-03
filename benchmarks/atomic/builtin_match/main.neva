@@ -1,0 +1,12 @@
+// Benchmarks builtin component `Match` in one-shot mode.
+def Main(start any) (stop any) {
+	match Match<int>
+	---
+	:start -> [
+		1 -> match:data,
+		1 -> match:if[0],
+		42 -> match:then[0],
+		0 -> match:else
+	]
+	match -> :stop
+}

@@ -1,0 +1,6 @@
+def Main(start any) (stop any) {
+	lock Lock<any>
+	---
+	:start -> [lock:sig, lock:data]
+	lock -> :stop
+}

@@ -8,53 +8,46 @@ import (
 
 type rangeInt struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	fromIn, err := io.In.Single("from")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	toIn, err := io.In.Single("to")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			fromMsg, ok := fromIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			toMsg, ok := toIn.Receive(ctx)
+			fromMsg, toMsg, ok := receive2(ctx, fromIn, toIn)
 			if !ok {
 				return
 			}
 
 			var (
 				from = fromMsg.Int()
-				to   = toMsg.Int()
-
-				idx  = int64(0)
-				last = false
-				data = from
+				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+				to  = toMsg.Int()
+				idx = int64(0)
 			)
 
 			if from < to {
-				for !last {
-					if data == to-1 {
-						last = true
-					}
-
+				for data := from; data < to; data++ {
 					item := streamItem(
 						runtime.NewIntMsg(data),
 						idx,
-						last,
+						data == to-1,
 					)
 
 					if !resOut.Send(ctx, item) {
@@ -62,18 +55,13 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					}
 
 					idx++
-					data++
 				}
 			} else {
-				for !last {
-					if data == toMsg.Int()+1 {
-						last = true
-					}
-
+				for data := from; data > to; data-- {
 					item := streamItem(
 						runtime.NewIntMsg(data),
 						idx,
-						last,
+						data == to+1,
 					)
 
 					if !resOut.Send(ctx, item) {
@@ -81,7 +69,6 @@ func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					}
 
 					idx++
-					data--
 				}
 			}
 		}

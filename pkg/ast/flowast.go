@@ -1,5 +1,7 @@
 // This package defines source code entities - abstractions that end-user (a programmer) operates on.
 // For convenience these structures have json tags. This is not clean architecture but it's very handy for LSP.
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 package ast
 
 import (
@@ -13,19 +15,21 @@ import (
 // Build represents all the information in source code, that must be compiled.
 // User usually don't interacts with this abstraction, but it's important for compiler.
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type Build struct {
-	EntryModRef core.ModuleRef            `json:"entryModRef"`
 	Modules     map[core.ModuleRef]Module `json:"modules,omitempty"`
+	EntryModRef core.ModuleRef            `json:"entryModRef"`
 }
 
 // Module is unit of distribution.
 type Module struct {
-	Manifest ModuleManifest     `json:"manifest"`
 	Packages map[string]Package `json:"packages,omitempty"`
+	Manifest ModuleManifest     `json:"manifest"`
 }
 
+//nolint:gocritic,nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename string, err error) {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	pkg, ok := mod.Packages[entityRef.Pkg]
 	if !ok {
 		return Entity{}, "", fmt.Errorf("package not found: %v", entityRef.Pkg)
@@ -39,16 +43,18 @@ func (mod Module) Entity(entityRef core.EntityRef) (entity Entity, filename stri
 	return entity, filename, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type ModuleManifest struct {
-	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
 	Deps            map[string]core.ModuleRef `json:"deps,omitempty" yaml:"deps,omitempty"`
+	LanguageVersion string                    `json:"neva,omitempty" yaml:"neva,omitempty"`
 }
 
 type Package map[string]File
 
 // Just like program's Entity
-func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) {
+//
+//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (p Package) Entity(entityName string) (entity Entity, filename string, ok bool) { //nolint:lll,nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for fileName, file := range p {
 		entity, ok := file.Entities[entityName]
 		if ok {
@@ -58,16 +64,18 @@ func (p Package) Entity(entityName string) (entity Entity, filename string, ok b
 	return Entity{}, "", false
 }
 
+//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type EntitiesResult struct {
+	Entity     Entity
 	EntityName string
 	FileName   string
-	Entity     Entity
 }
 
 // Entities iterates over all entities in the package using the range-func protocol.
 func (pkg Package) Entities() func(func(EntitiesResult) bool) {
 	return func(yield func(EntitiesResult) bool) {
 		for fileName, file := range pkg {
+			//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for entityName, entity := range file.Entities {
 				if !yield(EntitiesResult{
 					EntityName: entityName,
@@ -92,17 +100,20 @@ type Import struct {
 	Meta    core.Meta `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
+//nolint:govet // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Entity struct {
-	IsPublic  bool        `json:"exported,omitempty"`
-	Kind      EntityKind  `json:"kind,omitempty"`
-	Const     Const       `json:"const"`
 	Type      ts.Def      `json:"type"`
+	Component []Component `json:"component,omitempty"`
 	Interface Interface   `json:"interface"`
-	Component []Component `json:"component,omitempty"` // Non-overloaded components are represented as slice of one element.
+	Const     Const       `json:"const"`
+	Comments  *Comments   `json:"comments,omitempty"`
+	Kind      EntityKind  `json:"kind,omitempty"`
+	IsPublic  bool        `json:"exported,omitempty"`
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (e Entity) Meta() *core.Meta {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	m := core.Meta{}
 	switch e.Kind {
 	case ConstEntity:
@@ -128,13 +139,13 @@ const (
 
 // Component is unit of computation.
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type Component struct {
-	Interface  `json:"interface"`
 	Directives map[Directive]string `json:"directives,omitempty"`
 	Nodes      map[string]Node      `json:"nodes,omitempty"`
 	Net        []Connection         `json:"net,omitempty"`
-	Meta       core.Meta            `json:"meta"`
+	Interface  `json:"interface"`
+	Meta       core.Meta `json:"meta"`
 }
 
 // Directive is an explicit instruction for compiler.
@@ -149,14 +160,16 @@ type Interface struct {
 
 // TODO should we use it to typesystem package?
 //
-//nolint:govet // fieldalignment: keep semantic grouping.
+
 type TypeParams struct {
 	Params []ts.Param `json:"params,omitempty"`
 	Meta   core.Meta  `json:"meta"`
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (t TypeParams) ToFrame() map[string]ts.Def {
 	frame := make(map[string]ts.Def, len(t.Params))
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, param := range t.Params {
 		frame[param.Name] = ts.Def{
 			BodyExpr: &param.Constr,
@@ -167,8 +180,10 @@ func (t TypeParams) ToFrame() map[string]ts.Def {
 }
 
 func (t TypeParams) String() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s strings.Builder
 	s.WriteString("<")
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, param := range t.Params {
 		s.WriteString(param.Name + " " + param.Constr.String())
 		if i < len(t.Params)-1 {
@@ -178,15 +193,14 @@ func (t TypeParams) String() string {
 	return s.String() + ">"
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Node struct {
 	Directives    map[Directive]string `json:"directives,omitempty"`
-	EntityRef     core.EntityRef       `json:"entityRef"`
+	DIArgs        map[string]Node      `json:"diArgs,omitempty"`
+	OverloadIndex *int                 `json:"overloadIndex,omitempty"`
 	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
-	ErrGuard      bool                 `json:"errGuard,omitempty"`      // ErrGuard explains if node is used with `?` operator.
-	DIArgs        map[string]Node      `json:"diArgs,omitempty"`        // Dependency Injection.
-	OverloadIndex *int                 `json:"overloadIndex,omitempty"` // Only for overloaded components.
+	EntityRef     core.EntityRef       `json:"entityRef"`
 	Meta          core.Meta            `json:"meta"`
+	ErrGuard      bool                 `json:"errGuard,omitempty"`
 }
 
 const MissingNodeNamePrefix = "__missing_node_name__"
@@ -202,8 +216,10 @@ func (n Node) String() string {
 type TypeArgs []ts.Expr
 
 func (t TypeArgs) String() string {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var s strings.Builder
 	s.WriteString("<")
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for i, arg := range t {
 		s.WriteString(arg.String())
 		if i < len(t)-1 {
@@ -233,15 +249,14 @@ func (c ConstValue) String() string {
 	return c.Message.String()
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type MsgLiteral struct {
 	Bool         *bool                 `json:"bool,omitempty"`
 	Int          *int                  `json:"int,omitempty"`
 	Float        *float64              `json:"float,omitempty"`
 	Str          *string               `json:"str,omitempty"`
-	List         []ConstValue          `json:"vec,omitempty"`
 	DictOrStruct map[string]ConstValue `json:"dict,omitempty"`
 	Union        *UnionLiteral         `json:"union,omitempty"`
+	List         []ConstValue          `json:"vec,omitempty"`
 	Meta         core.Meta             `json:"meta"`
 }
 
@@ -255,16 +270,20 @@ type UnionLiteral struct {
 func (m MsgLiteral) String() string {
 	switch {
 	case m.Bool != nil:
+		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return fmt.Sprintf("%v", *m.Bool)
 	case m.Int != nil:
+		//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return fmt.Sprintf("%v", *m.Int)
 	case m.Float != nil:
 		return fmt.Sprintf("%v", *m.Float)
 	case m.Str != nil:
 		return fmt.Sprintf("%q", *m.Str)
 	case len(m.List) != 0:
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		var s strings.Builder
 		s.WriteString("[")
+		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for i, item := range m.List {
 			s.WriteString(item.String())
 			if i != len(m.List)-1 {
@@ -273,8 +292,10 @@ func (m MsgLiteral) String() string {
 		}
 		return s.String() + "]"
 	case len(m.DictOrStruct) != 0:
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		var s strings.Builder
 		s.WriteString("{")
+		//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		for key, value := range m.DictOrStruct {
 			fmt.Fprintf(&s, "%q: %v", key, value.String())
 		}
@@ -289,14 +310,13 @@ type IO struct {
 	Meta core.Meta       `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Port struct {
 	TypeExpr ts.Expr   `json:"typeExpr"`
-	IsArray  bool      `json:"isArray,omitempty"`
 	Meta     core.Meta `json:"meta"`
+	Order    int       `json:"order"`
+	IsArray  bool      `json:"isArray,omitempty"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type Connection struct {
 	Senders   []ConnectionSender   `json:"sender,omitempty"`
 	Receivers []ConnectionReceiver `json:"receiver,omitempty"`
@@ -309,11 +329,9 @@ type ConnectionReceiver struct {
 	Meta              core.Meta   `json:"meta"`
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type ConnectionSender struct {
-	PortAddr *PortAddr `json:"portAddr,omitempty"`
-	Const    *Const    `json:"const,omitempty"`
-
+	PortAddr       *PortAddr `json:"portAddr,omitempty"`
+	Const          *Const    `json:"const,omitempty"`
 	StructSelector []string  `json:"selector,omitempty"`
 	Meta           core.Meta `json:"meta"`
 }
@@ -363,6 +381,7 @@ func (p PortAddr) String() string {
 		if IsArrayBypassIdx(p.Idx) {
 			idxString = "*"
 		} else {
+			//nolint:perfsprint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			idxString = fmt.Sprintf("%v", *p.Idx)
 		}
 	}

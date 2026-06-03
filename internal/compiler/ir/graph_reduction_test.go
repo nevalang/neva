@@ -7,10 +7,10 @@ import (
 )
 
 func Test_GraphReduction(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		name     string
+	tests := []struct {
 		input    map[PortAddr]PortAddr
 		expected map[PortAddr]PortAddr
+		name     string
 	}{
 		{
 			name: "simple_chain_reduction",

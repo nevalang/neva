@@ -10,6 +10,8 @@ import (
 )
 
 // Desugarer is NOT thread safe and must be used in single thread
+//
+//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type Desugarer struct {
 	virtualSelectorsCount uint64
 	virtualEmittersCount  uint64
@@ -40,6 +42,10 @@ func (d *Desugarer) desugarModule(
 	build src.Build,
 	modRef core.ModuleRef,
 ) (src.Module, error) {
+	if build.Modules == nil {
+		panic("internal invariant violated: desugarer got build with nil modules map")
+	}
+
 	mod := build.Modules[modRef]
 
 	// create manifest copy with std module dependency
@@ -51,7 +57,9 @@ func (d *Desugarer) desugarModule(
 	desugaredManifest.Deps["std"] = core.ModuleRef{Path: "std", Version: pkg.Version}
 
 	// copy all modules but replace manifest in current one
-	modsCopy := maps.Clone(build.Modules)
+	modsCopy := make(map[core.ModuleRef]src.Module, len(build.Modules))
+	maps.Copy(modsCopy, build.Modules)
+
 	modsCopy[modRef] = src.Module{
 		Manifest: desugaredManifest,
 		Packages: mod.Packages,
@@ -120,10 +128,12 @@ func (d *Desugarer) desugarPkg(pkg src.Package, scope Scope) (src.Package, error
 // desugarFile injects import of std/builtin into every pkg's file and desugares it's every entity
 func (d *Desugarer) desugarFile(
 	file src.File,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.File, error) {
 	desugaredEntities := make(map[string]src.Entity, len(file.Entities))
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for entityName, entity := range file.Entities {
 		entityResult, err := d.desugarEntity(entity, scope)
 		if err != nil {
@@ -156,14 +166,15 @@ func (d *Desugarer) desugarFile(
 	}, nil
 }
 
-//nolint:govet // fieldalignment: keep semantic grouping.
 type desugarEntityResult struct {
-	entity src.Entity
 	insert map[string]src.Entity
+	entity src.Entity
 }
 
 func (d *Desugarer) desugarEntity(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	entity src.Entity,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (desugarEntityResult, error) {
 	if entity.Kind != src.ComponentEntity && entity.Kind != src.ConstEntity {
@@ -184,6 +195,7 @@ func (d *Desugarer) desugarEntity(
 	desugaredVersions := make([]src.Component, 0, len(entity.Component))
 	entitiesToInsert := make(map[string]src.Entity)
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, component := range entity.Component {
 		componentResult, err := d.desugarComponent(component, scope)
 		if err != nil {

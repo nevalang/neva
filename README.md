@@ -85,7 +85,7 @@ flowchart LR
 ## Contributing
 
 1. Join [discord server](https://discord.gg/dmXbC79UuH) or [telegram group](https://t.me/+H1kRClL8ppI1MWJi)
-2. Read [contributing](./CONTRIBUTING.md), [architecture](./ARCHITECTURE.md) and [CoC](./CODE_OF_CONDUCT.md)
+2. Read [contributing](./CONTRIBUTING.md), [architecture](./ARCHITECTURE.md), [AGENTS](./AGENTS.md) and [CoC](./CODE_OF_CONDUCT.md)
 3. Support project on [Open Collective](https://opencollective.com/nevalang) ❤️‍🔥
 
 <p align="center">

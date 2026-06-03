@@ -1,0 +1,11 @@
+// Benchmarks builtin component `Ternary` in one-shot mode.
+def Main(start any) (stop any) {
+	ternary Ternary<int>
+	---
+	:start -> [
+		true -> ternary:if,
+		42 -> ternary:then,
+		0 -> ternary:else
+	]
+	ternary -> :stop
+}

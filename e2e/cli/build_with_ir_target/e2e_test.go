@@ -31,13 +31,13 @@ func TestBuildIRDefault(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct { //nolint:govet // fieldalignment
-			Ref string `yaml:"ref"`
+		Funcs []struct {
+			Msg map[string]any `yaml:"msg,omitempty"`
+			Ref string         `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
 				Out []string `yaml:"out"`
 			} `yaml:"io"`
-			Msg map[string]any `yaml:"msg,omitempty"`
 		} `yaml:"funcs"`
 	}
 	require.NoError(t, yaml.Unmarshal(irBytes, &ir))
@@ -65,13 +65,13 @@ func TestBuildIRYAML(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct { //nolint:govet // fieldalignment
-			Ref string `yaml:"ref"`
+		Funcs []struct {
+			Msg map[string]any `yaml:"msg,omitempty"`
+			Ref string         `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
 				Out []string `yaml:"out"`
 			} `yaml:"io"`
-			Msg map[string]any `yaml:"msg,omitempty"`
 		} `yaml:"funcs"`
 	}
 	require.NoError(t, yaml.Unmarshal(irBytes, &ir))
@@ -121,13 +121,13 @@ func TestBuildIRWithInterfaceWithImports(t *testing.T) {
 			From string `yaml:"from"`
 			To   string `yaml:"to"`
 		} `yaml:"connections"`
-		Funcs []struct { //nolint:govet // fieldalignment
-			Ref string `yaml:"ref"`
+		Funcs []struct {
+			Msg map[string]any `yaml:"msg,omitempty"`
+			Ref string         `yaml:"ref"`
 			IO  struct {
 				In  []string `yaml:"in"`
 				Out []string `yaml:"out"`
 			} `yaml:"io"`
-			Msg map[string]any `yaml:"msg,omitempty"`
 		} `yaml:"funcs"`
 	}
 	require.NoError(t, yaml.Unmarshal(irBytes, &ir))

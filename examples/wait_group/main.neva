@@ -1,9 +1,9 @@
 import { sync, fmt, runtime }
 
 def Main(start any) (stop any) {
-	p1 fmt.Println
-	p2 fmt.Println
-	p3 fmt.Println
+	p1 fmt.Println<any>
+	p2 fmt.Println<any>
+	p3 fmt.Println<any>
     wg sync.WaitGroup
     panic runtime.Panic
     ---

@@ -1,0 +1,16 @@
+import { sync }
+
+def Main(start any) (stop any) {
+	fan_out FanOut<any>
+	fan_in FanIn<any>
+	wg sync.WaitGroup
+	---
+	:start -> [
+		fan_out,
+		2 -> wg:count
+	]
+	fan_out:data[0] -> true -> fan_in:data[0]
+	fan_out:data[1] -> true -> fan_in:data[1]
+	fan_in -> wg:sig
+	wg -> :stop
+}

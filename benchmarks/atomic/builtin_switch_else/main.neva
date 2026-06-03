@@ -1,0 +1,12 @@
+// Benchmarks builtin component `Switch` else-path in one-shot mode.
+def Main(start any) (stop any) {
+	switch_router Switch<int>
+	del Del
+	---
+	:start -> [
+		3 -> switch_router:data,
+		1 -> switch_router:case[0]
+	]
+	switch_router:case[0] -> del
+	switch_router:else -> :stop
+}

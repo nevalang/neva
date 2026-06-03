@@ -11,10 +11,12 @@ import (
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/compiler"
-	"github.com/nevalang/neva/internal/compiler/backend/golang"
+	backendgolang "github.com/nevalang/neva/internal/compiler/backend/golang"
 	"github.com/nevalang/neva/internal/compiler/desugarer"
+	"github.com/nevalang/neva/pkg/golang"
 )
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func newInstallCmd(
 	workdir string,
 	bldr builder.Builder,
@@ -82,7 +84,7 @@ func newInstallCmd(
 				&desugarer,
 				analyzer,
 				irgen,
-				golang.NewBackend("", false),
+				backendgolang.NewBackend("", false),
 			)
 
 			if _, err := compilerToGo.Compile(cliCtx.Context, compiler.CompilerInput{
@@ -91,6 +93,7 @@ func newInstallCmd(
 				EmitTraceFile: false,
 				Mode:          compiler.ModeExecutable,
 			}); err != nil {
+				//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				return err
 			}
 
@@ -113,6 +116,7 @@ func newInstallCmd(
 
 			// Use go build to build directly to the target location
 			// This leverages Go's build system while giving us control over binary name
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			wd, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("get working directory: %w", err)
@@ -128,7 +132,11 @@ func newInstallCmd(
 				}
 			}()
 
-			cmd := exec.Command("go", "build", "-ldflags", "-s -w", "-o", targetPath, ".")
+			// Keep build flags centralized so CLI/install and compiler backends stay in sync.
+			// This avoids silent drift in artifact reproducibility/size behavior over time.
+			// #nosec G204 -- command args are constructed internally from known values
+			//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			cmd := exec.Command("go", golang.ReleaseBuildArgs(targetPath, ".")...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 
@@ -205,6 +213,7 @@ func resolveMainPkgPath(absPkg string) (string, error) {
 func dirContainsNeva(path string) (bool, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return false, err
 	}
 

@@ -61,3 +61,44 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Omit port names when possible. It enables renaming of ports without updating the networks.
 - Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and easier to scan.
+
+## Comments
+
+Good comments explain why.
+
+Use leading `//` block immediately above entity.
+
+- Free text is allowed and should describe intent/constraints.
+- Use `@inport <name> <text>` for inport semantics.
+- Use `@outport <name> <text>` for outport semantics.
+- Use `@example <text>` for external usage examples (how to use component from outside).
+- Multiple `@example` lines are allowed.
+- Separate logical sections with an empty commented line (`//`).
+
+Example:
+
+```neva
+// Processes payload and returns normalized result.
+// Keeps stable behavior for repeated start signals.
+//
+// @inport start Trigger signal.
+// @inport data Input payload.
+//
+// @outport res Normalized payload.
+// @outport err Processing error.
+//
+// @example :start -> process:start
+// @example 'hello' -> process:data
+// @example process:res -> :stop
+def Process(start any, data string) (res string, err error)
+```
+
+## Engineering Rules
+
+### Prefer The Simplest Solution
+
+Always prefer the simplest solution.
+
+1. First, find the simplest solution.
+2. Prove that it is insufficient.
+3. Add complexity only after you proved it is necessary.

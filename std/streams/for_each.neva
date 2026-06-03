@@ -14,8 +14,8 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
     lock1 Lock<stream<T>> // to lock current msg before sending to handler
     lock2 Lock<stream<T>> // to lock current msg before sending downstream
     handler ISideEffector<T>? // to process current msg
-    pass1 Pass // to unlock current msg to send to handler
-    pass2 Pass // to unlock current msg to send downstream
+    pass1 Pass<any> // to unlock current msg to send to handler
+    pass2 Pass<any> // to unlock current msg to send downstream
     ---
     :data -> [lock1:data, lock2:data, first]
 

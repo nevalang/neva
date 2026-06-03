@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Race` in one-shot mode.
+def Main(start any) (stop any) {
+	race Race<int>
+	---
+	:start -> [
+		42 -> race:data,
+		true -> race:case[0]
+	]
+	race:case[0] -> :stop
+}

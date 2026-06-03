@@ -1,0 +1,15 @@
+// Benchmarks builtin component `Union` in one-shot mode.
+type MaybeInt union {
+	Some int
+	None
+}
+
+def Main(start any) (stop any) {
+	box Union<MaybeInt>
+	---
+	:start -> [
+		42 -> box:data,
+		MaybeInt::Some -> box:tag
+	]
+	box -> :stop
+}

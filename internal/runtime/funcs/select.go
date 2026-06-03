@@ -9,14 +9,17 @@ import (
 
 type selector struct{}
 
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	ifArrIn, err := io.In.Array("if")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	thenArrIn, err := io.In.Array("then")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -26,6 +29,7 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -37,14 +41,14 @@ func (selector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 			}
 
 			then := make([]runtime.Msg, thenArrIn.Len())
-			if !thenArrIn.ReceiveAll(ctx, func(idx int, msg runtime.Msg) bool {
-				then[idx] = msg
+			if !thenArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+				then[idx] = ordered.Msg
 				return true
 			}) {
 				return
 			}
 
-			if !resOut.Send(ctx, then[ifMsg.SlotIdx]) {
+			if !resOut.Send(ctx, then[ifMsg.SlotIdx], ifMsg.OrderedMsg) {
 				return
 			}
 		}

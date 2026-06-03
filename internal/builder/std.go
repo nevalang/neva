@@ -12,6 +12,8 @@ import (
 )
 
 // ensureStdlib ensures the standard library is properly extracted and up-to-date
+//
+//nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func ensureStdlib() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -20,7 +22,9 @@ func ensureStdlib() (string, error) {
 
 	path := filepath.Join(home, "neva", "std")
 
-	// Compute checksum of the embedded stdlib
+	// Keep stdlib invalidation content-based: embed.FS file metadata does not carry
+	// reliable mtimes (ModTime is zero), so metadata-only fingerprinting can miss
+	// same-size content edits.
 	embeddedChecksum, err := nevaos.ComputeChecksumForFS(std.FS)
 	if err != nil {
 		return "", fmt.Errorf("compute embedded checksum: %w", err)
@@ -49,6 +53,7 @@ func ensureStdlib() (string, error) {
 	}
 
 	// Write all files from the embedded FS
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	err = fs.WalkDir(std.FS, ".", func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("walk error at %s: %w", filePath, err)
@@ -103,5 +108,6 @@ func readChecksum(stdlibPath string) (string, error) {
 func writeChecksum(stdlibPath, checksum string) error {
 	checksumPath := filepath.Join(stdlibPath, ".checksum")
 	// #nosec G306 -- checksum is a non-sensitive build artifact
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return os.WriteFile(checksumPath, []byte(checksum), 0644)
 }

@@ -60,6 +60,7 @@ func (s *treeShapeListener) parseTypeParams(
 	typeParams := params.TypeParamList().AllTypeParam()
 	result := make([]ts.Param, 0, len(typeParams))
 	for _, typeParam := range typeParams {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		v, err := s.parseTypeExpr(typeParam.TypeExpr())
 		if err != nil {
 			return src.TypeParams{}, err
@@ -115,7 +116,9 @@ func (s *treeShapeListener) parseTypeExpr(expr generated.ITypeExprContext) (ts.E
 	}
 
 	var result *ts.Expr
+	//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	if instExpr := expr.TypeInstExpr(); instExpr != nil {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		v, err := s.parseTypeInstExpr(instExpr)
 		if err != nil {
 			return ts.Expr{}, &compiler.Error{
@@ -406,11 +409,12 @@ func (s *treeShapeListener) parsePorts(
 	in []generated.IPortDefContext,
 ) (map[string]src.Port, *compiler.Error) {
 	parsedInports := map[string]src.Port{}
-	for _, port := range in {
+	for order, port := range in {
 		single := port.SinglePortDef()
 		arr := port.ArrayPortDef()
 
 		var (
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			id       antlr.TerminalNode
 			typeExpr generated.ITypeExprContext
 			isArr    bool
@@ -430,6 +434,7 @@ func (s *treeShapeListener) parsePorts(
 			portName = id.GetText()
 		}
 
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		v, err := s.parseTypeExpr(typeExpr)
 		if err != nil {
 			return nil, err
@@ -437,6 +442,7 @@ func (s *treeShapeListener) parsePorts(
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
 			TypeExpr: v,
+			Order:    order,
 			Meta: core.Meta{
 				Text: port.GetText(),
 				Start: core.Position{
@@ -458,15 +464,30 @@ func (s *treeShapeListener) parsePorts(
 func (s *treeShapeListener) parseInterfaceDef(
 	actx generated.IInterfaceDefContext,
 ) (src.Interface, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing interface definition context")
+	}
+
 	parsedTypeParams, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	in, err := s.parsePorts(actx.InPortsDef().PortsDef().AllPortDef())
+
+	inPortsDef := actx.InPortsDef()
+	if inPortsDef == nil || inPortsDef.PortsDef() == nil {
+		panic("internal invariant violated: missing in ports definition in interface")
+	}
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	in, err := s.parsePorts(inPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
-	out, err := s.parsePorts(actx.OutPortsDef().PortsDef().AllPortDef())
+
+	outPortsDef := actx.OutPortsDef()
+	if outPortsDef == nil || outPortsDef.PortsDef() == nil {
+		panic("internal invariant violated: missing out ports definition in interface")
+	}
+	out, err := s.parsePorts(outPortsDef.PortsDef().AllPortDef())
 	if err != nil {
 		return src.Interface{}, err
 	}
@@ -495,6 +516,7 @@ func (s *treeShapeListener) parseInterfaceDef(
 	}, nil
 }
 
+//nolint:funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s *treeShapeListener) parseNodes(
 	actx generated.ICompNodesDefBodyContext,
 	isRootLevel bool,
@@ -680,10 +702,11 @@ func (s *treeShapeListener) parsePortAddr(
 
 func (s *treeShapeListener) parsePortAddrIdx(
 	idxText string,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	meta core.Meta,
 ) (*uint8, *compiler.Error) {
 	if idxText == "*" {
-		return compiler.Pointer(src.ArrayBypassIdx), nil
+		return arrayBypassIdxPointer(), nil
 	}
 
 	idxUint, err := strconv.ParseUint(idxText, 10, 8)
@@ -704,9 +727,15 @@ func (s *treeShapeListener) parsePortAddrIdx(
 	return &idxUint8, nil
 }
 
+func arrayBypassIdxPointer() *uint8 {
+	idx := src.ArrayBypassIdx
+	return &idx
+}
+
 func (s *treeShapeListener) parseSinglePortAddr(
 	fallbackNode string,
 	expr generated.ISinglePortAddrContext,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	meta core.Meta,
 ) (src.PortAddr, *compiler.Error) {
 	nodeName := fallbackNode
@@ -780,7 +809,8 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 }
 
 //nolint:gocyclo // Parsing literals requires many grammar branches.
-func (s *treeShapeListener) parseMessage(
+//nolint:cyclop,funlen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	constVal generated.IConstLitContext,
 ) (src.MsgLiteral, *compiler.Error) {
 	msg := src.MsgLiteral{
@@ -838,10 +868,10 @@ func (s *treeShapeListener) parseMessage(
 				},
 			}
 		}
-		if constVal.MINUS() != nil {
-			parsedInt = -parsedInt
-		}
 		intVal := int(parsedInt)
+		if constVal.MINUS() != nil {
+			intVal = -intVal
+		}
 		msg.Int = &intVal
 	case constVal.FLOAT() != nil:
 		parsedFloat, err := strconv.ParseFloat(constVal.FLOAT().GetText(), 64)
@@ -995,15 +1025,20 @@ func (s *treeShapeListener) parseCompilerDirectives(
 func (s *treeShapeListener) parseTypeDef(
 	actx generated.ITypeDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing type definition context")
+	}
+
 	var body *ts.Expr
 	if expr := actx.TypeExpr(); expr != nil {
-		v, err := s.parseTypeExpr(actx.TypeExpr())
+		typeExpr, err := s.parseTypeExpr(expr)
 		if err != nil {
 			return src.Entity{}, err
 		}
-		body = &v
+		body = &typeExpr
 	}
 
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	v, err := s.parseTypeParams(actx.TypeParams())
 	if err != nil {
 		return src.Entity{}, err
@@ -1034,6 +1069,10 @@ func (s *treeShapeListener) parseTypeDef(
 func (s *treeShapeListener) parseConstDef(
 	actx generated.IConstDefContext,
 ) (src.Entity, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing const definition context")
+	}
+
 	constLit := actx.ConstLit()
 	entityRef := actx.EntityRef()
 
@@ -1107,7 +1146,16 @@ func (s *treeShapeListener) parseConstDef(
 func (s *treeShapeListener) parseCompDef(
 	actx generated.ICompDefContext,
 ) (src.Component, *compiler.Error) {
-	parsedInterfaceDef, err := s.parseInterfaceDef(actx.InterfaceDef())
+	if actx == nil {
+		panic("internal invariant violated: missing component definition context")
+	}
+
+	ifaceDef := actx.InterfaceDef()
+	if ifaceDef == nil {
+		panic("internal invariant violated: missing component interface definition")
+	}
+
+	parsedInterfaceDef, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		return src.Component{}, err
 	}
@@ -1135,7 +1183,7 @@ func (s *treeShapeListener) parseCompDef(
 	}
 
 	parsedConnections := []src.Connection{}
-	connections := actx.CompBody().ConnDefList()
+	connections := body.ConnDefList()
 	if connections != nil {
 		parsedNet, err := s.parseConnections(connections)
 		if err != nil {
@@ -1200,8 +1248,13 @@ func (s *treeShapeListener) parseConnection(connDef generated.IConnDefContext) (
 
 func (s *treeShapeListener) parseConnDef(
 	actx generated.IConnDefContext,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing connection definition context")
+	}
+
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
 	if err != nil {
 		return src.Connection{}, err
@@ -1222,6 +1275,10 @@ func (s *treeShapeListener) parseConnDef(
 func (s *treeShapeListener) parseSenderSide(
 	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing sender side context")
+	}
+
 	singleSender := actx.SingleSenderSide()
 	mulSenders := actx.MultipleSenderSide()
 
@@ -1298,6 +1355,7 @@ func (s *treeShapeListener) parseSingleReceiverSide(
 
 func (s *treeShapeListener) parseChainedConnExpr(
 	actx generated.IChainedNormConnContext,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	connMeta core.Meta,
 ) (src.ConnectionReceiver, *compiler.Error) {
 	parsedConn, err := s.parseConnDef(actx.ConnDef(), connMeta)
@@ -1314,6 +1372,10 @@ func (s *treeShapeListener) parseChainedConnExpr(
 func (s *treeShapeListener) parseReceiverSide(
 	actx generated.IReceiverSideContext,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
+	if actx == nil {
+		panic("internal invariant violated: missing receiver side context")
+	}
+
 	singleReceiverSide := actx.SingleReceiverSide()
 	multipleReceiverSide := actx.MultipleReceiverSide()
 
@@ -1367,6 +1429,7 @@ func (s *treeShapeListener) parseMultipleReceiverSides(
 	return parsedReceivers, nil
 }
 
+//nolint:cyclop,funlen,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s *treeShapeListener) parseSingleSender(
 	senderSide generated.ISingleSenderSideContext,
 ) (src.ConnectionSender, *compiler.Error) {

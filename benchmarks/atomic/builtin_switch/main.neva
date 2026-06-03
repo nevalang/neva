@@ -1,0 +1,10 @@
+// Benchmarks builtin component `Switch` in one-shot mode.
+def Main(start any) (stop any) {
+	switch Switch<int>
+	---
+	:start -> [
+		1 -> switch:data,
+		1 -> switch:case[0]
+	]
+	switch:case[0] -> :stop
+}
