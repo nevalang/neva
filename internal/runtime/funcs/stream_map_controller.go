@@ -6,8 +6,8 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// streamMapController preserves stream event ordering for Map.
-// For each Data event it waits for mapped payload before forwarding Data.
+// streamMapController preserves stream item ordering for Map.
+// For each item it waits for the mapped payload before forwarding the result.
 type streamMapController struct{}
 
 //nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -38,35 +38,23 @@ func (streamMapController) Create(input runtime.IO, _ runtime.Msg) (func(ctx con
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
+			msg, dataOK := dataIn.Receive(ctx)
+			if !dataOK {
+				return
+			}
+
+			item := msg.Struct()
+			if !itemOut.Send(ctx, item.Get("data"), msg) {
+				return
+			}
+
+			mappedMsg, ok := mappedIn.Receive(ctx)
 			if !ok {
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				if !resOut.Send(ctx, streamOpen()) {
-					return
-				}
-			case isStreamData(msg):
-				if !itemOut.Send(ctx, streamDataValue(msg)) {
-					return
-				}
-
-				mappedMsg, ok := mappedIn.Receive(ctx)
-				if !ok {
-					return
-				}
-
-				if !resOut.Send(ctx, streamData(mappedMsg)) {
-					return
-				}
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, streamClose()) {
-					return
-				}
-			default:
-				panic("stream_map_controller: unexpected stream tag")
+			if !resOut.Send(ctx, streamItem(mappedMsg.Msg, item.Get("idx").Int(), item.Get("last").Bool()), msg, mappedMsg) {
+				return
 			}
 		}
 	}, nil

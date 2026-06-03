@@ -23,11 +23,12 @@ func (streamIsData) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Co
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, dataOK := dataIn.Receive(ctx)
+			if !dataOK {
 				return
 			}
-			if !resOut.Send(ctx, runtime.NewBoolMsg(isStreamData(msg))) {
+			item := msg.Struct()
+			if !resOut.Send(ctx, runtime.NewBoolMsg(!item.Get("last").Bool())) {
 				return
 			}
 		}
@@ -51,11 +52,12 @@ func (streamIsClose) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.C
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, dataOK := dataIn.Receive(ctx)
+			if !dataOK {
 				return
 			}
-			if !resOut.Send(ctx, runtime.NewBoolMsg(isStreamClose(msg))) {
+			item := msg.Struct()
+			if !resOut.Send(ctx, runtime.NewBoolMsg(item.Get("last").Bool())) {
 				return
 			}
 		}
@@ -79,16 +81,12 @@ func (streamUnwrapData) Create(input runtime.IO, _ runtime.Msg) (func(ctx contex
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, dataOK := dataIn.Receive(ctx)
+			if !dataOK {
 				return
 			}
 
-			if !isStreamData(msg) {
-				panic("stream_unwrap_data: expected Data message")
-			}
-
-			if !resOut.Send(ctx, streamDataValue(msg)) {
+			if !resOut.Send(ctx, msg.Struct().Get("data")) {
 				return
 			}
 		}

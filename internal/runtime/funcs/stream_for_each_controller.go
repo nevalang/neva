@@ -7,7 +7,7 @@ import (
 )
 
 // streamForEachController serializes stream item handling for ForEach.
-// It forwards Open/Close immediately and forwards Data only after done signal.
+// It forwards each item only after the handler signals completion.
 type streamForEachController struct{}
 
 //nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -38,35 +38,22 @@ func (streamForEachController) Create(input runtime.IO, _ runtime.Msg) (func(ctx
 
 	return func(ctx context.Context) {
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, dataOK := dataIn.Receive(ctx)
+			if !dataOK {
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			case isStreamData(msg):
-				item := streamDataValue(msg)
-				if !itemOut.Send(ctx, item) {
-					return
-				}
+			item := msg.Struct()
+			if !itemOut.Send(ctx, item.Get("data"), msg) {
+				return
+			}
 
-				if _, ok := doneIn.Receive(ctx); !ok {
-					return
-				}
+			if _, doneOK := doneIn.Receive(ctx); !doneOK {
+				return
+			}
 
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			case isStreamClose(msg):
-				if !resOut.Send(ctx, msg) {
-					return
-				}
-			default:
-				panic("stream_for_each_controller: unexpected stream tag")
+			if !resOut.Send(ctx, streamItem(item.Get("data"), item.Get("idx").Int(), item.Get("last").Bool()), msg) {
+				return
 			}
 		}
 	}, nil

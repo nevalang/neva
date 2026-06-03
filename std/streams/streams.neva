@@ -39,15 +39,15 @@ pub def Range(from int, to int) (res stream<int>)
 #extern(stream_enumerate)
 pub def Enumerate<T>(data stream<T>) (res stream<Indexed<T>>)
 
-// IsData returns true when stream item has Data tag.
+// IsData returns true when stream item is not the last item.
 #extern(stream_is_data)
 def IsData<T>(data stream<T>) (res bool)
 
-// IsClose returns true when stream item has Close tag.
+// IsClose returns true when stream item is the last item.
 #extern(stream_is_close)
 def IsClose<T>(data stream<T>) (res bool)
 
-// UnwrapData extracts payload from stream<T>::Data item.
+// UnwrapData extracts payload from a stream item.
 #extern(stream_unwrap_data)
 def UnwrapData<T>(data stream<T>) (res T)
 
