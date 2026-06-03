@@ -23,6 +23,10 @@ func errFromString(s string) runtime.StructMsg {
 	})
 }
 
+func sendRuntimeError(ctx context.Context, errOut runtime.SingleOutport, err error) bool {
+	return errOut.Send(ctx, errFromErr(err))
+}
+
 func streamItem(data runtime.Msg, idx int64, last bool) runtime.StructMsg {
 	return runtime.NewStructMsg([]runtime.StructField{
 		runtime.NewStructField("data", data),

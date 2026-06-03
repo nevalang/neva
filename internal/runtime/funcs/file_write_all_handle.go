@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -13,62 +14,63 @@ type fileWriteAllHandle struct {
 func (c fileWriteAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	fileIn, err := rio.In.Single("file")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve file inport: %w", err)
 	}
 
 	dataIn, err := rio.In.Single("data")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve data inport: %w", err)
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve res outport: %w", err)
 	}
 
 	errOut, err := rio.Out.Single("err")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve err outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
 		for {
-			fileMsg, ok := fileIn.Receive(ctx)
-			if !ok {
+			fileMsg, received := fileIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
+			dataMsg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			id, err := fileHandleID(fileMsg)
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			file, err := c.handles.Get(id)
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if _, err := file.Write(dataMsg.Bytes()); err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			if !resOut.Send(ctx, runtime.NewIntMsg(id)) {
+			if !c.handleFileMessage(ctx, fileMsg, dataMsg, resOut, errOut) {
 				return
 			}
 		}
 	}, nil
+}
+
+func (c fileWriteAllHandle) handleFileMessage(
+	ctx context.Context,
+	fileMsg runtime.OrderedMsg,
+	dataMsg runtime.OrderedMsg,
+	resOut runtime.SingleOutport,
+	errOut runtime.SingleOutport,
+) bool {
+	handleID, err := fileHandleID(fileMsg.Msg)
+	if err != nil {
+		return sendRuntimeError(ctx, errOut, err)
+	}
+
+	file, err := c.handles.Get(handleID)
+	if err != nil {
+		return sendRuntimeError(ctx, errOut, err)
+	}
+
+	if _, err := file.Write(dataMsg.Bytes()); err != nil {
+		return sendRuntimeError(ctx, errOut, err)
+	}
+
+	return resOut.Send(ctx, runtime.NewIntMsg(handleID))
 }

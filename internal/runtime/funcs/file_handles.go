@@ -1,6 +1,7 @@
 package funcs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -44,49 +45,52 @@ func (s *fileHandleStore) Add(file *os.File) int64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	id := s.nextID
+	handleID := s.nextID
 	s.nextID++
-	s.files[id] = file
+	s.files[handleID] = file
 
-	return id
+	return handleID
 }
 
-func (s *fileHandleStore) Get(id int64) (*os.File, error) {
+func (s *fileHandleStore) Get(handleID int64) (*os.File, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	file, ok := s.files[id]
-	if !ok {
-		return nil, fmt.Errorf("file handle %d not found", id)
+	file, found := s.files[handleID]
+	if !found {
+		return nil, fmt.Errorf("file handle %d not found", handleID)
 	}
 
 	return file, nil
 }
 
-func (s *fileHandleStore) Close(id int64) error {
+func (s *fileHandleStore) Close(handleID int64) error {
 	s.mu.Lock()
-	if _, isStdio := s.stdio[id]; isStdio {
+	if _, isStdio := s.stdio[handleID]; isStdio {
 		s.mu.Unlock()
-		return fmt.Errorf("cannot close stdio file handle %d", id)
+		return fmt.Errorf("cannot close stdio file handle %d", handleID)
 	}
 
-	file, ok := s.files[id]
-	if ok {
-		delete(s.files, id)
+	file, found := s.files[handleID]
+	if found {
+		delete(s.files, handleID)
 	}
 	s.mu.Unlock()
 
-	if !ok {
-		return fmt.Errorf("file handle %d not found", id)
+	if !found {
+		return fmt.Errorf("file handle %d not found", handleID)
 	}
 
-	return file.Close()
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("close file handle %d: %w", handleID, err)
+	}
+	return nil
 }
 
 func fileHandleID(msg runtime.Msg) (int64, error) {
-	idMsg, ok := msg.(runtime.IntMsg)
-	if !ok {
-		return 0, fmt.Errorf("file handle must be int")
+	idMsg, isIntMsg := msg.(runtime.IntMsg)
+	if !isIntMsg {
+		return 0, errors.New("file handle must be int")
 	}
 
 	return idMsg.Int(), nil

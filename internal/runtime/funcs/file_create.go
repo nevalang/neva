@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -14,40 +15,50 @@ type fileCreate struct {
 func (c fileCreate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("filename")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve filename inport: %w", err)
 	}
 
 	resOut, err := rio.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve res outport: %w", err)
 	}
 
 	errOut, err := rio.Out.Single("err")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve err outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
 		for {
-			nameMsg, ok := filenameIn.Receive(ctx)
-			if !ok {
+			nameMsg, received := filenameIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			// #nosec G304 -- filename is user-controlled by design.
-			file, err := os.OpenFile(nameMsg.Str(), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o644)
-			if err != nil {
-				if !errOut.Send(ctx, errFromErr(err)) {
-					return
-				}
-				continue
-			}
-
-			id := c.handles.Add(file)
-			if !resOut.Send(ctx, runtime.NewIntMsg(id)) {
-				_ = c.handles.Close(id)
+			if !c.handleFileMessage(ctx, nameMsg, resOut, errOut) {
 				return
 			}
 		}
 	}, nil
+}
+
+func (c fileCreate) handleFileMessage(
+	ctx context.Context,
+	nameMsg runtime.OrderedMsg,
+	resOut runtime.SingleOutport,
+	errOut runtime.SingleOutport,
+) bool {
+	// #nosec G304 -- filename is user-controlled by design.
+	file, err := os.OpenFile(nameMsg.Str(), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o644)
+	if err != nil {
+		return sendRuntimeError(ctx, errOut, err)
+	}
+
+	handleID := c.handles.Add(file)
+	if resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+		return true
+	}
+
+	_ = c.handles.Close(handleID)
+	return false
 }
