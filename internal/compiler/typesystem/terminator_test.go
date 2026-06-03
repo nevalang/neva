@@ -12,12 +12,12 @@ import (
 func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		wantErr error
+		scope   TestScope
 		name    string
 		trace   ts.Trace
-		scope   TestScope
 		want    bool
-		wantErr error
 	}{
 		{ // list<t1> [t1] { t1=list<t1>, list<t> }
 			name:  "non valid recursive case",

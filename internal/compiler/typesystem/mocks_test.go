@@ -7,8 +7,8 @@ package typesystem_test
 import (
 	reflect "reflect"
 
-	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	gomock "github.com/golang/mock/gomock"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 )
 
 // MockexprValidator is a mock of exprValidator interface.

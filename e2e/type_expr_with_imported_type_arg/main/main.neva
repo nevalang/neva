@@ -7,7 +7,7 @@ import { streams }
 
 def Main(start any) (stop any) {
 	justFoo Struct<foo.Foo>
-	just streams.Just<foo.Foo>
+	just streams.Item<foo.Foo>
 	---
 	:start -> 0 -> justFoo:bar
 	justFoo -> just:data

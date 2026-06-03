@@ -6,11 +6,11 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-//nolint:govet // fieldalignment: listener fields grouped.
 type treeShapeListener struct {
-	*generated.BasenevaListener
-	loc   core.Location
 	state src.File
+	*generated.BasenevaListener
+	loc         core.Location
+	sourceLines []string
 }
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
@@ -25,6 +25,9 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	typeDef := actx.TypeDef()
+	if typeDef == nil {
+		panic("missing type definition")
+	}
 
 	parsedEntity, err := s.parseTypeDef(typeDef)
 	if err != nil {
@@ -32,12 +35,24 @@ func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	name := typeDef.IDENTIFIER().GetText()
+	comments, err := s.parseLeadingComments(typeDef.GetStart().GetLine(), nil)
+	if err != nil {
+		panic(err)
+	}
+	parsedEntity.Comments = comments
+	nameIdent := typeDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing type identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = parsedEntity
 }
 
 func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	constDef := actx.ConstDef()
+	if constDef == nil {
+		panic("missing const definition")
+	}
 
 	parsedEntity, err := s.parseConstDef(constDef)
 	if err != nil {
@@ -45,36 +60,76 @@ func (s *treeShapeListener) EnterConstStmt(actx *generated.ConstStmtContext) {
 	}
 
 	parsedEntity.IsPublic = actx.PUB() != nil
-	name := constDef.IDENTIFIER().GetText()
+	comments, err := s.parseLeadingComments(constDef.GetStart().GetLine(), nil)
+	if err != nil {
+		panic(err)
+	}
+	parsedEntity.Comments = comments
+	nameIdent := constDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing const identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = parsedEntity
 }
 
 func (s *treeShapeListener) EnterInterfaceStmt(actx *generated.InterfaceStmtContext) {
-	v, err := s.parseInterfaceDef(actx.InterfaceDef())
+	ifaceDef := actx.InterfaceDef()
+	if ifaceDef == nil {
+		panic("missing interface definition")
+	}
+
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	v, err := s.parseInterfaceDef(ifaceDef)
 	if err != nil {
 		panic(err)
 	}
-	name := actx.InterfaceDef().IDENTIFIER().GetText()
+	comments, err := s.parseLeadingComments(ifaceDef.GetStart().GetLine(), &v.IO)
+	if err != nil {
+		panic(err)
+	}
+
+	nameIdent := ifaceDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing interface identifier")
+	}
+	name := nameIdent.GetText()
 	s.state.Entities[name] = src.Entity{
 		IsPublic:  actx.PUB() != nil,
 		Kind:      src.InterfaceEntity,
 		Interface: v,
+		Comments:  comments,
 	}
 }
 
 func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	compDef := actx.CompDef()
+	if compDef == nil {
+		panic("missing component definition")
+	}
+	ifaceDef := compDef.InterfaceDef()
+	if ifaceDef == nil {
+		panic("missing component interface definition")
+	}
 
 	parsedComponent, err := s.parseCompDef(compDef)
 	if err != nil {
 		panic(err)
 	}
 
-	name := compDef.InterfaceDef().IDENTIFIER().GetText()
+	nameIdent := ifaceDef.IDENTIFIER()
+	if nameIdent == nil {
+		panic("missing component identifier")
+	}
+	name := nameIdent.GetText()
 
 	parsedComponent.Directives = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
+	comments, err := s.parseLeadingComments(compDef.GetStart().GetLine(), &parsedComponent.IO)
+	if err != nil {
+		panic(err)
+	}
 
 	existing, ok := s.state.Entities[name]
 	if !ok {
@@ -82,11 +137,15 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 			Kind:      src.ComponentEntity,
 			IsPublic:  actx.PUB() != nil, // in case of overloaded component, first version sets visibility
 			Component: []src.Component{parsedComponent},
+			Comments:  comments,
 		}
 		return
 	}
 
 	existing.Component = append(existing.Component, parsedComponent)
+	if comments != nil {
+		existing.Comments = comments
+	}
 
 	// store back the updated entity; without this, only the first overload is kept
 	s.state.Entities[name] = existing

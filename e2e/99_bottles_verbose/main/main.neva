@@ -43,8 +43,8 @@ const firstLine3 string = 'No more bottles of beer on the wall, no more bottles 
 
 def PrintFirstLine(n int) (n int, err error) {
 	switch Switch<int>
-	p1 fmt.Println?
-	p2 fmt.Println?
+	p1 fmt.Println<any>?
+	p2 fmt.Println<any>?
 	printf fmt.Printf?
 	lock Lock<int>
 	---
@@ -71,9 +71,9 @@ const secondLine4 string = 'Go to the store and buy some more, 99 bottles of bee
 
 def PrintSecondLine(n int) (n int, err error) {
 	switch Switch<int>
-	p1 fmt.Println?
-	p2 fmt.Println?
-	p3 fmt.Println?
+	p1 fmt.Println<any>?
+	p2 fmt.Println<any>?
+	p3 fmt.Println<any>?
 	printf fmt.Printf?
 	lock Lock<int>
 	---

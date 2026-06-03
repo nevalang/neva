@@ -8,15 +8,14 @@ import (
 )
 
 func Test_joinNodePath(t *testing.T) {
-	//nolint:govet // fieldalignment: test helper struct.
 	type args struct {
-		nodePath []string
 		nodeName string
+		nodePath []string
 	}
 	tests := []struct {
 		name string
-		args args
 		want string
+		args args
 	}{
 		{
 			name: "simple_join",

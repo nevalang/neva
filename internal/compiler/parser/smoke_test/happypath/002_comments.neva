@@ -2,3 +2,28 @@
 
 // Program that simply prints "Hello, World!".
 // Turns out we need `const` and `lock` for that!
+
+import {
+	fmt
+}
+
+// Text block above type.
+// @example Payload{value: "x"}
+type Payload struct {
+	value string
+}
+
+// Process payload and return message.
+// @inport start trigger signal
+// @inport data input payload
+// @outport res processed payload
+// @outport err processing error
+// @example :start -> process:start
+// @example 'hello' -> process:data
+def Process(start any, data string) (res string, err error) {
+	println fmt.Println<string>
+	---
+	:data -> println:data
+	println:res -> :res
+	println:err -> :err
+}

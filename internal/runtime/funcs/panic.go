@@ -11,11 +11,12 @@ import (
 type panicker struct{}
 
 func (p panicker) Create(
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	msgIn, err := io.In.Single("data")
+	msgIn, err := runtimeIO.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -25,12 +26,12 @@ func (p panicker) Create(
 			return
 		}
 
-		if cancel, ok := runtime.CancelFuncFromContext(ctx); ok {
-			cancel()
-		}
-
 		if _, err := fmt.Fprintln(os.Stderr, "panic:", panicMsg); err != nil {
 			panic(err)
 		}
+
+		writeTerminationTrace("panic cause dataflow trace", runtimeIO, panicMsg)
+
+		runtime.Terminate(ctx, 1)
 	}, nil
 }

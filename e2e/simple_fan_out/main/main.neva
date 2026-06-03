@@ -1,8 +1,8 @@
 import { fmt, runtime, builtin }
 
 def Main(start any) (stop any) {
-    p1 fmt.Println
-    p2 fmt.Println
+    p1 fmt.Println<any>
+    p2 fmt.Println<any>
     lock builtin.Lock<any>
     panic runtime.Panic
     ---

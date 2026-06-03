@@ -44,15 +44,15 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 					return
 				}
 
-				if isStreamClose(m) {
+				if isStreamClose(m.Msg) {
 					break stream
 				}
-				if !isStreamData(m) {
+				if !isStreamData(m.Msg) {
 					continue
 				}
 
 				var pix pixelMsg
-				pix.decode(streamDataValue(m))
+				pix.decode(streamDataValue(m.Msg))
 				if pix.x < 0 || pix.y < 0 {
 					if !errOut.Send(ctx, errFromString("image.New: Pixel out of bounds")) {
 						return

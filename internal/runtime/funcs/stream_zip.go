@@ -79,7 +79,7 @@ func (streamZip) Create(
 }
 
 type streamReceiver interface {
-	Receive(ctx context.Context) (runtime.Msg, bool)
+	Receive(ctx context.Context) (runtime.OrderedMsg, bool)
 }
 
 func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
@@ -88,34 +88,34 @@ func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
 		if !ok {
 			return false
 		}
-		if isStreamOpen(msg) {
+		if isStreamOpen(msg.Msg) {
 			return true
 		}
 	}
 }
 
-func receiveStreamDataOrClose(ctx context.Context, in runtime.SingleInport) (runtime.Msg, bool, bool) {
+func receiveStreamDataOrClose(ctx context.Context, in streamReceiver) (runtime.Msg, bool, bool) {
 	for {
 		msg, ok := in.Receive(ctx)
 		if !ok {
 			return nil, false, false
 		}
 		switch {
-		case isStreamData(msg):
-			return streamDataValue(msg), false, true
-		case isStreamClose(msg):
+		case isStreamData(msg.Msg):
+			return streamDataValue(msg.Msg), false, true
+		case isStreamClose(msg.Msg):
 			return nil, true, true
 		}
 	}
 }
 
-func drainStreamUntilClose(ctx context.Context, in runtime.SingleInport) {
+func drainStreamUntilClose(ctx context.Context, in streamReceiver) {
 	for {
 		msg, ok := in.Receive(ctx)
 		if !ok {
 			return
 		}
-		if isStreamClose(msg) {
+		if isStreamClose(msg.Msg) {
 			return
 		}
 	}

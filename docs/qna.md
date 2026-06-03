@@ -192,6 +192,82 @@ It reduces code, especially for mappings between records, vectors, and dictionar
 
 Neva's `any` is similar to Go's `any` or TypeScript's `unknown`. It's necessary for certain critical cases where the alternative would be an overly complicated type system.
 
+## How should errors and execution traces relate in Neva?
+
+Treat them as different layers:
+
+1. `error` value carries failure semantics (what failed).
+2. runtime trace (Dataflow Trace; historically also called Graph trace) carries
+   execution context (where/how message moved in graph).
+
+This split avoids overloading error payloads with transport/debug metadata and
+keeps dataflow semantics explicit.
+
+Practical implications:
+
+- Keep `res` / `err` outport model and `?` error propagation idioms.
+- Use error wrapping for semantic context when needed (domain-level meaning),
+  not as the only way to reconstruct execution path.
+- Treat runtime trace as always-on execution state; optional CLI trace flags
+  should control external JSONL emission, not whether causality is tracked.
+- Model causality as a graph, not a single linked list: one emitted message may
+  depend on multiple consumed inputs within the same component activation.
+- Panic/debugger/error-formatting should rely on runtime trace facilities for
+  graph context.
+- Runtime trace output should remain machine-parseable with explicit format
+  versioning for backward-compatible tooling evolution.
+
+Status: tracing query/format APIs are still evolving, so behavior may be
+incremental until the runtime tracing track is fully implemented.
+
+## How should graceful shutdown work in Neva runtime?
+
+Neva treats graceful shutdown as a default execution contract, not an optional
+discipline:
+
+1. User-level `panic` in Neva is a valid program scenario, not an internal
+   runtime crash.
+2. Runtime components should signal shutdown via context cancellation and allow
+   goroutines to stop cooperatively.
+3. Internal runtime invariants still use Go `panic` (developer-facing defects),
+   while user-program panic flows through normal error-return paths.
+4. Exit codes are decided at process boundary (`main`), after runtime finishes
+   cooperative teardown.
+
+In short: user panic is semantic program failure with graceful stop; internal
+panic is implementation failure.
+
+## Why does generated `main` call `os.Exit`, while runtime itself does not?
+
+Because runtime must stay embeddable and should not terminate the host process.
+
+Rules:
+
+1. Runtime core never calls `os.Exit(...)`.
+2. Runtime core is responsible for cooperative shutdown (cancel context, stop
+   goroutines, release owned resources).
+3. Process exit policy belongs to the process boundary (`main` template).
+
+This split allows the same runtime to work both as a standalone executable and
+as an embedded library.
+
+## What is the current runtime exit/return contract?
+
+Current contract:
+
+1. `runtime.Run(...)` / `runtime.Call(...)` return `error`.
+2. If `err != nil`, execution is treated as failed and generated `main` exits
+   with code `1`.
+3. User-level panic in Neva currently propagates through this `error` transport
+   as a temporary compatibility mechanism.
+
+Target direction (planned):
+
+1. Runtime returns `(exitCode int, err error)`.
+2. `err != nil` means runtime/system failure (invalid result).
+3. `err == nil` means valid program termination; caller uses returned
+   `exitCode` (`0`, `1`, or custom code from future `os.exit` component).
+
 ## Why can only primitive messages be used as "literal network senders"?
 
 It enables easier type inference and keeps networks readable.

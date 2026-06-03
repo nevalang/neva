@@ -8,35 +8,35 @@ import (
 
 type listAt struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	idxIn, err := io.In.Single("idx")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	errOut, err := io.Out.Single("err")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
-			idxMsg, ok := idxIn.Receive(ctx)
+			dataMsg, idxMsg, ok := receive2(ctx, dataIn, idxIn)
 			if !ok {
 				return
 			}
@@ -49,6 +49,7 @@ func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				if !errOut.Send(ctx, errFromString("index out of bounds")) {
 					return
 				}
+				continue
 			}
 
 			if idx < 0 {

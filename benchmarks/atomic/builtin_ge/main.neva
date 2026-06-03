@@ -1,0 +1,7 @@
+// Benchmarks builtin component `Ge` in one-shot mode.
+def Main(start any) (stop any) {
+	ge Ge
+	---
+	:start -> [3 -> ge:left, 3 -> ge:right]
+	ge -> :stop
+}

@@ -13,11 +13,13 @@ import (
 func (g Generator) processNetwork(
 	conns []src.Connection,
 	scope *src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) map[string]portsUsage {
 	nodesPortsUsage := map[string]portsUsage{}
 
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for _, conn := range conns {
 		if sender, receiver, ok := arrayBypassPorts(conn); ok {
 			g.processArrayBypassConnection(
@@ -47,9 +49,12 @@ func (g Generator) processNetwork(
 }
 
 func (Generator) processArrayBypassConnection(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	senderPort src.PortAddr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	receiverPort src.PortAddr,
 	nodesPortsUsage map[string]portsUsage,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
 	result *ir.Program,
 ) {
@@ -100,8 +105,10 @@ func (Generator) processArrayBypassConnection(
 }
 
 func (g Generator) processNormalConnection(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
 	scope *src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	conn src.Connection,
 	nodesPortsUsage map[string]portsUsage,
 	result *ir.Program,
@@ -121,6 +128,7 @@ func (g Generator) processNormalConnection(
 	result.Connections[irSenderSidePortAddr] = irReceiverPortAddr
 }
 
+//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) {
 	if len(conn.Senders) != 1 || len(conn.Receivers) != 1 {
 		return nil, nil, false
@@ -140,8 +148,10 @@ func arrayBypassPorts(conn src.Connection) (*src.PortAddr, *src.PortAddr, bool) 
 }
 
 func (g Generator) processSender(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
 	scope *src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	sender src.ConnectionSender,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
@@ -212,8 +222,10 @@ func (g Generator) processSender(
 
 // processReceiver maps src connection side to ir connection side 1-1 just making the port addr's path absolute
 func (g Generator) processReceiver(
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	nodeCtx nodeContext,
 	scope *src.Scope,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	receiver src.ConnectionReceiver,
 	nodesUsage map[string]portsUsage,
 ) ir.PortAddr {
@@ -287,6 +299,7 @@ func joinNodePath(nodePath []string, nodeName string) string {
 
 // this is very important because runtime function calls depends on this order.
 func sortPortAddrs(addrs []ir.PortAddr) {
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	sort.Slice(addrs, func(i, j int) bool {
 		if addrs[i].Path != addrs[j].Path {
 			return addrs[i].Path < addrs[j].Path

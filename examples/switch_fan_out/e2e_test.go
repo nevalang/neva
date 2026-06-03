@@ -14,6 +14,6 @@ func Test(t *testing.T) {
 
 	// Test panic case with "Bob"
 	// Combine stdout+stderr so the panic text emitted by runtime.Panic remains part of the output.
-	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Bob\n"))
-	require.Equal(t, "Enter the name: panic: Bob\n", out+stderr)
+	out, stderr := e2e.Run(t, []string{"run", "."}, e2e.WithStdin("Bob\n"), e2e.WithCode(1))
+	require.Contains(t, out+stderr, "Enter the name: panic: Bob\n")
 }

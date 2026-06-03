@@ -1,0 +1,13 @@
+// Benchmarks builtin component `Gate` with ignored false signal first.
+def Main(start any) (stop any) {
+	gate Gate<int>
+	signals FanIn<bool>
+	---
+	:start -> [
+		42 -> gate:data,
+		false -> signals:data[0],
+		true -> signals:data[1]
+	]
+	signals -> gate:if
+	gate -> :stop
+}

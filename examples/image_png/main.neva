@@ -21,9 +21,9 @@ def NewColor(r int, g int, b int, a int) (color image.RGBA) {
 }
 
 def Main(start any) (stop any) {
-	new image.New, encode image.Encode, one streams.Just<image.Pixel>
+	new image.New, encode image.Encode, item streams.Item<image.Pixel>
 	newPixel NewPixel, newColor NewColor,
-	writeAll io.WriteAll, printErr fmt.Println
+	writeAll io.WriteAll, printErr fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> [
@@ -32,8 +32,8 @@ def Main(start any) (stop any) {
 		'minimal.png' -> writeAll:filename
 	]
 	newColor -> newPixel:c
-	newPixel -> one:data
-	one:res -> new
+	newPixel -> item:data
+	item:res -> new
 	new:img -> encode:img
 	encode:res -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr

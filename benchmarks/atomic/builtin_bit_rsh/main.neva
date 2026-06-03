@@ -1,0 +1,7 @@
+// Benchmarks builtin component `BitRsh` in one-shot mode.
+def Main(start any) (stop any) {
+	bit_rsh BitRsh
+	---
+	:start -> [8 -> bit_rsh:left, 2 -> bit_rsh:right]
+	bit_rsh -> :stop
+}

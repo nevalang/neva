@@ -5,32 +5,54 @@ run:
   timeout: 5m # overall lint timeout
 linters:
   enable: # explicit linter allowlist
+    - asasalint # detect []any passed as any in variadic calls
     - asciicheck # Non-ASCII identifiers (e.g., func Καλημέρα()).
     - bidichk # Bidi control chars in source (e.g., hidden RTL in comment).
     - bodyclose # Ensure HTTP response bodies are closed (e.g., defer resp.Body.Close()).
+    - containedctx # forbid embedding context.Context in structs
     - copyloopvar # Unnecessary loop var copy (e.g., tt := tt).
+    - cyclop # function/package cyclomatic complexity checks
+    - dupl # detect duplicated code fragments
     - dogsled # Too many blank identifiers (e.g., a, _, _, _, := f()).
     - durationcheck # Suspicious duration math (e.g., time.Second * time.Minute).
     - depguard # Guard import boundaries per package.
     - errcheck # Missing error checks (e.g., _ = f()).
+    - errname # enforce error naming conventions
     - errorlint # Error wrapping/formatting (e.g., fmt.Errorf("%w", err)).
     - exhaustive # Non-exhaustive switches on enums (e.g., switch myEnum { ... }).
+    - exptostd # suggest stdlib replacements for x/exp usage
+    - fatcontext # detect nested context creation in loops/closures
+    - funlen # long function checks
+    - gocheckcompilerdirectives # validate //go: directives
     - gocritic # Bug-prone patterns (e.g., append assigned to new slice).
+    - gocognit # cognitive complexity checks
     - gocyclo # High cyclomatic complexity (e.g., long if/else chains).
     - gochecknoglobals # Disallow global variables.
     - gochecknoinits # Disallow init() functions.
+    - godoclint # stricter doc comment rules
     - gosec # Security issues (e.g., exec.Command on tainted input).
     - govet # Vet analyzers (e.g., fieldalignment).
+    - iface # prevent interface pollution anti-patterns
     - ineffassign # Assigned then unused (e.g., x = 1; x = 2; use x).
+    - interfacebloat # limit oversized interfaces
+    - intrange # suggest integer range loops when possible
+    - ireturn # enforce return concrete types where possible
     - lll # Long lines (e.g., 200+ char string/struct tag).
+    - maintidx # enforce function maintainability floor
+    - makezero # detect suboptimal non-zero slice initialization
     - misspell # Misspellings (e.g., "concider").
     - nakedret # Naked returns in large funcs (e.g., return without values).
+    - nestif # detect overly nested if chains
     - nilerr # Returning nil error after err != nil check.
     - nilnesserr # err != nil but returning different nil error value.
     - nilnil # Returning (nil, nil) for (val, err).
-    - nolintlint # Stale/unknown //nolint (e.g., //nolint:golint).
+    - noctx # detect funcs that should accept context.Context
+    - nonamedreturns # disallow named return parameters
+    # nolintlint intentionally disabled during strict phase-1 mass suppression rollout.
+    - perfsprint # suggest faster alternatives to fmt.Sprintf
     - prealloc # Suggest slice prealloc (e.g., make([]T, 0, n)).
     - predeclared # Shadowing predeclared names (e.g., var len = 3).
+    - recvcheck # enforce receiver type consistency
     - revive # Style/semantic rules (e.g., error strings lowercase).
     - staticcheck # Advanced correctness checks (e.g., unused results).
     - thelper # Missing t.Helper() in test helpers.
@@ -38,6 +60,9 @@ linters:
     - unconvert # Redundant conversions (e.g., int64(v) when v already int64).
     - unparam # Unused params/always-nil results.
     - unused # Unused symbols (e.g., unused func/var).
+    - usestdlibvars # prefer stdlib constants/variables where possible
+    - varnamelen # enforce variable name length by scope
+    - wrapcheck # enforce wrapped external errors
     - wastedassign # Wasted assignments (e.g., x = 1 before immediate overwrite).
     - whitespace # Superfluous blank lines (e.g., extra newline at end of block).
   settings:
@@ -47,8 +72,21 @@ linters:
     gocritic:
       enabled-tags: # rule tags to enable
         - diagnostic # bug-finding rules only
+        - performance # performance-focused rules
+    gocognit:
+      min-complexity: 15 # tighter cognitive complexity threshold
     gocyclo:
-      min-complexity: 20 # max cyclomatic complexity before warning
+      min-complexity: 12 # stricter cyclomatic complexity threshold
+    cyclop:
+      max-complexity: 12 # stricter cyclomatic complexity threshold
+      package-average: 8.0 # enforce package-level complexity hygiene
+    funlen:
+      lines: 80 # stricter function length in lines
+      statements: 40 # stricter function length in statements
+    maintidx:
+      under: 20 # minimum maintainability index threshold
+    nestif:
+      min-complexity: 4 # flag deeply nested conditionals earlier
     govet:
       enable: # additional vet checks
         - fieldalignment # report struct padding inefficiencies

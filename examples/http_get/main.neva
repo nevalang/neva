@@ -8,7 +8,7 @@ import {
 def Main(start any) (stop any) {
 	http_get http.Get
 	string_from_bytes strings.FromBytes
-	println fmt.Println
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> 'http://www.example.com' -> http_get

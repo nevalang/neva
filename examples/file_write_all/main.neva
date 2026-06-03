@@ -8,7 +8,7 @@ import {
 def Main(start any) (stop any) {
 	write_all io.WriteAll
 	bytes_from_string bytes.FromString
-	println fmt.Println
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> [

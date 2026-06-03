@@ -1,8 +1,8 @@
 // --- Sources ---
 
-pub type Indexed<T> struct {
+pub type Enumerated<T> struct {
     idx int
-    data T
+    item T
 }
 
 // FromArray iterates over all array-inport's slots in order
@@ -20,9 +20,9 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // must remain whole stream elements.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
-// Just creates a single-item stream.
+// Item creates a single-item stream.
 #extern(stream_just)
-pub def Just<T>(data T) (res stream<T>)
+pub def Item<T>(data T) (res stream<T>)
 
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
@@ -37,15 +37,11 @@ pub def Range(from int, to int) (res stream<int>)
 
 // Enumerate attaches a 0-based index to each Data item in a stream.
 #extern(stream_enumerate)
-pub def Enumerate<T>(data stream<T>) (res stream<Indexed<T>>)
+pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
 // IsData returns true when stream item has Data tag.
 #extern(stream_is_data)
 def IsData<T>(data stream<T>) (res bool)
-
-// IsClose returns true when stream item has Close tag.
-#extern(stream_is_close)
-def IsClose<T>(data stream<T>) (res bool)
 
 // UnwrapData extracts payload from stream<T>::Data item.
 #extern(stream_unwrap_data)

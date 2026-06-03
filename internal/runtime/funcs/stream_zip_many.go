@@ -112,6 +112,6 @@ type dataInSlot struct {
 	idx int
 }
 
-func (d dataInSlot) Receive(ctx context.Context) (runtime.Msg, bool) {
+func (d dataInSlot) Receive(ctx context.Context) (runtime.OrderedMsg, bool) {
 	return d.arr.Receive(ctx, d.idx)
 }
