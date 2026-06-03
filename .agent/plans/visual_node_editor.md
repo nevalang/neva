@@ -1,5 +1,27 @@
 # Visual Node Editor Plan (Finalized)
 
+## 2026-05 Baseline Corrections
+
+This plan remains the main strategy document, but several assumptions below were
+partially outdated and are now explicitly corrected:
+
+- LSP source of truth is externalized to `nevalang/neva-lsp` (not `cmd/lsp` in
+  this repository). Any LSP endpoint work must be tracked in `neva-lsp`.
+- Visual-editor MVP delivery is split across repositories:
+  - `nevalang/neva`: runtime trace core, source graph contract and compiler-side
+    mapping artifacts.
+  - `nevalang/neva-lsp`: source graph and trace-query transport endpoints.
+  - `nevalang/vscode-nevalang`: readonly visual preview UX and trace overlay.
+- Runtime trace terminology is standardized as **Dataflow Trace** (`Graph trace`
+  remains a backward-compatible alias in issue history).
+
+Execution model from now on:
+
+- Keep one GitHub master tracker issue with linked child issues/PRs across all
+  related repos.
+- Keep repository-local session snapshots concise and append-only for
+  multi-session continuity.
+
 ## Purpose
 
 Design and deliver a visual node editor for Neva that:

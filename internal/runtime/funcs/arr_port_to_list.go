@@ -10,6 +10,7 @@ import (
 type arrayPortToList struct{}
 
 func (arrayPortToList) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
@@ -20,6 +21,7 @@ func (arrayPortToList) Create(
 
 	listOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -29,11 +31,11 @@ func (arrayPortToList) Create(
 		for {
 			list := make([]runtime.Msg, 0, l)
 			for idx := range l {
-				msg, ok := portIn.Receive(ctx, idx)
+				ordered, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
 				}
-				list = append(list, msg)
+				list = append(list, ordered.Msg)
 			}
 
 			if !listOut.Send(ctx, runtime.NewListMsg(list)) {

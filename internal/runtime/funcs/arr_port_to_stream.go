@@ -10,6 +10,7 @@ import (
 type arrayPortToStream struct{}
 
 func (arrayPortToStream) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(context.Context), error) {
@@ -20,32 +21,32 @@ func (arrayPortToStream) Create(
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	// TODO: could be optimized by using portIn.ReceiveAll()
 	// but we need to handle order of sending messages to stream
 	return func(ctx context.Context) {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		l := portIn.Len()
 
 		for {
-			if !resOut.Send(ctx, streamOpen()) {
-				return
-			}
-
 			for idx := range l {
-				msg, ok := portIn.Receive(ctx, idx)
+				ordered, ok := portIn.Receive(ctx, idx)
 				if !ok {
 					return
 				}
 
-				if !resOut.Send(ctx, streamData(msg)) {
+				item := streamItem(
+					ordered.Msg,
+					int64(idx),
+					idx == l-1,
+				)
+
+				if !resOut.Send(ctx, item, ordered) {
 					return
 				}
-			}
-
-			if !resOut.Send(ctx, streamClose()) {
-				return
 			}
 		}
 	}, nil

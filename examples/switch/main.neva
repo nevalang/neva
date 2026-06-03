@@ -15,7 +15,7 @@ def Main(start any) (stop any) {
 
 // We keep :err as any to forward the unmatched string to Panic.
 def App(start any) (stop any, err any) {
-    print fmt.Print?
+    print fmt.Print<any>?
     scanln fmt.Scanln?
     upper strings.ToUpper
     lower strings.ToLower

@@ -1,0 +1,9 @@
+import { fmt }
+
+const HELLO string = 'hello'
+
+def Main(start any) (stop any) {
+	printer fmt.Println
+	---
+	:start -> HELLO -> printer -> :stop
+}

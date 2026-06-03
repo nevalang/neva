@@ -6,6 +6,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+//nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewRegistry() map[string]runtime.FuncCreator {
 	return map[string]runtime.FuncCreator{
 		"new":     newV2{},
@@ -88,6 +89,8 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"int_inc":                   intInc{},
 		"int_dec":                   intDec{},
+		"int_neg":                   intNeg{},
+		"float_neg":                 floatNeg{},
 		"int_from_float":            intFromFloat{},
 		"float_from_int":            floatFromInt{},
 		"string_from_int_codepoint": stringFromIntCodepoint{},
@@ -105,14 +108,16 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"regexp_submatch": regexpSubmatch{},
 
-		"list_at":   listAt{},
-		"list_len":  listlen{},
-		"list_push": listPush{},
+		"list_at":    listAt{},
+		"list_len":   listlen{},
+		"list_slice": listSlice{},
+		"list_push":  listPush{},
 
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},
 
 		"string_at":           stringAt{},
+		"string_slice":        stringSlice{},
 		"strings_join_stream": stringJoinStream{},
 		"strings_join_list":   stringJoinList{},
 		"strings_split":       stringsSplit{},
@@ -121,6 +126,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"scanln":                    scanln{},
 		"args":                      args{},
+		"os_exit":                   osExit{},
 		"os_environ":                osEnviron{},
 		"dotenv_load":               dotenvLoad{},
 		"dotenv_load_from":          dotenvLoadFrom{},

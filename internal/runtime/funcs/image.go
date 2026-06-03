@@ -8,6 +8,8 @@ import (
 )
 
 // TODO can't we use uint8 here?
+//
+//nolint:recvcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type rgbaMsg struct {
 	r int64
 	g int64
@@ -70,7 +72,16 @@ func (i imageMsg) createImage() image.Image {
 }
 
 type pixelStreamMsg struct {
+	idx int64
 	pixelMsg
+	last bool
+}
+
+func (i *pixelStreamMsg) decode(msg runtime.Msg) {
+	m := msg.Struct()
+	i.idx = m.Get("idx").Int()
+	i.pixelMsg.decode(m.Get("data"))
+	i.last = m.Get("last").Bool()
 }
 
 func clampUint16(value int64) uint16 {

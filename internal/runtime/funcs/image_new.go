@@ -9,50 +9,44 @@ import (
 
 type imageNew struct{}
 
+//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	pixelsIn, err := io.In.Single("pixels")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	imgOut, err := io.Out.Single("img")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	errOut, err := io.Out.Single("err")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			if !waitStreamOpen(ctx, pixelsIn) {
-				return
-			}
-
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			im := make(map[pixelMsg]struct{})
 			var (
 				width  int64
 				height int64
 			)
-
 		stream:
 			for {
+				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				m, ok := pixelsIn.Receive(ctx)
 				if !ok {
 					return
 				}
 
-				if isStreamClose(m) {
-					break stream
-				}
-				if !isStreamData(m) {
-					continue
-				}
-
-				var pix pixelMsg
-				pix.decode(streamDataValue(m))
+				var pix pixelStreamMsg
+				pix.decode(m)
 				if pix.x < 0 || pix.y < 0 {
 					if !errOut.Send(ctx, errFromString("image.New: Pixel out of bounds")) {
 						return
@@ -64,7 +58,10 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				if pix.y >= height {
 					height = pix.y + 1
 				}
-				im[pix] = struct{}{}
+				im[pix.pixelMsg] = struct{}{}
+				if pix.last {
+					break stream
+				}
 			}
 
 			img := image.NewRGBA(image.Rect(0, 0, int(width), int(height)))

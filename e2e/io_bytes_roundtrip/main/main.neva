@@ -11,7 +11,7 @@ def Main(start any) (stop any) {
 	string_from_bytes strings.FromBytes
 	write_all io.WriteAll
 	read_all io.ReadAll
-	println fmt.Println
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> [

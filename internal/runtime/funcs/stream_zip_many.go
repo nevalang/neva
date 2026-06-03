@@ -10,17 +10,21 @@ import (
 
 type streamZipMany struct{}
 
+//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamZipMany) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Array("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -36,8 +40,10 @@ func (streamZipMany) Create(
 			}
 
 			states := make([]streamState, streamsCount)
+			var shouldStop atomic.Bool
 			var aborted atomic.Bool
 
+			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			wg.Add(streamsCount)
 
@@ -49,11 +55,6 @@ func (streamZipMany) Create(
 
 					collected := make([]runtime.Msg, 0)
 
-					if !waitStreamOpen(ctx, dataInSlot{arr: dataIn, idx: idx}) {
-						aborted.Store(true)
-						return
-					}
-
 					for {
 						msg, ok := dataIn.Receive(ctx, idx)
 						if !ok {
@@ -61,10 +62,11 @@ func (streamZipMany) Create(
 							return
 						}
 
-						switch {
-						case isStreamData(msg):
-							collected = append(collected, streamDataValue(msg))
-						case isStreamClose(msg):
+						item := msg.Struct()
+						collected = append(collected, item.Get("data"))
+
+						if item.Get("last").Bool() {
+							shouldStop.Store(true)
 							states[idx] = streamState{data: collected}
 							return
 						}
@@ -85,33 +87,28 @@ func (streamZipMany) Create(
 				}
 			}
 
-			if !resOut.Send(ctx, streamOpen()) {
-				return
-			}
-
+			//nolint:intrange // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			for idx := 0; idx < count; idx++ {
 				zipped := make([]runtime.Msg, streamsCount)
 				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(ctx, streamData(runtime.NewListMsg(zipped))) {
+				if !resOut.Send(
+					ctx,
+					streamItem(
+						runtime.NewListMsg(zipped),
+						int64(idx),
+						idx == count-1,
+					),
+				) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, streamClose()) {
+			if shouldStop.Load() || count == 0 {
 				return
 			}
 		}
 	}, nil
-}
-
-type dataInSlot struct {
-	arr runtime.ArrayInport
-	idx int
-}
-
-func (d dataInSlot) Receive(ctx context.Context) (runtime.Msg, bool) {
-	return d.arr.Receive(ctx, d.idx)
 }

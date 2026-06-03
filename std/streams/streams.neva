@@ -53,14 +53,14 @@ def UnwrapData<T>(data stream<T>) (res T)
 
 // --- Synchronization ---
 
-// Wait blocks until stream close item arrives, then sends a signal.
+// Wait blocks until last stream item arrive, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
     del Del
-    s Switch<stream<any>>
+    s Switch<bool>
     ---
     :data -> [
-        s:data,
-        stream<any>::Close -> s:case[0]
+        .last -> s:data,
+        true -> s:case[0]
     ]
     s:case[0] -> :sig
     s:else -> del

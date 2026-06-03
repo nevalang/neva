@@ -88,8 +88,8 @@ func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
 	net := got.Entities["C1"].Component[0].Net
 	conn := net[0]
 
-	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Senders[0].PortAddr.Idx)
-	require.Equal(t, compiler.Pointer(src.ArrayBypassIdx), conn.Receivers[0].PortAddr.Idx)
+	require.Equal(t, arrayBypassIdxPointer(), conn.Senders[0].PortAddr.Idx)
+	require.Equal(t, arrayBypassIdxPointer(), conn.Receivers[0].PortAddr.Idx)
 }
 
 func TestParser_ParseFile_ReservedArrayBypassIdx(t *testing.T) {
@@ -136,6 +136,23 @@ func TestParser_ParseFile_LonelyPorts(t *testing.T) {
 	require.Equal(t, "", senderPortAddr.Port)
 }
 
+func TestParser_ParseFile_PortOrder(t *testing.T) {
+	text := []byte(`
+		def Range(from int, to int) (res int, err error) {}
+	`)
+
+	p := New()
+
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.True(t, err == nil)
+
+	io := got.Entities["Range"].Component[0].IO
+	require.Equal(t, 0, io.In["from"].Order)
+	require.Equal(t, 1, io.In["to"].Order)
+	require.Equal(t, 0, io.Out["res"].Order)
+	require.Equal(t, 1, io.Out["err"].Order)
+}
+
 func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 	text := []byte(`
 		def C1() () { :foo -> n1:p1 -> :bar }
@@ -168,10 +185,10 @@ func TestParser_ParseFile_ChainedConnections(t *testing.T) {
 }
 
 func TestParser_ParseFile_ChainedConnectionsWithConstants(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "const ref in chain",
@@ -238,6 +255,65 @@ func TestParser_ParseFile_Comments(t *testing.T) {
 
 	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
+}
+
+func TestParser_ParseFile_EntityComments(t *testing.T) {
+	text := []byte(`
+		// Processes payload.
+		// Stable behavior.
+		//
+		// @inport start Trigger signal.
+		// @inport data Input payload.
+		//
+		// @outport res Processed result.
+		// @outport err Processing error.
+		//
+		// @example :start -> process:start
+		// @example 'hello' -> process:data
+		// @custom owned-by-ai-cli
+		def Process(start any, data string) (res string, err error)
+	`)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+
+	entity := got.Entities["Process"]
+	require.NotNil(t, entity.Comments)
+	require.Equal(t, []string{"Processes payload.\nStable behavior."}, entity.Comments.TextBlocks)
+	require.Equal(t, "Trigger signal.", entity.Comments.Inports["start"])
+	require.Equal(t, "Input payload.", entity.Comments.Inports["data"])
+	require.Equal(t, "Processed result.", entity.Comments.Outports["res"])
+	require.Equal(t, "Processing error.", entity.Comments.Outports["err"])
+	require.Equal(t, []string{":start -> process:start", "'hello' -> process:data"}, entity.Comments.Examples)
+	require.Len(t, entity.Comments.Tags, 1)
+	require.Equal(t, "custom", entity.Comments.Tags[0].Name)
+	require.Equal(t, "owned-by-ai-cli", entity.Comments.Tags[0].Value)
+}
+
+func TestParser_ParseFile_EntityCommentsBlankLineNotAttached(t *testing.T) {
+	text := []byte(`
+		// Not attached due to blank line.
+
+		def Process(start any) (stop any)
+	`)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, err)
+	require.Nil(t, got.Entities["Process"].Comments)
+}
+
+func TestParser_ParseFile_EntityCommentsUnknownPortFails(t *testing.T) {
+	text := []byte(`
+		// @inport missing does-not-exist
+		def Process(start any) (stop any)
+	`)
+
+	p := New()
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "unknown @inport reference")
 }
 
 func TestParser_ParseFile_Directives(t *testing.T) {
@@ -339,10 +415,10 @@ func TestParser_ParseFile_AnonymousNodes(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "simple union",
@@ -402,10 +478,10 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 }
 
 func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, got src.File)
 		name  string
 		text  string
-		check func(t *testing.T, got src.File)
 	}{
 		{
 			name: "union with value",
@@ -633,10 +709,10 @@ func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {
 }
 
 func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
+	tests := []struct {
+		check func(t *testing.T, net []src.Connection)
 		name  string
 		text  string
-		check func(t *testing.T, net []src.Connection)
 	}{
 		{
 			name: "direct tag-only",

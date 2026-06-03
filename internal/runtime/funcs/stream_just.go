@@ -25,13 +25,8 @@ func (streamJust) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context
 			if !ok {
 				return
 			}
-			if !resOut.Send(ctx, streamOpen()) {
-				return
-			}
-			if !resOut.Send(ctx, streamData(data)) {
-				return
-			}
-			if !resOut.Send(ctx, streamClose()) {
+
+			if !resOut.Send(ctx, streamItem(data, 0, true)) {
 				return
 			}
 		}

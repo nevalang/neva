@@ -8,18 +8,19 @@ import (
 	"testing/fstest"
 )
 
+//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func TestComputeChecksumForFS(t *testing.T) {
-	tests := []struct { //nolint:govet // fieldalignment
-		name        string
+	tests := []struct {
 		setup       func(t *testing.T) fs.FS
+		name        string
 		want        string
-		wantErr     bool
 		errContains string
+		wantErr     bool
 	}{
 		{
 			name: "empty_fs",
 			setup: func(t *testing.T) fs.FS {
-			    t.Helper()
+				t.Helper()
 				return fstest.MapFS{}
 			},
 			want: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // SHA-256 of empty input
@@ -27,7 +28,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "single_file",
 			setup: func(t *testing.T) fs.FS {
-			    t.Helper()
+				t.Helper()
 				return fstest.MapFS{
 					"test.txt": {
 						Data: []byte("hello, world"),
@@ -39,7 +40,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "multiple_files",
 			setup: func(t *testing.T) fs.FS {
-			    t.Helper()
+				t.Helper()
 				return fstest.MapFS{
 					"dir1/file1.txt": {
 						Data: []byte("file1"),
@@ -54,7 +55,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "nested_directories",
 			setup: func(t *testing.T) fs.FS {
-			    t.Helper()
+				t.Helper()
 				return fstest.MapFS{
 					"a/b/c/file1.txt": {
 						Data: []byte("nested"),
@@ -69,7 +70,7 @@ func TestComputeChecksumForFS(t *testing.T) {
 		{
 			name: "error_reading_file",
 			setup: func(t *testing.T) fs.FS {
-			    t.Helper()
+				t.Helper()
 				return &failingFS{
 					MapFS: fstest.MapFS{
 						"test.txt": {
@@ -116,6 +117,7 @@ type failingFS struct {
 func (f *failingFS) Open(name string) (fs.File, error) {
 	file, err := f.MapFS.Open(name)
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 	return &failingFile{File: file}, nil
@@ -125,10 +127,12 @@ type failingFile struct {
 	fs.File
 }
 
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (f *failingFile) Read(p []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
 func (f *failingFile) Stat() (fs.FileInfo, error) {
+	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return f.File.Stat()
 }

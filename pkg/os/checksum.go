@@ -9,7 +9,9 @@ import (
 	"sort"
 )
 
-// ComputeChecksum computes a checksum of all files in the embedded FS
+// ComputeChecksumForFS hashes full file contents for deterministic FS invalidation.
+// This is intentionally stronger than metadata-only keys, which are not reliable
+// for embed.FS (file mtime is zero/unknown).
 func ComputeChecksumForFS(filesys fs.FS) (string, error) {
 	// First pass: collect all files
 	var filenames []string
@@ -32,6 +34,7 @@ func ComputeChecksumForFS(filesys fs.FS) (string, error) {
 	// Second pass: hash file contents
 	hasher := sha256.New()
 	for _, filename := range filenames {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		f, err := filesys.Open(filename)
 		if err != nil {
 			return "", fmt.Errorf("open %s: %w", filename, err)

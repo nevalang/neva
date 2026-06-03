@@ -6,7 +6,10 @@ pub type string
 pub type bytes
 pub type dict<T>
 pub type list<T>
-pub type maybe<T>
+pub type maybe<T> union {
+    Some T
+    None
+}
 
 type Type any
 
@@ -15,10 +18,10 @@ pub type error struct {
     child maybe<error>
 }
 
-pub type stream<T> union {
-    Open
-    Data T
-    Close
+pub type stream<T> struct {
+    data T
+    idx int
+    last bool
 }
 
 pub type DictEntry<T> struct {

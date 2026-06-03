@@ -5,6 +5,7 @@ package parser
 import (
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
 
@@ -107,6 +108,7 @@ func (p Parser) parseFile(
 			Package:  pkgName,
 			Filename: fileName,
 		},
+		sourceLines: strings.Split(string(content), "\n"),
 	}
 
 	if err := walkTree(listener, prsr.Prog()); err != nil {
@@ -124,8 +126,10 @@ func (p Parser) parseFile(
 	return listener.state, nil
 }
 
+//nolint:nonamedreturns // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func walkTree(listener antlr.ParseTreeListener, tree antlr.ParseTree) (err *compiler.Error) {
 	defer func() {
+		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		if e := recover(); e != nil {
 			if compilerErr, ok := e.(*compiler.Error); ok {
 				err = compilerErr

@@ -1,0 +1,19 @@
+// @inport data should-not-be-here
+// @outport res should-not-be-here
+type Payload struct {
+	value string
+}
+
+import {
+	fmt
+	runtime
+}
+
+def Main(start any) (stop any) {
+	println fmt.Println<string>
+	panic runtime.Panic
+	---
+	:start -> 'ok' -> println:data
+	println:res -> :stop
+	println:err -> panic
+}

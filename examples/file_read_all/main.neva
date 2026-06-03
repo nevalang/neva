@@ -9,7 +9,7 @@ import {
 def Main(start any) (stop any) {
 	read_all io.ReadAll
 	string_from_bytes strings.FromBytes
-	println fmt.Println
+	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> 'main.neva' -> read_all:filename

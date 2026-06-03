@@ -9,16 +9,19 @@ import (
 type streamToList struct{}
 
 func (s streamToList) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	seqIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -32,20 +35,19 @@ func (s streamToList) Create(
 				return
 			}
 
-			switch {
-			case isStreamOpen(msg):
-				list = list[:0]
-				continue
-			case isStreamData(msg):
-				list = append(list, streamDataValue(msg))
-				continue
-			case !isStreamClose(msg):
+			item := msg.Struct()
+
+			list = append(list, item.Get("data"))
+
+			if !item.Get("last").Bool() {
 				continue
 			}
 
 			if !resOut.Send(ctx, runtime.NewListMsg(list)) {
 				return
 			}
+
+			list = []runtime.Msg{}
 		}
 	}, nil
 }

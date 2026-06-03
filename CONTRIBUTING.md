@@ -22,6 +22,15 @@ Not required but recommended:
 
 ## Development
 
+## Engineering Harness (`AGENTS.md`)
+
+This repository uses hierarchical `AGENTS.md` files as an engineering harness
+for both humans and machines.
+
+- Root [`AGENTS.md`](./AGENTS.md) defines stable global rules.
+- Local `AGENTS.md` files define context-specific rules in subdirectories.
+- Prefer local `AGENTS.md` over local `README.md` for contributor/agent workflows.
+
 ## Releasing a new version
 
 Follow these steps to publish a new Nevalang release:
@@ -191,3 +200,45 @@ We don't have sugar for `maybe<T>` and `list<T>` so why would we have this for u
 However it's not `struct` where we _technically_ have to have some "literal" syntax. It's possible in theory to have just `union<T1, T2, ... Tn>` like e.g. in Python but would require _type-system_ known about `union` name and handle this reference expressions very differently. In fact this will only make design more complicated because we _pretend_ like it's regular type instantiation consisting of reference and arguments but in fact it's not.
 
 Lastly it's just common to have `|` syntax for unions.
+
+### How should we treat `any` in compiler/runtime design?
+
+Practical semantics:
+
+1. `any` is the top type (`T <: any` for any concrete `T`), and `any <: any`.
+2. `any` is intentionally opaque at use sites: do not treat `any` as
+   `int`/`string`/`list`/`dict` without explicit narrowing.
+3. `T: any` remains a valid generic constraint.
+
+This keeps APIs composable without weakening compile-time safety.
+
+### Should `any` be forbidden as a generic type argument?
+
+Current policy: no, not at language level.
+
+`List<any>`, `Dict<string, any>`, or `Foo<any>` are valid but may reduce
+optimization opportunities for runtime container specialization.
+
+Treat this as performance tradeoff, not type-safety violation. If needed,
+enforce later as linter warning, not compiler error.
+
+### How should runtime specialize generic container operations?
+
+Public API should stay generic (for example `Get<T>(List<T>, idx) -> T`), while
+compiler lowering selects internal runtime path by representation kind.
+
+Current practical strategy:
+
+1. Keep fast specialized paths for common scalar containers (`int`, `string`,
+   `bool`, `float`).
+2. Use boxed/generic fallback for complex, nested, union-heavy, or `any`-typed
+   containers unless profiling justifies deeper specialization.
+3. Treat this as implementation detail, not user-visible API split.
+
+This keeps language surface simple and lets performance work evolve
+incrementally.
+
+### Are union tag checks avoidable?
+
+No. Tagged unions are sum types; runtime must inspect discriminants to select a
+case branch. These checks are semantic, not accidental runtime guessing.

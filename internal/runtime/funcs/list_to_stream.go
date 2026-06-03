@@ -9,16 +9,19 @@ import (
 type listToStream struct{}
 
 func (c listToStream) Create(
+	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -30,18 +33,17 @@ func (c listToStream) Create(
 			}
 
 			list := data.List()
-			if !resOut.Send(ctx, streamOpen()) {
-				return
-			}
 
 			for idx := range list {
-				if !resOut.Send(ctx, streamData(list[idx])) {
+				item := streamItem(
+					list[idx],
+					int64(idx),
+					idx == len(list)-1,
+				)
+
+				if !resOut.Send(ctx, item) {
 					return
 				}
-			}
-
-			if !resOut.Send(ctx, streamClose()) {
-				return
 			}
 		}
 	}, nil

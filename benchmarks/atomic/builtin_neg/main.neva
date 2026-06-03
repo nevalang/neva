@@ -1,0 +1,6 @@
+// Benchmarks builtin component `Neg` in one-shot mode.
+def Main(start any) (stop any) {
+	neg Neg
+	---
+	:start -> 1 -> neg -> :stop
+}
