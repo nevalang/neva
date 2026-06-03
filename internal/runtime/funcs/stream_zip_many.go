@@ -89,7 +89,7 @@ func (streamZipMany) Create(
 				return
 			}
 
-			for idx := 0; idx < count; idx++ {
+			for idx := range count {
 				zipped := make([]runtime.Msg, streamsCount)
 				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]

@@ -11,25 +11,19 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-    cond_pred Cond<stream<T>>
-    fan_non_data FanOut<stream<T>>
-    switch Switch<stream<T>>
-    wrap Union<stream<T>>
+    controller SplitController<T>
     predicate IPredicate<T>
     ---
-    :data -> [
-        switch:data,
-        stream<T>::Data -> switch:case[0]
-    ]
-    switch:case[0] -> [predicate, wrap:data, stream<T>::Data -> wrap:tag]
-    wrap -> cond_pred:data
-    predicate -> cond_pred:if
-
-    switch:else -> fan_non_data
-    [cond_pred:then, fan_non_data:data[0]] -> :then
-    [cond_pred:else, fan_non_data:data[1]] -> :else
+    :data -> controller:data
+    controller:item -> predicate
+    predicate -> controller:pass
+    controller:then -> :then
+    controller:else -> :else
 }
 
 // IPredicate represents a logic that determines if a value satisfies a condition.
 // It is used by components like Filter and Split to decide how to process stream elements.
 pub interface IPredicate<T>(T) (bool)
+
+#extern(stream_split_controller)
+def SplitController<T>(data stream<T>, pass bool) (item T, then stream<T>, else stream<T>)

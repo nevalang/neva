@@ -39,7 +39,7 @@ func (arrayPortToStream) Create(
 					return
 				}
 
-				if !resOut.Send(ctx, streamData(msg)) {
+				if !resOut.Send(ctx, streamData(msg.Msg)) {
 					return
 				}
 			}

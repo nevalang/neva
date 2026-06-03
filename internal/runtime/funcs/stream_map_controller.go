@@ -64,7 +64,7 @@ func forwardMappedMessage(
 			return false
 		}
 
-		return resOut.Send(ctx, streamData(mappedMsg))
+		return resOut.Send(ctx, streamData(mappedMsg.Msg))
 	case isStreamClose(msg):
 		return resOut.Send(ctx, streamClose())
 	default:
