@@ -249,6 +249,21 @@ var compatCheckerTests = []compatCheckerTestcase{
 		},
 		wantErr: nil,
 	},
+	{ // union {Int} <: union {Int int, Str string}
+		name: "tag-only union selector is compatible with payload union tag",
+		subType: h.Union(map[string]*ts.Expr{
+			"Int": nil,
+		}),
+		superType: h.Union(map[string]*ts.Expr{
+			"Int": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}},
+			"Str": {Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}},
+		}),
+		terminator: func(mtmr *MockrecursionTerminatorMockRecorder) {
+			t := ts.Trace{}
+			mtmr.ShouldTerminate(t, nil).Return(false, nil).AnyTimes()
+		},
+		wantErr: nil,
+	},
 	{ // union {Int string} <: union {Int int, Str string}
 		name: "two unions, one 1 tag, second 2, intersection is not compatible",
 		subType: h.Union(map[string]*ts.Expr{
