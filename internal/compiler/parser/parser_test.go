@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"os"
 	"testing"
 
 	"github.com/nevalang/neva/internal/compiler"
@@ -933,6 +934,56 @@ func TestParser_ParseFile_ConnectionSendersConstRefAndPortAddr(t *testing.T) {
 	require.NotNil(t, explicitPortSender)
 	require.Equal(t, "a", explicitPortSender.Node)
 	require.Equal(t, "res", explicitPortSender.Port)
+}
+
+func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
+	text, err := os.ReadFile("../../../examples/image_png/main.neva")
+	require.NoError(t, err)
+
+	p := New()
+	got, parseErr := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.Nil(t, parseErr)
+
+	net := got.Entities["Main"].Component[0].Net
+	require.NotEmpty(t, net)
+
+	var foundNewStreamChain bool
+	var foundErrFanIn bool
+
+	for _, conn := range net {
+		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newStream" &&
+			conn.Senders[0].PortAddr.Port == "s" {
+			require.NotNil(t, conn.Receivers[0].PortAddr)
+			require.Equal(t, "new", conn.Receivers[0].PortAddr.Node)
+			require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
+			foundNewStreamChain = true
+		}
+
+		if len(conn.Senders) == 3 && len(conn.Receivers) == 1 &&
+			conn.Receivers[0].PortAddr.Node == "printErr" {
+			require.Equal(t, "new", conn.Senders[0].PortAddr.Node)
+			require.Equal(t, "encode", conn.Senders[1].PortAddr.Node)
+			require.Equal(t, "writeAll", conn.Senders[2].PortAddr.Node)
+			require.Equal(t, "err", conn.Senders[0].PortAddr.Port)
+			require.Equal(t, "err", conn.Senders[1].PortAddr.Port)
+			require.Equal(t, "err", conn.Senders[2].PortAddr.Port)
+			foundErrFanIn = true
+		}
+	}
+
+	require.True(t, foundNewStreamChain)
+	require.True(t, foundErrFanIn)
+}
+
+func TestTreeShapeListener_ParseReceiverSide_NilContextReturnsCompilerError(t *testing.T) {
+	listener := treeShapeListener{loc: location}
+
+	receivers, err := listener.parseReceiverSide(nil)
+	require.Nil(t, receivers)
+	require.NotNil(t, err)
+	require.Equal(t, "missing receiver side", err.Message)
+	require.NotNil(t, err.Meta)
+	require.Equal(t, location, err.Meta.Location)
 }
 
 func TestParser_ParseFile_StructLiteralTrailingComma(t *testing.T) {
