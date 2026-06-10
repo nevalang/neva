@@ -8,10 +8,11 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
     handler IMapHandler<T, Y>
     ---
     :data -> controller:data
-    controller:item -> handler
-    handler -> controller:mapped
+    controller:item -> handler -> controller:mapped
     controller:res -> :res
 }
 
+// MapController serializes Map work so each mapped value is emitted with
+// the original stream metadata before the next item is processed.
 #extern(stream_map_controller)
 def MapController<T, Y>(data stream<T>, mapped Y) (item T, res stream<Y>)

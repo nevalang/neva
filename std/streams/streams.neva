@@ -1,6 +1,7 @@
 // --- Sources ---
 
-pub type Indexed<T> struct {
+// Enumerated is a stream item paired with its 0-based index.
+pub type Enumerated<T> struct {
     idx int
     data T
 }
@@ -35,15 +36,15 @@ pub def FromDict<T>(data dict<T>) (res stream<DictEntry<T>>)
 #extern(stream_int_range)
 pub def Range(from int, to int) (res stream<int>)
 
-// Enumerate attaches a 0-based index to each Data item in a stream.
+// Enumerate attaches a 0-based index to each stream item.
 #extern(stream_enumerate)
-pub def Enumerate<T>(data stream<T>) (res stream<Indexed<T>>)
+pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
-// IsData returns true when stream item is not the last item.
+// IsData returns true when stream item carries data.
 #extern(stream_is_data)
 def IsData<T>(data stream<T>) (res bool)
 
-// IsClose returns true when stream item is the last item.
+// IsClose returns true when stream item closes the stream.
 #extern(stream_is_close)
 def IsClose<T>(data stream<T>) (res bool)
 
