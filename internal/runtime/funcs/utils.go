@@ -115,6 +115,9 @@ func receive4(
 // Runtime style note: keep OrderedMsg access explicit (selected.OrderedMsg.Msg),
 // do not rely on promoted fields from embedded structs in hot paths.
 //
+// tryToUnboxIfUnion returns union payload if message is a data-carrying union;
+// otherwise it returns the original message unchanged.
+//
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
 	unionMsg, ok := runtime.AsUnion(msg)
@@ -127,6 +130,74 @@ func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
 	}
 
 	return unionMsg.Data()
+}
+
+// listToMsgs converts any supported typed list view to generic []runtime.Msg.
+// Typed scalar paths avoid panicking Msgs() calls on typed list implementations.
+func listToMsgs(list runtime.ListMsg) []runtime.Msg {
+	if values, ok := runtime.AsListInts(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewIntMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListStrings(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewStringMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListBools(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewBoolMsg(values[i])
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsListFloats(list); ok {
+		msgs := make([]runtime.Msg, len(values))
+		for i := range values {
+			msgs[i] = runtime.NewFloatMsg(values[i])
+		}
+		return msgs
+	}
+	return list.Msgs()
+}
+
+// dictToMsgs converts any supported typed dict view to generic map[string]runtime.Msg.
+// Typed scalar paths avoid panicking Msgs() calls on typed dict implementations.
+func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
+	if values, ok := runtime.AsDictInts(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewIntMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictStrings(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewStringMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictBools(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewBoolMsg(value)
+		}
+		return msgs
+	}
+	if values, ok := runtime.AsDictFloats(dict); ok {
+		msgs := make(map[string]runtime.Msg, len(values))
+		for key, value := range values {
+			msgs[key] = runtime.NewFloatMsg(value)
+		}
+		return msgs
+	}
+	return dict.Msgs()
 }
 
 // --- Trace ---

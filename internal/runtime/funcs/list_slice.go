@@ -15,7 +15,12 @@ func sliceList(data []runtime.Msg, from int64, to int64) []runtime.Msg {
 	return append([]runtime.Msg(nil), data[start:end]...)
 }
 
-//nolint:dupl,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func sliceTypedList[T any](data []T, from int64, to int64) []T {
+	start, end := normalizeSliceBounds(from, to, int64(len(data)))
+	return append([]T(nil), data[start:end]...)
+}
+
+//nolint:dupl,varnamelen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
@@ -63,8 +68,24 @@ func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), er
 				return
 			}
 
-			res := runtime.NewListMsg(sliceList(dataMsg.List(), fromMsg.Int(), toMsg.Int()))
-			if !resOut.Send(ctx, res) {
+			list := dataMsg.List()
+			from, to := fromMsg.Int(), toMsg.Int()
+
+			var sent bool
+			//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+			if values, ok := runtime.AsListInts(list); ok {
+				sent = resOut.Send(ctx, runtime.NewListIntMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := runtime.AsListStrings(list); ok {
+				sent = resOut.Send(ctx, runtime.NewListStringMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := runtime.AsListBools(list); ok {
+				sent = resOut.Send(ctx, runtime.NewListBoolMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := runtime.AsListFloats(list); ok {
+				sent = resOut.Send(ctx, runtime.NewListFloatMsg(sliceTypedList(values, from, to)))
+			} else {
+				sent = resOut.Send(ctx, runtime.NewListMsg(sliceList(list.Msgs(), from, to)))
+			}
+
+			if !sent {
 				return
 			}
 		}

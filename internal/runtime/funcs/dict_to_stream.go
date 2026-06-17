@@ -32,7 +32,7 @@ func (dictToStream) Create(
 				return
 			}
 
-			dict := dataMsg.Dict()
+			dict := dictToMsgs(dataMsg.Dict())
 			// Go map iteration order is intentionally non-deterministic.
 			size := len(dict)
 
