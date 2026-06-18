@@ -11,29 +11,19 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-    cond_data Cond<stream<T>>
-    cond_pred Cond<stream<T>>
-    fan_non_data FanOut<stream<T>>
-    is_data IsData<T>
-    unwrap UnwrapData<T>
-    pass_then_route Pass<stream<T>>
-    pass_else_route Pass<stream<T>>
+    controller SplitController<T>
     predicate IPredicate<T>
     ---
-    :data -> [cond_data:data, is_data]
-    is_data -> cond_data:if
-
-    cond_data:then -> [cond_pred:data, unwrap]
-    unwrap -> predicate
-    predicate -> cond_pred:if
-
-    cond_pred:then -> pass_then_route
-    cond_pred:else -> pass_else_route
-
-    cond_data:else -> fan_non_data
-    [pass_then_route, fan_non_data:data[0]] -> :then
-    [pass_else_route, fan_non_data:data[1]] -> :else
+    :data -> controller:data
+    controller:item -> predicate -> controller:predicate
+    controller:then -> :then
+    controller:else -> :else
 }
+
+// SplitController serializes predicate evaluation and closes each non-empty
+// output branch by marking that branch's last retained item as `last=true`.
+#extern(stream_split_controller)
+def SplitController<T>(data stream<T>, predicate bool) (item T, then stream<T>, else stream<T>)
 
 // IPredicate represents a logic that determines if a value satisfies a condition.
 // It is used by components like Filter and Split to decide how to process stream elements.
