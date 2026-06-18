@@ -37,6 +37,7 @@ web/webview/dist
 thirdparty
 vendor
 .DS_Store
+.codex/context
 tmp
 tmp.md
 todo.md

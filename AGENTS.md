@@ -18,13 +18,17 @@ It is intentionally short and stable. Use linked docs for deep details.
 9. Never merge a PR, enable auto-merge, or close a review PR as “done” unless the user gives a direct explicit command in that conversation.
 10. For generated tests, include short intent comments.
 11. Keep this file updated when process/architecture/rules change.
-12. For repository-local skills, prefer concise English `SKILL.md` guidance (tool list + workflow); avoid bundled scripts unless explicitly requested.
+12. Repository-local Codex skills live in `.codex/skills/*/SKILL.md`.
+    Prefer concise English guidance (tool list + workflow); avoid bundled
+    scripts unless explicitly requested.
 13. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
 14. `AGENTS.md` is an engineering harness artifact for both humans and machines.
 15. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
 16. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
-17. File-type authoring rules live in `.claude/rules/*.md`; if a harness does not load them automatically, inspect matching `paths` frontmatter before editing files.
-18. Avoid duplicating durable guidance across `AGENTS.md`, `.claude/rules`, and docs; keep one source of truth and make the other layers point to it.
+17. File-type authoring rules live as Codex skills under `.codex/skills/`.
+18. Avoid duplicating durable guidance across `AGENTS.md`, `.codex/skills`,
+    docs, and workflows; keep one source of truth and make other layers point
+    to it.
 
 ## 2) High-Level Project Context
 
@@ -41,7 +45,8 @@ It is intentionally short and stable. Use linked docs for deep details.
 - Architecture map: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Contributor workflow and release basics: [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Documentation index: [docs/README.md](./docs/README.md)
-- `docs/` is user-facing documentation; agent/RFC/progress notes belong in `.agent/plans/`.
+- `docs/` is user-facing documentation; agent/RFC/progress notes belong in `.codex/plans/`.
+- Repository-local Codex skills and shared prompt context: [.codex/](./.codex/)
 - Language rationale and design decisions: [docs/qna.md](./docs/qna.md)
 - Neva style rules: [docs/style_guide.md](./docs/style_guide.md)
 - Language deep dive: [docs/book/README.md](./docs/book/README.md)
@@ -72,12 +77,21 @@ high-signal constraints:
 8. Keep compiler-contract stdlib semantics explicit (`builtin`, `Union`,
    `Struct`, `#autoports`, desugaring-sensitive behavior).
 
-## 5) File-Type Rules
+## 5) Git Workflow
 
-- Go authoring guidance lives in `.claude/rules/go-files.md`.
-- Neva authoring guidance lives in `.claude/rules/neva-files.md`.
+- When the user asks to make changes, expect to publish them as a pull request
+  unless they explicitly ask not to.
+- Open PRs as ready for review by default. Use draft only when the user asks
+  for a draft or the branch is intentionally incomplete.
+- If the current branch is not based on the latest `origin/main`, create a fresh
+  branch from `origin/main` before committing to avoid unrelated PR diff.
 
-## 6) Validation Workflow
+## 6) File-Type Rules
+
+- Use relevant repository-local Codex skills from `.codex/skills/` by their
+  metadata and task fit.
+
+## 7) Validation Workflow
 
 Prefer smallest meaningful scope first, then widen only if needed.
 
@@ -96,7 +110,7 @@ make antlr
 make gofix
 ```
 
-## 7) Change-Specific Checklists
+## 8) Change-Specific Checklists
 
 ### Grammar / parser / analyzer changes
 
@@ -124,13 +138,11 @@ make gofix
 
 ### Release delivery automation
 
-- For OpenCode-driven release announcements, use headless `opencode run`.
-  `anomalyco/opencode/github@latest` is limited to GitHub comment/review events.
-- Prefer thin release workflows that delegate wording/format rules to
-  repository-local `.opencode/skills/*` prompts instead of embedding large
-  generation logic in YAML.
+- Prefer thin release workflows that delegate wording/format rules to skills
+  instead of embedding large generation logic in YAML.
+- Do not add legacy external-agent workflow assets.
 
-## 8) Keep AGENTS.md Lean
+## 9) Keep AGENTS.md Lean
 
 - Do not append per-session journals here.
 - Keep only durable process rules, architecture deltas, and high-value gotchas.
