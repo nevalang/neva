@@ -9,7 +9,7 @@ import (
 )
 
 type fileReadAllHandle struct {
-	handles *fileHandleStore
+	handles *runtime.FileHandles
 }
 
 func (c fileReadAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {

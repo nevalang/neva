@@ -26,7 +26,7 @@ func (fileStdin) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(stdinFileHandleID)) {
+			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StdinFileHandleID)) {
 				return
 			}
 		}
@@ -52,7 +52,7 @@ func (fileStdout) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(stdoutFileHandleID)) {
+			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StdoutFileHandleID)) {
 				return
 			}
 		}
@@ -78,7 +78,7 @@ func (fileStderr) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(stderrFileHandleID)) {
+			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StderrFileHandleID)) {
 				return
 			}
 		}

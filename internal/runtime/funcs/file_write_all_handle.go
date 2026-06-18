@@ -8,7 +8,7 @@ import (
 )
 
 type fileWriteAllHandle struct {
-	handles *fileHandleStore
+	handles *runtime.FileHandles
 }
 
 func (c fileWriteAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {

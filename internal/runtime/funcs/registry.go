@@ -8,9 +8,9 @@ import (
 
 //nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewRegistry() map[string]runtime.FuncCreator {
-	// File-handle components share one store per registry so handles remain
-	// valid across Open/Create/ReadAllFile/WriteAllFile/Close nodes.
-	fileHandles := newFileHandleStore()
+	// File-handle components share one runtime table per registry so handles
+	// remain valid across Open/Create/ReadAllFile/WriteAllFile/Close nodes.
+	fileHandles := runtime.NewFileHandles()
 
 	return map[string]runtime.FuncCreator{
 		"new":     newV2{},

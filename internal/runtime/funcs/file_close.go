@@ -8,7 +8,7 @@ import (
 )
 
 type fileClose struct {
-	handles *fileHandleStore
+	handles *runtime.FileHandles
 }
 
 func (c fileClose) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {

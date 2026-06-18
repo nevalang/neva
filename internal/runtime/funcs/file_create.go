@@ -9,7 +9,7 @@ import (
 )
 
 type fileCreate struct {
-	handles *fileHandleStore
+	handles *runtime.FileHandles
 }
 
 func (c fileCreate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {

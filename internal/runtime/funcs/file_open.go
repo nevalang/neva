@@ -9,7 +9,7 @@ import (
 )
 
 type fileOpen struct {
-	handles *fileHandleStore
+	handles *runtime.FileHandles
 }
 
 func (c fileOpen) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
