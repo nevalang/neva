@@ -1251,7 +1251,10 @@ func (s *treeShapeListener) parseConnDef(
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing connection definition context")
+		return src.Connection{}, &compiler.Error{
+			Message: "missing connection definition",
+			Meta:    &meta,
+		}
 	}
 
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
@@ -1275,7 +1278,12 @@ func (s *treeShapeListener) parseSenderSide(
 	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing sender side context")
+		return nil, &compiler.Error{
+			Message: "missing sender side",
+			Meta: &core.Meta{
+				Location: s.loc,
+			},
+		}
 	}
 
 	singleSender := actx.SingleSenderSide()
@@ -1372,7 +1380,12 @@ func (s *treeShapeListener) parseReceiverSide(
 	actx generated.IReceiverSideContext,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing receiver side context")
+		return nil, &compiler.Error{
+			Message: "missing receiver side",
+			Meta: &core.Meta{
+				Location: s.loc,
+			},
+		}
 	}
 
 	singleReceiverSide := actx.SingleReceiverSide()

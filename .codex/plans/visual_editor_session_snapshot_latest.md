@@ -17,7 +17,7 @@
 - Added machine-readable trace event output v1 in `DebugInterceptor` (JSON lines).
 - Added tests for trace ancestry and panic error semantics in `internal/runtime`.
 - Created P0 master tracker issue: #1118.
-- Updated `.agent/plans/visual_node_editor.md` with split-repo/LSP-externalized baseline corrections.
+- Updated `.codex/plans/visual_node_editor.md` with split-repo/LSP-externalized baseline corrections.
 - Added snapshot template and updated `docs/qna.md` terminology (`Dataflow Trace` as canonical).
 
 ## Decisions
@@ -47,4 +47,3 @@
 - #1050
 - #792
 - #1046
-
