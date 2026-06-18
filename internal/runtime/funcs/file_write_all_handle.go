@@ -55,19 +55,19 @@ func (c fileWriteAllHandle) handleFileMessage(
 ) bool {
 	handleID, err := fileHandleID(fileMsg.Msg)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	file, err := c.handles.Get(handleID)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	if _, err := file.Write(dataMsg.Bytes()); err != nil {
 		if !resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
 			return false
 		}
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	return resOut.Send(ctx, runtime.NewIntMsg(handleID))

@@ -9,12 +9,11 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-//nolint:govet // Keeping map and counter together improves readability for this small state holder.
 type fileHandleStore struct {
-	mu     sync.Mutex
-	nextID int64
-	files  map[int64]*os.File
-	stdio  map[int64]struct{}
+	files          map[int64]*os.File
+	stdioHandleIDs map[int64]struct{}
+	nextID         int64
+	mu             sync.Mutex
 }
 
 const (
@@ -31,9 +30,9 @@ func newFileHandleStore() *fileHandleStore {
 	}
 
 	return &fileHandleStore{
-		nextID: 3,
+		nextID: stderrFileHandleID + 1,
 		files:  files,
-		stdio: map[int64]struct{}{
+		stdioHandleIDs: map[int64]struct{}{
 			stdinFileHandleID:  {},
 			stdoutFileHandleID: {},
 			stderrFileHandleID: {},
@@ -66,7 +65,7 @@ func (s *fileHandleStore) Get(handleID int64) (*os.File, error) {
 
 func (s *fileHandleStore) Close(handleID int64) error {
 	s.mu.Lock()
-	if _, isStdio := s.stdio[handleID]; isStdio {
+	if _, isStdio := s.stdioHandleIDs[handleID]; isStdio {
 		s.mu.Unlock()
 		return fmt.Errorf("cannot close stdio file handle %d", handleID)
 	}

@@ -50,7 +50,7 @@ func (c fileOpen) handleFileMessage(
 ) bool {
 	file, err := os.Open(nameMsg.Str())
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	handleID := c.handles.Add(file)
@@ -58,6 +58,8 @@ func (c fileOpen) handleFileMessage(
 		return true
 	}
 
-	_ = c.handles.Close(handleID)
+	if err := c.handles.Close(handleID); err != nil {
+		panic(err)
+	}
 	return false
 }

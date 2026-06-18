@@ -49,11 +49,11 @@ func (c fileClose) handleFileMessage(
 ) bool {
 	handleID, err := fileHandleID(fileMsg.Msg)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	if err := c.handles.Close(handleID); err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	return resOut.Send(ctx, emptyStruct())

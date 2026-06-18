@@ -22,8 +22,6 @@ func TestFileHandleStoreLifecycle(t *testing.T) {
 	if _, err := tmpFile.Seek(0, 0); err != nil {
 		t.Fatalf("Seek() error = %v", err)
 	}
-	t.Cleanup(func() { _ = tmpFile.Close() })
-
 	store := newFileHandleStore()
 	id := store.Add(tmpFile)
 	if id <= stderrFileHandleID {

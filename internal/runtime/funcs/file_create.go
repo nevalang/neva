@@ -51,7 +51,7 @@ func (c fileCreate) handleFileMessage(
 	// #nosec G304 -- filename is user-controlled by design.
 	file, err := os.OpenFile(nameMsg.Str(), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o644)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	handleID := c.handles.Add(file)
@@ -59,6 +59,8 @@ func (c fileCreate) handleFileMessage(
 		return true
 	}
 
-	_ = c.handles.Close(handleID)
+	if err := c.handles.Close(handleID); err != nil {
+		panic(err)
+	}
 	return false
 }

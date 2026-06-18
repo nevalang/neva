@@ -21,3 +21,5 @@ paths:
   two-input receives in operator helpers or creators.
 - Add doc comments for new Go functions and types.
 - For newly generated Go code blocks longer than 3 lines, add a short one-line intent comment when the purpose is not immediately obvious.
+- Do not add helper functions or methods unless they abstract at least two meaningful operations or remove real complexity.
+- Never ignore errors. If an error cannot be returned or sent through the component API, handle it explicitly and document or panic only when it represents an internal invariant violation.

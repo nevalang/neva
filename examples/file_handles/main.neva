@@ -1,41 +1,53 @@
 import { bytes, io, fmt, runtime, strings }
 
 def Main(start any) (stop any) {
-	startFanOut FanOut<any>
-	create io.Create
-	writeAll io.WriteAllFile
-	bytesFromString bytes.FromString
-	closeWriter io.Close
-	open io.Open
-	readAll io.ReadAllFile
-	stringFromBytes strings.FromBytes
-	closeReader io.Close
-	println fmt.Println<any>
+	app App
 	panic runtime.Panic
 	---
-	:start -> startFanOut
-	startFanOut:data[0] -> 'file_handles_example.txt' -> create:filename
-	startFanOut:data[1] -> 'Hello, io.File!' -> bytesFromString:data
-	bytesFromString:res -> writeAll:data
+	:start -> app
+	app:stop -> :stop
+	app:err -> panic
+}
 
-	create:res -> writeAll:file
-	writeAll:res -> closeWriter:file
+def App(start any) (stop any, err error) {
+	write_example WriteExample?
+	read_example ReadExample?
+	println fmt.Println<any>?
+	---
+	:start -> write_example:start
+	write_example:stop -> read_example:start
+	read_example:res -> println:data
+	[println:res, read_example:closed] -> :stop
+}
 
-	closeWriter:res -> 'file_handles_example.txt' -> open:filename
-	open:res -> readAll:file
-	readAll:res -> stringFromBytes:data
-	stringFromBytes:res -> println:data
-	readAll:handle -> closeReader:file
+def WriteExample(start any) (stop any, err error) {
+	start_fan_out FanOut<any>
+	create io.Create
+	write_all io.WriteAllFile
+	bytes_from_string bytes.FromString
+	close io.Close
+	---
+	:start -> start_fan_out
+	start_fan_out:data[0] -> 'file_handles_example.txt' -> create:filename
+	start_fan_out:data[1] -> 'Hello, io.File!' -> bytes_from_string:data
+	bytes_from_string:res -> write_all:data
+	create:res -> write_all:file
+	write_all:res -> close:file
+	close:res -> :stop
+	[create:err, write_all:err, close:err] -> :err
+}
 
-	[
-		create:err,
-		writeAll:err,
-		closeWriter:err,
-		open:err,
-		readAll:err,
-		closeReader:err,
-		println:err
-	] -> panic
-
-	[println:res, closeReader:res] -> :stop
+def ReadExample(start any) (res string, closed any, err error) {
+	open io.Open
+	read_all io.ReadAllFile
+	string_from_bytes strings.FromBytes
+	close io.Close
+	---
+	:start -> 'file_handles_example.txt' -> open:filename
+	open:res -> read_all:file
+	read_all:res -> string_from_bytes:data
+	string_from_bytes:res -> :res
+	read_all:handle -> close:file
+	close:res -> :closed
+	[open:err, read_all:err, close:err] -> :err
 }

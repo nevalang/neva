@@ -56,12 +56,12 @@ func (c fileReadAllHandle) handleFileMessage(
 ) bool {
 	handleID, err := fileHandleID(fileMsg.Msg)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	file, err := c.handles.Get(handleID)
 	if err != nil {
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	data, err := io.ReadAll(file)
@@ -69,7 +69,7 @@ func (c fileReadAllHandle) handleFileMessage(
 		if !handleOut.Send(ctx, runtime.NewIntMsg(handleID)) {
 			return false
 		}
-		return sendRuntimeError(ctx, errOut, err)
+		return errOut.Send(ctx, errFromErr(err))
 	}
 
 	if !resOut.Send(ctx, runtime.NewBytesMsg(data)) {
