@@ -947,16 +947,16 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 	net := got.Entities["Main"].Component[0].Net
 	require.NotEmpty(t, net)
 
-	var foundNewStreamChain bool
+	var foundStreamItemChain bool
 	var foundErrFanIn bool
 
 	for _, conn := range net {
-		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newStream" &&
-			conn.Senders[0].PortAddr.Port == "s" {
+		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "item" &&
+			conn.Senders[0].PortAddr.Port == "res" {
 			require.NotNil(t, conn.Receivers[0].PortAddr)
 			require.Equal(t, "new", conn.Receivers[0].PortAddr.Node)
 			require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-			foundNewStreamChain = true
+			foundStreamItemChain = true
 		}
 
 		if len(conn.Senders) == 3 && len(conn.Receivers) == 1 &&
@@ -971,7 +971,7 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 		}
 	}
 
-	require.True(t, foundNewStreamChain)
+	require.True(t, foundStreamItemChain)
 	require.True(t, foundErrFanIn)
 }
 

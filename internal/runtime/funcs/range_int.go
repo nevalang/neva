@@ -26,13 +26,8 @@ func (rangeInt) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Co
 
 	return func(ctx context.Context) {
 		for {
-			fromMsg, fromReceived := fromIn.Receive(ctx)
-			if !fromReceived {
-				return
-			}
-
-			toMsg, toReceived := toIn.Receive(ctx)
-			if !toReceived {
+			fromMsg, toMsg, received := receive2(ctx, fromIn, toIn)
+			if !received {
 				return
 			}
 
@@ -55,7 +50,23 @@ func sendIntRange(
 		return false
 	}
 
-	for _, data := range rangeValues(from, toValue) {
+	if from < toValue {
+		return sendAscendingIntRange(ctx, resOut, from, toValue)
+	}
+
+	if from > toValue {
+		return sendDescendingIntRange(ctx, resOut, from, toValue)
+	}
+
+	return resOut.Send(ctx, streamClose())
+}
+
+func sendAscendingIntRange(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	from, toValue int64,
+) bool {
+	for data := from; data < toValue; data++ {
 		if !resOut.Send(ctx, streamData(runtime.NewIntMsg(data))) {
 			return false
 		}
@@ -64,23 +75,16 @@ func sendIntRange(
 	return resOut.Send(ctx, streamClose())
 }
 
-func rangeValues(from, toValue int64) []int64 {
-	switch {
-	case from < toValue:
-		values := make([]int64, 0, toValue-from)
-		for data := from; data < toValue; data++ {
-			values = append(values, data)
+func sendDescendingIntRange(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	from, toValue int64,
+) bool {
+	for data := from; data > toValue; data-- {
+		if !resOut.Send(ctx, streamData(runtime.NewIntMsg(data))) {
+			return false
 		}
-
-		return values
-	case from > toValue:
-		values := make([]int64, 0, from-toValue)
-		for data := from; data > toValue; data-- {
-			values = append(values, data)
-		}
-
-		return values
-	default:
-		return nil
 	}
+
+	return resOut.Send(ctx, streamClose())
 }

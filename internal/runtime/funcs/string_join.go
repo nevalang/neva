@@ -27,13 +27,8 @@ func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx cont
 
 	return func(ctx context.Context) {
 		for {
-			dataMsg, dataReceived := dataIn.Receive(ctx)
-			if !dataReceived {
-				return
-			}
-
-			sepMsg, sepReceived := sepIn.Receive(ctx)
-			if !sepReceived {
+			dataMsg, sepMsg, received := receive2(ctx, dataIn, sepIn)
+			if !received {
 				return
 			}
 
@@ -85,15 +80,6 @@ func appendStreamItem(builder *strings.Builder, item, sep string) {
 	builder.WriteString(item)
 }
 
-func receiveJoinSeparator(ctx context.Context, sepIn runtime.SingleInport) (string, bool) {
-	sepMsg, sepReceived := sepIn.Receive(ctx)
-	if !sepReceived {
-		return "", false
-	}
-
-	return sepMsg.Str(), true
-}
-
 func handleJoinedStreamMessage(
 	ctx context.Context,
 	builder *strings.Builder,
@@ -133,22 +119,25 @@ func runStringJoinStream(
 	)
 
 	for {
-		msg, dataReceived := dataIn.Receive(ctx)
-		if !dataReceived {
-			return
-		}
-
+		var msg runtime.OrderedMsg
 		if !hasSep {
-			nextSep, sepReceived := receiveJoinSeparator(ctx, sepIn)
-			if !sepReceived {
+			sepMsg, dataMsg, received := receive2(ctx, sepIn, dataIn)
+			if !received {
 				return
 			}
 
-			sep = nextSep
+			sep = sepMsg.Str()
+			msg = dataMsg
 			hasSep = true
+		} else {
+			dataMsg, dataReceived := dataIn.Receive(ctx)
+			if !dataReceived {
+				return
+			}
+			msg = dataMsg
 		}
 
-		nextHasSep, keepRunning := handleJoinedStreamMessage(ctx, &builder, resOut, msg, sep, hasSep)
+		nextHasSep, keepRunning := handleJoinedStreamMessage(ctx, &builder, resOut, msg.Msg, sep, hasSep)
 		if !keepRunning {
 			return
 		}
