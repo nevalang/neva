@@ -34,12 +34,7 @@ func (c fileWriteAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx cont
 
 	return func(ctx context.Context) {
 		for {
-			fileMsg, received := fileIn.Receive(ctx)
-			if !received {
-				return
-			}
-
-			dataMsg, received := dataIn.Receive(ctx)
+			fileMsg, dataMsg, received := receive2(ctx, fileIn, dataIn)
 			if !received {
 				return
 			}
@@ -69,6 +64,9 @@ func (c fileWriteAllHandle) handleFileMessage(
 	}
 
 	if _, err := file.Write(dataMsg.Bytes()); err != nil {
+		if !resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+			return false
+		}
 		return sendRuntimeError(ctx, errOut, err)
 	}
 

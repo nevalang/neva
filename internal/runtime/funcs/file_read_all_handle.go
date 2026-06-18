@@ -66,6 +66,9 @@ func (c fileReadAllHandle) handleFileMessage(
 
 	data, err := io.ReadAll(file)
 	if err != nil {
+		if !handleOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+			return false
+		}
 		return sendRuntimeError(ctx, errOut, err)
 	}
 
