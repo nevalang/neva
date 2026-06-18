@@ -58,6 +58,8 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 
 ## Networks
 
+- Keep components small and focused. Split large graphs into named components
+  when that makes the main dataflow easier to scan.
 - Omit port names when possible. It enables renaming of ports without updating the networks.
 - Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and easier to scan.
