@@ -1,9 +1,9 @@
 ---
-name: "neva-mermaid"
-description: Convert Neva programs to valid Mermaid diagrams
+name: "neva-to-mermaid"
+description: "Convert Neva programs to valid Mermaid flowchart diagrams. Use when asked to visualize Neva code as Mermaid."
 ---
 
-# Neva to Mermaid Skill
+# Neva to Mermaid
 
 Use this skill to convert any Neva source code into a Mermaid flowchart.
 
@@ -28,11 +28,10 @@ Use this skill to convert any Neva source code into a Mermaid flowchart.
 
    - **Components**:
      - Use unique Mermaid node IDs.
-     - Render components as regular boxes: `id["name: Type"]`.
-
-   - **Component nodes (IMPORTANT)**: 
-     - Component nodes MUST be rendered using **only their declared instance name**.
-     - Do NOT annotate component nodes with type names, generic parameters, or usage information.
+     - Render component nodes as regular boxes using only their declared
+       instance name: `id["name"]`.
+     - Do not annotate component nodes with type names, generic parameters, or
+       usage information.
 
    - **Literals**:
      - Render numeric and string literals as rectangles using Mermaid shape syntax:
@@ -68,7 +67,8 @@ Use this skill to convert any Neva source code into a Mermaid flowchart.
      - You MAY use `&` to reduce clutter only when it does **not** hide fan-in/fan-out topology.
      - If Neva uses list-wiring (`[...]`), prefer junction nodes over `&`.
 
-3. Don't lookup otherfiles in repo and do not bother calling tools like websearch, this text describes absolutely everything you need.
+3. Do not look up other files in the repo or call web search; this text
+   describes the conversion rules.
 4. Ensure the output is ready to be pasted into the Mermaid playground.
 
 ## Reference Example
