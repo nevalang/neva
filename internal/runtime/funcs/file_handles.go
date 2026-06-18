@@ -9,11 +9,17 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// fileHandleStore owns runtime file resources exposed to Neva as opaque integer
+// handles.
 type fileHandleStore struct {
-	files          map[int64]*os.File
+	// files maps each live handle ID to the Go file it represents.
+	files map[int64]*os.File
+	// stdioHandleIDs marks predefined process stdio handles that must not close.
 	stdioHandleIDs map[int64]struct{}
-	nextID         int64
-	mu             sync.Mutex
+	// nextID is the next dynamic handle ID allocated by Add.
+	nextID int64
+	// mu protects files, stdioHandleIDs, and nextID.
+	mu sync.RWMutex
 }
 
 const (
@@ -52,8 +58,8 @@ func (s *fileHandleStore) Add(file *os.File) int64 {
 }
 
 func (s *fileHandleStore) Get(handleID int64) (*os.File, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	file, found := s.files[handleID]
 	if !found {
