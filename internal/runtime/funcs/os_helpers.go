@@ -189,13 +189,8 @@ func runBinaryLoop(
 	step func(runtime.OrderedMsg, runtime.OrderedMsg) (runtime.Msg, error),
 ) {
 	for {
-		firstInput, firstReceived := firstIn.Receive(ctx)
-		if !firstReceived {
-			return
-		}
-
-		secondInput, secondReceived := secondIn.Receive(ctx)
-		if !secondReceived {
+		firstInput, secondInput, received := receive2(ctx, firstIn, secondIn)
+		if !received {
 			return
 		}
 
