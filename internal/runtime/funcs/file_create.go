@@ -54,13 +54,5 @@ func (c fileCreate) handleFileMessage(
 		return errOut.Send(ctx, errFromErr(err))
 	}
 
-	handleID := c.handles.Add(file)
-	if resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
-		return true
-	}
-
-	if err := c.handles.Close(handleID); err != nil {
-		panic(err)
-	}
-	return false
+	return sendFileHandle(ctx, c.handles, file, resOut, errOut)
 }

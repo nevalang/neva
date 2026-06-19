@@ -58,31 +58,22 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 
 ## Networks
 
-- Keep components small and focused. Split large graphs into named components
-  when that makes the main dataflow easier to scan. As a rule of thumb, a
-  component with more than 7 nodes or 12 connections should either have a clear
-  reason to stay flat or be split into named subcomponents. Components with 3-5
-  nodes and up to 8 connections are usually easiest to read.
+- Keep components small and focused. Aim for about 3 nodes and 5 connections;
+  split at 5 nodes or 10 connections unless the flat graph has a clear reason
+  to stay together.
 - Omit port names when possible. It enables renaming of ports without updating
   the networks.
 - Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible
   (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and
   easier to scan.
+- Prefer standard flow names: `sig` for trigger inputs, `res` for success
+  outputs, and `err` for errors.
 
-Small component example (assuming `bytes` and `io` are imported):
+Example:
 
 ```neva
-def SaveGreeting(start any, text string) (stop any, err error) {
-	bytes_from_string bytes.FromString
-	write io.WriteAll
-	---
-	:text -> bytes_from_string
-	bytes_from_string -> write:data
-	:start -> 'greeting.txt' -> write:filename
-	write:res -> :stop
-	write:err -> :err
-}
+read:res -> strings.FromBytes -> :res
 ```
 
 ## Comments

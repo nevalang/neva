@@ -15,10 +15,14 @@ const (
 
 // FileHandles owns runtime file resources exposed to Neva as opaque integer handles.
 type FileHandles struct {
-	files          map[int64]*os.File
+	// files maps Neva-visible handle IDs to live process files.
+	files map[int64]*os.File
+	// stdioHandleIDs marks process stdio handles that must not be closed by Neva.
 	stdioHandleIDs map[int64]struct{}
-	nextID         int64
-	mu             sync.RWMutex
+	// nextID is the next dynamic handle ID returned by Add.
+	nextID int64
+	// mu protects files and nextID.
+	mu sync.RWMutex
 }
 
 // NewFileHandles creates a runtime file-handle table with process stdio handles.
@@ -66,6 +70,7 @@ func (handles *FileHandles) Get(handleID int64) (*os.File, error) {
 }
 
 // Close removes and closes a dynamic file handle.
+// It returns an error for stdio, unknown, or already-closed handles.
 func (handles *FileHandles) Close(handleID int64) error {
 	handles.mu.Lock()
 	if _, isStdio := handles.stdioHandleIDs[handleID]; isStdio {
