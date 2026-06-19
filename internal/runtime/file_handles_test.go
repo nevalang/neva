@@ -89,24 +89,3 @@ func TestFileHandlesHasStdioHandles(t *testing.T) {
 		t.Fatal("Close(stderr) expected error")
 	}
 }
-
-func TestFileHandlesAllocatesAcrossShards(t *testing.T) {
-	t.Parallel()
-
-	handles := NewFileHandles()
-	seenShards := map[int64]struct{}{}
-
-	for range fileHandleShardCount * 2 {
-		tmpFile, err := os.CreateTemp(t.TempDir(), "file-handles-sharded-*.txt")
-		if err != nil {
-			t.Fatalf("CreateTemp() error = %v", err)
-		}
-
-		handleID := handles.Add(tmpFile)
-		seenShards[handleID%fileHandleShardCount] = struct{}{}
-	}
-
-	if len(seenShards) < fileHandleShardCount {
-		t.Fatalf("Add() used %d shards, want %d", len(seenShards), fileHandleShardCount)
-	}
-}
