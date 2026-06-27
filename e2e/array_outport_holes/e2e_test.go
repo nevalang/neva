@@ -12,6 +12,6 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		stderr,
-		"main/main.neva:4:1: array outport 'fanOut:data' is used incorrectly: slot 1 is missing\n",
+		"main/main.neva:6:1: array outport 'fanOut:data' is used incorrectly: slot 1 is missing\n",
 	)
 }

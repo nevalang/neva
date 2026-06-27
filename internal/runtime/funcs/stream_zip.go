@@ -35,7 +35,7 @@ func (streamZip) Create(
 			if !waitStreamOpen(ctx, rightIn) {
 				return
 			}
-			if !resOut.Send(ctx, streamOpen()) {
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -51,7 +51,7 @@ func (streamZip) Create(
 				}
 
 				if leftClosed || rightClosed {
-					if !resOut.Send(ctx, streamClose()) {
+					if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
 						return
 					}
 					if !leftClosed {
@@ -70,7 +70,7 @@ func (streamZip) Create(
 					},
 				)
 
-				if !resOut.Send(ctx, streamData(zipped)) {
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(zipped)) {
 					return
 				}
 			}
@@ -88,7 +88,7 @@ func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
 		if !ok {
 			return false
 		}
-		if isStreamOpen(msg.Msg) {
+		if runtime.IsStreamOpen(msg.Msg) {
 			return true
 		}
 	}
@@ -102,9 +102,9 @@ func receiveStreamDataOrClose(ctx context.Context, in streamReceiver) (runtime.M
 			return nil, false, false
 		}
 		switch {
-		case isStreamData(msg.Msg):
-			return streamDataValue(msg.Msg), false, true
-		case isStreamClose(msg.Msg):
+		case runtime.IsStreamData(msg.Msg):
+			return runtime.StreamDataValue(msg.Msg), false, true
+		case runtime.IsStreamClose(msg.Msg):
 			return nil, true, true
 		}
 	}
@@ -116,7 +116,7 @@ func drainStreamUntilClose(ctx context.Context, in streamReceiver) {
 		if !ok {
 			return
 		}
-		if isStreamClose(msg.Msg) {
+		if runtime.IsStreamClose(msg.Msg) {
 			return
 		}
 	}

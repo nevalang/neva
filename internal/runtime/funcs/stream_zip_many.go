@@ -62,9 +62,9 @@ func (streamZipMany) Create(
 						}
 
 						switch {
-						case isStreamData(msg):
-							collected = append(collected, streamDataValue(msg))
-						case isStreamClose(msg):
+						case runtime.IsStreamData(msg):
+							collected = append(collected, runtime.StreamDataValue(msg))
+						case runtime.IsStreamClose(msg):
 							states[idx] = streamState{data: collected}
 							return
 						}
@@ -85,7 +85,7 @@ func (streamZipMany) Create(
 				}
 			}
 
-			if !resOut.Send(ctx, streamOpen()) {
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -95,12 +95,12 @@ func (streamZipMany) Create(
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(ctx, streamData(runtime.NewListMsg(zipped))) {
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewListMsg(zipped))) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, streamClose()) {
+			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
 				return
 			}
 		}

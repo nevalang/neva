@@ -869,7 +869,7 @@ func (a Analyzer) getConstSenderType(
 	}
 
 	if constSender.Value.Message.Union != nil {
-		unionSenderType, err := a.unionLiteralSenderType(constSender.Value.Message.Union, scope)
+		unionSenderType, err := a.inferUnionLiteralSenderType(constSender.Value.Message.Union, scope)
 		if err != nil {
 			return src.Const{}, ts.Expr{}, err
 		}

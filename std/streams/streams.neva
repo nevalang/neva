@@ -1,8 +1,8 @@
 // --- Sources ---
 
 pub type Enumerated<T> struct {
-    idx int
-    item T
+	idx int
+	item T
 }
 
 // FromArray iterates over all array-inport's slots in order
@@ -20,7 +20,15 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // must remain whole stream elements.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
-// Item creates a single-item stream.
+// Item creates a stream that contains exactly one Data item.
+//
+// This is useful when an API expects a stream but the producer has one value,
+// for example when passing a single pixel to image.New or adapting scalar data
+// to stream combinators.
+//
+// @inport data Value to emit as the only Data item.
+//
+// @outport res Stream that emits Open, Data(data), and Close.
 #extern(stream_just)
 pub def Item<T>(data T) (res stream<T>)
 
@@ -43,15 +51,13 @@ pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
 // Wait blocks until stream close item arrives, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
-    del Del
-    switch Switch<stream<any>>
-    ---
-    :data -> [
-        switch:data,
-        stream<any>::Close -> switch:case[0]
-    ]
-    switch:case[0] -> :sig
-    switch:else -> del
+	switch Switch<stream<any>>
+	---
+	:data -> [
+		switch:data,
+		stream<any>::Close -> switch:case[0]
+	]
+	switch:case[0] -> :sig
 }
 
 // --- Combinators ---

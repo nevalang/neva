@@ -1,20 +1,34 @@
 // ForEach applies a handler to each Data item in a stream to produce side-effects.
 // It forwards the original stream unchanged and preserves item order.
+//
+// It uses backpressure to ensure the handler processes items sequentially:
+// the next Data item is not forwarded until the handler finishes the previous one.
+// This prevents concurrency issues in side-effecting handlers.
+//
+// To wait for all items to be processed, use it with streams.Wait.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-    controller ForEachController<T>
-    handler ISideEffector<T>
-    done FanIn<any>
-    ---
-    :data -> controller:data
-    controller:item -> handler
+	controller ForEachController<T>
+	handler IForEachHandler<T>
+	done FanIn<any>
+	---
+	:data -> controller:data
+	controller:item -> handler
 
-    handler:res -> done:data[0]
-    handler:err -> [done:data[1], :err]
-    done -> controller:done
-    controller:res -> :res
+	handler:res -> done:data[0]
+	handler:err -> [done:data[1], :err]
+	done -> controller:done
+	controller:res -> :res
 }
 
-pub interface ISideEffector<T>(T) (res any, err error)
+// IForEachHandler is a dependency for ForEach.
+pub interface IForEachHandler<T>(T) (res any, err error)
 
+// ForEachController serializes handler execution for stream Data items.
+//
+// @inport data Input stream.
+// @inport done Signal that the handler finished processing the current item.
+//
+// @outport item Payload to pass to the handler.
+// @outport res Original stream forwarded in the same order.
 #extern(stream_for_each_controller)
 def ForEachController<T>(data stream<T>, done any) (item T, res stream<T>)

@@ -22,6 +22,9 @@ Use tabs over spaces.
 
 ### Imports
 
+Always use multiline import blocks, even for a single import. Do not separate
+imports with commas.
+
 Group imports by type: stdlib, third-party, local. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions

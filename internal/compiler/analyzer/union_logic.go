@@ -14,7 +14,7 @@ type unionActiveTagInfo struct {
 	tagTypeExpr ts.Expr
 }
 
-func (a Analyzer) unionLiteralSenderType(
+func (a Analyzer) inferUnionLiteralSenderType(
 	unionLiteral *src.UnionLiteral,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
@@ -111,7 +111,7 @@ func (a Analyzer) messageLiteralType(
 	case value.Message.Str != nil:
 		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}, Meta: value.Message.Meta}, nil
 	case value.Message.Union != nil:
-		return a.unionLiteralSenderType(value.Message.Union, scope)
+		return a.inferUnionLiteralSenderType(value.Message.Union, scope)
 	default:
 		return ts.Expr{}, &compiler.Error{
 			Message: "Union literal payload must be a primitive or union literal",

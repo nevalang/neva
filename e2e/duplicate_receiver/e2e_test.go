@@ -12,6 +12,6 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		stderr,
-		"main/main.neva:9:1: port 'println:res' is used twice\n",
+		"main/main.neva:13:1: port 'println:res' is used twice\n",
 	)
 }

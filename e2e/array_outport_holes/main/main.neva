@@ -1,4 +1,6 @@
-import { io }
+import {
+	io
+}
 
 def Main(start any) (stop any) {
 	fanOut FanOut<any>

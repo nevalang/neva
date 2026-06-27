@@ -1,4 +1,10 @@
-import { io, image, fmt, runtime, streams }
+import {
+	fmt
+	image
+	io
+	runtime
+	streams
+}
 
 def NewPixel(x int, y int, c image.RGBA) (pixel image.Pixel) {
 	pb Struct<image.Pixel>
@@ -32,8 +38,7 @@ def Main(start any) (stop any) {
 		'minimal.png' -> writeAll:filename
 	]
 	newColor -> newPixel:c
-	newPixel -> item:data
-	item:res -> new
+	newPixel -> item -> new
 	new:img -> encode:img
 	encode:res -> writeAll:data
 	[new:err, encode:err, writeAll:err] -> printErr

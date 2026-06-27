@@ -52,10 +52,10 @@ func forwardForEachMessage(
 	msg runtime.Msg,
 ) bool {
 	switch {
-	case isStreamOpen(msg), isStreamClose(msg):
+	case runtime.IsStreamOpen(msg), runtime.IsStreamClose(msg):
 		return resOut.Send(ctx, msg)
-	case isStreamData(msg):
-		if !itemOut.Send(ctx, streamDataValue(msg)) {
+	case runtime.IsStreamData(msg):
+		if !itemOut.Send(ctx, runtime.StreamDataValue(msg)) {
 			return false
 		}
 

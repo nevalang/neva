@@ -5,6 +5,5 @@ type U union {
 def Main(start any) (stop any) {
 	pass Pass<U>
 	---
-	:start -> U::Int('bad') -> pass
-	pass -> :stop
+	:start -> U::Int('bad') -> pass -> :stop
 }

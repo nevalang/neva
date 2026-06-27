@@ -29,7 +29,7 @@ func (arrayPortToStream) Create(
 		l := portIn.Len()
 
 		for {
-			if !resOut.Send(ctx, streamOpen()) {
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -39,12 +39,12 @@ func (arrayPortToStream) Create(
 					return
 				}
 
-				if !resOut.Send(ctx, streamData(msg.Msg)) {
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(msg.Msg)) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, streamClose()) {
+			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
 				return
 			}
 		}

@@ -33,17 +33,17 @@ func (c listToStream) Create(
 			}
 
 			list := data.List()
-			if !resOut.Send(ctx, streamOpen()) {
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
 				return
 			}
 
 			for idx := range list {
-				if !resOut.Send(ctx, streamData(list[idx])) {
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(list[idx])) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, streamClose()) {
+			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
 				return
 			}
 		}

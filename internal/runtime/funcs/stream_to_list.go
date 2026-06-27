@@ -36,13 +36,13 @@ func (s streamToList) Create(
 			}
 
 			switch {
-			case isStreamOpen(msg):
+			case runtime.IsStreamOpen(msg):
 				list = list[:0]
 				continue
-			case isStreamData(msg):
-				list = append(list, streamDataValue(msg))
+			case runtime.IsStreamData(msg):
+				list = append(list, runtime.StreamDataValue(msg))
 				continue
-			case !isStreamClose(msg):
+			case !runtime.IsStreamClose(msg):
 				continue
 			}
 

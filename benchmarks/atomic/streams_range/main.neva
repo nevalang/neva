@@ -1,6 +1,8 @@
 // Benchmarks the atomic streams.Range hot path.
 // Wait is kept only as the terminal sink for a valid standalone program.
-import { streams }
+import {
+	streams
+}
 
 def Main(start any) (stop any) {
 	range streams.Range
