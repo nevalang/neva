@@ -58,9 +58,23 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 
 ## Networks
 
-- Omit port names when possible. It enables renaming of ports without updating the networks.
+- Keep components small and focused. Aim for about 3 nodes and 5 connections;
+  split at 5 nodes or 10 connections unless the flat graph has a clear reason
+  to stay together.
+- Omit port names when possible. It enables renaming of ports without updating
+  the networks.
 - Use `?` to propagate errors unless custom error handling is needed.
-- Prefer chaining connections inline when possible (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and easier to scan.
+- Prefer chaining connections inline when possible
+  (e.g. `c -> switch:case[0] -> println`) to keep the dataflow compact and
+  easier to scan.
+- Prefer standard flow names: `sig` for trigger inputs, `res` for success
+  outputs, and `err` for errors.
+
+Example:
+
+```neva
+read:res -> fromBytes -> :res
+```
 
 ## Comments
 

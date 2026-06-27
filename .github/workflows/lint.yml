@@ -44,7 +44,10 @@ jobs:
     name: govulncheck
     runs-on: ubuntu-latest
     steps:
-      - uses: golang/govulncheck-action@v1
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-          output-format: text
+          go-version: '1.26.4'
+          cache: false
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.4.0 ./...
