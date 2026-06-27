@@ -1,6 +1,6 @@
 ---
 name: "go-authoring"
-description: "Use when editing, reviewing, or generating Go files in this repository. Covers Neva-specific Go style, runtime boundaries, lint expectations, and validation."
+description: "Use when editing, reviewing, or generating Go files in this repository. Covers Go style, local runtime boundaries, lint expectations, and validation."
 ---
 
 # Go Authoring
@@ -20,6 +20,11 @@ Use this skill for changes touching `*.go`.
   unavoidable, keep it narrowly scoped to the exact line/rule and add a short
   justification.
 - Prefer `Makefile` targets for standard checks when applicable.
+- Do not add helper functions or methods unless they abstract at least two
+  meaningful operations or remove real complexity.
+- Never ignore errors, including assignment to `_`. Handle the error locally or
+  pass it to the caller; choose one outcome such as return (wrapping when useful),
+  log, or panic, but do not both report and continue with the same error.
 
 ## Runtime Boundaries
 
