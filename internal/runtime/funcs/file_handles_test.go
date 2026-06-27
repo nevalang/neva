@@ -76,6 +76,27 @@ func TestFileOpenHandleOpensFile(t *testing.T) {
 	mustCloseHandle(t, store, handleID)
 }
 
+func TestFileOpenHandleReportsOpenError(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	path := t.TempDir() + "/missing.txt"
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileOpen{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewStringMsg(path)},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+}
+
 func TestFileCreateHandleCreatesFile(t *testing.T) {
 	t.Parallel()
 
@@ -109,6 +130,27 @@ func TestFileCreateHandleCreatesFile(t *testing.T) {
 	}
 }
 
+func TestFileCreateHandleReportsCreateError(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	path := t.TempDir() + "/missing-parent/created.txt"
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileCreate{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewStringMsg(path)},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+}
+
 func TestFileCloseHandleClosesFile(t *testing.T) {
 	t.Parallel()
 
@@ -131,6 +173,66 @@ func TestFileCloseHandleClosesFile(t *testing.T) {
 	if _, err := store.Get(handleID); err == nil {
 		t.Fatal("Get() expected error after file_close")
 	}
+}
+
+func TestFileCloseHandleReportsUnknownHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileClose{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewIntMsg(42)},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+}
+
+func TestFileCloseHandleReportsStdioHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileClose{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewIntMsg(runtime.StdoutFileHandleID)},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+}
+
+func TestFileCloseHandleReportsNonIntHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileClose{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewStringMsg("bad")},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
 }
 
 func TestFileReadAllHandleReturnsDataAndHandle(t *testing.T) {
@@ -157,6 +259,50 @@ func TestFileReadAllHandleReturnsDataAndHandle(t *testing.T) {
 	mustCloseHandle(t, store, handleID)
 }
 
+func TestFileReadAllHandleReportsUnknownHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "handle", "err"})
+
+	ok := fileReadAllHandle{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewIntMsg(42)},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "handle"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+	assertNoOutput(t, outChans, "handle")
+}
+
+func TestFileReadAllHandleReportsNonIntHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "handle", "err"})
+
+	ok := fileReadAllHandle{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewStringMsg("bad")},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "handle"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+	assertNoOutput(t, outChans, "handle")
+}
+
 func TestFileReadAllHandlePassesHandleOnReadError(t *testing.T) {
 	t.Parallel()
 
@@ -177,7 +323,49 @@ func TestFileReadAllHandlePassesHandleOnReadError(t *testing.T) {
 	}
 
 	assertOutputEquals(t, outChans, "handle", runtime.NewIntMsg(handleID), nil)
-	assertRuntimeErrorOutput(t, outChans, "err")
+	assertRuntimeErrorOutput(t, outChans)
+}
+
+func TestFileWriteAllHandleReportsUnknownHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileWriteAllHandle{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewIntMsg(42)},
+		runtime.OrderedMsg{Msg: runtime.NewBytesMsg([]byte("data"))},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
+}
+
+func TestFileWriteAllHandleReportsNonIntHandle(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	_, _, outChans := newIO(nil, []string{"res", "err"})
+
+	ok := fileWriteAllHandle{handles: store}.handleFileMessage(
+		context.Background(),
+		runtime.OrderedMsg{Msg: runtime.NewStringMsg("bad")},
+		runtime.OrderedMsg{Msg: runtime.NewBytesMsg([]byte("data"))},
+		mustSingleOutport(t, outChans, "res"),
+		mustSingleOutport(t, outChans, "err"),
+	)
+	if !ok {
+		t.Fatal("handleFileMessage() returned false")
+	}
+
+	assertRuntimeErrorOutput(t, outChans)
+	assertNoOutput(t, outChans, "res")
 }
 
 func TestFileWriteAllHandleWritesDataAndKeepsHandleOpen(t *testing.T) {
@@ -234,7 +422,35 @@ func TestFileWriteAllHandlePassesHandleOnWriteError(t *testing.T) {
 	}
 
 	assertOutputEquals(t, outChans, "res", runtime.NewIntMsg(handleID), nil)
-	assertRuntimeErrorOutput(t, outChans, "err")
+	assertRuntimeErrorOutput(t, outChans)
+}
+
+func TestStoreAndSendFileHandleCleansUpWhenContextIsCanceled(t *testing.T) {
+	t.Parallel()
+
+	store := runtime.NewFileHandles()
+	file := createTempFile(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	resOut := mustSingleOutport(t, map[string]chan runtime.OrderedMsg{
+		"res": make(chan runtime.OrderedMsg),
+	}, "res")
+	errOut := mustSingleOutport(t, map[string]chan runtime.OrderedMsg{
+		"err": make(chan runtime.OrderedMsg),
+	}, "err")
+
+	ok := storeAndSendFileHandle(ctx, store, file, resOut, errOut)
+	if ok {
+		t.Fatal("storeAndSendFileHandle() returned true after context cancellation")
+	}
+
+	handleID := runtime.StderrFileHandleID + 1
+	if _, err := store.Get(handleID); err == nil {
+		t.Fatal("Get() expected error for cleaned-up handle")
+	}
+	if _, err := file.WriteString("after cleanup"); err == nil {
+		t.Fatal("WriteString() expected error after cleanup closed the file")
+	}
 }
 
 func TestFileStdioComponentsReturnRuntimeHandles(t *testing.T) {
@@ -377,15 +593,25 @@ func mustSingleOutport(
 	return *port
 }
 
-func assertRuntimeErrorOutput(t *testing.T, outChans map[string]chan runtime.OrderedMsg, outName string) {
+func assertRuntimeErrorOutput(t *testing.T, outChans map[string]chan runtime.OrderedMsg) {
 	t.Helper()
 
 	select {
-	case got := <-outChans[outName]:
+	case got := <-outChans["err"]:
 		if _, ok := got.Msg.(runtime.StructMsg); !ok {
 			t.Fatalf("error output = %T, want struct error", got.Msg)
 		}
 	default:
-		t.Fatalf("no runtime error on %q", outName)
+		t.Fatalf("no runtime error on %q", "err")
+	}
+}
+
+func assertNoOutput(t *testing.T, outChans map[string]chan runtime.OrderedMsg, outName string) {
+	t.Helper()
+
+	select {
+	case got := <-outChans[outName]:
+		t.Fatalf("unexpected output on %q: %v", outName, got)
+	default:
 	}
 }

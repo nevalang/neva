@@ -24,9 +24,10 @@ func parseFileHandleID(msg runtime.Msg) (int64, error) {
 // storeAndSendFileHandle registers an opened file and sends its handle to Neva.
 //
 // file_open and file_create both transfer the opened *os.File into
-// runtime.FileHandles, then expose only the opaque handle ID downstream. If the
-// result cannot be delivered, no Neva node can close that new handle, so this
-// helper closes and removes it immediately to avoid leaking the process file.
+// runtime.FileHandles, then expose only the opaque handle ID downstream. If
+// runtime cancellation prevents sending the handle, no Neva node can close that
+// new handle, so this helper closes and removes it immediately to avoid leaking
+// the process file.
 func storeAndSendFileHandle(
 	ctx context.Context,
 	handles *runtime.FileHandles,
