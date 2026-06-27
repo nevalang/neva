@@ -952,7 +952,7 @@ func (a Analyzer) validateUnionLiteralPayload(
 	}
 
 	if unionLiteral.Data == nil {
-		return fmt.Errorf("tag %q requires a value of a defined type", unionLiteral.Tag)
+		return nil
 	}
 
 	dataType, err := a.inferConstValueType(*unionLiteral.Data, scope)

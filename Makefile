@@ -1,5 +1,6 @@
 # === Development ===
 GOLANGCI_LINT_VERSION ?= latest
+GOVULNCHECK_VERSION ?= v1.4.0
 
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
@@ -40,7 +41,7 @@ test-unit:
 
 .PHONY: vulncheck
 vulncheck:
-	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
 
 # check potential nil-derefs
 .PHONY: nilaway
