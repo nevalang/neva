@@ -54,5 +54,5 @@ func (c fileCreate) handleFileMessage(
 		return errOut.Send(ctx, errFromErr(err))
 	}
 
-	return sendFileHandle(ctx, c.handles, file, resOut, errOut)
+	return storeAndSendFileHandle(ctx, c.handles, file, resOut, errOut)
 }

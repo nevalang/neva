@@ -9,19 +9,19 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-func TestFileHandleID(t *testing.T) {
+func TestParseFileHandleID(t *testing.T) {
 	t.Parallel()
 
-	id, err := fileHandleID(runtime.NewIntMsg(42))
+	id, err := parseFileHandleID(runtime.NewIntMsg(42))
 	if err != nil {
-		t.Fatalf("fileHandleID() unexpected error = %v", err)
+		t.Fatalf("parseFileHandleID() unexpected error = %v", err)
 	}
 	if id != 42 {
-		t.Fatalf("fileHandleID() id = %d, want 42", id)
+		t.Fatalf("parseFileHandleID() id = %d, want 42", id)
 	}
 
-	if _, err := fileHandleID(runtime.NewStringMsg("bad")); err == nil {
-		t.Fatal("fileHandleID() expected type error")
+	if _, err := parseFileHandleID(runtime.NewStringMsg("bad")); err == nil {
+		t.Fatal("parseFileHandleID() expected type error")
 	}
 }
 

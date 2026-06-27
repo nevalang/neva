@@ -65,7 +65,7 @@ Names should inherit context from parent scope. Good naming eliminates need for 
   the networks.
 - Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible
-  (e.g. `c -> switch:case[0] -> fmt.Println`) to keep the dataflow compact and
+  (e.g. `c -> switch:case[0] -> println`) to keep the dataflow compact and
   easier to scan.
 - Prefer standard flow names: `sig` for trigger inputs, `res` for success
   outputs, and `err` for errors.
@@ -73,7 +73,7 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 Example:
 
 ```neva
-read:res -> strings.FromBytes -> :res
+read:res -> fromBytes -> :res
 ```
 
 ## Comments

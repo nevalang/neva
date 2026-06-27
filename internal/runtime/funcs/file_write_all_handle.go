@@ -53,7 +53,7 @@ func (c fileWriteAllHandle) handleFileMessage(
 	resOut runtime.SingleOutport,
 	errOut runtime.SingleOutport,
 ) bool {
-	handleID, err := fileHandleID(fileMsg.Msg)
+	handleID, err := parseFileHandleID(fileMsg.Msg)
 	if err != nil {
 		return errOut.Send(ctx, errFromErr(err))
 	}

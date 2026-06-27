@@ -13,15 +13,32 @@ const (
 	StderrFileHandleID int64 = 2
 )
 
-// FileHandles owns runtime file resources exposed to Neva as opaque integer handles.
+// FileHandles owns process files that Neva code addresses through opaque IDs.
+//
+// The generated Go runtime keeps one FileHandles table in the stdlib registry
+// and shares it between all file-related extern functions. The table only
+// protects handle lookup and lifecycle bookkeeping; actual file I/O happens on
+// the returned *os.File after Get releases the lock.
+//
+// This intentionally starts with one simple table instead of sharding. Get uses
+// a read lock, so concurrent reads/writes through already-open handles do not
+// block each other at the table level. Add and Close take the write lock because
+// they mutate the map and the next dynamic ID. If open/close churn becomes a
+// measured bottleneck, sharding can be added inside this type without changing
+// the public runtime API.
 type FileHandles struct {
 	// files maps Neva-visible handle IDs to live process files.
 	files map[int64]*os.File
-	// stdioHandleIDs marks process stdio handles that must not be closed by Neva.
+	// stdioHandleIDs marks process stdio handles owned by the host process.
+	// Neva may read/write these handles, but must not close them; the process and
+	// Go runtime own their lifetime.
 	stdioHandleIDs map[int64]struct{}
-	// nextID is the next dynamic handle ID returned by Add.
+	// nextID is a monotonic cursor for handles created by Open/Create. It is not
+	// round-robin and IDs are not reused, which keeps stale handle use visible as
+	// an error after Close removes the old entry.
 	nextID int64
-	// mu protects files and nextID.
+	// mu protects files, stdioHandleIDs, and nextID. Get takes RLock for a short
+	// map lookup; Add and Close take Lock because they modify the table.
 	mu sync.RWMutex
 }
 
@@ -45,6 +62,9 @@ func NewFileHandles() *FileHandles {
 }
 
 // Add stores file and returns a new opaque runtime handle ID.
+//
+// The caller transfers lifecycle ownership to FileHandles. User code must close
+// the returned ID through the file_close extern when it is done with the file.
 func (handles *FileHandles) Add(file *os.File) int64 {
 	handles.mu.Lock()
 	defer handles.mu.Unlock()
@@ -57,6 +77,10 @@ func (handles *FileHandles) Add(file *os.File) int64 {
 }
 
 // Get returns the file registered for handleID.
+//
+// The returned *os.File remains owned by FileHandles; callers may perform I/O on
+// it but must not close it directly. The lookup lock is released before return,
+// so long reads or writes do not hold the table lock.
 func (handles *FileHandles) Get(handleID int64) (*os.File, error) {
 	handles.mu.RLock()
 	defer handles.mu.RUnlock()
@@ -70,7 +94,12 @@ func (handles *FileHandles) Get(handleID int64) (*os.File, error) {
 }
 
 // Close removes and closes a dynamic file handle.
-// It returns an error for stdio, unknown, or already-closed handles.
+//
+// Close is intentionally not idempotent. A second close of the same dynamic ID
+// reports an unknown handle, matching Go's own "use after close is an error"
+// posture and making double-close bugs visible to Neva code through the err
+// outport. Stdio handles also return an error because their lifetime belongs to
+// the host process, not to the Neva program.
 func (handles *FileHandles) Close(handleID int64) error {
 	handles.mu.Lock()
 	if _, isStdio := handles.stdioHandleIDs[handleID]; isStdio {
