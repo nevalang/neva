@@ -7,6 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
+// singleInport resolves a named single inport and wraps setup errors uniformly.
 func singleInport(io runtime.IO, name string) (runtime.SingleInport, error) {
 	inport, err := io.In.Single(name)
 	if err != nil {
@@ -16,6 +17,7 @@ func singleInport(io runtime.IO, name string) (runtime.SingleInport, error) {
 	return inport, nil
 }
 
+// singleOutport resolves a named single outport and wraps setup errors uniformly.
 func singleOutport(io runtime.IO, name string) (runtime.SingleOutport, error) {
 	outport, err := io.Out.Single(name)
 	if err != nil {
@@ -25,6 +27,7 @@ func singleOutport(io runtime.IO, name string) (runtime.SingleOutport, error) {
 	return outport, nil
 }
 
+// runSignalLoop handles signal-triggered runtime functions.
 func runSignalLoop(
 	ctx context.Context,
 	sigIn runtime.SingleInport,
@@ -56,6 +59,7 @@ func runSignalLoop(
 	}
 }
 
+// createSignalLoop prepares a signal-triggered runtime function loop.
 func createSignalLoop(
 	rio runtime.IO,
 	withErr bool,
@@ -86,6 +90,7 @@ func createSignalLoop(
 	}, nil
 }
 
+// createUnaryLoop prepares a one-input runtime function loop.
 func createUnaryLoop(
 	rio runtime.IO,
 	inName string,
@@ -117,6 +122,7 @@ func createUnaryLoop(
 	}, nil
 }
 
+// createBinaryLoop prepares a two-input runtime function loop.
 func createBinaryLoop(
 	rio runtime.IO,
 	firstName string,
@@ -148,6 +154,7 @@ func createBinaryLoop(
 	}, nil
 }
 
+// runUnaryLoop handles runtime functions that consume one input per step.
 func runUnaryLoop(
 	ctx context.Context,
 	inputIn runtime.SingleInport,
@@ -180,6 +187,7 @@ func runUnaryLoop(
 	}
 }
 
+// runBinaryLoop handles runtime functions that consume two inputs per step.
 func runBinaryLoop(
 	ctx context.Context,
 	firstIn runtime.SingleInport,

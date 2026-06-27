@@ -5,14 +5,29 @@ import "testing"
 func TestArgsListMsg(t *testing.T) {
 	t.Parallel()
 
-	got := argsListMsg([]string{"neva", "run", "main"})
-	list := got.List()
-
-	if len(list) != 3 {
-		t.Fatalf("expected 3 args, got %d", len(list))
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{name: "empty", args: nil},
+		{name: "one", args: []string{"neva"}},
+		{name: "many", args: []string{"neva", "run", "main"}},
 	}
 
-	if list[0].Str() != "neva" || list[1].Str() != "run" || list[2].Str() != "main" {
-		t.Fatalf("unexpected args payload: %v", list)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			list := argsListMsg(tt.args).List()
+			if len(list) != len(tt.args) {
+				t.Fatalf("expected %d args, got %d", len(tt.args), len(list))
+			}
+
+			for i, want := range tt.args {
+				if got := list[i].Str(); got != want {
+					t.Fatalf("arg[%d] = %q, want %q", i, got, want)
+				}
+			}
+		})
 	}
 }

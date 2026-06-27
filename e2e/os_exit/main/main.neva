@@ -1,17 +1,16 @@
 import {
-    builtin
-    fmt
-    os
+	fmt
+	os
 }
 
 def Main(start any) (stop any) {
-    exit os.Exit
-    lock builtin.Lock<int>
-    scan fmt.Scanln
-    del builtin.Del
-    ---
-    :start -> [2 -> exit:code, scan, 2 -> lock:data]
-    scan:res -> lock:sig
-    scan:err -> del
-    lock:res -> :stop
+	exit os.Exit
+	lock Lock<int>
+	scan fmt.Scanln
+	del Del
+	---
+	:start -> [2 -> exit:code, scan, 2 -> lock:data]
+	scan:res -> lock:sig
+	scan:err -> del
+	lock -> :stop
 }

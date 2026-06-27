@@ -33,6 +33,10 @@ Use this skill for changes touching `*.go`.
 - Binary runtime funcs in `internal/runtime/funcs/**` must receive `left` and
   `right` inputs concurrently; do not add sequential two-input receives in
   operator helpers or creators.
+- Runtime function changes must include focused unit tests, not only
+  benchmarks or e2e coverage. Prefer table-driven tests that cover the normal
+  path, error path, and meaningful corner cases for each public runtime
+  behavior touched.
 
 ## Comments
 

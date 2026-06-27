@@ -9,18 +9,18 @@ def Main(start any) (stop any) {
 	getenv os.Getenv
 	lookup_env os.LookupEnv
 	expand_env os.ExpandEnv
-	p1 fmt.Println<string>
-	p2 fmt.Println<bool>
-	p3 fmt.Println<string>
+	print_value fmt.Println<string>
+	print_exists fmt.Println<bool>
+	print_expanded fmt.Println<string>
 	panic runtime.Panic
 	---
 	:start -> [
 		'NEVA_E2E_OS_KEY' -> setenv:key,
 		'value' -> setenv:value
 	]
-	setenv:res -> 'NEVA_E2E_OS_KEY' -> getenv -> p1
-	p1:res -> 'NEVA_E2E_OS_MISSING' -> lookup_env -> .exists -> p2
-	p2:res -> '$NEVA_E2E_OS_KEY' -> expand_env -> p3
-	p3:res -> :stop
-	[setenv:err, p1:err, p2:err, p3:err] -> panic
+	setenv:res -> 'NEVA_E2E_OS_KEY' -> getenv -> print_value
+	print_value:res -> 'NEVA_E2E_OS_MISSING' -> lookup_env -> .exists -> print_exists
+	print_exists:res -> '$NEVA_E2E_OS_KEY' -> expand_env -> print_expanded
+	print_expanded:res -> :stop
+	[setenv:err, print_value:err, print_exists:err, print_expanded:err] -> panic
 }

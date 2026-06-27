@@ -9,8 +9,8 @@ def Main(start any) (stop any) {
 	print fmt.Println<list<string>>
 	panic runtime.Panic
 	---
-	:start -> args:sig
-	args:res -> print
+	:start -> args
+	args -> print
 	print:res -> :stop
-	[print:err] -> panic
+	print:err -> panic
 }

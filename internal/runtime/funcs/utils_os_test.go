@@ -7,7 +7,7 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// os_helpers_test.go contains unit tests for shared std/os runtime helpers.
+// utils_os_test.go contains unit tests for shared std/os runtime helpers.
 
 func TestCreateBinaryLoopReceivesInputsConcurrently(t *testing.T) {
 	t.Parallel()

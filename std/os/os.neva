@@ -1,13 +1,16 @@
+// LookupEnvResult is the Neva representation of Go's os.LookupEnv return pair.
 pub type LookupEnvResult struct {
 	value string
 	exists bool
 }
 
+// DirEntry contains the stable fields exposed from Go's os.DirEntry.
 pub type DirEntry struct {
 	name string
 	isDir bool
 }
 
+// FileInfo contains portable fields exposed from Go's os.FileInfo.
 pub type FileInfo struct {
 	name string
 	size int
@@ -68,7 +71,7 @@ pub def Chdir(path string) (res any, err error)
 #extern(os_getpid)
 pub def Getpid(sig any) (res int)
 
-// Getppid returns parent process identifier.
+// Getppid returns the parent process identifier.
 #extern(os_getppid)
 pub def Getppid(sig any) (res int)
 
