@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -48,6 +49,9 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 
 			data, err := io.ReadAll(f)
 			if err != nil {
+				if closeErr := f.Close(); closeErr != nil {
+					err = fmt.Errorf("read file: %w; close file: %w", err, closeErr)
+				}
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}

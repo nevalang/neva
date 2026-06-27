@@ -1,3 +1,6 @@
+// File is an opaque file-handle token returned by Open/Create.
+pub type File int
+
 // ReadAll reads the file named by filename and returns the contents.
 // It returns an error if the file does not exist or cannot be read.
 // You don't have to think about closing the file, it's done under the hood.
@@ -11,3 +14,39 @@ pub def ReadAll(filename string) (res bytes, err error)
 // You don't have to think about closing the file, it's done under the hood.
 #extern(write_all)
 pub def WriteAll(filename string, data bytes) (res any, err error)
+
+// Open opens a file for reading and returns a file handle.
+// Handles must be closed explicitly with Close.
+#extern(file_open)
+pub def Open(filename string) (res File, err error)
+
+// Create creates (or truncates) a file for writing and returns a file handle.
+// Handles must be closed explicitly with Close.
+#extern(file_create)
+pub def Create(filename string) (res File, err error)
+
+// Close releases a file handle returned by Open/Create.
+#extern(file_close)
+pub def Close(file File) (res any, err error)
+
+// Stdin returns the process stdin file handle.
+#extern(file_stdin)
+pub def Stdin(sig any) (res File)
+
+// Stdout returns the process stdout file handle.
+#extern(file_stdout)
+pub def Stdout(sig any) (res File)
+
+// Stderr returns the process stderr file handle.
+#extern(file_stderr)
+pub def Stderr(sig any) (res File)
+
+// ReadAllFile reads all bytes from a previously opened file handle.
+// It also passes the same handle further so it can be chained into Close.
+#extern(file_read_all)
+pub def ReadAllFile(file File) (res bytes, handle File, err error)
+
+// WriteAllFile writes the provided bytes to a previously created file handle.
+// It returns the same handle so it can be chained into Close.
+#extern(file_write_all)
+pub def WriteAllFile(file File, data bytes) (res File, err error)

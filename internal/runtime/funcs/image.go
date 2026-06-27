@@ -71,10 +71,6 @@ func (i imageMsg) createImage() image.Image {
 	return im
 }
 
-type pixelStreamMsg struct {
-	pixelMsg
-}
-
 func clampUint16(value int64) uint16 {
 	if value < 0 {
 		return 0

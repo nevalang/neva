@@ -8,6 +8,10 @@ import (
 
 //nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewRegistry() map[string]runtime.FuncCreator {
+	// File-handle components share one runtime table per registry so handles
+	// remain valid across Open/Create/ReadAllFile/WriteAllFile/Close nodes.
+	fileHandles := runtime.NewFileHandles()
+
 	return map[string]runtime.FuncCreator{
 		"new":     newV2{},
 		"del":     del{},
@@ -134,11 +138,19 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"printf":                    printf{},
 		"print":                     printFunc{},
 
-		"read_all":     fileReadAll{},
-		"write_all":    writeAll{},
-		"http_get":     httpGet{},
-		"image_encode": imageEncode{},
-		"image_new":    imageNew{},
+		"read_all":       fileReadAll{},
+		"write_all":      writeAll{},
+		"file_open":      fileOpen{handles: fileHandles},
+		"file_create":    fileCreate{handles: fileHandles},
+		"file_close":     fileClose{handles: fileHandles},
+		"file_read_all":  fileReadAllHandle{handles: fileHandles},
+		"file_write_all": fileWriteAllHandle{handles: fileHandles},
+		"file_stdin":     fileStdin{},
+		"file_stdout":    fileStdout{},
+		"file_stderr":    fileStderr{},
+		"http_get":       httpGet{},
+		"image_encode":   imageEncode{},
+		"image_new":      imageNew{},
 
 		"wait_group": waitGroup{},
 
