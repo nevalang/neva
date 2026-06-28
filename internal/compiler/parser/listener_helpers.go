@@ -1314,6 +1314,12 @@ func (s *treeShapeListener) parseSenderSide(
 		toParse = append(toParse, singleSender)
 	} else {
 		toParse = mulSenders.AllSingleSenderSide()
+		if len(toParse) == 1 {
+			return nil, &compiler.Error{
+				Message: "Multiple sender expression must contain at least two senders",
+				Meta:    &meta,
+			}
+		}
 	}
 
 	parsedSenders := []src.ConnectionSender{}
