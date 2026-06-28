@@ -1,4 +1,6 @@
-import { runtime }
+import {
+	runtime
+}
 
 // Benchmarks builtin component `Get` in one-shot mode.
 const value dict<string> = {

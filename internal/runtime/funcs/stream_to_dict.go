@@ -34,24 +34,25 @@ func (streamToDict) Create(
 				return
 			}
 
-			// Static typing guarantees stream payload is streams.Entry<T>.
-			streamItemMsg := dataMsg.Struct()
-			entryMsg := streamItemMsg.Get("data").Struct()
-			key := entryMsg.Get("key").Str()
-			valueMsg := entryMsg.Get("value")
+			switch {
+			case runtime.IsStreamOpen(dataMsg):
+				dict = map[string]runtime.Msg{}
+				continue
+			case runtime.IsStreamData(dataMsg):
+				entryMsg := runtime.StreamDataValue(dataMsg).Struct()
+				key := entryMsg.Get("key").Str()
+				valueMsg := entryMsg.Get("value")
 
-			// Duplicate key policy: last message for the key wins.
-			dict[key] = valueMsg
-
-			if !streamItemMsg.Get("last").Bool() {
+				// Duplicate key policy: last message for the key wins.
+				dict[key] = valueMsg
+				continue
+			case !runtime.IsStreamClose(dataMsg):
 				continue
 			}
 
 			if !resOut.Send(ctx, runtime.NewDictMsg(dict)) {
 				return
 			}
-
-			dict = map[string]runtime.Msg{}
 		}
 	}, nil
 }

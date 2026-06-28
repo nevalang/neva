@@ -1,19 +1,26 @@
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(T) (Y)
 
-// Map maps one stream onto another.
-// Unlike ForEach, it does not block the stream. As soon as one item processed,
-// it sends an item downstream and processes the next one.
-// It's can receive next message before previous one is processed,
-// so it must never be used with side-effects.
+// Map maps one stream onto another while preserving stream event order.
+//
+// It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
+// Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-    handler IMapHandler<T, Y>
-    wrap Struct<stream<Y>>
-    ---
-    :data -> [
-        .idx -> wrap:idx,
-        .last -> wrap:last,
-        .data -> handler -> wrap:data
-    ]
-    wrap -> :res
+	controller MapController<T, Y>
+	handler IMapHandler<T, Y>
+	---
+	:data -> controller:data
+	controller:item -> handler
+	handler -> controller:mapped
+	controller:res -> :res
 }
+
+// MapController serializes item mapping and stream event forwarding.
+//
+// @inport data Input stream.
+// @inport mapped Handler output for the item emitted on item.
+//
+// @outport item Payload to pass to the mapper.
+// @outport res Mapped stream.
+#extern(stream_map_controller)
+def MapController<T, Y>(data stream<T>, mapped Y) (item T, res stream<Y>)

@@ -9,27 +9,22 @@ import (
 
 type streamProduct struct{}
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamProduct) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	firstIn, err := io.In.Single("first")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	secondIn, err := io.In.Single("second")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	resOut, err := io.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -42,10 +37,14 @@ func (streamProduct) Create(
 				secondData        = []runtime.Msg{}
 			)
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 
 			wg.Go(func() {
+				firstOk = waitStreamOpen(ctx, firstIn)
+				if !firstOk {
+					return
+				}
+			readFirst:
 				for {
 					var firstMsg runtime.Msg
 					firstMsg, firstOk = firstIn.Receive(ctx)
@@ -53,16 +52,21 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := firstMsg.Struct()
-					firstData = append(firstData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
-						break
+					switch {
+					case runtime.IsStreamData(firstMsg):
+						firstData = append(firstData, runtime.StreamDataValue(firstMsg))
+					case runtime.IsStreamClose(firstMsg):
+						break readFirst
 					}
 				}
 			})
 
 			wg.Go(func() {
+				secondOk = waitStreamOpen(ctx, secondIn)
+				if !secondOk {
+					return
+				}
+			readSecond:
 				for {
 					var secondMsg runtime.Msg
 					secondMsg, secondOk = secondIn.Receive(ctx)
@@ -70,11 +74,11 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := secondMsg.Struct()
-					secondData = append(secondData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
-						break
+					switch {
+					case runtime.IsStreamData(secondMsg):
+						secondData = append(secondData, runtime.StreamDataValue(secondMsg))
+					case runtime.IsStreamClose(secondMsg):
+						break readSecond
 					}
 				}
 			})
@@ -85,22 +89,26 @@ func (streamProduct) Create(
 				return
 			}
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			for i, firstMsg := range firstData {
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				for j, secondMsg := range secondData {
-					resOut.Send(
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+				return
+			}
+
+			for _, firstMsg := range firstData {
+				for _, secondMsg := range secondData {
+					if !resOut.Send(
 						ctx,
-						streamItem(
-							runtime.NewStructMsg([]runtime.StructField{
-								runtime.NewStructField("first", firstMsg),
-								runtime.NewStructField("second", secondMsg),
-							}),
-							int64(i*len(secondData)+j),
-							i == len(firstData)-1 && j == len(secondData)-1,
-						),
-					)
+						runtime.NewStreamDataMsg(runtime.NewStructMsg([]runtime.StructField{
+							runtime.NewStructField("first", firstMsg),
+							runtime.NewStructField("second", secondMsg),
+						})),
+					) {
+						return
+					}
 				}
+			}
+
+			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
+				return
 			}
 		}
 	}, nil

@@ -8,10 +8,7 @@ import (
 )
 
 func Test(t *testing.T) {
+	// Regression: union literal payloads must be checked before generic receivers erase the concrete tag type.
 	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
-	require.Contains(
-		t,
-		stderr,
-		"main/main.neva:6:1: array outport 'fanOut:data' is used incorrectly: slot 1 is missing\n",
-	)
+	require.Contains(t, stderr, "Union literal payload type")
 }

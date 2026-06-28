@@ -89,6 +89,34 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
 }
 
+func TestParser_ParseFile_ImportBlockRequiresMultilineItems(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "single line import",
+			text: `import { fmt }`,
+		},
+		{
+			name: "comma separated imports",
+			text: `
+				import {
+					fmt, runtime
+				}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+
+			require.NotNil(t, err)
+		})
+	}
+}
+
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
 	text := []byte(`
 		def C1() () {
@@ -962,16 +990,21 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 	net := got.Entities["Main"].Component[0].Net
 	require.NotEmpty(t, net)
 
-	var foundNewStreamChain bool
+	var foundStreamItemChain bool
 	var foundErrFanIn bool
 
 	for _, conn := range net {
-		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newStream" &&
-			conn.Senders[0].PortAddr.Port == "s" {
-			require.NotNil(t, conn.Receivers[0].PortAddr)
-			require.Equal(t, "new", conn.Receivers[0].PortAddr.Node)
-			require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-			foundNewStreamChain = true
+		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newPixel" &&
+			conn.Senders[0].PortAddr.Port == "" {
+			require.NotNil(t, conn.Receivers[0].ChainedConnection)
+			itemChain := conn.Receivers[0].ChainedConnection
+			require.Equal(t, "item", itemChain.Senders[0].PortAddr.Node)
+			require.Equal(t, "", itemChain.Senders[0].PortAddr.Port)
+
+			require.NotNil(t, itemChain.Receivers[0].PortAddr)
+			require.Equal(t, "new", itemChain.Receivers[0].PortAddr.Node)
+			require.Equal(t, "", itemChain.Receivers[0].PortAddr.Port)
+			foundStreamItemChain = true
 		}
 
 		if len(conn.Senders) == 3 && len(conn.Receivers) == 1 &&
@@ -986,7 +1019,7 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 		}
 	}
 
-	require.True(t, foundNewStreamChain)
+	require.True(t, foundStreamItemChain)
 	require.True(t, foundErrFanIn)
 }
 

@@ -35,19 +35,20 @@ func (s streamToList) Create(
 				return
 			}
 
-			item := msg.Struct()
-
-			list = append(list, item.Get("data"))
-
-			if !item.Get("last").Bool() {
+			switch {
+			case runtime.IsStreamOpen(msg):
+				list = list[:0]
+				continue
+			case runtime.IsStreamData(msg):
+				list = append(list, runtime.StreamDataValue(msg))
+				continue
+			case !runtime.IsStreamClose(msg):
 				continue
 			}
 
 			if !resOut.Send(ctx, runtime.NewListMsg(list)) {
 				return
 			}
-
-			list = []runtime.Msg{}
 		}
 	}, nil
 }

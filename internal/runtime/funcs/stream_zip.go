@@ -8,82 +8,115 @@ import (
 
 type streamZip struct{}
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamZip) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	leftIn, err := io.In.Single("left")
+	leftIn, err := singleInport(runtimeIO, "left")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	rightIn, err := io.In.Single("right")
+	rightIn, err := singleInport(runtimeIO, "right")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var idx int64
 		for {
-			leftMsg, rightMsg, ok := receive2(ctx, leftIn, rightIn)
-			if !ok {
+			if !waitStreamOpen(ctx, leftIn) {
+				return
+			}
+			if !waitStreamOpen(ctx, rightIn) {
+				return
+			}
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
 				return
 			}
 
-			leftItem := leftMsg.Struct()
-			rightItem := rightMsg.Struct()
-
-			leftLast := leftItem.Get("last").Bool()
-			rightLast := rightItem.Get("last").Bool()
-
-			zipped := runtime.NewStructMsg(
-				[]runtime.StructField{
-					runtime.NewStructField("left", leftItem.Get("data")),
-					runtime.NewStructField("right", rightItem.Get("data")),
-				},
-			)
-
-			last := leftLast || rightLast
-
-			if !resOut.Send(ctx, streamItem(zipped, idx, last)) {
-				return
-			}
-
-			idx++
-
-			if last {
-				if !leftLast {
-					drainStream(ctx, leftIn)
+			for {
+				leftMsg, leftClosed, received := receiveStreamDataOrClose(ctx, leftIn)
+				if !received {
+					return
 				}
 
-				if !rightLast {
-					drainStream(ctx, rightIn)
+				rightMsg, rightClosed, received := receiveStreamDataOrClose(ctx, rightIn)
+				if !received {
+					return
 				}
 
-				return
+				if leftClosed || rightClosed {
+					if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
+						return
+					}
+					if !leftClosed {
+						drainStreamUntilClose(ctx, leftIn)
+					}
+					if !rightClosed {
+						drainStreamUntilClose(ctx, rightIn)
+					}
+					break
+				}
+
+				zipped := runtime.NewStructMsg(
+					[]runtime.StructField{
+						runtime.NewStructField("left", leftMsg),
+						runtime.NewStructField("right", rightMsg),
+					},
+				)
+
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(zipped)) {
+					return
+				}
 			}
 		}
 	}, nil
 }
 
-func drainStream(ctx context.Context, in runtime.SingleInport) {
+type streamReceiver interface {
+	Receive(ctx context.Context) (runtime.OrderedMsg, bool)
+}
+
+func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
+	for {
+		msg, ok := in.Receive(ctx)
+		if !ok {
+			return false
+		}
+		if runtime.IsStreamOpen(msg.Msg) {
+			return true
+		}
+	}
+}
+
+//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
+func receiveStreamDataOrClose(ctx context.Context, in streamReceiver) (runtime.Msg, bool, bool) {
+	for {
+		msg, received := in.Receive(ctx)
+		if !received {
+			return nil, false, false
+		}
+		switch {
+		case runtime.IsStreamData(msg.Msg):
+			return runtime.StreamDataValue(msg.Msg), false, true
+		case runtime.IsStreamClose(msg.Msg):
+			return nil, true, true
+		}
+	}
+}
+
+func drainStreamUntilClose(ctx context.Context, in streamReceiver) {
 	for {
 		msg, ok := in.Receive(ctx)
 		if !ok {
 			return
 		}
-
-		if msg.Struct().Get("last").Bool() {
+		if runtime.IsStreamClose(msg.Msg) {
 			return
 		}
 	}

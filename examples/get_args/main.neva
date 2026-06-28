@@ -1,4 +1,9 @@
-import { os, fmt, runtime, streams }
+import {
+	os
+	fmt
+	runtime
+	streams
+}
 
 def Main(start any) (stop any) {
         args os.Args

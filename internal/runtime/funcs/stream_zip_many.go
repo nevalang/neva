@@ -10,21 +10,17 @@ import (
 
 type streamZipMany struct{}
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (streamZipMany) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	dataIn, err := io.In.Array("data")
+	dataIn, err := runtimeIO.In.Array("data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
@@ -40,10 +36,8 @@ func (streamZipMany) Create(
 			}
 
 			states := make([]streamState, streamsCount)
-			var shouldStop atomic.Bool
 			var aborted atomic.Bool
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var wg sync.WaitGroup
 			wg.Add(streamsCount)
 
@@ -55,6 +49,11 @@ func (streamZipMany) Create(
 
 					collected := make([]runtime.Msg, 0)
 
+					if !waitStreamOpen(ctx, &dataInSlot{arr: dataIn, idx: idx}) {
+						aborted.Store(true)
+						return
+					}
+
 					for {
 						msg, ok := dataIn.Receive(ctx, idx)
 						if !ok {
@@ -62,11 +61,10 @@ func (streamZipMany) Create(
 							return
 						}
 
-						item := msg.Struct()
-						collected = append(collected, item.Get("data"))
-
-						if item.Get("last").Bool() {
-							shouldStop.Store(true)
+						switch {
+						case runtime.IsStreamData(msg):
+							collected = append(collected, runtime.StreamDataValue(msg))
+						case runtime.IsStreamClose(msg):
 							states[idx] = streamState{data: collected}
 							return
 						}
@@ -87,28 +85,33 @@ func (streamZipMany) Create(
 				}
 			}
 
-			//nolint:intrange // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			for idx := 0; idx < count; idx++ {
+			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+				return
+			}
+
+			for idx := range count {
 				zipped := make([]runtime.Msg, streamsCount)
 				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(
-					ctx,
-					streamItem(
-						runtime.NewListMsg(zipped),
-						int64(idx),
-						idx == count-1,
-					),
-				) {
+				if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewListMsg(zipped))) {
 					return
 				}
 			}
 
-			if shouldStop.Load() || count == 0 {
+			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
 				return
 			}
 		}
 	}, nil
+}
+
+type dataInSlot struct {
+	arr runtime.ArrayInport
+	idx int
+}
+
+func (slot *dataInSlot) Receive(ctx context.Context) (runtime.OrderedMsg, bool) {
+	return slot.arr.Receive(ctx, slot.idx)
 }

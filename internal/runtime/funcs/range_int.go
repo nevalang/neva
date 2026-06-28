@@ -8,69 +8,83 @@ import (
 
 type rangeInt struct{}
 
-//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (rangeInt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	fromIn, err := io.In.Single("from")
+func (rangeInt) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	fromIn, err := singleInport(runtimeIO, "from")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	toIn, err := io.In.Single("to")
+	toIn, err := singleInport(runtimeIO, "to")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			fromMsg, toMsg, ok := receive2(ctx, fromIn, toIn)
-			if !ok {
+			fromMsg, toMsg, received := receive2(ctx, fromIn, toIn)
+			if !received {
 				return
 			}
 
-			var (
-				from = fromMsg.Int()
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				to  = toMsg.Int()
-				idx = int64(0)
-			)
+			from := fromMsg.Int()
+			toValue := toMsg.Int()
 
-			if from < to {
-				for data := from; data < to; data++ {
-					item := streamItem(
-						runtime.NewIntMsg(data),
-						idx,
-						data == to-1,
-					)
-
-					if !resOut.Send(ctx, item) {
-						return
-					}
-
-					idx++
-				}
-			} else {
-				for data := from; data > to; data-- {
-					item := streamItem(
-						runtime.NewIntMsg(data),
-						idx,
-						data == to+1,
-					)
-
-					if !resOut.Send(ctx, item) {
-						return
-					}
-
-					idx++
-				}
+			if !sendIntRange(ctx, resOut, from, toValue) {
+				return
 			}
 		}
 	}, nil
+}
+
+func sendIntRange(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	from, toValue int64,
+) bool {
+	if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+		return false
+	}
+
+	if from < toValue {
+		return sendAscendingIntRange(ctx, resOut, from, toValue)
+	}
+
+	if from > toValue {
+		return sendDescendingIntRange(ctx, resOut, from, toValue)
+	}
+
+	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+}
+
+func sendAscendingIntRange(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	from, toValue int64,
+) bool {
+	for data := from; data < toValue; data++ {
+		if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewIntMsg(data))) {
+			return false
+		}
+	}
+
+	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+}
+
+func sendDescendingIntRange(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	from, toValue int64,
+) bool {
+	for data := from; data > toValue; data-- {
+		if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewIntMsg(data))) {
+			return false
+		}
+	}
+
+	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
 }
