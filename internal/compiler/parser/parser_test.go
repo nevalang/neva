@@ -48,6 +48,21 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	require.Equal(t, "stop", chainEnd.Port)
 }
 
+func TestParser_ParseFile_SingleSenderMultipleExpressionRejected(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			[foo] -> bar
+		}`,
+	)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+
+	require.Empty(t, got.Entities)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "Multiple sender expression must contain at least two senders")
+}
+
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
 		def C1() () {

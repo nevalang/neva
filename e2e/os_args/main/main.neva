@@ -1,0 +1,16 @@
+import {
+	fmt
+	os
+	runtime
+}
+
+def Main(start any) (stop any) {
+	args os.Args
+	print fmt.Println<list<string>>
+	panic runtime.Panic
+	---
+	:start -> args
+	args -> print
+	print:res -> :stop
+	print:err -> panic
+}
