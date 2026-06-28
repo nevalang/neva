@@ -2,30 +2,9 @@ package funcs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
-
-// singleInport resolves a named single inport and wraps setup errors uniformly.
-func singleInport(io runtime.IO, name string) (runtime.SingleInport, error) {
-	inport, err := io.In.Single(name)
-	if err != nil {
-		return runtime.SingleInport{}, fmt.Errorf("get inport %q: %w", name, err)
-	}
-
-	return inport, nil
-}
-
-// singleOutport resolves a named single outport and wraps setup errors uniformly.
-func singleOutport(io runtime.IO, name string) (runtime.SingleOutport, error) {
-	outport, err := io.Out.Single(name)
-	if err != nil {
-		return runtime.SingleOutport{}, fmt.Errorf("get outport %q: %w", name, err)
-	}
-
-	return outport, nil
-}
 
 // runSignalLoop handles signal-triggered runtime functions.
 func runSignalLoop(
