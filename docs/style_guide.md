@@ -22,6 +22,8 @@ Use tabs over spaces.
 
 ### Imports
 
+Use a single import block per file.
+
 Group imports by type: stdlib, third-party, local. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions
@@ -67,6 +69,8 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Prefer chaining connections inline when possible
   (e.g. `c -> switch:case[0] -> println`) to keep the dataflow compact and
   easier to scan.
+- Treat dense networks with more than 5-6 connections as a smell. Prefer
+  extracting a named helper component when it improves scanability.
 - Prefer standard flow names: `sig` for trigger inputs, `res` for success
   outputs, and `err` for errors.
 
@@ -81,6 +85,8 @@ read:res -> fromBytes -> :res
 Good comments explain why.
 
 Use leading `//` block immediately above entity.
+
+Exported entities should have at least a short leading comment explaining their purpose.
 
 - Free text is allowed and should describe intent/constraints.
 - Use `@inport <name> <text>` for inport semantics.
