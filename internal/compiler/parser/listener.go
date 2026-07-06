@@ -23,6 +23,21 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 	s.state.Imports[alias] = imp
 }
 
+func (s *treeShapeListener) EnterImportStmt(actx *generated.ImportStmtContext) {
+	s.state.ImportBlocks = append(s.state.ImportBlocks, core.Meta{
+		Text: actx.GetText(),
+		Start: core.Position{
+			Line:   actx.GetStart().GetLine(),
+			Column: actx.GetStart().GetColumn(),
+		},
+		Stop: core.Position{
+			Line:   actx.GetStop().GetLine(),
+			Column: actx.GetStop().GetColumn(),
+		},
+		Location: s.loc,
+	})
+}
+
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
 	typeDef := actx.TypeDef()
 	if typeDef == nil {

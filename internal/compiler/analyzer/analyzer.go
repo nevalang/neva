@@ -157,9 +157,14 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	// preallocate
 	analyzedFiles := make(map[string]src.File, len(pkg))
 	for fileName, file := range pkg {
+		if err := a.validateFileImports(fileName, file, *scope.Location()); err != nil {
+			return nil, err
+		}
+
 		analyzedFiles[fileName] = src.File{
-			Imports:  file.Imports,
-			Entities: make(map[string]src.Entity, len(file.Entities)),
+			Imports:      file.Imports,
+			ImportBlocks: file.ImportBlocks,
+			Entities:     make(map[string]src.Entity, len(file.Entities)),
 		}
 	}
 
@@ -181,6 +186,24 @@ func (a Analyzer) analyzePkg(pkg src.Package, scope src.Scope) (src.Package, *co
 	}
 
 	return analyzedFiles, nil
+}
+
+func (a Analyzer) validateFileImports(fileName string, file src.File, location core.Location) *compiler.Error {
+	if len(file.ImportBlocks) <= 1 {
+		return nil
+	}
+
+	meta := file.ImportBlocks[1]
+	meta.Location = core.Location{
+		ModRef:   location.ModRef,
+		Package:  location.Package,
+		Filename: fileName,
+	}
+
+	return &compiler.Error{
+		Message: "file must have at most one import statement",
+		Meta:    &meta,
+	}
 }
 
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

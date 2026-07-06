@@ -55,6 +55,27 @@ func TestAnalyzeConstStringLiteralAllowed(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestAnalyzePkgRejectsMultipleImportStatements(t *testing.T) {
+	// Imports should stay grouped into a single block to keep file dependencies scannable.
+	a := testAnalyzer(t)
+	scope := testScope(t)
+
+	_, err := a.analyzePkg(src.Package{
+		"main.neva": {
+			ImportBlocks: []core.Meta{
+				{Text: "import { fmt }"},
+				{Text: "import { streams }"},
+			},
+			Imports:  map[string]src.Import{},
+			Entities: map[string]src.Entity{},
+		},
+	}, scope)
+
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "at most one import statement")
+	require.Equal(t, "main.neva", err.Meta.Location.Filename)
+}
+
 func testAnalyzer(t *testing.T) Analyzer {
 	t.Helper()
 

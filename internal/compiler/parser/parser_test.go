@@ -117,6 +117,23 @@ func TestParser_ParseFile_ImportBlockRequiresMultilineItems(t *testing.T) {
 	}
 }
 
+func TestParser_ParseFile_TracksImportBlocks(t *testing.T) {
+	p := New()
+
+	file, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+		import {
+			fmt
+		}
+
+		import {
+			streams
+		}
+	`))
+
+	require.Nil(t, err)
+	require.Len(t, file.ImportBlocks, 2)
+}
+
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
 	text := []byte(`
 		def C1() () {
