@@ -35,7 +35,16 @@ Default output is a **draft** GitHub release, not immediate publication.
 4. Collect merged PRs in the release window.
    - determine range from previous tag (for example `vX.Y.Z..origin/main`)
    - gather merged PR numbers and read each PR description (`gh pr view`)
-5. Draft release notes.
+5. Bump repository version references.
+   - update `pkg/version.go` to the next release version without the `v` prefix
+   - update checked-in Neva manifests and examples that pin the current language version
+     (`std/neva.yml`, `examples/neva.yml`, `benchmarks/neva.yml`, `e2e/**/neva.yml`,
+     and internal test manifests)
+   - update docs and tests that show or assert the current version
+   - update generated headers only when they embed the current version string
+   - run `rg "v?X\\.Y\\.Z"` for the previous version and inspect every remaining hit;
+     only leave historical changelog/release-note references intentionally
+6. Draft release notes.
    - keep style concise and factual
    - include: theme/title, summary, key sections, related PR list, full changelog compare link
    - if changes are mostly internal, say that directly
@@ -43,14 +52,14 @@ Default output is a **draft** GitHub release, not immediate publication.
      - CLI changes: add at least one command snippet showing new command/flag usage
      - language changes: add at least one Nevalang code snippet
    - keep examples small; full compilable wrappers are optional
-6. Build assets locally from clean main state.
+7. Build assets locally from clean main state.
    - `make build`
    - verify expected platform binaries are present
    - compute checksums with `shasum -a 256`
-7. Create draft release with assets.
+8. Create draft release with assets.
    - `gh release create <tag> <assets...> --target main --title <tag> --notes-file <file> --draft`
    - verify metadata and uploaded assets via `gh release view <tag> --json ...`
-8. Report back.
+9. Report back.
    - release URL
    - included PRs
    - asset names and checksums
