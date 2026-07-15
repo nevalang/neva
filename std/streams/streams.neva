@@ -20,7 +20,7 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // must remain whole stream elements.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
-// Item creates a stream that contains exactly one Data item.
+// Just creates a stream that contains exactly one Data item.
 //
 // This is useful when an API expects a stream but the producer has one value,
 // for example when adapting scalar data to a stream combinator.
@@ -28,8 +28,8 @@ pub def FromString(data string) (res stream<string>)
 // @inport data Value to emit as the only Data item.
 //
 // @outport res Stream that emits Open, Data(data), and Close.
-#extern(stream_item)
-pub def Item<T>(data T) (res stream<T>)
+#extern(stream_just)
+pub def Just<T>(data T) (res stream<T>)
 
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.

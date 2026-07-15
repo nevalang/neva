@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type streamItem struct{}
+type streamJust struct{}
 
-func (streamItem) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamJust) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
