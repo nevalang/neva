@@ -111,7 +111,6 @@ func (a Analyzer) analyzeReceiver(
 	}
 }
 
-//nolint:gocognit // Receiver validation combines generic, Union:data, and pattern-port checks.
 func (a Analyzer) analyzePortAddrReceiver(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
@@ -155,26 +154,12 @@ func (a Analyzer) analyzePortAddrReceiver(
 
 	// Validate all outer senders that feed the chain head (fan-in into the chain start).
 	// Example: [a, b] -> x -> y  => both a and b must be compatible with x's inport.
-	for senderIndex, resolvedSenderType := range resolvedSenderTypes {
-		isPattern, err := a.isUnionTagPatternReceiverSender(
-			&analyzedSenders[senderIndex],
-			&typeExpr,
-			&portAddr,
-			nodes,
-			scope,
-		)
-		if err != nil {
-			return err
-		}
-		if isPattern {
-			continue
-		}
-
+	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, typeExpr, scope); err != nil {
 			return &compiler.Error{
 				Message: fmt.Sprintf(
 					"Incompatible types: %v -> %v: %v",
-					analyzedSenders[senderIndex], portAddr, err.Error(),
+					analyzedSenders[i], portAddr, err.Error(),
 				),
 				Meta: &portAddr.Meta,
 			}
@@ -207,33 +192,6 @@ func (a Analyzer) analyzePortAddrReceiver(
 	return nil
 }
 
-// isUnionTagPatternPort reports whether portAddr receives a union tag rather than a union value.
-func isUnionTagPatternPort(portAddr *src.PortAddr, nodes map[string]src.Node) bool {
-	if portAddr.Port == "case" && isSwitchCasePort(*portAddr, nodes) {
-		return true
-	}
-
-	node, ok := nodes[portAddr.Node]
-	return ok && portAddr.Port == "tag" && isUnionNode(node)
-}
-
-// isUnionTagPatternReceiverSender validates a tag-only union literal at a pattern port.
-func (a Analyzer) isUnionTagPatternReceiverSender(
-	sender *src.ConnectionSender,
-	receiverType *ts.Expr,
-	portAddr *src.PortAddr,
-	nodes map[string]src.Node,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (bool, *compiler.Error) {
-	if !isUnionTagPatternPort(portAddr, nodes) {
-		return false, nil
-	}
-
-	return a.validateUnionTagPatternSender(sender, receiverType, scope)
-}
-
-//nolint:gocognit // Chain validation mirrors direct receiver validation before recursive analysis.
 func (a Analyzer) analyzeChainedConnectionReceiver(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	chainedConn src.Connection,
@@ -269,28 +227,12 @@ func (a Analyzer) analyzeChainedConnectionReceiver(
 		return src.Connection{}, err
 	}
 
-	for senderIndex, resolvedSenderType := range resolvedSenderTypes {
-		if chainHeadSender.PortAddr != nil {
-			isPattern, err := a.isUnionTagPatternReceiverSender(
-				&analyzedSenders[senderIndex],
-				&chainHeadType,
-				chainHeadSender.PortAddr,
-				nodes,
-				scope,
-			)
-			if err != nil {
-				return src.Connection{}, err
-			}
-			if isPattern {
-				continue
-			}
-		}
-
+	for i, resolvedSenderType := range resolvedSenderTypes {
 		if err := a.resolver.IsSubtypeOf(*resolvedSenderType, chainHeadType, scope); err != nil {
 			return src.Connection{}, &compiler.Error{
 				Message: fmt.Sprintf(
 					"Incompatible types: %v -> %v: %v",
-					analyzedSenders[senderIndex], chainHeadSender, err.Error(),
+					analyzedSenders[i], chainHeadSender, err.Error(),
 				),
 				Meta: &chainedConn.Meta,
 			}

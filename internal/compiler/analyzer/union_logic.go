@@ -72,77 +72,6 @@ func (a Analyzer) inferUnionLiteralSenderType(
 	}, nil
 }
 
-// validateUnionTagPatternSender recognizes a tag-only union literal at a pattern port.
-// Such a literal selects a member; it is not a complete value for a payload-carrying member.
-func (a Analyzer) validateUnionTagPatternSender(
-	sender *src.ConnectionSender,
-	receiverType *ts.Expr,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (bool, *compiler.Error) {
-	unionLiteral, err := a.tryResolveUnionConstSender(sender, scope)
-	if err != nil {
-		return false, err
-	}
-	if unionLiteral == nil || unionLiteral.Data != nil {
-		return false, nil
-	}
-
-	if receiverType.Lit == nil || receiverType.Lit.Union == nil {
-		return false, &compiler.Error{
-			Message: fmt.Sprintf(
-				"Union tag pattern %v::%s requires a union receiver, got %v",
-				unionLiteral.EntityRef,
-				unionLiteral.Tag,
-				*receiverType,
-			),
-			Meta: &sender.Meta,
-		}
-	}
-	if _, ok := receiverType.Lit.Union[unionLiteral.Tag]; !ok {
-		return false, &compiler.Error{
-			Message: fmt.Sprintf(
-				"Union tag pattern %v::%s is not compatible with %v: tag not found",
-				unionLiteral.EntityRef,
-				unionLiteral.Tag,
-				*receiverType,
-			),
-			Meta: &sender.Meta,
-		}
-	}
-
-	return true, nil
-}
-
-// tryResolveUnionConstSender resolves a union literal constant when sender holds one.
-// A non-union constant is not an error because ordinary receiver validation handles it.
-func (a Analyzer) tryResolveUnionConstSender(
-	sender *src.ConnectionSender,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (*src.UnionLiteral, *compiler.Error) {
-	if sender.Const == nil {
-		return nil, nil
-	}
-
-	if sender.Const.Value.Message != nil && sender.Const.Value.Message.Union != nil {
-		return sender.Const.Value.Message.Union, nil
-	}
-	if sender.Const.Value.Ref == nil {
-		return nil, nil
-	}
-
-	constType, err := a.getResolvedConstTypeByRef(*sender.Const.Value.Ref, scope)
-	if err != nil {
-		return nil, err
-	}
-	if constType.Lit == nil || constType.Lit.Union == nil {
-		return nil, nil
-	}
-
-	return a.resolveUnionConstRef(*sender.Const.Value.Ref, scope)
-}
-
 func (a Analyzer) messageLiteralType(
 	value *src.ConstValue,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -207,7 +136,7 @@ func (a Analyzer) buildUnionActiveTagBindings(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for nodeName, node := range nodes {
 		// Only Union<T> nodes participate in tag/data validation.
-		if !isUnionNode(node) {
+		if !a.isUnionNode(node) {
 			continue
 		}
 
@@ -390,7 +319,7 @@ func (a Analyzer) collectPortSendersInReceivers(
 // isUnionNode identifies the builtin Union<T> node used for wrapping tags/payloads.
 //
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func isUnionNode(node src.Node) bool {
+func (a Analyzer) isUnionNode(node src.Node) bool {
 	return node.EntityRef.Name == "Union" && (node.EntityRef.Pkg == "" || node.EntityRef.Pkg == "builtin")
 }
 
@@ -438,17 +367,22 @@ func (a Analyzer) resolveUnionTypeFromLiteral(
 		Meta: unionLiteral.Meta,
 	}, scope)
 	if analyzeExprErr != nil {
+		// Generic tag-only literals (for example stream<T>::Open) can appear in generic
+		// components before concrete type-argument substitution. For union-tag validation
+		// we only need member names, so unresolved argument expressions are acceptable.
 		typeDef, _, getTypeErr := scope.GetType(unionLiteral.EntityRef)
-		if getTypeErr != nil || typeDef.BodyExpr == nil ||
-			(len(typeDef.Params) > 0 && len(unionLiteral.TypeArgs) == 0) {
+		if getTypeErr != nil {
 			return ts.Expr{}, &compiler.Error{
 				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
 				Meta:    &unionLiteral.Meta,
 			}
 		}
-
-		// At this analysis stage a component's formal type parameters may no longer be
-		// available in scope. We only need the member definition for a tag-only pattern.
+		if typeDef.BodyExpr == nil {
+			return ts.Expr{}, &compiler.Error{
+				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
+				Meta:    &unionLiteral.Meta,
+			}
+		}
 		unionTypeExpr = *typeDef.BodyExpr
 	}
 

@@ -221,7 +221,7 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 		}
 	}
 
-	if isUnionNode(node) {
+	if a.isUnionNode(node) {
 		firstResolvedNodeArg := resolvedNodeArgs[0]
 		if firstResolvedNodeArg.Lit == nil || firstResolvedNodeArg.Lit.Union == nil {
 			return src.Node{}, foundInterface{}, &compiler.Error{

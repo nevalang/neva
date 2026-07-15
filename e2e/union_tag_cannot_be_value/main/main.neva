@@ -1,9 +1,0 @@
-type Event union {
-	Data int
-}
-
-def Main(start any) (stop any) {
-	pass Pass<Event>
-	---
-	:start -> Event::Data -> pass -> :stop
-}

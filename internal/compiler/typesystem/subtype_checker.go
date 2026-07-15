@@ -34,7 +34,7 @@ type TerminatorParams struct {
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
 //
-//nolint:gocyclo,gocognit,cyclop // Subtype checking has many structural cases.
+//nolint:gocyclo // Subtype checking has many structural cases.
 func (s SubtypeChecker) Check(
 	expr,
 	constr Expr,
@@ -149,8 +149,14 @@ func (s SubtypeChecker) Check(
 			if exprTagType == nil && constrTagType == nil {
 				continue
 			}
-			// A tag-only literal is a pattern, not a value for a member with payload.
-			if (exprTagType == nil) != (constrTagType == nil) {
+			// Allow tag-only expression element to match typed constraint element.
+			// This is needed for pattern-like union literals (for example stream<T>::Data)
+			// where sender checks only the tag.
+			if exprTagType == nil && constrTagType != nil {
+				continue
+			}
+			// Typed expression element cannot match tag-only constraint element.
+			if exprTagType != nil && constrTagType == nil {
 				return fmt.Errorf("%w: for tag %s: one has type, other doesn't", ErrUnions, tag)
 			}
 			// both have types, check compatibility
