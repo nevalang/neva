@@ -8,6 +8,7 @@ import (
 
 type stringToStream struct{}
 
+//nolint:gocognit // Stream framing and rune emission belong to one state machine.
 func (stringToStream) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,

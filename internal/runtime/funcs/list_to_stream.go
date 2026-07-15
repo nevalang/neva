@@ -8,6 +8,7 @@ import (
 
 type listToStream struct{}
 
+//nolint:gocognit // Stream framing and termination handling belong to one state machine.
 func (c listToStream) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,

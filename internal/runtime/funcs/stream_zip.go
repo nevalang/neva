@@ -8,6 +8,7 @@ import (
 
 type streamZip struct{}
 
+//nolint:cyclop,gocognit,gocyclo // Zip synchronizes two stream lifecycles in one state machine.
 func (streamZip) Create(
 	runtimeIO runtime.IO,
 	_ runtime.Msg,

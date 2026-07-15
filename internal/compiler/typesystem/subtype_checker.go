@@ -34,7 +34,7 @@ type TerminatorParams struct {
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
 //
-//nolint:gocyclo // Subtype checking has many structural cases.
+//nolint:cyclop,funlen,gocognit,gocyclo,maintidx // Subtype checking has many structural cases.
 func (s SubtypeChecker) Check(
 	expr,
 	constr Expr,
@@ -58,6 +58,7 @@ func (s SubtypeChecker) Check(
 		)
 	}
 
+	//nolint:nestif // Recursive type checks require the nested termination guards.
 	if isConstraintInstance { // both expr and constr are insts
 		isSubTypeRecursive, err := s.terminator.ShouldTerminate(
 			params.SubtypeTrace,

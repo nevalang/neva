@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -9,23 +10,24 @@ import (
 
 type streamProduct struct{}
 
+//nolint:cyclop,funlen,gocognit,gocyclo // Collecting both stream lifecycles and emitting the product are one operation.
 func (streamProduct) Create(
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Single("first")
+	firstIn, err := runtimeIO.In.Single("first")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get first inport: %w", err)
 	}
 
-	secondIn, err := io.In.Single("second")
+	secondIn, err := runtimeIO.In.Single("second")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get second inport: %w", err)
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := runtimeIO.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get res outport: %w", err)
 	}
 
 	// TODO: make sure it's not possible to do processing on the fly so we don't have to wait for both streams to complete
@@ -37,9 +39,9 @@ func (streamProduct) Create(
 				secondData        = []runtime.Msg{}
 			)
 
-			var wg sync.WaitGroup
+			var group sync.WaitGroup
 
-			wg.Go(func() {
+			group.Go(func() {
 				firstOk = waitStreamOpen(ctx, firstIn)
 				if !firstOk {
 					return
@@ -61,7 +63,7 @@ func (streamProduct) Create(
 				}
 			})
 
-			wg.Go(func() {
+			group.Go(func() {
 				secondOk = waitStreamOpen(ctx, secondIn)
 				if !secondOk {
 					return
@@ -83,7 +85,7 @@ func (streamProduct) Create(
 				}
 			})
 
-			wg.Wait()
+			group.Wait()
 
 			if !firstOk || !secondOk {
 				return

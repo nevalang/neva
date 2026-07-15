@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -9,30 +10,31 @@ import (
 
 type accumulator struct{}
 
-func (a accumulator) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	initIn, err := io.In.Single("init")
+//nolint:cyclop,funlen,gocognit,gocyclo // The stream cycle and its cancellation paths must remain together.
+func (a accumulator) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	initIn, err := runtimeIO.In.Single("init")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get init inport: %w", err)
 	}
 
-	updIn, err := io.In.Single("upd")
+	updIn, err := runtimeIO.In.Single("upd")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get upd inport: %w", err)
 	}
 
-	flushIn, err := io.In.Single("flush")
+	flushIn, err := runtimeIO.In.Single("flush")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get flush inport: %w", err)
 	}
 
-	curOut, err := io.Out.Single("cur")
+	curOut, err := runtimeIO.Out.Single("cur")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get cur outport: %w", err)
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := runtimeIO.Out.Single("res")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get res outport: %w", err)
 	}
 
 	return func(ctx context.Context) {

@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -10,13 +11,14 @@ import (
 
 type streamZipMany struct{}
 
+//nolint:cyclop,funlen,gocognit,gocyclo // Coordinated collection and emission across all streams form one operation.
 func (streamZipMany) Create(
 	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := runtimeIO.In.Array("data")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get data inport: %w", err)
 	}
 
 	resOut, err := singleOutport(runtimeIO, "res")
@@ -38,14 +40,14 @@ func (streamZipMany) Create(
 			states := make([]streamState, streamsCount)
 			var aborted atomic.Bool
 
-			var wg sync.WaitGroup
-			wg.Add(streamsCount)
+			var group sync.WaitGroup
+			group.Add(streamsCount)
 
 			for streamIdx := range streamsCount {
 				idx := streamIdx
 
 				go func() {
-					defer wg.Done()
+					defer group.Done()
 
 					collected := make([]runtime.Msg, 0)
 
@@ -72,7 +74,7 @@ func (streamZipMany) Create(
 				}()
 			}
 
-			wg.Wait()
+			group.Wait()
 
 			if aborted.Load() {
 				return
