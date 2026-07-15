@@ -34,7 +34,7 @@ type TerminatorParams struct {
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
 //
-//nolint:gocyclo,gocognit,cyclop,funlen // Subtype checking has many structural cases.
+//nolint:gocyclo,gocognit,cyclop // Subtype checking has many structural cases.
 func (s SubtypeChecker) Check(
 	expr,
 	constr Expr,
