@@ -1,3 +1,7 @@
+import {
+	@:sync
+}
+
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
@@ -9,27 +13,58 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-	ctrl SplitController<T>
+	bootstrap Switch<stream<T>>
+	serial sync.Sync<stream<T>>
+	input_switch Switch<stream<T>>
+	hold Lock<stream<T>>
+	output_switch Switch<stream<T>>
+	route Cond<stream<T>>
+	data_box Union<stream<T>>
 	predicate IPredicate<T>
+	hold_signals FanIn<any>
+	done FanIn<any>
+	then_output FanIn<stream<T>>
+	else_output FanIn<stream<T>>
+	del Del
 	---
-	:data -> ctrl:data
-	ctrl:item -> predicate
-	predicate -> ctrl:pass
-	ctrl:then -> :then
-	ctrl:else -> :else
+	:data -> [
+		bootstrap:data,
+		stream<T>::Open -> bootstrap:case[0],
+		serial:data
+	]
+	bootstrap:case[0] -> serial:start
+	bootstrap:else -> del
+
+	serial -> [
+		hold:data,
+		input_switch:data,
+		stream<T>::Open -> input_switch:case[0],
+		stream<T>::Data -> input_switch:case[1],
+		stream<T>::Close -> input_switch:case[2]
+	]
+	input_switch:case[0] -> hold_signals:data[0]
+	input_switch:case[1] -> predicate
+	predicate -> [hold_signals:data[1], route:if]
+	input_switch:case[2] -> hold_signals:data[2]
+	hold_signals -> hold:sig
+
+	hold -> [
+		output_switch:data,
+		stream<T>::Open -> output_switch:case[0],
+		stream<T>::Data -> output_switch:case[1],
+		stream<T>::Close -> output_switch:case[2]
+	]
+	output_switch:case[0] -> [then_output:data[0], else_output:data[0], done:data[0]]
+	output_switch:case[1] -> [data_box:data, stream<T>::Data -> data_box:tag]
+	data_box -> route:data
+	route:then -> [then_output:data[1], done:data[1]]
+	route:else -> [else_output:data[1], done:data[2]]
+	output_switch:case[2] -> [then_output:data[2], else_output:data[2], done:data[3]]
+	done -> serial:done
+	then_output -> :then
+	else_output -> :else
 }
 
 // IPredicate represents a logic that determines if a value satisfies a condition.
 // It is used by components like Filter and Split to decide how to process stream elements.
 pub interface IPredicate<T>(T) (bool)
-
-// SplitController preserves stream ordering while routing Data items by predicate.
-//
-// @inport data Input stream.
-// @inport pass Predicate result for the item emitted on item.
-//
-// @outport item Payload to test with the predicate.
-// @outport then Stream containing items accepted by the predicate.
-// @outport else Stream containing items rejected by the predicate.
-#extern(stream_split_controller)
-def SplitController<T>(data stream<T>, pass bool) (item T, then stream<T>, else stream<T>)

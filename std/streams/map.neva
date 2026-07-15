@@ -1,3 +1,7 @@
+import {
+	@:sync
+}
+
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(T) (Y)
 
@@ -6,24 +10,31 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
 // Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-	ctrl MapController<T, Y>
+	bootstrap Switch<stream<T>>
+	serial sync.Sync<stream<T>>
+	switch Switch<stream<T>>
 	handler IMapHandler<T, Y>
+	box Union<stream<Y>>
+	output FanIn<stream<Y>>
+	del_bootstrap Del
+	del_switch Del
 	---
-	:data -> ctrl:data
-	ctrl:item -> handler
-	handler -> ctrl:mapped
-	ctrl:res -> :res
-}
+	:data -> [
+		bootstrap:data,
+		stream<T>::Open -> bootstrap:case[0],
+		serial:data
+	]
+	bootstrap:case[0] -> serial:start
+	bootstrap:else -> del_bootstrap
 
-// MapController preserves stream protocol order while applying the mapper.
-// It forwards Open and Close directly. For each Data event, it sends the item
-// to the mapper, waits for exactly one mapped value, then emits that value as
-// the corresponding Data event before accepting the next input event.
-//
-// @inport data Input stream.
-// @inport mapped Handler output for the item emitted on item.
-//
-// @outport item Payload to pass to the mapper.
-// @outport res Mapped stream.
-#extern(stream_map_controller)
-def MapController<T, Y>(data stream<T>, mapped Y) (item T, res stream<Y>)
+	serial -> [
+		switch:data,
+		stream<T>::Open -> switch:case[0] -> stream<Y>::Open -> output:data[0],
+		stream<T>::Data -> switch:case[1] -> handler,
+		stream<T>::Close -> switch:case[2] -> stream<Y>::Close -> output:data[2]
+	]
+	handler -> [box:data, stream<Y>::Data -> box:tag]
+	box -> output:data[1]
+	output -> [serial:done, :res]
+	switch:else -> del_switch
+}

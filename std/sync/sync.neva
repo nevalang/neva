@@ -18,3 +18,18 @@
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
 pub def WaitGroup(count int, sig any) (sig any)
+
+// Sync releases data messages one at a time.
+//
+// Send one signal to start before sending the first data message. Send one done
+// signal after processing each res message to release the next data message.
+pub def Sync<T>(start any, data T, done any) (res T) {
+	lock Lock<T>
+	signals FanIn<any>
+	---
+	:start -> signals:data[0]
+	:done -> signals:data[1]
+	:data -> lock:data
+	signals -> lock:sig
+	lock -> :res
+}

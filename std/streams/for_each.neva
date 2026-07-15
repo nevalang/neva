@@ -1,3 +1,7 @@
+import {
+	@:sync
+}
+
 // ForEach applies a handler to each Data item in a stream to produce side-effects.
 // It forwards the original stream unchanged and preserves item order.
 //
@@ -7,28 +11,37 @@
 //
 // To wait for all items to be processed, use it with streams.Wait.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-	ctrl ForEachController<T>
+	bootstrap Switch<stream<T>>
+	serial sync.Sync<stream<T>>
+	hold Lock<stream<T>>
+	hold_signals FanIn<any>
+	switch Switch<stream<T>>
 	handler IForEachHandler<T>
-	done FanIn<any>
+	del Del
 	---
-	:data -> ctrl:data
-	ctrl:item -> handler
+	:data -> [
+		bootstrap:data,
+		stream<T>::Open -> bootstrap:case[0],
+		serial:data
+	]
+	bootstrap:case[0] -> serial:start
+	bootstrap:else -> del
 
-	handler:res -> done:data[0]
-	handler:err -> [done:data[1], :err]
-	done -> ctrl:done
-	ctrl:res -> :res
+	serial -> [
+		hold:data,
+		switch:data,
+		stream<T>::Open -> switch:case[0],
+		stream<T>::Data -> switch:case[1],
+		stream<T>::Close -> switch:case[2]
+	]
+	switch:case[0] -> hold_signals:data[0]
+	switch:case[1] -> handler
+	handler:res -> hold_signals:data[1]
+	switch:case[2] -> hold_signals:data[2]
+	hold_signals -> hold:sig
+	hold -> [serial:done, :res]
+	handler:err -> :err
 }
 
 // IForEachHandler is a dependency for ForEach.
 pub interface IForEachHandler<T>(T) (res any, err error)
-
-// ForEachController serializes handler execution for stream Data items.
-//
-// @inport data Input stream.
-// @inport done Signal that the handler finished processing the current item.
-//
-// @outport item Payload to pass to the handler.
-// @outport res Original stream forwarded in the same order.
-#extern(stream_for_each_controller)
-def ForEachController<T>(data stream<T>, done any) (item T, res stream<T>)
