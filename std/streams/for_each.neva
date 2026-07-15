@@ -38,9 +38,9 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	switch:case[1] -> handler
 	handler:res -> hold_signals:data[1]
 	switch:case[2] -> hold_signals:data[2]
+	handler:err -> [hold_signals:data[3], :err]
 	hold_signals -> hold:sig
 	hold -> [serial:done, :res]
-	handler:err -> :err
 }
 
 // IForEachHandler is a dependency for ForEach.
