@@ -776,6 +776,23 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 		text  string
 	}{
 		{
+			name: "generic tag-only keeps instantiated union type",
+			text: `
+				type U<T> union { A T }
+				def C1<T>() () {
+					U<T>::A -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				t.Helper()
+				typeExpr := net[0].Senders[0].Const.TypeExpr
+				require.NotNil(t, typeExpr.Inst)
+				require.Equal(t, "U", typeExpr.Inst.Ref.Name)
+				require.Len(t, typeExpr.Inst.Args, 1)
+				require.Equal(t, "T", typeExpr.Inst.Args[0].Inst.Ref.Name)
+			},
+		},
+		{
 			name: "direct tag-only",
 			text: `
 				type U union { A }

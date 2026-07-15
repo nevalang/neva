@@ -1,0 +1,39 @@
+import {
+    fmt
+    lists
+    runtime
+    streams
+}
+
+const numbers list<int> = [1, 2, 3, 4]
+
+type Result struct {
+    then list<int>
+    else list<int>
+}
+
+def Main(start any) (stop any) {
+    source streams.FromList<int>
+    split streams.Split<int>{predicate IsEven}
+    then_list lists.FromStream<int>
+    else_list lists.FromStream<int>
+    result Struct<Result>
+    println fmt.Println<Result>
+    panic runtime.Panic
+    ---
+    :start -> $numbers -> source -> split
+    split:then -> then_list -> result:then
+    split:else -> else_list -> result:else
+    result -> println:data
+    println:res -> :stop
+    println:err -> panic
+}
+
+def IsEven(data int) (res bool) {
+    mod Mod
+    eq Eq<int>
+    ---
+    :data -> [mod:left, 2 -> mod:right]
+    mod -> [eq:left, 0 -> eq:right]
+    eq -> :res
+}
