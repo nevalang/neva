@@ -6,118 +6,11 @@ import (
 	"github.com/nevalang/neva/internal/compiler"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	src "github.com/nevalang/neva/pkg/ast"
-	"github.com/nevalang/neva/pkg/core"
 )
 
 type unionActiveTagInfo struct {
 	tag         string
 	tagTypeExpr ts.Expr
-}
-
-func (a Analyzer) inferUnionLiteralSenderType(
-	unionLiteral *src.UnionLiteral,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
-	unionTypeExpr, err := a.resolveUnionTypeFromLiteral(unionLiteral, scope)
-	if err != nil {
-		return ts.Expr{}, err
-	}
-
-	tagTypeExpr, ok := unionTypeExpr.Lit.Union[unionLiteral.Tag]
-	if !ok {
-		return ts.Expr{}, &compiler.Error{
-			Message: fmt.Sprintf("tag %q not found in union %v", unionLiteral.Tag, unionLiteral.EntityRef),
-			Meta:    &unionLiteral.Meta,
-		}
-	}
-
-	var literalTagType *ts.Expr
-	if unionLiteral.Data != nil {
-		if tagTypeExpr == nil {
-			return ts.Expr{}, &compiler.Error{
-				Message: fmt.Sprintf("tag %q does not accept a payload", unionLiteral.Tag),
-				Meta:    &unionLiteral.Meta,
-			}
-		}
-
-		payloadType, err := a.messageLiteralType(unionLiteral.Data, scope)
-		if err != nil {
-			return ts.Expr{}, err
-		}
-
-		if err := a.resolver.IsSubtypeOf(payloadType, *tagTypeExpr, scope); err != nil {
-			return ts.Expr{}, &compiler.Error{
-				Message: fmt.Sprintf(
-					"Union literal payload type %v is not compatible with tag %q (%v): %v",
-					payloadType,
-					unionLiteral.Tag,
-					*tagTypeExpr,
-					err,
-				),
-				Meta: &unionLiteral.Data.Meta,
-			}
-		}
-
-		literalTagType = &payloadType
-	}
-
-	return ts.Expr{
-		Lit: &ts.LitExpr{
-			Union: map[string]*ts.Expr{
-				unionLiteral.Tag: literalTagType,
-			},
-		},
-		Meta: unionLiteral.Meta,
-	}, nil
-}
-
-func (a Analyzer) messageLiteralType(
-	value *src.ConstValue,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (ts.Expr, *compiler.Error) {
-	if value == nil {
-		return ts.Expr{}, &compiler.Error{
-			Message: "Union literal payload type is empty",
-		}
-	}
-
-	if value.Ref != nil {
-		resolvedType, err := a.getResolvedConstTypeByRef(*value.Ref, scope)
-		if err != nil {
-			return ts.Expr{}, compiler.Error{
-				Meta: &value.Ref.Meta,
-			}.Wrap(err)
-		}
-
-		return resolvedType, nil
-	}
-
-	if value.Message == nil {
-		return ts.Expr{}, &compiler.Error{
-			Message: "Union literal payload type is empty",
-			Meta:    &value.Meta,
-		}
-	}
-
-	switch {
-	case value.Message.Bool != nil:
-		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "bool"}}, Meta: value.Message.Meta}, nil
-	case value.Message.Int != nil:
-		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "int"}}, Meta: value.Message.Meta}, nil
-	case value.Message.Float != nil:
-		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "float"}}, Meta: value.Message.Meta}, nil
-	case value.Message.Str != nil:
-		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}, Meta: value.Message.Meta}, nil
-	case value.Message.Union != nil:
-		return a.inferUnionLiteralSenderType(value.Message.Union, scope)
-	default:
-		return ts.Expr{}, &compiler.Error{
-			Message: "Union literal payload must be a primitive or union literal",
-			Meta:    &value.Message.Meta,
-		}
-	}
 }
 
 // buildUnionActiveTagBindings inspects the network wiring to determine which concrete tag
