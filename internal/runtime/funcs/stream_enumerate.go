@@ -45,6 +45,7 @@ func forwardEnumeratedMessage(
 		*idx = 0
 		return resOut.Send(ctx, newStreamOpenMsg())
 	case isStreamData(msg):
+		// Enumerated<T> is the Data union payload, so encode it as a struct message first.
 		item := runtime.NewStructMsg([]runtime.StructField{
 			runtime.NewStructField("idx", runtime.NewIntMsg(*idx)),
 			runtime.NewStructField("item", streamDataValue(msg)),

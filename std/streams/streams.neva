@@ -23,8 +23,7 @@ pub def FromString(data string) (res stream<string>)
 // Item creates a stream that contains exactly one Data item.
 //
 // This is useful when an API expects a stream but the producer has one value,
-// for example when passing a single pixel to image.New or adapting scalar data
-// to stream combinators.
+// for example when adapting scalar data to a stream combinator.
 //
 // @inport data Value to emit as the only Data item.
 //

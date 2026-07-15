@@ -103,6 +103,7 @@ func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	`))
 
 	require.NotNil(t, err)
+	require.Equal(t, "file must contain at most one import statement", err.Message)
 }
 
 func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {

@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -26,11 +26,11 @@ func (s *BasenevaListener) EnterProg(ctx *ProgContext) {}
 // ExitProg is called when production prog is exited.
 func (s *BasenevaListener) ExitProg(ctx *ProgContext) {}
 
-// EnterNonImportStmt is called when production nonImportStmt is entered.
-func (s *BasenevaListener) EnterNonImportStmt(ctx *NonImportStmtContext) {}
+// EnterStmt is called when production stmt is entered.
+func (s *BasenevaListener) EnterStmt(ctx *StmtContext) {}
 
-// ExitNonImportStmt is called when production nonImportStmt is exited.
-func (s *BasenevaListener) ExitNonImportStmt(ctx *NonImportStmtContext) {}
+// ExitStmt is called when production stmt is exited.
+func (s *BasenevaListener) ExitStmt(ctx *StmtContext) {}
 
 // EnterCompilerDirectives is called when production compilerDirectives is entered.
 func (s *BasenevaListener) EnterCompilerDirectives(ctx *CompilerDirectivesContext) {}

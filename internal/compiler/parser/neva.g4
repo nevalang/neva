@@ -2,13 +2,11 @@ grammar neva;
 
 /* PARSER */
 
-prog:
-	(NEWLINE | COMMENT | nonImportStmt)*
-	importStmt?
-	(NEWLINE | COMMENT | nonImportStmt)* EOF;
+prog: (NEWLINE | COMMENT | stmt)* EOF;
 
-nonImportStmt:
-	typeStmt
+stmt:
+	importStmt
+	| typeStmt
 	| interfaceStmt
 	| constStmt
 	| compStmt;

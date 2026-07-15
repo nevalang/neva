@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type rangeInt struct{}
+type streamIntRange struct{}
 
-func (rangeInt) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamIntRange) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	fromIn, err := singleInport(runtimeIO, "from")
 	if err != nil {
 		return nil, err

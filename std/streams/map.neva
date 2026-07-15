@@ -15,7 +15,10 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 	ctrl:res -> :res
 }
 
-// MapController serializes item mapping and stream event forwarding.
+// MapController preserves stream protocol order while applying the mapper.
+// It forwards Open and Close directly. For each Data event, it sends the item
+// to the mapper, waits for exactly one mapped value, then emits that value as
+// the corresponding Data event before accepting the next input event.
 //
 // @inport data Input stream.
 // @inport mapped Handler output for the item emitted on item.
