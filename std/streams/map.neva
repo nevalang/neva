@@ -1,7 +1,3 @@
-import {
-	@:sync
-}
-
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(T) (Y)
 
@@ -10,31 +6,20 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
 // Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-	bootstrap Switch<stream<T>>
-	serial sync.Sync<stream<T>>
-	switch Switch<stream<T>>
+	stream_step StreamStep<T>
+	event_switch Switch<stream<T>>
 	handler IMapHandler<T, Y>
-	box Union<stream<Y>>
+	data_union Union<stream<Y>>
 	output FanIn<stream<Y>>
-	del_bootstrap Del
-	del_switch Del
 	---
-	:data -> [
-		bootstrap:data,
-		stream<T>::Open -> bootstrap:case[0],
-		serial:data
+	:data -> stream_step:data
+	stream_step -> [
+		event_switch:data,
+		stream<T>::Open -> event_switch:case[0] -> stream<Y>::Open -> output:data[0],
+		stream<T>::Data -> event_switch:case[1] -> handler,
+		stream<T>::Close -> event_switch:case[2] -> stream<Y>::Close -> output:data[2]
 	]
-	bootstrap:case[0] -> serial:start
-	bootstrap:else -> del_bootstrap
-
-	serial -> [
-		switch:data,
-		stream<T>::Open -> switch:case[0] -> stream<Y>::Open -> output:data[0],
-		stream<T>::Data -> switch:case[1] -> handler,
-		stream<T>::Close -> switch:case[2] -> stream<Y>::Close -> output:data[2]
-	]
-	handler -> [box:data, stream<Y>::Data -> box:tag]
-	box -> output:data[1]
-	output -> [serial:done, :res]
-	switch:else -> del_switch
+	handler -> [data_union:data, stream<Y>::Data -> data_union:tag]
+	data_union -> output:data[1]
+	output -> [stream_step:done, :res]
 }

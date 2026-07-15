@@ -1,7 +1,3 @@
-import {
-	@:sync
-}
-
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
@@ -13,8 +9,7 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-	bootstrap Switch<stream<T>>
-	serial sync.Sync<stream<T>>
+	stream_step StreamStep<T>
 	input_switch Switch<stream<T>>
 	hold Lock<stream<T>>
 	output_switch Switch<stream<T>>
@@ -25,17 +20,9 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	done FanIn<any>
 	then_output FanIn<stream<T>>
 	else_output FanIn<stream<T>>
-	del Del
 	---
-	:data -> [
-		bootstrap:data,
-		stream<T>::Open -> bootstrap:case[0],
-		serial:data
-	]
-	bootstrap:case[0] -> serial:start
-	bootstrap:else -> del
-
-	serial -> [
+	:data -> stream_step:data
+	stream_step -> [
 		hold:data,
 		input_switch:data,
 		stream<T>::Open -> input_switch:case[0],
@@ -60,7 +47,7 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	route:then -> [then_output:data[1], done:data[1]]
 	route:else -> [else_output:data[1], done:data[2]]
 	output_switch:case[2] -> [then_output:data[2], else_output:data[2], done:data[3]]
-	done -> serial:done
+	done -> stream_step:done
 	then_output -> :then
 	else_output -> :else
 }

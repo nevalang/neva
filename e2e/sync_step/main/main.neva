@@ -1,0 +1,46 @@
+import {
+	fmt
+	runtime
+	streams
+	sync
+	time
+}
+
+const values list<int> = [1, 2, 3]
+
+def Main(start any) (stop any) {
+	source streams.FromList<int>
+	init_switch Switch<stream<int>>
+	sync_sync sync.Sync<stream<int>>{Handle}
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> $values -> source -> [
+		init_switch:data,
+		stream<int>::Open -> init_switch:case[0],
+		sync_sync:data
+	]
+	init_switch:case[0] -> sync_sync:init
+	sync_sync:res -> wait -> :stop
+	sync_sync:err -> panic
+}
+
+def Handle(data stream<int>) (res any, err error) {
+	event_switch Switch<stream<int>>
+	signals FanIn<any>
+	delay time.Delay<int>
+	println fmt.Println<int>?
+	---
+	:data -> [
+		event_switch:data,
+		stream<int>::Open -> event_switch:case[0],
+		stream<int>::Data -> event_switch:case[1],
+		stream<int>::Close -> event_switch:case[2]
+	]
+	event_switch:case[0] -> signals:data[0]
+	event_switch:case[1] -> [delay:data, $time.millisecond -> delay:dur]
+	delay -> println:data
+	println:res -> signals:data[1]
+	event_switch:case[2] -> signals:data[2]
+	signals -> :res
+}
