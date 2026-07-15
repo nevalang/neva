@@ -9,7 +9,7 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-	stream_step StreamStep<T>
+	step Step<T>
 	input_switch Switch<stream<T>>
 	hold Lock<stream<T>>
 	output_switch Switch<stream<T>>
@@ -21,8 +21,8 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	then_output FanIn<stream<T>>
 	else_output FanIn<stream<T>>
 	---
-	:data -> stream_step:data
-	stream_step -> [
+	:data -> step:data
+	step -> [
 		hold:data,
 		input_switch:data,
 		stream<T>::Open -> input_switch:case[0],
@@ -47,7 +47,7 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	route:then -> [then_output:data[1], done:data[1]]
 	route:else -> [else_output:data[1], done:data[2]]
 	output_switch:case[2] -> [then_output:data[2], else_output:data[2], done:data[3]]
-	done -> stream_step:done
+	done -> step:done
 	then_output -> :then
 	else_output -> :else
 }

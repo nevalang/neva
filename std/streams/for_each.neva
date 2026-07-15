@@ -7,14 +7,14 @@
 //
 // To wait for all items to be processed, use it with streams.Wait.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-	stream_step StreamStep<T>
+	step Step<T>
 	hold Lock<stream<T>>
 	hold_signals FanIn<any>
 	event_switch Switch<stream<T>>
 	handler IForEachHandler<T>
 	---
-	:data -> stream_step:data
-	stream_step -> [
+	:data -> step:data
+	step -> [
 		hold:data,
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0],
@@ -27,7 +27,7 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	event_switch:case[2] -> hold_signals:data[2]
 	handler:err -> [hold_signals:data[3], :err]
 	hold_signals -> hold:sig
-	hold -> [stream_step:done, :res]
+	hold -> [step:done, :res]
 }
 
 // IForEachHandler is a dependency for ForEach.

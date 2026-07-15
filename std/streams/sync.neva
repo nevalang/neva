@@ -2,7 +2,7 @@ import {
 	@:sync
 }
 
-// StreamStep forwards stream events one at a time.
+// Step forwards stream events one at a time.
 //
 // The Open event initializes the underlying synchronization session. A done
 // signal releases the next event only after the previous one is fully handled.
@@ -11,7 +11,7 @@ import {
 // @inport done Acknowledges complete handling of one res event.
 //
 // @outport res Next ordered stream event to handle.
-def StreamStep<T>(data stream<T>, done any) (res stream<T>) {
+def Step<T>(data stream<T>, done any) (res stream<T>) {
 	open_switch Switch<stream<T>>
 	sync_step sync.SyncStep<stream<T>>
 	---

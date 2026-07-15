@@ -6,14 +6,14 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
 // Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-	stream_step StreamStep<T>
+	step Step<T>
 	event_switch Switch<stream<T>>
 	handler IMapHandler<T, Y>
 	data_union Union<stream<Y>>
 	output FanIn<stream<Y>>
 	---
-	:data -> stream_step:data
-	stream_step -> [
+	:data -> step:data
+	step -> [
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0] -> stream<Y>::Open -> output:data[0],
 		stream<T>::Data -> event_switch:case[1] -> handler,
@@ -21,5 +21,5 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 	]
 	handler -> [data_union:data, stream<Y>::Data -> data_union:tag]
 	data_union -> output:data[1]
-	output -> [stream_step:done, :res]
+	output -> [step:done, :res]
 }
