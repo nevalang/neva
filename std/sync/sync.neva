@@ -19,7 +19,7 @@
 #extern(wait_group)
 pub def WaitGroup(count int, sig any) (sig any)
 
-// SyncStep releases one data message at a time.
+// Step releases one data message at a time.
 //
 // Send exactly one init signal to start a session. After receiving each res
 // message, send one done signal only when its complete processing has finished.
@@ -31,7 +31,7 @@ pub def WaitGroup(count int, sig any) (sig any)
 // @inport done Acknowledges that processing of one res message is complete.
 //
 // @outport res The next data message whose processing may begin.
-pub def SyncStep<T>(init any, data T, done any) (res T) {
+pub def Step<T>(init any, data T, done any) (res T) {
 	lock Lock<T>
 	signals FanIn<any>
 	---
@@ -56,18 +56,18 @@ pub def SyncStep<T>(init any, data T, done any) (res T) {
 // @outport err Error emitted by handler. The input is still acknowledged so
 // the synchronization session can make progress.
 pub def Sync<T>(init any, data T) (res T, err error) {
-	sync_step SyncStep<T>
+	step Step<T>
 	lock Lock<T>
 	signals FanIn<any>
 	handler ISyncHandler<T>
 	---
-	:init -> sync_step:init
-	:data -> sync_step:data
-	sync_step -> [lock:data, handler]
+	:init -> step:init
+	:data -> step:data
+	step -> [lock:data, handler]
 	handler:res -> signals:data[0]
 	handler:err -> [signals:data[1], :err]
 	signals -> lock:sig
-	lock -> [sync_step:done, :res]
+	lock -> [step:done, :res]
 }
 
 // ISyncHandler completes one sequential unit of work.

@@ -11,9 +11,9 @@ import {
 // @inport done Acknowledges complete handling of one res event.
 //
 // @outport res Next ordered stream event to handle.
-def Step<T>(data stream<T>, done any) (res stream<T>) {
+pub def Step<T>(data stream<T>, done any) (res stream<T>) {
 	open_switch Switch<stream<T>>
-	sync_step sync.SyncStep<stream<T>>
+	sync_step sync.Step<stream<T>>
 	---
 	:data -> [
 		open_switch:data,
