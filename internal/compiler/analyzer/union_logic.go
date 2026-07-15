@@ -16,10 +16,11 @@ type unionActiveTagInfo struct {
 
 func (a Analyzer) inferUnionLiteralSenderType(
 	unionLiteral *src.UnionLiteral,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	unionTypeExpr, err := a.resolveUnionTypeFromLiteral(unionLiteral, scope)
+	unionTypeExpr, err := a.resolveUnionTypeFromLiteral(unionLiteral, typeFrame, scope)
 	if err != nil {
 		return ts.Expr{}, err
 	}
@@ -41,7 +42,7 @@ func (a Analyzer) inferUnionLiteralSenderType(
 			}
 		}
 
-		payloadType, err := a.messageLiteralType(unionLiteral.Data, scope)
+		payloadType, err := a.messageLiteralType(unionLiteral.Data, typeFrame, scope)
 		if err != nil {
 			return ts.Expr{}, err
 		}
@@ -74,6 +75,7 @@ func (a Analyzer) inferUnionLiteralSenderType(
 
 func (a Analyzer) messageLiteralType(
 	value *src.ConstValue,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
@@ -111,7 +113,7 @@ func (a Analyzer) messageLiteralType(
 	case value.Message.Str != nil:
 		return ts.Expr{Inst: &ts.InstExpr{Ref: core.EntityRef{Name: "string"}}, Meta: value.Message.Meta}, nil
 	case value.Message.Union != nil:
-		return a.inferUnionLiteralSenderType(value.Message.Union, scope)
+		return a.inferUnionLiteralSenderType(value.Message.Union, typeFrame, scope)
 	default:
 		return ts.Expr{}, &compiler.Error{
 			Message: "Union literal payload must be a primitive or union literal",
