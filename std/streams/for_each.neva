@@ -1,3 +1,7 @@
+import {
+	@:sync
+}
+
 // ForEach applies a handler to each Data item in a stream to produce side-effects.
 // It forwards the original stream unchanged and preserves item order.
 //
@@ -7,14 +11,14 @@
 //
 // To wait for all items to be processed, use it with streams.Wait.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-	step Step<T>
+	turn sync.Turn<stream<T>>
 	hold Lock<stream<T>>
 	hold_signals FanIn<any>
 	event_switch Switch<stream<T>>
 	handler IForEachHandler<T>
 	---
-	:data -> step:data
-	step -> [
+	:data -> turn:data
+	turn -> [
 		hold:data,
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0],
@@ -27,7 +31,7 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	event_switch:case[2] -> hold_signals:data[2]
 	handler:err -> [hold_signals:data[3], :err]
 	hold_signals -> hold:sig
-	hold -> [step:done, :res]
+	hold -> [turn:done, :res]
 }
 
 // IForEachHandler is a dependency for ForEach.

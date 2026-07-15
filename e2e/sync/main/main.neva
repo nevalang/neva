@@ -10,17 +10,11 @@ const values list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
 	source streams.FromList<int>
-	init_switch Switch<stream<int>>
 	sync_sync sync.Sync<stream<int>>{Handle}
 	wait streams.Wait
 	panic runtime.Panic
 	---
-	:start -> $values -> source -> [
-		init_switch:data,
-		stream<int>::Open -> init_switch:case[0],
-		sync_sync:data
-	]
-	init_switch:case[0] -> sync_sync:init
+	:start -> $values -> source -> sync_sync:data
 	sync_sync:res -> wait -> :stop
 	sync_sync:err -> panic
 }

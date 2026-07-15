@@ -19,28 +19,18 @@
 #extern(wait_group)
 pub def WaitGroup(count int, sig any) (sig any)
 
-// Step releases one data message at a time.
+// Turn is Lock's sibling with a slightly different release rule.
 //
-// Send exactly one init signal to start a session. After receiving each res
-// message, send one done signal only when its complete processing has finished.
-// A done signal releases the next data message.
+// Like Lock, it releases one data message at a time. Unlike Lock, it releases
+// the first message immediately, then waits for done before receiving and
+// releasing each following message.
 //
-// @inport init Starts one synchronization session. Send exactly once before
-// the first data message.
 // @inport data Messages to process sequentially.
 // @inport done Acknowledges that processing of one res message is complete.
 //
 // @outport res The next data message whose processing may begin.
-pub def Step<T>(init any, data T, done any) (res T) {
-	lock Lock<T>
-	signals FanIn<any>
-	---
-	:init -> signals:data[0]
-	:done -> signals:data[1]
-	:data -> lock:data
-	signals -> lock:sig
-	lock -> :res
-}
+#extern(sync_turn)
+pub def Turn<T>(data T, done any) (res T)
 
 // Sync runs a side-effecting handler sequentially.
 //
@@ -48,26 +38,23 @@ pub def Step<T>(init any, data T, done any) (res T) {
 // emits either res or err. The res outport forwards the original input after
 // that completion signal, so downstream work observes the same order.
 //
-// @inport init Starts one synchronization session. Send exactly once before
-// the first data message.
 // @inport data Messages to process with handler.
 //
 // @outport res Original input after handler completion.
 // @outport err Error emitted by handler. The input is still acknowledged so
 // the synchronization session can make progress.
-pub def Sync<T>(init any, data T) (res T, err error) {
-	step Step<T>
+pub def Sync<T>(data T) (res T, err error) {
+	turn Turn<T>
 	lock Lock<T>
-	signals FanIn<any>
+	fan_in FanIn<any>
 	handler ISyncHandler<T>
 	---
-	:init -> step:init
-	:data -> step:data
-	step -> [lock:data, handler]
-	handler:res -> signals:data[0]
-	handler:err -> [signals:data[1], :err]
-	signals -> lock:sig
-	lock -> [step:done, :res]
+	:data -> turn:data
+	turn -> [lock:data, handler]
+	handler:res -> fan_in:data[0]
+	handler:err -> [fan_in:data[1], :err]
+	fan_in -> lock:sig
+	lock -> [turn:done, :res]
 }
 
 // ISyncHandler completes one sequential unit of work.

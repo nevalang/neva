@@ -13,11 +13,12 @@ func NewRegistry() map[string]runtime.FuncCreator {
 	fileHandles := runtime.NewFileHandles()
 
 	return map[string]runtime.FuncCreator{
-		"new":     newV2{},
-		"del":     del{},
-		"lock":    lock{},
-		"fan_in":  fanIn{},
-		"fan_out": fanOut{},
+		"new":       newV2{},
+		"del":       del{},
+		"lock":      lock{},
+		"sync_turn": turn{},
+		"fan_in":    fanIn{},
+		"fan_out":   fanOut{},
 
 		"panic": panicker{},
 
