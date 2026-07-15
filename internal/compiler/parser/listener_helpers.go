@@ -796,11 +796,11 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.UnionLit() != nil:
-		parsedConst.TypeExpr.Lit = &ts.LitExpr{
-			Union: map[string]*ts.Expr{
-				lit.UnionLit().IDENTIFIER().GetText(): nil,
-			},
+		parsedUnionType, err := s.parseTypeInstExpr(lit.UnionLit().TypeInstExpr())
+		if err != nil {
+			return src.Const{}, err
 		}
+		parsedConst.TypeExpr = *parsedUnionType
 	}
 
 	return parsedConst, nil

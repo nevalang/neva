@@ -21,6 +21,7 @@ type unionActiveTagInfo struct {
 func (a Analyzer) buildUnionActiveTagBindings(
 	net []src.Connection,
 	nodes map[string]src.Node,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (map[string]unionActiveTagInfo, *compiler.Error) {
@@ -70,7 +71,7 @@ func (a Analyzer) buildUnionActiveTagBindings(
 		}
 
 		// Ensure literal's union type matches Union<T>.
-		_, err = a.resolveUnionTypeFromLiteral(unionLiteral, scope)
+		_, err = a.resolveUnionTypeFromLiteral(unionLiteral, typeFrame, scope)
 		if err != nil {
 			return nil, compiler.Error{Meta: &tagSender.Meta}.Wrap(err)
 		}
@@ -249,34 +250,22 @@ func (a Analyzer) resolveUnionConstSender(
 // It returns the fully analyzed union type expression or an error if the reference isn't a union.
 func (a Analyzer) resolveUnionTypeFromLiteral(
 	unionLiteral *src.UnionLiteral,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(ts.Expr{
+	unionTypeExpr, err := a.resolver.ResolveExprWithFrame(ts.Expr{
 		Inst: &ts.InstExpr{
 			Ref:  unionLiteral.EntityRef,
 			Args: unionLiteral.TypeArgs,
 		},
 		Meta: unionLiteral.Meta,
-	}, scope)
-	if analyzeExprErr != nil {
-		// Generic tag-only literals (for example stream<T>::Open) can appear in generic
-		// components before concrete type-argument substitution. For union-tag validation
-		// we only need member names, so unresolved argument expressions are acceptable.
-		typeDef, _, getTypeErr := scope.GetType(unionLiteral.EntityRef)
-		if getTypeErr != nil {
-			return ts.Expr{}, &compiler.Error{
-				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
-				Meta:    &unionLiteral.Meta,
-			}
+	}, typeFrame, scope)
+	if err != nil {
+		return ts.Expr{}, &compiler.Error{
+			Message: fmt.Sprintf("failed to resolve union type: %v", err),
+			Meta:    &unionLiteral.Meta,
 		}
-		if typeDef.BodyExpr == nil {
-			return ts.Expr{}, &compiler.Error{
-				Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
-				Meta:    &unionLiteral.Meta,
-			}
-		}
-		unionTypeExpr = *typeDef.BodyExpr
 	}
 
 	if unionTypeExpr.Lit == nil || unionTypeExpr.Lit.Union == nil {
