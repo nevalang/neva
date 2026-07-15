@@ -9,7 +9,7 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 
 // Split splits a stream into two streams based on a predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-	ctrl SplitCtrl<T>
+	ctrl SplitController<T>
 	predicate IPredicate<T>
 	---
 	:data -> ctrl:data
@@ -23,7 +23,7 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 // It is used by components like Filter and Split to decide how to process stream elements.
 pub interface IPredicate<T>(T) (bool)
 
-// SplitCtrl preserves stream ordering while routing Data items by predicate.
+// SplitController preserves stream ordering while routing Data items by predicate.
 //
 // @inport data Input stream.
 // @inport pass Predicate result for the item emitted on item.
@@ -32,4 +32,4 @@ pub interface IPredicate<T>(T) (bool)
 // @outport then Stream containing items accepted by the predicate.
 // @outport else Stream containing items rejected by the predicate.
 #extern(stream_split_controller)
-def SplitCtrl<T>(data stream<T>, pass bool) (item T, then stream<T>, else stream<T>)
+def SplitController<T>(data stream<T>, pass bool) (item T, then stream<T>, else stream<T>)

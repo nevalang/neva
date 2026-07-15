@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type streamJust struct{}
+type streamItem struct{}
 
-func (streamJust) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamItem) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (streamJust) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.
 }
 
 func sendSingleItemStream(ctx context.Context, resOut runtime.SingleOutport, dataMsg runtime.OrderedMsg) bool {
-	return resOut.Send(ctx, runtime.NewStreamOpenMsg()) &&
-		resOut.Send(ctx, runtime.NewStreamDataMsg(dataMsg.Msg)) &&
-		resOut.Send(ctx, runtime.NewStreamCloseMsg())
+	return resOut.Send(ctx, newStreamOpenMsg()) &&
+		resOut.Send(ctx, newStreamDataMsg(dataMsg.Msg)) &&
+		resOut.Send(ctx, newStreamCloseMsg())
 }

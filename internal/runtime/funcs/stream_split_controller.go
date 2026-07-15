@@ -56,10 +56,10 @@ func forwardSplitMessage(
 	msg runtime.Msg,
 ) bool {
 	switch {
-	case runtime.IsStreamOpen(msg):
-		return thenOut.Send(ctx, runtime.NewStreamOpenMsg()) && elseOut.Send(ctx, runtime.NewStreamOpenMsg())
-	case runtime.IsStreamData(msg):
-		item := runtime.StreamDataValue(msg)
+	case isStreamOpen(msg):
+		return thenOut.Send(ctx, newStreamOpenMsg()) && elseOut.Send(ctx, newStreamOpenMsg())
+	case isStreamData(msg):
+		item := streamDataValue(msg)
 		if !itemOut.Send(ctx, item) {
 			return false
 		}
@@ -74,8 +74,8 @@ func forwardSplitMessage(
 		}
 
 		return elseOut.Send(ctx, msg)
-	case runtime.IsStreamClose(msg):
-		return thenOut.Send(ctx, runtime.NewStreamCloseMsg()) && elseOut.Send(ctx, runtime.NewStreamCloseMsg())
+	case isStreamClose(msg):
+		return thenOut.Send(ctx, newStreamCloseMsg()) && elseOut.Send(ctx, newStreamCloseMsg())
 	default:
 		panic("stream_split_controller: unexpected stream tag")
 	}

@@ -6,13 +6,13 @@ pub interface IMapHandler<T, Y>(T) (Y)
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
 // Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-	controller MapController<T, Y>
+	ctrl MapController<T, Y>
 	handler IMapHandler<T, Y>
 	---
-	:data -> controller:data
-	controller:item -> handler
-	handler -> controller:mapped
-	controller:res -> :res
+	:data -> ctrl:data
+	ctrl:item -> handler
+	handler -> ctrl:mapped
+	ctrl:res -> :res
 }
 
 // MapController serializes item mapping and stream event forwarding.

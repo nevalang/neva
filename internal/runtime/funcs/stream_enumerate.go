@@ -41,22 +41,22 @@ func forwardEnumeratedMessage(
 	idx *int64,
 ) bool {
 	switch {
-	case runtime.IsStreamOpen(msg):
+	case isStreamOpen(msg):
 		*idx = 0
-		return resOut.Send(ctx, runtime.NewStreamOpenMsg())
-	case runtime.IsStreamData(msg):
+		return resOut.Send(ctx, newStreamOpenMsg())
+	case isStreamData(msg):
 		item := runtime.NewStructMsg([]runtime.StructField{
 			runtime.NewStructField("idx", runtime.NewIntMsg(*idx)),
-			runtime.NewStructField("item", runtime.StreamDataValue(msg)),
+			runtime.NewStructField("item", streamDataValue(msg)),
 		})
-		if !resOut.Send(ctx, runtime.NewStreamDataMsg(item)) {
+		if !resOut.Send(ctx, newStreamDataMsg(item)) {
 			return false
 		}
 
 		*idx++
 		return true
-	case runtime.IsStreamClose(msg):
-		return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+	case isStreamClose(msg):
+		return resOut.Send(ctx, newStreamCloseMsg())
 	default:
 		panic("stream_enumerate: unexpected stream tag")
 	}

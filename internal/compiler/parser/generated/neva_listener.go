@@ -1,4 +1,4 @@
-// Code generated from ./neva.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ./neva.g4 by ANTLR 4.13.1. DO NOT EDIT.
 
 package parsing // neva
 import "github.com/antlr4-go/antlr/v4"
@@ -10,8 +10,8 @@ type nevaListener interface {
 	// EnterProg is called when entering the prog production.
 	EnterProg(c *ProgContext)
 
-	// EnterStmt is called when entering the stmt production.
-	EnterStmt(c *StmtContext)
+	// EnterNonImportStmt is called when entering the nonImportStmt production.
+	EnterNonImportStmt(c *NonImportStmtContext)
 
 	// EnterCompilerDirectives is called when entering the compilerDirectives production.
 	EnterCompilerDirectives(c *CompilerDirectivesContext)
@@ -253,8 +253,8 @@ type nevaListener interface {
 	// ExitProg is called when exiting the prog production.
 	ExitProg(c *ProgContext)
 
-	// ExitStmt is called when exiting the stmt production.
-	ExitStmt(c *StmtContext)
+	// ExitNonImportStmt is called when exiting the nonImportStmt production.
+	ExitNonImportStmt(c *NonImportStmtContext)
 
 	// ExitCompilerDirectives is called when exiting the compilerDirectives production.
 	ExitCompilerDirectives(c *CompilerDirectivesContext)

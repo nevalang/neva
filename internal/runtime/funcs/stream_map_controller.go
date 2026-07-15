@@ -52,10 +52,10 @@ func forwardMappedMessage(
 	msg runtime.Msg,
 ) bool {
 	switch {
-	case runtime.IsStreamOpen(msg):
-		return resOut.Send(ctx, runtime.NewStreamOpenMsg())
-	case runtime.IsStreamData(msg):
-		if !itemOut.Send(ctx, runtime.StreamDataValue(msg)) {
+	case isStreamOpen(msg):
+		return resOut.Send(ctx, newStreamOpenMsg())
+	case isStreamData(msg):
+		if !itemOut.Send(ctx, streamDataValue(msg)) {
 			return false
 		}
 
@@ -64,9 +64,9 @@ func forwardMappedMessage(
 			return false
 		}
 
-		return resOut.Send(ctx, runtime.NewStreamDataMsg(mappedMsg.Msg))
-	case runtime.IsStreamClose(msg):
-		return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+		return resOut.Send(ctx, newStreamDataMsg(mappedMsg.Msg))
+	case isStreamClose(msg):
+		return resOut.Send(ctx, newStreamCloseMsg())
 	default:
 		panic("stream_map_controller: unexpected stream tag")
 	}

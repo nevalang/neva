@@ -7,17 +7,17 @@
 //
 // To wait for all items to be processed, use it with streams.Wait.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
-	controller ForEachController<T>
+	ctrl ForEachController<T>
 	handler IForEachHandler<T>
 	done FanIn<any>
 	---
-	:data -> controller:data
-	controller:item -> handler
+	:data -> ctrl:data
+	ctrl:item -> handler
 
 	handler:res -> done:data[0]
 	handler:err -> [done:data[1], :err]
-	done -> controller:done
-	controller:res -> :res
+	done -> ctrl:done
+	ctrl:res -> :res
 }
 
 // IForEachHandler is a dependency for ForEach.

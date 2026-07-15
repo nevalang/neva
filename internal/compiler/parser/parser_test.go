@@ -89,38 +89,10 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
 }
 
-func TestParser_ParseFile_ImportBlockRequiresMultilineItems(t *testing.T) {
-	tests := []struct {
-		name string
-		text string
-	}{
-		{
-			name: "single line import",
-			text: `import { fmt }`,
-		},
-		{
-			name: "comma separated imports",
-			text: `
-				import {
-					fmt, runtime
-				}`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := New()
-			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
-
-			require.NotNil(t, err)
-		})
-	}
-}
-
-func TestParser_ParseFile_TracksImportBlocks(t *testing.T) {
+func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	p := New()
 
-	file, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
 		import {
 			fmt
 		}
@@ -130,8 +102,33 @@ func TestParser_ParseFile_TracksImportBlocks(t *testing.T) {
 		}
 	`))
 
-	require.Nil(t, err)
-	require.Len(t, file.ImportBlocks, 2)
+	require.NotNil(t, err)
+}
+
+func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "single line",
+			text: "import { fmt }",
+		},
+		{
+			name: "comma separated",
+			text: "import { fmt, runtime }",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+
+			require.Nil(t, err)
+		})
+	}
 }
 
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {

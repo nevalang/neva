@@ -29,7 +29,7 @@ pub def FromString(data string) (res stream<string>)
 // @inport data Value to emit as the only Data item.
 //
 // @outport res Stream that emits Open, Data(data), and Close.
-#extern(stream_just)
+#extern(stream_item)
 pub def Item<T>(data T) (res stream<T>)
 
 // FromDict creates a stream of dictionary entries.
@@ -49,7 +49,7 @@ pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
 // --- Synchronization ---
 
-// Wait blocks until stream close item arrives, then sends a signal.
+// Wait blocks until stream closes, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
 	switch Switch<stream<any>>
 	---

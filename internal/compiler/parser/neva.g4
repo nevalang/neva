@@ -2,11 +2,13 @@ grammar neva;
 
 /* PARSER */
 
-prog: (NEWLINE | COMMENT | stmt)* EOF;
+prog:
+	(NEWLINE | COMMENT | nonImportStmt)*
+	importStmt?
+	(NEWLINE | COMMENT | nonImportStmt)* EOF;
 
-stmt:
-	importStmt
-	| typeStmt
+nonImportStmt:
+	typeStmt
 	| interfaceStmt
 	| constStmt
 	| compStmt;
@@ -17,9 +19,9 @@ compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
 compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: IMPORT NEWLINE* LBRACE NEWLINE+ importBlockItem* RBRACE;
-importBlockItem: (importDef | COMMENT) NEWLINE+;
-importDef: importAlias? importPath COMMENT?;
+importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE*;
+importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;
 importPathMod: AT | importMod;
