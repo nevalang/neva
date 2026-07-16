@@ -1,150 +1,124 @@
-# AGENTS.md
+# Neva Engineering Guide
 
-This file is a compact operating guide for coding agents in this repository.
-It is intentionally short and stable. Use linked docs for deep details.
+This file is the repository's high-level engineering map for humans and Codex.
+Read the canonical document for the subsystem before changing it. Keep this
+guide concise: it routes work; it does not duplicate documentation.
 
-## 1) Operating Protocol
+## Project Model
 
-1. Plan -> Review -> Execute -> Review.
-2. Use `context7` MCP (when available) for library API docs.
-3. For GitHub context, use `gh` first; fall back to `curl` only if needed.
-4. If uncertainty is >10% and local context cannot resolve it safely, ask user.
-5. Refactor proactively when it clearly improves clarity/maintainability.
-6. Run targeted checks with ~5m cap unless user requests longer runs.
-7. Run `golangci-lint` and `go test` only for touched system parts; fix issues you introduce.
-   - Language/compiler/runtime/stdlib changes: run targeted lint/tests for those packages and semantics.
-   - CI/workflow/prompt/docs-only changes: run only checks relevant to those files; skip unrelated language/runtime test suites.
-8. For PR comment tasks: apply changes first, then reply to each addressed review comment via `gh`; do not resolve threads unless user asks.
-9. Never merge a PR, enable auto-merge, or close a review PR as “done” unless the user gives a direct explicit command in that conversation.
-10. For generated tests, include short intent comments.
-11. Keep this file updated when process/architecture/rules change.
-12. Repository-local Codex skills live in `.codex/skills/*/SKILL.md`.
-    Prefer concise English guidance (tool list + workflow); avoid bundled
-    scripts unless explicitly requested.
-13. Error semantics policy: return `*compiler.Error` for invalid user programs (input/domain failures), but `panic` on internal invariant violations or impossible cross-stage states.
-14. `AGENTS.md` is an engineering harness artifact for both humans and machines.
-15. Keep this root file compact; target <=200 lines and move local details into nested `AGENTS.md` files.
-16. Treat nested `AGENTS.md` files as the repository source of truth for scoped instructions outside file-type authoring rules.
-17. File-type authoring rules live as Codex skills under `.codex/skills/`.
-18. Avoid duplicating durable guidance across `AGENTS.md`, `.codex/skills`,
-    docs, and workflows; keep one source of truth and make other layers point
-    to it.
+Neva is a statically typed, compiled dataflow language. Programs are explicit
+node-and-connection graphs, and concurrency is the default execution model.
 
-## 2) High-Level Project Context
+Compiler pipeline:
 
-- Neva is a statically typed, compiled **dataflow** language.
-- Programs are explicit node/edge graphs; implicit parallelism is default.
-- Compiler pipeline: parser -> analyzer -> desugarer -> IR gen -> backend.
-- Runtime executes generated Go with message passing primitives.
-- Standard library mixes pure Neva components and `#extern` runtime-backed components.
-- LSP source is externalized (`nevalang/neva-lsp`), not under `cmd/lsp` in this repo.
-
-## 3) Documentation Router
-
-- Project overview and quick start: [README.md](./README.md)
-- Architecture map: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Contributor workflow and release basics: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- Documentation index: [docs/README.md](./docs/README.md)
-- `docs/` is user-facing documentation; agent/RFC/progress notes belong in `.codex/plans/`.
-- Repository-local Codex skills and shared prompt context: [.codex/](./.codex/)
-- Language rationale and design decisions: [docs/qna.md](./docs/qna.md)
-- Neva style rules: [docs/style_guide.md](./docs/style_guide.md)
-- Language deep dive: [docs/book/README.md](./docs/book/README.md)
-- Build/test/dev commands: [Makefile](./Makefile)
-- Go lint policy (source of truth): [.golangci.yml](./.golangci.yml)
-
-## 4) Stable Language/Architecture Invariants
-
-These are distilled from long-term session notes and should be treated as
-high-signal constraints:
-
-1. Preserve 1:1 mapping between text and graph. Prefer explicit stdlib nodes
-   over hidden control-flow sugar.
-2. `Main` must have exactly one `start` inport and one `stop` outport
-   (both `any`, non-array).
-3. Literal/const senders are constrained:
-   - valid only in signal-triggered chains (e.g. `:start -> ...`)
-   - primitive/union literals are allowed; bytes literal is not
-4. Array-bypass uses `[*]` on both sides of a single connection.
-   - index `255` is reserved for wildcard (`[*]`)
-   - do not mix bypass and indexed usage on same port
-5. Error flow convention is stable: `res` for primary result, `err error`
-   for failures, `?` for propagation when custom handling is unnecessary.
-6. Conversions are explicit stdlib components (no implicit cast syntax).
-   - policy split: builtin (total casts) vs `std/strconv` (parse/format)
-7. `bytes` is transport-focused and currently has no literal syntax.
-   Use explicit converters (`bytes.FromString`, `strings.FromBytes`).
-8. Keep compiler-contract stdlib semantics explicit (`builtin`, `Union`,
-   `Struct`, `#autoports`, desugaring-sensitive behavior).
-
-## 5) Git Workflow
-
-- When the user asks to make changes, expect to publish them as a pull request
-  unless they explicitly ask not to.
-- Open PRs as ready for review by default. Use draft only when the user asks
-  for a draft or the branch is intentionally incomplete.
-- If the current branch is not based on the latest `origin/main`, create a fresh
-  branch from `origin/main` before committing to avoid unrelated PR diff.
-
-## 6) File-Type Rules
-
-- Use relevant repository-local Codex skills from `.codex/skills/` by their
-  metadata and task fit.
-
-## 7) Validation Workflow
-
-Prefer smallest meaningful scope first, then widen only if needed.
-
-1. Lint changed scope (`golangci-lint`).
-2. Run targeted tests for touched packages/components.
-3. For parser/grammar work, run parser smoke tests and regenerate parser.
-4. Run broader `go test ./...` only when appropriate; it can be long due to
-   `examples/` + `e2e/`.
-
-Useful commands:
-
-```bash
-make lint
-go test ./...
-make antlr
-make gofix
+```text
+parser -> analyzer -> desugarer -> IR generator -> Go backend
 ```
 
-## 8) Change-Specific Checklists
+The standard library combines Neva components with native runtime-backed
+components declared through `#extern`.
 
-### Grammar / parser / analyzer changes
+## Repository Map
 
-- Update grammar/parser artifacts when needed (`make antlr`).
-- Re-run parser smoke tests and touched analyzer tests.
-- Preserve documented core semantics (array-bypass, sender rules, `Main` rules).
+- `cmd/`: CLI entrypoints.
+- `internal/compiler/`: parser, analyzer, desugarer, IR generation, and Go backend.
+- `internal/runtime/`: messages, ports, program execution, and native functions.
+- `std/`: public standard-library packages and component contracts.
+- `e2e/`: isolated regression modules with Go test harnesses.
+- `examples/`: executable, user-facing examples in one shared module.
+- `benchmarks/`: explicit runtime and language performance scenarios.
+- `docs/user/`: language behavior, API usage, style, and learning materials.
+- `docs/developer/`: implementation, testing, runtime, and contributor guidance.
+- The language server lives in `nevalang/neva-lsp`, not in this repository.
 
-### Stdlib / runtime extern changes
+## Documentation
 
-- Keep `std/* #extern(...)` names synchronized with
-  `internal/runtime/funcs/registry.go`.
-- If stdlib naming/conventions change, update docs in same PR:
-  `docs/style_guide.md` and `docs/qna.md`.
-- If compiler bootstrap utils are affected, regenerate from repo CLI
-  (avoid stale global binaries).
-- Treat per-component e2e and benchmark coverage as the long-term stdlib
-  maintenance goal. Start with atomic benchmarks and add broader scenarios
-  only when they are justified by a distinct behavior or performance question.
+Documentation is organized by primary reader, not by a one-way dependency
+graph. Link between `docs/user/` and `docs/developer/` when useful, but keep a
+topic canonical in one place.
 
-### Tests and e2e
+- Public language behavior, API semantics, and Neva style belong in `docs/user/`.
+- Compiler, runtime, standard-library implementation, and test strategy belong
+  in `docs/developer/`.
 
-- `examples/` is one module (all examples must compile together).
-- `e2e/` contains separate modules with Go harness tests.
-- Keep e2e runs time-bounded; avoid orphaned long-running subprocess chains.
+Start from `docs/README.md` for documentation navigation.
 
-### Release delivery automation
+## Change Routing
 
-- Prefer thin release workflows that delegate wording/format rules to skills
-  instead of embedding large generation logic in YAML.
-- Do not add legacy external-agent workflow assets.
+| Change | Read before editing | Update when behavior changes |
+| --- | --- | --- |
+| `*.neva` | `docs/user/style_guide.md` | User docs for public API or style |
+| `std/**` | User component docs and `docs/developer/runtime-functions.md` when native | User API docs and developer implementation docs as applicable |
+| `internal/runtime/funcs/**` | `docs/developer/runtime-functions.md` | Developer runtime docs; user docs only for public behavior |
+| `internal/compiler/**` | `docs/developer/compiler.md` and relevant user semantics | Developer compiler docs; user docs for language-surface changes |
+| `e2e/**`, `examples/**`, `benchmarks/**` | `docs/developer/testing.md` | Developer testing docs when the test contract changes |
 
-## 9) Keep AGENTS.md Lean
+## Stable Language Constraints
 
-- Do not append per-session journals here.
-- Keep only durable process rules, architecture deltas, and high-value gotchas.
-- If a note is transient, put it in issue/PR discussion instead.
-- Keep the root `AGENTS.md` short (target <=200 lines) and push local guidance down to subdirectories.
+1. Preserve the 1:1 mapping between text and graph. Prefer explicit standard
+   library nodes over hidden control-flow sugar.
+2. `Main` has exactly one non-array `start any` inport and one non-array
+   `stop any` outport.
+3. Literal and const senders are valid only in signal-triggered chains.
+   Primitive and union literals are allowed; bytes literals are not.
+4. Array bypass uses `[*]` on both sides of one connection. Index `255` is
+   reserved for wildcard bypass; do not mix bypass and indexed usage on a port.
+5. Use `res` for the primary result and `err error` for failures. Propagate
+   errors with `?` unless custom handling is necessary.
+6. Conversions are explicit standard-library components. Do not introduce
+   implicit casts.
+7. `bytes` is transport-focused and has no literal syntax. Use explicit
+   converters such as `bytes.FromString` and `strings.FromBytes`.
+8. Keep compiler-contract standard-library behavior explicit: `builtin`,
+   `Union`, `Struct`, `#autoports`, and desugaring-sensitive constructs are
+   language boundaries, not ordinary helpers.
+9. Return `*compiler.Error` for invalid user programs. Panic only for internal
+   invariant violations or impossible cross-stage states.
+
+## Working Protocol
+
+1. Inspect the relevant code, tests, and canonical documentation before making
+   an architectural decision.
+2. Prefer existing repository patterns and public primitives over new APIs or
+   special cases.
+3. For a grammar, AST, analyzer, or type-system change, create a minimal
+   reproducer before implementation and identify the violated language rule.
+4. For a runtime function, establish why a Neva graph is insufficient and
+   follow the runtime-function protocol.
+5. Keep changes scoped. Record unresolved design work in an issue or a
+   repository-local plan rather than shipping speculative infrastructure.
+
+## Operating Standards
+
+- Use `gh` for GitHub context before falling back to `curl`.
+- Ask the user when material uncertainty remains after repository and
+  documentation research.
+- Run targeted checks with an approximately five-minute cap unless the user
+  asks for a broader run.
+- Start implementation branches from current `origin/main` unless the user
+  explicitly asks to work on an existing branch.
+- Never merge, enable auto-merge, or close a review PR without a direct user
+  command in the current conversation.
+- Keep this guide current when a recurring process or architecture rule changes.
+
+## Skills
+
+Use the matching repository skill for the task:
+
+- `Go` for Go files.
+- `Neva` for `.neva` files and Neva snippets.
+- `Review` for pull requests, diffs, and branches.
+
+## Validation
+
+Prefer the smallest meaningful scope first, then widen only when needed.
+
+1. Run focused lint and tests for the changed subsystem.
+2. For parser work, update grammar artifacts and run parser smoke tests.
+3. For runtime and standard-library behavior, run focused unit tests and e2e
+   coverage; benchmarks do not replace behavior tests.
+4. Run broader `go test ./...` only when the blast radius warrants it.
+
+For PR review comments, apply code or documentation changes first, reply to
+every addressed comment through GitHub, and do not resolve threads unless the
+user requests it. Verify the latest unresolved threads after replying.

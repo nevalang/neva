@@ -1,16 +1,15 @@
 ---
-name: "neva-authoring"
-description: "Use when editing, reviewing, or generating .neva source files or Neva snippets in docs/tests. Covers syntax, style, and validation expectations."
+name: "neva"
+description: "Use for Neva source or snippets: authoring, refactoring, debugging, or review."
 ---
 
-# Neva Authoring
+# Neva
 
 Use this skill for changes touching `*.neva` or Neva code snippets.
 
 ## Rules
 
-- Follow the nearest `AGENTS.md` as scoped source of truth.
-- Source of truth for style: `docs/style_guide.md`.
+- Read `docs/user/style_guide.md` before editing.
 - Keep edited `.neva` files syntactically valid.
 - If syntax is uncertain, consult `internal/compiler/parser/neva.g4` and nearby
   `.neva` examples before editing.

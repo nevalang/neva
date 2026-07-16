@@ -89,7 +89,7 @@ Also, entry and stdlib modules are only modules without versions in their refere
 
 ### Stdlib Module
 
-Each module implicitly depends on the `stdlib` module, which the compiler automatically includes in every build. The compiler contains embedded stdlib files, eliminating the need for downloads. As a result, the stdlib module is the only one without dependencies, while all other modules implicitly depend on it. Stdlib source code is located [here](../std/).
+Each module implicitly depends on the `stdlib` module, which the compiler automatically includes in every build. The compiler contains embedded stdlib files, eliminating the need for downloads. As a result, the stdlib module is the only one without dependencies, while all other modules implicitly depend on it. Stdlib source code is located [here](../../../std/).
 
 Here's how inserted dependency looks like:
 
@@ -257,7 +257,7 @@ Stdlib imports are imports of packages from the `std` module. For stdlib imports
 
 #### Builtin Package
 
-Every file implicitly imports the `std:builtin` package. When referring to builtin entities, omit the namespace (e.g., use `Add` instead of `builtin.Add`). The compiler automatically prefixes with `builtin.`. Note that local entities with the same name will shadow builtin ones, but it's best to avoid such situations. Never manually import the builtin package as the compiler does this automatically. To learn what's inside the builtin explore [stdlib source code](../std/builtin/).
+Every file implicitly imports the `std:builtin` package. When referring to builtin entities, omit the namespace (e.g., use `Add` instead of `builtin.Add`). The compiler automatically prefixes with `builtin.`. Note that local entities with the same name will shadow builtin ones, but it's best to avoid such situations. Never manually import the builtin package as the compiler does this automatically. To learn what's inside the builtin explore [stdlib source code](../../../std/builtin/).
 
 ### Local Imports
 

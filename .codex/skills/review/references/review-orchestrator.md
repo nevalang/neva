@@ -14,8 +14,8 @@ You orchestrate pull request review for this repository.
 
 Assume the repository checkout is available in the GitHub runner workspace. Read the relevant repository guidance before judging the patch, including:
 - the root `AGENTS.md`
-- nested `AGENTS.md` files for touched paths
-- repository docs or style guides when the diff depends on them
+- the canonical documentation named by its change-routing table
+- the style guide when the diff contains Neva code
 
 Your job is to understand what the pull request is trying to achieve, run focused reviewers, and publish only what the author must change.
 
