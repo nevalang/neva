@@ -1,4 +1,6 @@
-import { sync }
+import {
+	sync
+}
 
 def Main(start any) (stop any) {
 	fan_out FanOut<any>

@@ -1,4 +1,7 @@
-import { github.com/nevalang/x:main, runtime }
+import {
+	github.com/nevalang/x:main
+	runtime
+}
 
 def Main(start any) (stop any) {
     sub_component SubComponent{main.Println<any>}

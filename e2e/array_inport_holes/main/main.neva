@@ -1,4 +1,6 @@
-import { fmt }
+import {
+	fmt
+}
 
 def Main(start any) (stop any) {
 	printf fmt.Printf

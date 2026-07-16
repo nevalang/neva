@@ -13,6 +13,29 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
+func (s *treeShapeListener) validateImportStmt(actx *generated.ImportStmtContext) *compiler.Error {
+	if s.importCount == 0 {
+		s.importCount++
+		return nil
+	}
+
+	return &compiler.Error{
+		Message: "file must contain at most one import statement",
+		Meta: &core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}
+}
+
 func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
@@ -796,13 +819,11 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(lit.UnionLit().EntityRef())
+		parsedUnionType, err := s.parseTypeInstExpr(lit.UnionLit().TypeInstExpr())
 		if err != nil {
 			return src.Const{}, err
 		}
-		parsedConst.TypeExpr.Inst = &ts.InstExpr{
-			Ref: parsedUnionRef,
-		}
+		parsedConst.TypeExpr = *parsedUnionType
 	}
 
 	return parsedConst, nil
@@ -908,12 +929,13 @@ func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll //
 			),
 		)
 	case constVal.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(constVal.UnionLit().EntityRef())
+		parsedUnionType, err := s.parseTypeInstExpr(constVal.UnionLit().TypeInstExpr())
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
 		msg.Union = &src.UnionLiteral{
-			EntityRef: parsedUnionRef,
+			EntityRef: parsedUnionType.Inst.Ref,
+			TypeArgs:  parsedUnionType.Inst.Args,
 			Tag:       constVal.UnionLit().IDENTIFIER().GetText(),
 		}
 		if wrapped := constVal.UnionLit().ConstLit(); wrapped != nil {

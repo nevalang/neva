@@ -21,6 +21,7 @@ type unionActiveTagInfo struct {
 func (a Analyzer) buildUnionActiveTagBindings(
 	net []src.Connection,
 	nodes map[string]src.Node,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (map[string]unionActiveTagInfo, *compiler.Error) {
@@ -70,7 +71,7 @@ func (a Analyzer) buildUnionActiveTagBindings(
 		}
 
 		// Ensure literal's union type matches Union<T>.
-		_, err = a.resolveUnionTypeFromLiteral(unionLiteral, scope)
+		_, err = a.resolveUnionTypeFromLiteral(unionLiteral, typeFrame, scope)
 		if err != nil {
 			return nil, compiler.Error{Meta: &tagSender.Meta}.Wrap(err)
 		}
@@ -249,21 +250,20 @@ func (a Analyzer) resolveUnionConstSender(
 // It returns the fully analyzed union type expression or an error if the reference isn't a union.
 func (a Analyzer) resolveUnionTypeFromLiteral(
 	unionLiteral *src.UnionLiteral,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (ts.Expr, *compiler.Error) {
-	typeDef, _, err := scope.GetType(unionLiteral.EntityRef)
+	unionTypeExpr, err := a.resolver.ResolveExprWithFrame(ts.Expr{
+		Inst: &ts.InstExpr{
+			Ref:  unionLiteral.EntityRef,
+			Args: unionLiteral.TypeArgs,
+		},
+		Meta: unionLiteral.Meta,
+	}, typeFrame, scope)
 	if err != nil {
 		return ts.Expr{}, &compiler.Error{
 			Message: fmt.Sprintf("failed to resolve union type: %v", err),
-			Meta:    &unionLiteral.Meta,
-		}
-	}
-
-	unionTypeExpr, analyzeExprErr := a.analyzeTypeExpr(*typeDef.BodyExpr, scope)
-	if analyzeExprErr != nil {
-		return ts.Expr{}, &compiler.Error{
-			Message: fmt.Sprintf("failed to resolve union type: %v", analyzeExprErr),
 			Meta:    &unionLiteral.Meta,
 		}
 	}

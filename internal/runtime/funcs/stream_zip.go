@@ -2,88 +2,152 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
 
 type streamZip struct{}
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,gocognit,gocyclo // Zip synchronizes two stream lifecycles in one state machine.
 func (streamZip) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	leftIn, err := io.In.Single("left")
+	leftIn, err := singleInport(runtimeIO, "left")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	rightIn, err := io.In.Single("right")
+	rightIn, err := singleInport(runtimeIO, "right")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		var idx int64
 		for {
-			leftMsg, rightMsg, ok := receive2(ctx, leftIn, rightIn)
-			if !ok {
+			if !waitStreamOpens(ctx, leftIn, rightIn) {
+				return
+			}
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
 				return
 			}
 
-			leftItem := leftMsg.Struct()
-			rightItem := rightMsg.Struct()
-
-			leftLast := leftItem.Get("last").Bool()
-			rightLast := rightItem.Get("last").Bool()
-
-			zipped := runtime.NewStructMsg(
-				[]runtime.StructField{
-					runtime.NewStructField("left", leftItem.Get("data")),
-					runtime.NewStructField("right", rightItem.Get("data")),
-				},
-			)
-
-			last := leftLast || rightLast
-
-			if !resOut.Send(ctx, streamItem(zipped, idx, last)) {
-				return
-			}
-
-			idx++
-
-			if last {
-				if !leftLast {
-					drainStream(ctx, leftIn)
+			for {
+				leftMsg, leftClosed, rightMsg, rightClosed, received := receiveStreamPairDataOrClose(ctx, leftIn, rightIn)
+				if !received {
+					return
 				}
 
-				if !rightLast {
-					drainStream(ctx, rightIn)
+				if leftClosed || rightClosed {
+					if !resOut.Send(ctx, newStreamCloseMsg()) {
+						return
+					}
+					if !leftClosed {
+						drainStreamUntilClose(ctx, leftIn)
+					}
+					if !rightClosed {
+						drainStreamUntilClose(ctx, rightIn)
+					}
+					break
 				}
 
-				return
+				zipped := runtime.NewStructMsg(
+					[]runtime.StructField{
+						runtime.NewStructField("left", leftMsg),
+						runtime.NewStructField("right", rightMsg),
+					},
+				)
+
+				if !resOut.Send(ctx, newStreamDataMsg(zipped)) {
+					return
+				}
 			}
 		}
 	}, nil
 }
 
-func drainStream(ctx context.Context, in runtime.SingleInport) {
+// waitStreamOpens receives the opening event from both streams concurrently.
+func waitStreamOpens(ctx context.Context, leftIn, rightIn runtime.SingleInport) bool {
+	var (
+		leftOK, rightOK bool
+		group           sync.WaitGroup
+	)
+
+	group.Go(func() {
+		leftOK = waitStreamOpen(ctx, leftIn)
+	})
+	group.Go(func() {
+		rightOK = waitStreamOpen(ctx, rightIn)
+	})
+	group.Wait()
+
+	return leftOK && rightOK
+}
+
+type streamReceiver interface {
+	Receive(ctx context.Context) (runtime.OrderedMsg, bool)
+}
+
+func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
+	for {
+		msg, ok := in.Receive(ctx)
+		if !ok {
+			return false
+		}
+		if isStreamOpen(msg.Msg) {
+			return true
+		}
+	}
+}
+
+// receiveStreamPairDataOrClose receives the next relevant event from both streams concurrently.
+//
+//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
+func receiveStreamPairDataOrClose(
+	ctx context.Context,
+	leftIn, rightIn runtime.SingleInport,
+) (runtime.Msg, bool, runtime.Msg, bool, bool) {
+	for {
+		leftMsg, rightMsg, received := receive2(ctx, leftIn, rightIn)
+		if !received {
+			return nil, false, nil, false, false
+		}
+
+		leftData, leftClosed, leftAccepted := decodeStreamDataOrClose(leftMsg.Msg)
+		rightData, rightClosed, rightAccepted := decodeStreamDataOrClose(rightMsg.Msg)
+		if leftAccepted && rightAccepted {
+			return leftData, leftClosed, rightData, rightClosed, true
+		}
+	}
+}
+
+// decodeStreamDataOrClose classifies a stream event relevant to zip processing.
+//
+//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
+func decodeStreamDataOrClose(msg runtime.Msg) (runtime.Msg, bool, bool) {
+	switch {
+	case isStreamData(msg):
+		return streamDataValue(msg), false, true
+	case isStreamClose(msg):
+		return nil, true, true
+	default:
+		return nil, false, false
+	}
+}
+
+func drainStreamUntilClose(ctx context.Context, in streamReceiver) {
 	for {
 		msg, ok := in.Receive(ctx)
 		if !ok {
 			return
 		}
-
-		if msg.Struct().Get("last").Bool() {
+		if isStreamClose(msg.Msg) {
 			return
 		}
 	}

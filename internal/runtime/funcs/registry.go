@@ -13,11 +13,12 @@ func NewRegistry() map[string]runtime.FuncCreator {
 	fileHandles := runtime.NewFileHandles()
 
 	return map[string]runtime.FuncCreator{
-		"new":     newV2{},
-		"del":     del{},
-		"lock":    lock{},
-		"fan_in":  fanIn{},
-		"fan_out": fanOut{},
+		"new":       newV2{},
+		"del":       del{},
+		"lock":      lock{},
+		"sync_turn": turn{},
+		"fan_in":    fanIn{},
+		"fan_out":   fanOut{},
 
 		"panic": panicker{},
 
@@ -54,7 +55,9 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"dict_to_stream":       dictToStream{},
 		"stream_to_dict":       streamToDict{},
 
-		"stream_int_range": rangeInt{},
+		"stream_int_range": streamIntRange{},
+		"stream_just":      streamJust{},
+		"stream_enumerate": streamEnumerate{},
 
 		"stream_zip":      streamZip{},
 		"stream_zip_many": streamZipMany{},

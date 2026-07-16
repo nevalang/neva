@@ -1,27 +1,86 @@
-import { @:lists }
+import {
+	@:sync
+}
 
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
-// Note that the resulting stream will have its elements re-indexed to be continuous.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
-    split Split<T>{predicate IPredicate<T>}
-    s2l lists.FromStream<T>
-    l2s FromList<T>
-    ---
-    :data -> split
-    split:then -> s2l -> l2s -> :res
+	split Split<T>{predicate IPredicate<T>}
+	---
+	:data -> split
+	split:then -> :res
 }
 
 // Split splits a stream into two streams based on a predicate.
-// Notice that it does not modifies stream item indexes and last flag.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
-    cond Cond<stream<T>>
-    predicate IPredicate<T>
-    ---
-    :data -> [cond:data, .data -> predicate]
-    predicate -> cond:if
-    cond:then -> :then
-    cond:else -> :else
+	turn sync.Turn<stream<T>>
+	classify Classify<T>{predicate IPredicate<T>}
+	emit Emit<T>
+	---
+	:data -> turn:data
+	turn -> classify
+	classify:res -> emit:data
+	classify:condition -> emit:condition
+	emit:done -> turn:done
+	emit:then -> :then
+	emit:else -> :else
+}
+
+// Classify holds a stream event until its Data payload is classified.
+def Classify<T>(data stream<T>) (res stream<T>, condition bool) {
+	hold Lock<stream<T>>
+	event_switch Switch<stream<T>>
+	signals FanIn<any>
+	predicate IPredicate<T>
+	---
+	:data -> [
+		hold:data,
+		event_switch:data,
+		stream<T>::Open -> event_switch:case[0] -> signals:data[0],
+		stream<T>::Data -> event_switch:case[1] -> predicate,
+		stream<T>::Close -> event_switch:case[2] -> signals:data[2]
+	]
+	predicate -> [signals:data[1], :condition]
+	signals -> hold:sig
+	hold -> :res
+}
+
+// Emit sends classified Data to one output and stream boundaries to both.
+def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, done any) {
+	event_switch Switch<stream<T>>
+	route Cond<stream<T>>
+	data_union Union<stream<T>>
+	then_output FanIn<stream<T>>
+	else_output FanIn<stream<T>>
+	done_output FanIn<any>
+	---
+	:data -> [
+		event_switch:data,
+		stream<T>::Open -> event_switch:case[0],
+		stream<T>::Data -> event_switch:case[1],
+		stream<T>::Close -> event_switch:case[2]
+	]
+	:condition -> route:if
+	event_switch:case[0] -> [
+		then_output:data[0],
+		else_output:data[0],
+		done_output:data[0]
+	]
+	event_switch:case[1] -> [
+		data_union:data,
+		stream<T>::Data -> data_union:tag
+	]
+	data_union -> route:data
+	route:then -> [then_output:data[1], done_output:data[1]]
+	route:else -> [else_output:data[1], done_output:data[2]]
+	event_switch:case[2] -> [
+		then_output:data[2],
+		else_output:data[2],
+		done_output:data[3]
+	]
+	then_output -> :then
+	else_output -> :else
+	done_output -> :done
 }
 
 // IPredicate represents a logic that determines if a value satisfies a condition.

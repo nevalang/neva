@@ -1,4 +1,8 @@
-import { fmt, runtime, streams }
+import {
+	fmt
+	runtime
+	streams
+}
 
 const lst list<bool> = [true, false]
 

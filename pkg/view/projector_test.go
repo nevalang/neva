@@ -147,8 +147,10 @@ func TestProjectFileByIDIncludesDependencyInjectionArgs(t *testing.T) {
 	workspace := writeWorkspace(t, map[string]string{
 		"neva.yml": manifestYAML(),
 		"main.neva": `
-import { streams }
-import { fmt }
+import {
+	fmt
+	streams
+}
 
 def Main(data stream<int>) (res stream<int>, err error) {
 	for_each streams.ForEach<int>{Print2Lines}
