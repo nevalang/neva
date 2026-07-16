@@ -73,6 +73,77 @@ func (a Analyzer) inferUnionLiteralSenderType(
 	}, nil
 }
 
+// validateUnionTagPatternSender recognizes a tag-only union literal at a pattern port.
+// Such a literal selects a member; it is not a complete value for a payload-carrying member.
+func (a Analyzer) validateUnionTagPatternSender(
+	sender *src.ConnectionSender,
+	receiverType *ts.Expr,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	scope src.Scope,
+) (bool, *compiler.Error) {
+	unionLiteral, err := a.tryResolveUnionConstSender(sender, scope)
+	if err != nil {
+		return false, err
+	}
+	if unionLiteral == nil || unionLiteral.Data != nil {
+		return false, nil
+	}
+
+	if receiverType.Lit == nil || receiverType.Lit.Union == nil {
+		return false, &compiler.Error{
+			Message: fmt.Sprintf(
+				"Union tag pattern %v::%s requires a union receiver, got %v",
+				unionLiteral.EntityRef,
+				unionLiteral.Tag,
+				*receiverType,
+			),
+			Meta: &sender.Meta,
+		}
+	}
+	if _, ok := receiverType.Lit.Union[unionLiteral.Tag]; !ok {
+		return false, &compiler.Error{
+			Message: fmt.Sprintf(
+				"Union tag pattern %v::%s is not compatible with %v: tag not found",
+				unionLiteral.EntityRef,
+				unionLiteral.Tag,
+				*receiverType,
+			),
+			Meta: &sender.Meta,
+		}
+	}
+
+	return true, nil
+}
+
+// tryResolveUnionConstSender resolves a union literal constant when sender holds one.
+// A non-union constant is not an error because ordinary receiver validation handles it.
+func (a Analyzer) tryResolveUnionConstSender(
+	sender *src.ConnectionSender,
+	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	scope src.Scope,
+) (*src.UnionLiteral, *compiler.Error) {
+	if sender.Const == nil {
+		return nil, nil
+	}
+
+	if sender.Const.Value.Message != nil && sender.Const.Value.Message.Union != nil {
+		return sender.Const.Value.Message.Union, nil
+	}
+	if sender.Const.Value.Ref == nil {
+		return nil, nil
+	}
+
+	constType, err := a.getResolvedConstTypeByRef(*sender.Const.Value.Ref, scope)
+	if err != nil {
+		return nil, err
+	}
+	if constType.Lit == nil || constType.Lit.Union == nil {
+		return nil, nil
+	}
+
+	return a.resolveUnionConstRef(*sender.Const.Value.Ref, scope)
+}
+
 func (a Analyzer) messageLiteralType(
 	value *src.ConstValue,
 	typeFrame map[string]ts.Def,
