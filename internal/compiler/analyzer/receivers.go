@@ -111,7 +111,7 @@ func (a Analyzer) analyzeReceiver(
 	}
 }
 
-//nolint:gocyclo,gocognit // Receiver validation combines generic, Union:data, and pattern-port checks.
+//nolint:cyclop,gocyclo,gocognit // Receiver validation combines generic, Union:data, and pattern-port checks.
 func (a Analyzer) analyzePortAddrReceiver(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	portAddr src.PortAddr,
@@ -233,7 +233,7 @@ func (a Analyzer) isUnionTagPatternReceiverSender(
 	return a.validateUnionTagPatternSender(sender, receiverType, scope)
 }
 
-//nolint:gocyclo,gocognit // Chain validation mirrors direct receiver validation before recursive analysis.
+//nolint:cyclop,gocyclo,gocognit // Chain validation mirrors direct receiver validation before recursive analysis.
 func (a Analyzer) analyzeChainedConnectionReceiver(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	chainedConn src.Connection,

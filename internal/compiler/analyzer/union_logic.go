@@ -14,6 +14,7 @@ type unionActiveTagInfo struct {
 	tagTypeExpr ts.Expr
 }
 
+// inferUnionLiteralSenderType validates a union literal payload and derives its concrete tag type.
 func (a Analyzer) inferUnionLiteralSenderType(
 	unionLiteral *src.UnionLiteral,
 	typeFrame map[string]ts.Def,
@@ -144,6 +145,7 @@ func (a Analyzer) tryResolveUnionConstSender(
 	return a.resolveUnionConstRef(*sender.Const.Value.Ref, scope)
 }
 
+// messageLiteralType derives the type of a literal allowed as a union payload.
 func (a Analyzer) messageLiteralType(
 	value *src.ConstValue,
 	typeFrame map[string]ts.Def,
