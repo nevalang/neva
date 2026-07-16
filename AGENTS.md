@@ -1,6 +1,6 @@
 # Neva Engineering Guide
 
-This file is the repository's high-level engineering map for humans and Codex.
+This file is the repository's high-level engineering map for humans and robots.
 Read the canonical document for the subsystem before changing it. Keep this
 guide concise: it routes work; it does not duplicate documentation.
 
@@ -20,16 +20,23 @@ components declared through `#extern`.
 
 ## Repository Map
 
-- `cmd/`: CLI entrypoints.
-- `internal/compiler/`: parser, analyzer, desugarer, IR generation, and Go backend.
-- `internal/runtime/`: messages, ports, program execution, and native functions.
-- `std/`: public standard-library packages and component contracts.
-- `e2e/`: isolated regression modules with Go test harnesses.
-- `examples/`: executable, user-facing examples in one shared module.
-- `benchmarks/`: explicit runtime and language performance scenarios.
-- `docs/user/`: language behavior, API usage, style, and learning materials.
-- `docs/developer/`: implementation, testing, runtime, and contributor guidance.
-- The language server lives in `nevalang/neva-lsp`, not in this repository.
+```text
+.
+|- cmd/                    CLI entrypoint.
+|- internal/
+|  |- compiler/            Frontend, lowering, IR, and code-generation backends.
+|  `- runtime/             Messages, ports, program execution, and native functions.
+|- std/                    Public standard-library packages and component contracts.
+|- e2e/                    Isolated regression modules with Go test harnesses.
+|- examples/               User-facing executable examples in one shared module.
+|- benchmarks/             Explicit runtime and language performance scenarios.
+|- docs/
+|  |- user/                Language behavior, APIs, style, and learning material.
+|  `- developer/           Compiler, runtime, test, and contributor guidance.
+`- .codex/                 Repository-local skills, plans, and agent automation.
+```
+
+The language server lives in `nevalang/neva-lsp`, not in this repository.
 
 ## Documentation
 
@@ -52,28 +59,6 @@ Start from `docs/README.md` for documentation navigation.
 | `internal/runtime/funcs/**` | `docs/developer/runtime-functions.md` | Developer runtime docs; user docs only for public behavior |
 | `internal/compiler/**` | `docs/developer/compiler.md` and relevant user semantics | Developer compiler docs; user docs for language-surface changes |
 | `e2e/**`, `examples/**`, `benchmarks/**` | `docs/developer/testing.md` | Developer testing docs when the test contract changes |
-
-## Stable Language Constraints
-
-1. Preserve the 1:1 mapping between text and graph. Prefer explicit standard
-   library nodes over hidden control-flow sugar.
-2. `Main` has exactly one non-array `start any` inport and one non-array
-   `stop any` outport.
-3. Literal and const senders are valid only in signal-triggered chains.
-   Primitive and union literals are allowed; bytes literals are not.
-4. Array bypass uses `[*]` on both sides of one connection. Index `255` is
-   reserved for wildcard bypass; do not mix bypass and indexed usage on a port.
-5. Use `res` for the primary result and `err error` for failures. Propagate
-   errors with `?` unless custom handling is necessary.
-6. Conversions are explicit standard-library components. Do not introduce
-   implicit casts.
-7. `bytes` is transport-focused and has no literal syntax. Use explicit
-   converters such as `bytes.FromString` and `strings.FromBytes`.
-8. Keep compiler-contract standard-library behavior explicit: `builtin`,
-   `Union`, `Struct`, `#autoports`, and desugaring-sensitive constructs are
-   language boundaries, not ordinary helpers.
-9. Return `*compiler.Error` for invalid user programs. Panic only for internal
-   invariant violations or impossible cross-stage states.
 
 ## Working Protocol
 
@@ -101,14 +86,6 @@ Start from `docs/README.md` for documentation navigation.
   command in the current conversation.
 - Keep this guide current when a recurring process or architecture rule changes.
 
-## Skills
-
-Use the matching repository skill for the task:
-
-- `Go` for Go files.
-- `Neva` for `.neva` files and Neva snippets.
-- `Review` for pull requests, diffs, and branches.
-
 ## Validation
 
 Prefer the smallest meaningful scope first, then widen only when needed.
@@ -118,6 +95,14 @@ Prefer the smallest meaningful scope first, then widen only when needed.
 3. For runtime and standard-library behavior, run focused unit tests and e2e
    coverage; benchmarks do not replace behavior tests.
 4. Run broader `go test ./...` only when the blast radius warrants it.
+
+Each e2e directory is independently testable. Before pushing a behavior
+change, select and run the relevant `go test ./e2e/<case>` packages locally;
+use the full e2e suite only when the changed contract has broad reach.
+
+The repository's Codex stop hook runs `pre-commit` after a turn that leaves
+working-tree changes, so formatting and autofix output is available before the
+next response or push. Review and trust the hook explicitly when Codex asks.
 
 For PR review comments, apply code or documentation changes first, reply to
 every addressed comment through GitHub, and do not resolve threads unless the

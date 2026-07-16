@@ -7,6 +7,16 @@ description: "Use for Neva source or snippets: authoring, refactoring, debugging
 
 Use this skill for changes touching `*.neva` or Neva code snippets.
 
+## CLI Discovery
+
+- Use `neva --help` to list commands and global options.
+- Use `neva <command> --help` before relying on a command's flags or argument
+  contract.
+- During repository development, run `go run ./cmd/neva --help` or
+  `go run ./cmd/neva <command> --help` when a local binary is unavailable.
+- `neva doc [package/path] [.] <pattern>` searches the bundled standard
+  library; use it to discover existing components before adding one.
+
 ## Rules
 
 - Read `docs/user/style_guide.md` before editing.

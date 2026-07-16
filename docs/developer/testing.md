@@ -5,7 +5,10 @@
   standard-library regressions.
 - `examples/**` are executable user-facing documentation; all examples belong
   to one module and must compile together.
-- `benchmarks/**` measure explicit runtime or language performance questions.
+- `internal/runtime/**/*_bench_test.go` measures native runtime functions and
+  runtime primitives in isolation.
+- `benchmarks/**` measure explicit language-level and composed runtime
+  performance questions.
 
 Run the smallest meaningful scope while iterating, then widen validation when a
 change crosses compiler, runtime, or public standard-library boundaries.

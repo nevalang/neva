@@ -5,7 +5,14 @@ set -eu
 
 files=$(git diff --cached --name-only -- '*.go')
 if [ -z "$files" ]; then
-  echo "no staged Go files"
+  files=$( {
+    git diff --name-only -- '*.go'
+    git ls-files --others --exclude-standard -- '*.go'
+  } | sort -u )
+fi
+
+if [ -z "$files" ]; then
+  echo "no changed Go files"
   exit 0
 fi
 
