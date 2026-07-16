@@ -20,7 +20,8 @@ Prioritize questions such as:
 
 Look hard for:
 - logic bugs, invalid assumptions, and edge cases hidden behind plausible-looking code
-- broken invariants or conventions documented in `AGENTS.md`, nested `AGENTS.md`, style docs, or nearby code
+- broken invariants or conventions documented in `AGENTS.md`, canonical docs,
+  style docs, or nearby code
 - changes that make behavior less explicit, less deterministic, or less aligned with the compiler/runtime/dataflow model
 - contradictions between workflow configuration, prompts, automation behavior, and the actual capabilities being relied on
 - tests or docs that claim a guarantee the implementation does not really provide

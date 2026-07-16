@@ -23,7 +23,7 @@ Review for:
 - whether documentation, prompts, and code tell the same story
 
 Apply repository-specific standards too:
-- Neva files should follow `docs/style_guide.md`
+- Neva files should follow `docs/user/style_guide.md`
 - durable guidance should not be duplicated across `AGENTS.md`, rules, docs, prompts, and automation layers
 - workflows should stay minimal and should not absorb business logic that belongs in the reviewing layer
 - CI-facing prompts should be concrete and unambiguous, because ambiguity in automation is a maintainability bug

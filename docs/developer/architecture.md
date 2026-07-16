@@ -1,5 +1,8 @@
 # Architecture
 
+This page maps the implementation. For language concepts, start with the
+[user documentation](../user/README.md).
+
 ## Compiler
 
 ```mermaid

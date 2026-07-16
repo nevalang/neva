@@ -2,7 +2,8 @@
 
 Neva is a relatively small and simple language, don't be intimidated and feel free to hack around and reach out to maintainers if you need help.
 
-Start from reading [ARCHITECTURE.md](./ARCHITECTURE.md) and [Makefile](./Makefile).
+Start with [Architecture](./architecture.md), the [engineering guide](../../AGENTS.md),
+and the [Makefile](../../Makefile).
 
 ## Requirements
 
@@ -22,14 +23,9 @@ Not required but recommended:
 
 ## Development
 
-## Engineering Harness (`AGENTS.md`)
-
-This repository uses hierarchical `AGENTS.md` files as an engineering harness
-for both humans and machines.
-
-- Root [`AGENTS.md`](./AGENTS.md) defines stable global rules.
-- Local `AGENTS.md` files define context-specific rules in subdirectories.
-- Prefer local `AGENTS.md` over local `README.md` for contributor/agent workflows.
+Follow the [engineering guide](../../AGENTS.md) for repository routing,
+canonical documentation, and validation expectations. Use the matching skill
+for Go, Neva, or review work.
 
 ## Releasing a new version
 
@@ -58,7 +54,7 @@ after publishing: if the language syntax, stdlib, or tooling changed, update the
 
 ### Dataflow
 
-- [Nevalang's Documentation](./docs/README.md)
+- [Neva user documentation](../user/README.md)
 - [Flow-Based Programming: A New Approach to Application Development](https://jpaulmorrison.com/fbp/1stedchaps.html)
 - [Dataflow and Reactive Programming Systems: A Practical Guide](https://www.amazon.com/Dataflow-Reactive-Programming-Systems-Practical/dp/1497422442)
 
