@@ -89,38 +89,10 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
 }
 
-func TestParser_ParseFile_ImportBlockRequiresMultilineItems(t *testing.T) {
-	tests := []struct {
-		name string
-		text string
-	}{
-		{
-			name: "single line import",
-			text: `import { fmt }`,
-		},
-		{
-			name: "comma separated imports",
-			text: `
-				import {
-					fmt, runtime
-				}`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := New()
-			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
-
-			require.NotNil(t, err)
-		})
-	}
-}
-
-func TestParser_ParseFile_TracksImportBlocks(t *testing.T) {
+func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	p := New()
 
-	file, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
 		import {
 			fmt
 		}
@@ -130,8 +102,34 @@ func TestParser_ParseFile_TracksImportBlocks(t *testing.T) {
 		}
 	`))
 
-	require.Nil(t, err)
-	require.Len(t, file.ImportBlocks, 2)
+	require.NotNil(t, err)
+	require.Equal(t, "file must contain at most one import statement", err.Message)
+}
+
+func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "single line",
+			text: "import { fmt }",
+		},
+		{
+			name: "comma separated",
+			text: "import { fmt, runtime }",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+
+			require.Nil(t, err)
+		})
+	}
 }
 
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
@@ -1024,21 +1022,21 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 	net := got.Entities["Main"].Component[0].Net
 	require.NotEmpty(t, net)
 
-	var foundStreamItemChain bool
+	var foundStreamJustChain bool
 	var foundErrFanIn bool
 
 	for _, conn := range net {
 		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newPixel" &&
 			conn.Senders[0].PortAddr.Port == "" {
 			require.NotNil(t, conn.Receivers[0].ChainedConnection)
-			itemChain := conn.Receivers[0].ChainedConnection
-			require.Equal(t, "item", itemChain.Senders[0].PortAddr.Node)
-			require.Equal(t, "", itemChain.Senders[0].PortAddr.Port)
+			justChain := conn.Receivers[0].ChainedConnection
+			require.Equal(t, "just", justChain.Senders[0].PortAddr.Node)
+			require.Equal(t, "", justChain.Senders[0].PortAddr.Port)
 
-			require.NotNil(t, itemChain.Receivers[0].PortAddr)
-			require.Equal(t, "new", itemChain.Receivers[0].PortAddr.Node)
-			require.Equal(t, "", itemChain.Receivers[0].PortAddr.Port)
-			foundStreamItemChain = true
+			require.NotNil(t, justChain.Receivers[0].PortAddr)
+			require.Equal(t, "new", justChain.Receivers[0].PortAddr.Node)
+			require.Equal(t, "", justChain.Receivers[0].PortAddr.Port)
+			foundStreamJustChain = true
 		}
 
 		if len(conn.Senders) == 3 && len(conn.Receivers) == 1 &&
@@ -1053,7 +1051,7 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 		}
 	}
 
-	require.True(t, foundStreamItemChain)
+	require.True(t, foundStreamJustChain)
 	require.True(t, foundErrFanIn)
 }
 

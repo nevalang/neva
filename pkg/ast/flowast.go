@@ -90,9 +90,8 @@ func (pkg Package) Entities() func(func(EntitiesResult) bool) {
 }
 
 type File struct {
-	Imports      map[string]Import `json:"imports,omitempty"`
-	Entities     map[string]Entity `json:"entities,omitempty"`
-	ImportBlocks []core.Meta       `json:"-"`
+	Imports  map[string]Import `json:"imports,omitempty"`
+	Entities map[string]Entity `json:"entities,omitempty"`
 }
 
 type Import struct {

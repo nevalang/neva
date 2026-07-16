@@ -6,9 +6,9 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type rangeInt struct{}
+type streamIntRange struct{}
 
-func (rangeInt) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamIntRange) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	fromIn, err := singleInport(runtimeIO, "from")
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func sendIntRange(
 	resOut runtime.SingleOutport,
 	from, toValue int64,
 ) bool {
-	if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+	if !resOut.Send(ctx, newStreamOpenMsg()) {
 		return false
 	}
 
@@ -58,7 +58,7 @@ func sendIntRange(
 		return sendDescendingIntRange(ctx, resOut, from, toValue)
 	}
 
-	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+	return resOut.Send(ctx, newStreamCloseMsg())
 }
 
 func sendAscendingIntRange(
@@ -67,12 +67,12 @@ func sendAscendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data < toValue; data++ {
-		if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewIntMsg(data))) {
+		if !resOut.Send(ctx, newStreamDataMsg(runtime.NewIntMsg(data))) {
 			return false
 		}
 	}
 
-	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+	return resOut.Send(ctx, newStreamCloseMsg())
 }
 
 func sendDescendingIntRange(
@@ -81,10 +81,10 @@ func sendDescendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data > toValue; data-- {
-		if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewIntMsg(data))) {
+		if !resOut.Send(ctx, newStreamDataMsg(runtime.NewIntMsg(data))) {
 			return false
 		}
 	}
 
-	return resOut.Send(ctx, runtime.NewStreamCloseMsg())
+	return resOut.Send(ctx, newStreamCloseMsg())
 }

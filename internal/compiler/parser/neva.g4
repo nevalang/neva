@@ -17,9 +17,9 @@ compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
 compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: IMPORT NEWLINE* LBRACE NEWLINE+ importBlockItem* RBRACE;
-importBlockItem: (importDef | COMMENT) NEWLINE+;
-importDef: importAlias? importPath COMMENT?;
+importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE*;
+importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;
 importPathMod: AT | importMod;

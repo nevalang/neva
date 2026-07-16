@@ -18,3 +18,44 @@
 //  wg -> :stop  // Blocks forever.
 #extern(wait_group)
 pub def WaitGroup(count int, sig any) (sig any)
+
+// Turn is Lock's sibling with a slightly different release rule.
+//
+// Like Lock, it releases one data message at a time. Unlike Lock, it releases
+// the first message immediately, then waits for done before receiving and
+// releasing each following message.
+//
+// @inport data Messages to process sequentially.
+// @inport done Acknowledges that processing of one res message is complete.
+//
+// @outport res The next data message whose processing may begin.
+#extern(sync_turn)
+pub def Turn<T>(data T, done any) (res T)
+
+// Sync runs a side-effecting handler sequentially.
+//
+// It does not start the next handler invocation until the current handler
+// emits either res or err. The res outport forwards the original input after
+// that completion signal, so downstream work observes the same order.
+//
+// @inport data Messages to process with handler.
+//
+// @outport res Original input after handler completion.
+// @outport err Error emitted by handler. The input is still acknowledged so
+// the synchronization session can make progress.
+pub def Sync<T>(data T) (res T, err error) {
+	turn Turn<T>
+	lock Lock<T>
+	fan_in FanIn<any>
+	handler ISyncHandler<T>
+	---
+	:data -> turn:data
+	turn -> [lock:data, handler]
+	handler:res -> fan_in:data[0]
+	handler:err -> [fan_in:data[1], :err]
+	fan_in -> lock:sig
+	lock -> [turn:done, :res]
+}
+
+// ISyncHandler completes one sequential unit of work.
+pub interface ISyncHandler<T>(data T) (res any, err error)

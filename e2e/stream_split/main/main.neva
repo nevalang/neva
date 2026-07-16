@@ -3,6 +3,7 @@ import {
     lists
     runtime
     streams
+    time
 }
 
 const numbers list<int> = [1, 2, 3, 4]
@@ -30,10 +31,14 @@ def Main(start any) (stop any) {
 }
 
 def IsEven(data int) (res bool) {
+    // The delay makes Split wait for each predicate result before accepting
+    // the next stream event.
+    delay time.Delay<int>
     mod Mod
     eq Eq<int>
     ---
-    :data -> [mod:left, 2 -> mod:right]
+    :data -> [delay:data, $time.millisecond -> delay:dur]
+    delay -> [mod:left, 2 -> mod:right]
     mod -> [eq:left, 0 -> eq:right]
     eq -> :res
 }

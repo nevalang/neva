@@ -35,18 +35,18 @@ func (streamToDict) Create(
 			}
 
 			switch {
-			case runtime.IsStreamOpen(dataMsg):
+			case isStreamOpen(dataMsg):
 				dict = map[string]runtime.Msg{}
 				continue
-			case runtime.IsStreamData(dataMsg):
-				entryMsg := runtime.StreamDataValue(dataMsg).Struct()
+			case isStreamData(dataMsg):
+				entryMsg := streamDataValue(dataMsg).Struct()
 				key := entryMsg.Get("key").Str()
 				valueMsg := entryMsg.Get("value")
 
 				// Duplicate key policy: last message for the key wins.
 				dict[key] = valueMsg
 				continue
-			case !runtime.IsStreamClose(dataMsg):
+			case !isStreamClose(dataMsg):
 				continue
 			}
 

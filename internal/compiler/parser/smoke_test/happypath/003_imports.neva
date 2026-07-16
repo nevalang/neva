@@ -1,29 +1,6 @@
 import {
 	simple:path
-}
-
-import
-{
 	path:with/parts
-}
-
-import {
 	withalias simple:path
-}
-
-import {
 	withalias path:with/parts
-}
-
-import {
-	simple:path
-	path:with/parts
-}
-
-import {
-
-	simple:path
-
-	path:with/parts
-
 }

@@ -25,28 +25,29 @@ func (arrayPortToStream) Create(
 		return nil, fmt.Errorf("get res outport: %w", err)
 	}
 
-	// TODO: could be optimized by using portIn.ReceiveAll()
-	// but we need to handle order of sending messages to stream
 	return func(ctx context.Context) {
 		portLen := portIn.Len()
+		items := make([]runtime.OrderedMsg, portLen)
 
 		for {
-			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
+				return
+			}
+
+			if !portIn.ReceiveAll(ctx, func(idx int, msg runtime.OrderedMsg) bool {
+				items[idx] = msg
+				return true
+			}) {
 				return
 			}
 
 			for idx := range portLen {
-				msg, ok := portIn.Receive(ctx, idx)
-				if !ok {
-					return
-				}
-
-				if !resOut.Send(ctx, runtime.NewStreamDataMsg(msg.Msg)) {
+				if !resOut.Send(ctx, newStreamDataMsg(items[idx].Msg)) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
+			if !resOut.Send(ctx, newStreamCloseMsg()) {
 				return
 			}
 		}

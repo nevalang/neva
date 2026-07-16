@@ -36,17 +36,17 @@ func (stringToStream) Create(
 			// We split by Unicode code points (runes), not bytes.
 			// Byte iteration would break multibyte UTF-8 chars into fragments.
 			runes := []rune(dataMsg.Str())
-			if !resOut.Send(ctx, runtime.NewStreamOpenMsg()) {
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
 				return
 			}
 
 			for _, runeValue := range runes {
-				if !resOut.Send(ctx, runtime.NewStreamDataMsg(runtime.NewStringMsg(string(runeValue)))) {
+				if !resOut.Send(ctx, newStreamDataMsg(runtime.NewStringMsg(string(runeValue)))) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, runtime.NewStreamCloseMsg()) {
+			if !resOut.Send(ctx, newStreamCloseMsg()) {
 				return
 			}
 		}

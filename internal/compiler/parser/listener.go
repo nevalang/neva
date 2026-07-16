@@ -11,6 +11,7 @@ type treeShapeListener struct {
 	*generated.BasenevaListener
 	loc         core.Location
 	sourceLines []string
+	importCount int
 }
 
 func (s *treeShapeListener) EnterProg(actx *generated.ProgContext) {
@@ -24,18 +25,9 @@ func (s *treeShapeListener) EnterImportDef(actx *generated.ImportDefContext) {
 }
 
 func (s *treeShapeListener) EnterImportStmt(actx *generated.ImportStmtContext) {
-	s.state.ImportBlocks = append(s.state.ImportBlocks, core.Meta{
-		Text: actx.GetText(),
-		Start: core.Position{
-			Line:   actx.GetStart().GetLine(),
-			Column: actx.GetStart().GetColumn(),
-		},
-		Stop: core.Position{
-			Line:   actx.GetStop().GetLine(),
-			Column: actx.GetStop().GetColumn(),
-		},
-		Location: s.loc,
-	})
+	if err := s.validateImportStmt(actx); err != nil {
+		panic(err)
+	}
 }
 
 func (s *treeShapeListener) EnterTypeStmt(actx *generated.TypeStmtContext) {
