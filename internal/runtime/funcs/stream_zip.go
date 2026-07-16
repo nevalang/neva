@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 )
@@ -30,10 +31,7 @@ func (streamZip) Create(
 
 	return func(ctx context.Context) {
 		for {
-			if !waitStreamOpen(ctx, leftIn) {
-				return
-			}
-			if !waitStreamOpen(ctx, rightIn) {
+			if !waitStreamOpens(ctx, leftIn, rightIn) {
 				return
 			}
 			if !resOut.Send(ctx, newStreamOpenMsg()) {
@@ -41,12 +39,7 @@ func (streamZip) Create(
 			}
 
 			for {
-				leftMsg, leftClosed, received := receiveStreamDataOrClose(ctx, leftIn)
-				if !received {
-					return
-				}
-
-				rightMsg, rightClosed, received := receiveStreamDataOrClose(ctx, rightIn)
+				leftMsg, leftClosed, rightMsg, rightClosed, received := receiveStreamPairDataOrClose(ctx, leftIn, rightIn)
 				if !received {
 					return
 				}
@@ -79,6 +72,24 @@ func (streamZip) Create(
 	}, nil
 }
 
+// waitStreamOpens receives the opening event from both streams concurrently.
+func waitStreamOpens(ctx context.Context, leftIn, rightIn runtime.SingleInport) bool {
+	var (
+		leftOK, rightOK bool
+		group           sync.WaitGroup
+	)
+
+	group.Go(func() {
+		leftOK = waitStreamOpen(ctx, leftIn)
+	})
+	group.Go(func() {
+		rightOK = waitStreamOpen(ctx, rightIn)
+	})
+	group.Wait()
+
+	return leftOK && rightOK
+}
+
 type streamReceiver interface {
 	Receive(ctx context.Context) (runtime.OrderedMsg, bool)
 }
@@ -95,19 +106,38 @@ func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
 	}
 }
 
+// receiveStreamPairDataOrClose receives the next relevant event from both streams concurrently.
+//
 //nolint:ireturn // Stream payloads are runtime.Msg values by contract.
-func receiveStreamDataOrClose(ctx context.Context, in streamReceiver) (runtime.Msg, bool, bool) {
+func receiveStreamPairDataOrClose(
+	ctx context.Context,
+	leftIn, rightIn runtime.SingleInport,
+) (runtime.Msg, bool, runtime.Msg, bool, bool) {
 	for {
-		msg, received := in.Receive(ctx)
+		leftMsg, rightMsg, received := receive2(ctx, leftIn, rightIn)
 		if !received {
-			return nil, false, false
+			return nil, false, nil, false, false
 		}
-		switch {
-		case isStreamData(msg.Msg):
-			return streamDataValue(msg.Msg), false, true
-		case isStreamClose(msg.Msg):
-			return nil, true, true
+
+		leftData, leftClosed, leftAccepted := decodeStreamDataOrClose(leftMsg.Msg)
+		rightData, rightClosed, rightAccepted := decodeStreamDataOrClose(rightMsg.Msg)
+		if leftAccepted && rightAccepted {
+			return leftData, leftClosed, rightData, rightClosed, true
 		}
+	}
+}
+
+// decodeStreamDataOrClose classifies a stream event relevant to zip processing.
+//
+//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
+func decodeStreamDataOrClose(msg runtime.Msg) (runtime.Msg, bool, bool) {
+	switch {
+	case isStreamData(msg):
+		return streamDataValue(msg), false, true
+	case isStreamClose(msg):
+		return nil, true, true
+	default:
+		return nil, false, false
 	}
 }
 
