@@ -223,7 +223,12 @@ Dictionary is an [associative array](https://en.wikipedia.org/wiki/Associative_a
 
 ### Tagged Unions
 
-Tagged unions are fixed sets of named variants, each potentially carrying data. They enable pattern matching and exhaustive case handling. Tagged unions are compatible if one is a subset of another.
+Tagged unions are fixed sets of named variants, each potentially carrying data.
+They enable pattern matching and exhaustive case handling. Tagged unions are
+compatible when every source tag exists in the destination. A payload-bearing
+source tag is compatible with a tag-only destination because the destination
+ignores the extra payload. A tag-only source is not compatible with a
+payload-bearing destination because it cannot provide the required value.
 
 ### `union`
 
