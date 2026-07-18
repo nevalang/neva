@@ -1,0 +1,13 @@
+type WithPayload union {
+	Value int
+}
+
+type TagOnly union {
+	Value
+}
+
+def Main(start any) (stop any) {
+	pass Pass<TagOnly>
+	---
+	:start -> WithPayload::Value(42) -> pass -> :stop
+}

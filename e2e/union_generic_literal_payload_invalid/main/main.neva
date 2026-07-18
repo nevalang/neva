@@ -1,0 +1,10 @@
+type Maybe<T> union {
+    Some T
+    None
+}
+
+def Main(start any) (stop any) {
+    pass Pass<Maybe<int>>
+    ---
+    :start -> Maybe<int>::Some('bad') -> pass -> :stop
+}
