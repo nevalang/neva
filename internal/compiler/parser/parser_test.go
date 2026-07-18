@@ -48,6 +48,21 @@ func TestParser_ParseFile_StructSelectorsWithLonelyChain(t *testing.T) {
 	require.Equal(t, "stop", chainEnd.Port)
 }
 
+func TestParser_ParseFile_SingleSenderMultipleExpressionRejected(t *testing.T) {
+	text := []byte(`
+		def C1() () {
+			[foo] -> bar
+		}`,
+	)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+
+	require.Empty(t, got.Entities)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "Multiple sender expression must contain at least two senders")
+}
+
 func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	text := []byte(`
 		def C1() () {
@@ -72,6 +87,49 @@ func TestParser_ParseFile_PortlessArrPortAddr(t *testing.T) {
 	require.Equal(t, "bar", conn.Receivers[0].PortAddr.Node)
 	require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
 	require.Equal(t, new(uint8(1)), conn.Receivers[0].PortAddr.Idx)
+}
+
+func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
+	p := New()
+
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+		import {
+			fmt
+		}
+
+		import {
+			streams
+		}
+	`))
+
+	require.NotNil(t, err)
+	require.Equal(t, "file must contain at most one import statement", err.Message)
+}
+
+func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "single line",
+			text: "import { fmt }",
+		},
+		{
+			name: "comma separated",
+			text: "import { fmt, runtime }",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+
+			require.Nil(t, err)
+		})
+	}
 }
 
 func TestParser_ParseFile_ArrayBypassIdx(t *testing.T) {
@@ -716,6 +774,23 @@ func TestParser_ParseFile_UnionLiteralConstSenders(t *testing.T) {
 		text  string
 	}{
 		{
+			name: "generic tag-only keeps instantiated union type",
+			text: `
+				type U<T> union { A T }
+				def C1<T>() () {
+					U<T>::A -> receiver
+				}
+			`,
+			check: func(t *testing.T, net []src.Connection) {
+				t.Helper()
+				typeExpr := net[0].Senders[0].Const.TypeExpr
+				require.NotNil(t, typeExpr.Inst)
+				require.Equal(t, "U", typeExpr.Inst.Ref.Name)
+				require.Len(t, typeExpr.Inst.Args, 1)
+				require.Equal(t, "T", typeExpr.Inst.Args[0].Inst.Ref.Name)
+			},
+		},
+		{
 			name: "direct tag-only",
 			text: `
 				type U union { A }
@@ -947,16 +1022,21 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 	net := got.Entities["Main"].Component[0].Net
 	require.NotEmpty(t, net)
 
-	var foundNewStreamChain bool
+	var foundStreamJustChain bool
 	var foundErrFanIn bool
 
 	for _, conn := range net {
-		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newStream" &&
-			conn.Senders[0].PortAddr.Port == "s" {
-			require.NotNil(t, conn.Receivers[0].PortAddr)
-			require.Equal(t, "new", conn.Receivers[0].PortAddr.Node)
-			require.Equal(t, "", conn.Receivers[0].PortAddr.Port)
-			foundNewStreamChain = true
+		if len(conn.Senders) == 1 && conn.Senders[0].PortAddr.Node == "newPixel" &&
+			conn.Senders[0].PortAddr.Port == "" {
+			require.NotNil(t, conn.Receivers[0].ChainedConnection)
+			justChain := conn.Receivers[0].ChainedConnection
+			require.Equal(t, "just", justChain.Senders[0].PortAddr.Node)
+			require.Equal(t, "", justChain.Senders[0].PortAddr.Port)
+
+			require.NotNil(t, justChain.Receivers[0].PortAddr)
+			require.Equal(t, "new", justChain.Receivers[0].PortAddr.Node)
+			require.Equal(t, "", justChain.Receivers[0].PortAddr.Port)
+			foundStreamJustChain = true
 		}
 
 		if len(conn.Senders) == 3 && len(conn.Receivers) == 1 &&
@@ -971,7 +1051,7 @@ func TestParser_ParseFile_ImagePNGConnections(t *testing.T) {
 		}
 	}
 
-	require.True(t, foundNewStreamChain)
+	require.True(t, foundStreamJustChain)
 	require.True(t, foundErrFanIn)
 }
 

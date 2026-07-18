@@ -10,5 +10,5 @@ import (
 func Test(t *testing.T) {
 	// Generic union literal payloads must be checked against resolved type args.
 	_, stderr := e2e.Run(t, []string{"run", "main"}, e2e.WithCode(1))
-	require.Contains(t, stderr, "payload type mismatch")
+	require.Contains(t, stderr, "not compatible with tag")
 }

@@ -8,29 +8,33 @@ import (
 
 type streamJust struct{}
 
-func (streamJust) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := input.In.Single("data")
+func (streamJust) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := input.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
-			if !ok {
+			dataMsg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			if !resOut.Send(ctx, streamItem(data, 0, true)) {
+			if !sendSingleItemStream(ctx, resOut, dataMsg) {
 				return
 			}
 		}
 	}, nil
+}
+
+func sendSingleItemStream(ctx context.Context, resOut runtime.SingleOutport, dataMsg runtime.OrderedMsg) bool {
+	return resOut.Send(ctx, newStreamOpenMsg()) &&
+		resOut.Send(ctx, newStreamDataMsg(dataMsg.Msg)) &&
+		resOut.Send(ctx, newStreamCloseMsg())
 }

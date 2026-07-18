@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "$(git rev-parse --show-toplevel)/.codex/hooks/run-pre-commit-on-stop.sh",
+        "timeout": 120,
+        "statusMessage": "Running pre-commit checks"
+      }
+    ]
+  }
+}

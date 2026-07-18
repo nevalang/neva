@@ -11,15 +11,28 @@ import (
 )
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "."})
+	repoRoot := e2e.FindRepoRoot(t)
+	exampleDir := filepath.Join(repoRoot, "examples", "file_handles")
+
+	workdir, err := os.MkdirTemp(exampleDir, ".file-handles-e2e-*")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, os.RemoveAll(workdir))
+	})
+
+	src := filepath.Join(exampleDir, "main.neva")
+	dst := filepath.Join(workdir, "main.neva")
+	data, err := os.ReadFile(src)
+	require.NoError(t, err)
+	// #nosec G703 -- dst is inside a test-created temporary directory.
+	require.NoError(t, os.WriteFile(dst, data, 0o600))
+
+	out, _ := e2e.Run(t, []string{"run", "."}, e2e.WithDir(workdir))
 
 	require.Equal(t, "Hello, io.File!", strings.TrimSuffix(out, "\n"))
 
-	repoRoot := e2e.FindRepoRoot(t)
-	filename := filepath.Join(repoRoot, "examples", "file_handles", "file_handles_example.txt")
+	filename := filepath.Join(workdir, "file_handles_example.txt")
 	contents, err := os.ReadFile(filename)
 	require.NoError(t, err, out)
 	require.Equal(t, "Hello, io.File!", string(contents))
-
-	require.NoError(t, os.Remove(filename))
 }

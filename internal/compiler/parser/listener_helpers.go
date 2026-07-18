@@ -13,6 +13,29 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
+func (s *treeShapeListener) validateImportStmt(actx *generated.ImportStmtContext) *compiler.Error {
+	if s.importCount == 0 {
+		s.importCount++
+		return nil
+	}
+
+	return &compiler.Error{
+		Message: "file must contain at most one import statement",
+		Meta: &core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}
+}
+
 func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
@@ -796,11 +819,11 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.UnionLit() != nil:
-		parsedConst.TypeExpr.Lit = &ts.LitExpr{
-			Union: map[string]*ts.Expr{
-				lit.UnionLit().IDENTIFIER().GetText(): nil,
-			},
+		parsedUnionType, err := s.parseTypeInstExpr(lit.UnionLit().TypeInstExpr())
+		if err != nil {
+			return src.Const{}, err
 		}
+		parsedConst.TypeExpr = *parsedUnionType
 	}
 
 	return parsedConst, nil
@@ -1314,6 +1337,12 @@ func (s *treeShapeListener) parseSenderSide(
 		toParse = append(toParse, singleSender)
 	} else {
 		toParse = mulSenders.AllSingleSenderSide()
+		if len(toParse) == 1 {
+			return nil, &compiler.Error{
+				Message: "Multiple sender expression must contain at least two senders",
+				Meta:    &meta,
+			}
+		}
 	}
 
 	parsedSenders := []src.ConnectionSender{}

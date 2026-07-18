@@ -23,14 +23,6 @@ func errFromString(s string) runtime.StructMsg {
 	})
 }
 
-func streamItem(data runtime.Msg, idx int64, last bool) runtime.StructMsg {
-	return runtime.NewStructMsg([]runtime.StructField{
-		runtime.NewStructField("data", data),
-		runtime.NewStructField("idx", runtime.NewIntMsg(idx)),
-		runtime.NewStructField("last", runtime.NewBoolMsg(last)),
-	})
-}
-
 // --- Structs ---
 
 func emptyStruct() runtime.StructMsg {
@@ -58,6 +50,7 @@ func receive2(
 
 	return firstMsg, secondMsg, firstOK && secondOK
 }
+
 func receive3(
 	ctx context.Context,
 	firstIn runtime.SingleInport,

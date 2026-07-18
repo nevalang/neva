@@ -1,9 +1,8 @@
 // --- Sources ---
 
-// Enumerated is a stream item paired with its 0-based index.
 pub type Enumerated<T> struct {
-    idx int
-    data T
+	idx int
+	item T
 }
 
 // FromArray iterates over all array-inport's slots in order
@@ -21,7 +20,14 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // must remain whole stream elements.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
-// Just creates a single-item stream.
+// Just creates a stream that contains exactly one Data item.
+//
+// This is useful when an API expects a stream but the producer has one value,
+// for example when adapting scalar data to a stream combinator.
+//
+// @inport data Value to emit as the only Data item.
+//
+// @outport res Stream that emits Open, Data(data), and Close.
 #extern(stream_just)
 pub def Just<T>(data T) (res stream<T>)
 
@@ -36,35 +42,21 @@ pub def FromDict<T>(data dict<T>) (res stream<DictEntry<T>>)
 #extern(stream_int_range)
 pub def Range(from int, to int) (res stream<int>)
 
-// Enumerate attaches a 0-based index to each stream item.
+// Enumerate attaches a 0-based index to each Data item in a stream.
 #extern(stream_enumerate)
 pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
-// IsData returns true when stream item carries data.
-#extern(stream_is_data)
-def IsData<T>(data stream<T>) (res bool)
-
-// IsClose returns true when stream item closes the stream.
-#extern(stream_is_close)
-def IsClose<T>(data stream<T>) (res bool)
-
-// UnwrapData extracts payload from a stream item.
-#extern(stream_unwrap_data)
-def UnwrapData<T>(data stream<T>) (res T)
-
 // --- Synchronization ---
 
-// Wait blocks until last stream item arrive, then sends a signal.
+// Wait blocks until stream closes, then sends a signal.
 pub def Wait(data stream<any>) (sig any) {
-    del Del
-    s Switch<bool>
-    ---
-    :data -> [
-        .last -> s:data,
-        true -> s:case[0]
-    ]
-    s:case[0] -> :sig
-    s:else -> del
+	switch Switch<stream<any>>
+	---
+	:data -> [
+		switch:data,
+		stream<any>::Close -> switch:case[0]
+	]
+	switch:case[0] -> :sig
 }
 
 // --- Combinators ---

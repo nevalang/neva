@@ -8,35 +8,57 @@ import (
 
 type streamEnumerate struct{}
 
-func (streamEnumerate) Create(input runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := input.In.Single("data")
+func (streamEnumerate) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
-	resOut, err := input.Out.Single("res")
+	resOut, err := singleOutport(runtimeIO, "res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
+		var idx int64
 		for {
-			msg, ok := dataIn.Receive(ctx)
-			if !ok {
+			msg, received := dataIn.Receive(ctx)
+			if !received {
 				return
 			}
 
-			item := msg.Struct()
-			indexed := runtime.NewStructMsg([]runtime.StructField{
-				runtime.NewStructField("idx", item.Get("idx")),
-				runtime.NewStructField("data", item.Get("data")),
-			})
-
-			if !resOut.Send(ctx, streamItem(indexed, item.Get("idx").Int(), item.Get("last").Bool())) {
+			if !forwardEnumeratedMessage(ctx, resOut, msg, &idx) {
 				return
 			}
 		}
 	}, nil
+}
+
+func forwardEnumeratedMessage(
+	ctx context.Context,
+	resOut runtime.SingleOutport,
+	msg runtime.Msg,
+	idx *int64,
+) bool {
+	switch {
+	case isStreamOpen(msg):
+		*idx = 0
+		return resOut.Send(ctx, newStreamOpenMsg())
+	case isStreamData(msg):
+		// Enumerated<T> is the Data union payload, so encode it as a struct message first.
+		item := runtime.NewStructMsg([]runtime.StructField{
+			runtime.NewStructField("idx", runtime.NewIntMsg(*idx)),
+			runtime.NewStructField("item", streamDataValue(msg)),
+		})
+		if !resOut.Send(ctx, newStreamDataMsg(item)) {
+			return false
+		}
+
+		*idx++
+		return true
+	case isStreamClose(msg):
+		return resOut.Send(ctx, newStreamCloseMsg())
+	default:
+		panic("stream_enumerate: unexpected stream tag")
+	}
 }

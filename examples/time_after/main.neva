@@ -1,4 +1,6 @@
-import { time }
+import {
+	time
+}
 
 def Main(start any) (stop any) {
 	after time.After

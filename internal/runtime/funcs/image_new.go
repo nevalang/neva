@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"image"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -9,44 +10,51 @@ import (
 
 type imageNew struct{}
 
-//nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	pixelsIn, err := io.In.Single("pixels")
+//nolint:cyclop,gocognit,gocyclo // Stream framing, image accumulation, and error forwarding share one lifecycle.
+func (imageNew) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+	pixelsIn, err := runtimeIO.In.Single("pixels")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get pixels inport: %w", err)
 	}
 
-	imgOut, err := io.Out.Single("img")
+	imgOut, err := runtimeIO.Out.Single("img")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get img outport: %w", err)
 	}
 
-	errOut, err := io.Out.Single("err")
+	errOut, err := runtimeIO.Out.Single("err")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get err outport: %w", err)
 	}
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			im := make(map[pixelMsg]struct{})
+			if !waitStreamOpen(ctx, pixelsIn) {
+				return
+			}
+
+			pixels := make(map[pixelMsg]struct{})
 			var (
 				width  int64
 				height int64
 			)
+
 		stream:
 			for {
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				m, ok := pixelsIn.Receive(ctx)
+				msg, ok := pixelsIn.Receive(ctx)
 				if !ok {
 					return
 				}
 
-				var pix pixelStreamMsg
-				pix.decode(m)
+				if isStreamClose(msg.Msg) {
+					break stream
+				}
+				if !isStreamData(msg.Msg) {
+					continue
+				}
+
+				var pix pixelMsg
+				pix.decode(streamDataValue(msg.Msg))
 				if pix.x < 0 || pix.y < 0 {
 					if !errOut.Send(ctx, errFromString("image.New: Pixel out of bounds")) {
 						return
@@ -58,14 +66,11 @@ func (imageNew) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 				if pix.y >= height {
 					height = pix.y + 1
 				}
-				im[pix.pixelMsg] = struct{}{}
-				if pix.last {
-					break stream
-				}
+				pixels[pix] = struct{}{}
 			}
 
 			img := image.NewRGBA(image.Rect(0, 0, int(width), int(height)))
-			for pix := range im {
+			for pix := range pixels {
 				img.Set(int(pix.x), int(pix.y), pix.color.color())
 			}
 

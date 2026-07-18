@@ -1,18 +1,29 @@
+import {
+	@:sync
+}
+
 // IMapHandler is a dependency for Map.
 pub interface IMapHandler<T, Y>(T) (Y)
 
 // Map maps one stream onto another while preserving stream event order.
+//
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
+// Use ForEach instead when the handler performs side effects.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
-    controller MapController<T, Y>
-    handler IMapHandler<T, Y>
-    ---
-    :data -> controller:data
-    controller:item -> handler -> controller:mapped
-    controller:res -> :res
+	turn sync.Turn<stream<T>>
+	event_switch Switch<stream<T>>
+	handler IMapHandler<T, Y>
+	data_union Union<stream<Y>>
+	output FanIn<stream<Y>>
+	---
+	:data -> turn:data
+	turn -> [
+		event_switch:data,
+		stream<T>::Open -> event_switch:case[0] -> stream<Y>::Open -> output:data[0],
+		stream<T>::Data -> event_switch:case[1] -> handler,
+		stream<T>::Close -> event_switch:case[2] -> stream<Y>::Close -> output:data[2]
+	]
+	handler -> [data_union:data, stream<Y>::Data -> data_union:tag]
+	data_union -> output:data[1]
+	output -> [turn:done, :res]
 }
-
-// MapController serializes Map work so each mapped value is emitted with
-// the original stream metadata before the next item is processed.
-#extern(stream_map_controller)
-def MapController<T, Y>(data stream<T>, mapped Y) (item T, res stream<Y>)

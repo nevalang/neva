@@ -1,0 +1,26 @@
+import {
+	fmt
+	os
+	runtime
+}
+
+def Main(start any) (stop any) {
+	setenv os.Setenv
+	getenv os.Getenv
+	lookup_env os.LookupEnv
+	expand_env os.ExpandEnv
+	print_value fmt.Println<string>
+	print_exists fmt.Println<bool>
+	print_expanded fmt.Println<string>
+	panic runtime.Panic
+	---
+	:start -> [
+		'NEVA_E2E_OS_KEY' -> setenv:key,
+		'value' -> setenv:value
+	]
+	setenv:res -> 'NEVA_E2E_OS_KEY' -> getenv -> print_value
+	print_value:res -> 'NEVA_E2E_OS_MISSING' -> lookup_env -> .exists -> print_exists
+	print_exists:res -> '$NEVA_E2E_OS_KEY' -> expand_env -> print_expanded
+	print_expanded:res -> :stop
+	[setenv:err, print_value:err, print_exists:err, print_expanded:err] -> panic
+}

@@ -1,4 +1,10 @@
-import { bytes, io, fmt, runtime, strings }
+import {
+	bytes
+	io
+	fmt
+	runtime
+	strings
+}
 
 def Main(start any) (stop any) {
 	app App

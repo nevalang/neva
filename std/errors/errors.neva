@@ -1,4 +1,6 @@
-import { @:runtime }
+import {
+	@:runtime
+}
 
 // New creates a new error with the given text.
 #extern(errors_new)

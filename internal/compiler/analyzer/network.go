@@ -35,7 +35,12 @@ func (a Analyzer) analyzeNetwork(
 	// Read `Union:tag` wiring to bind each `Union<T>` node to a concrete tag.
 	// Example: `Union<MyU>`; `MyU::Int -> union:tag`; `42 -> union:data`
 	// We bind `tag=Int` so `union:data` must be compatible with int later.
-	unionActiveTags, err := a.buildUnionActiveTagBindings(net, nodes, scope)
+	unionActiveTags, err := a.buildUnionActiveTagBindings(
+		net,
+		nodes,
+		iface.TypeParams.ToFrame(),
+		scope,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -717,7 +722,11 @@ func (a Analyzer) getResolvedSenderType(
 	prevChainLink []src.ConnectionSender,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
-		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
+		resolvedConst, resolvedExpr, err := a.getConstSenderType(
+			*sender.Const,
+			iface.TypeParams.ToFrame(),
+			scope,
+		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
 		}
@@ -830,6 +839,7 @@ func (a Analyzer) getPortSenderType(
 func (a Analyzer) getConstSenderType(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	constSender src.Const,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Const, ts.Expr, *compiler.Error) {
@@ -850,8 +860,9 @@ func (a Analyzer) getConstSenderType(
 		}
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(
+	resolvedExpr, err := a.resolver.ResolveExprWithFrame(
 		constSender.TypeExpr,
+		typeFrame,
 		scope,
 	)
 	if err != nil {
@@ -861,24 +872,23 @@ func (a Analyzer) getConstSenderType(
 		}
 	}
 
-	if constSender.Value.Message.Union != nil {
-		resolvedExpr, err = a.getResolvedUnionLiteralSenderType(
-			*constSender.Value.Message.Union,
-			scope,
-		)
-		if err != nil {
-			return src.Const{}, ts.Expr{}, &compiler.Error{
-				Message: err.Error(),
-				Meta:    &constSender.Value.Message.Meta,
-			}
-		}
-	}
-
 	if err := a.validateLiteralSender(resolvedExpr); err != nil {
 		return src.Const{}, ts.Expr{}, &compiler.Error{
 			Message: err.Error(),
 			Meta:    &constSender.Value.Message.Meta,
 		}
+	}
+
+	if constSender.Value.Message.Union != nil {
+		unionSenderType, err := a.inferUnionLiteralSenderType(
+			constSender.Value.Message.Union,
+			typeFrame,
+			scope,
+		)
+		if err != nil {
+			return src.Const{}, ts.Expr{}, err
+		}
+		resolvedExpr = unionSenderType
 	}
 
 	return src.Const{
@@ -897,125 +907,6 @@ func (a Analyzer) getConstSenderType(
 		},
 		Meta: constSender.Meta,
 	}, resolvedExpr, nil
-}
-
-func (a Analyzer) getResolvedUnionLiteralSenderType(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	unionLiteral src.UnionLiteral,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (ts.Expr, error) {
-	resolvedUnion, err := a.resolver.ResolveExpr(ts.Expr{
-		Inst: &ts.InstExpr{
-			Args: unionLiteral.TypeArgs,
-			Ref:  unionLiteral.EntityRef,
-		},
-	}, scope)
-	if err != nil {
-		return ts.Expr{}, fmt.Errorf("resolve union literal type: %w", err)
-	}
-
-	if resolvedUnion.Lit == nil || resolvedUnion.Lit.Union == nil {
-		return ts.Expr{}, fmt.Errorf("union literal %s must reference a union type", unionLiteral.EntityRef.String())
-	}
-
-	tagType, ok := resolvedUnion.Lit.Union[unionLiteral.Tag]
-	if !ok {
-		return ts.Expr{}, fmt.Errorf("tag %q not found in union %s", unionLiteral.Tag, unionLiteral.EntityRef.String())
-	}
-
-	if err := a.validateUnionLiteralPayload(unionLiteral, tagType, scope); err != nil {
-		return ts.Expr{}, err
-	}
-
-	return ts.Expr{
-		Lit: &ts.LitExpr{
-			Union: map[string]*ts.Expr{
-				unionLiteral.Tag: cloneTypeExprPtr(tagType),
-			},
-		},
-	}, nil
-}
-
-func (a Analyzer) validateUnionLiteralPayload(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	unionLiteral src.UnionLiteral,
-	tagType *ts.Expr,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) error {
-	if tagType == nil {
-		if unionLiteral.Data != nil {
-			return fmt.Errorf("tag %q does not accept a payload", unionLiteral.Tag)
-		}
-		return nil
-	}
-
-	if unionLiteral.Data == nil {
-		return nil
-	}
-
-	dataType, err := a.inferConstValueType(*unionLiteral.Data, scope)
-	if err != nil {
-		return err
-	}
-
-	if err := a.resolver.IsSubtypeOf(dataType, *tagType, scope); err != nil {
-		return fmt.Errorf("tag %q payload type mismatch: %w", unionLiteral.Tag, err)
-	}
-
-	return nil
-}
-
-func (a Analyzer) inferConstValueType(
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	value src.ConstValue,
-	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	scope src.Scope,
-) (ts.Expr, error) {
-	if value.Ref != nil {
-		resolvedType, err := a.getResolvedConstTypeByRef(*value.Ref, scope)
-		if err != nil {
-			return ts.Expr{}, err
-		}
-		return resolvedType, nil
-	}
-
-	if value.Message == nil {
-		return ts.Expr{}, errors.New("literal payload type is empty")
-	}
-
-	switch {
-	case value.Message.Bool != nil:
-		return primitiveTypeExpr("bool"), nil
-	case value.Message.Int != nil:
-		return primitiveTypeExpr("int"), nil
-	case value.Message.Float != nil:
-		return primitiveTypeExpr("float"), nil
-	case value.Message.Str != nil:
-		return primitiveTypeExpr("string"), nil
-	case value.Message.Union != nil:
-		return a.getResolvedUnionLiteralSenderType(*value.Message.Union, scope)
-	default:
-		return ts.Expr{}, ErrComplexLiteralSender
-	}
-}
-
-func primitiveTypeExpr(name string) ts.Expr {
-	return ts.Expr{
-		Inst: &ts.InstExpr{
-			Ref: core.EntityRef{Name: name},
-		},
-	}
-}
-
-func cloneTypeExprPtr(expr *ts.Expr) *ts.Expr {
-	if expr == nil {
-		return nil
-	}
-
-	cloned := *expr
-	return &cloned
 }
 
 // validateLiteralSender allows only primitive literals and union literals for now.

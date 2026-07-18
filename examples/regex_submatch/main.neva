@@ -1,4 +1,8 @@
-import { regexp, fmt, runtime }
+import {
+	regexp
+	fmt
+	runtime
+}
 
 def Main(start any) (stop any) {
     println fmt.Println<any>, submatch regexp.Submatch, panic runtime.Panic
