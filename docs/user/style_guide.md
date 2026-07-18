@@ -22,8 +22,6 @@ Use tabs over spaces.
 
 ### Imports
 
-Use a single import block per file.
-
 Group imports by type: stdlib, third-party, local. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions

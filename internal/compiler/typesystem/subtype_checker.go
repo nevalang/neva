@@ -144,12 +144,8 @@ func (s SubtypeChecker) checkUnionSubtype(expr, constr *Expr, params *Terminator
 			continue
 		}
 
-		if exprTagType == nil {
-			continue
-		}
-
 		// if one has type and other doesn't, they're incompatible
-		if constrTagType == nil {
+		if (exprTagType == nil) != (constrTagType == nil) {
 			return fmt.Errorf("%w: for tag %s: one has type, other doesn't", ErrUnions, tag)
 		}
 

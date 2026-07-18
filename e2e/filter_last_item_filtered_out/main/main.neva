@@ -1,3 +1,7 @@
+// Verifies that Filter closes its output when the source's final item is rejected.
+// The input contains only even values followed by an odd value, so the result
+// must still complete with the retained even values.
+
 import {
     fmt
     lists
