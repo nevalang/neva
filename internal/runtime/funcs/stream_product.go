@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -9,28 +10,24 @@ import (
 
 type streamProduct struct{}
 
-//nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+//nolint:cyclop,funlen,gocognit,gocyclo // Collecting both stream lifecycles and emitting the product are one operation.
 func (streamProduct) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	io runtime.IO,
+	runtimeIO runtime.IO,
 	_ runtime.Msg,
 ) (func(ctx context.Context), error) {
-	firstIn, err := io.In.Single("first")
+	firstIn, err := runtimeIO.In.Single("first")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get first inport: %w", err)
 	}
 
-	secondIn, err := io.In.Single("second")
+	secondIn, err := runtimeIO.In.Single("second")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get second inport: %w", err)
 	}
 
-	resOut, err := io.Out.Single("res")
+	resOut, err := runtimeIO.Out.Single("res")
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
+		return nil, fmt.Errorf("get res outport: %w", err)
 	}
 
 	// TODO: make sure it's not possible to do processing on the fly so we don't have to wait for both streams to complete
@@ -42,10 +39,14 @@ func (streamProduct) Create(
 				secondData        = []runtime.Msg{}
 			)
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			var wg sync.WaitGroup
+			var group sync.WaitGroup
 
-			wg.Go(func() {
+			group.Go(func() {
+				firstOk = waitStreamOpen(ctx, firstIn)
+				if !firstOk {
+					return
+				}
+			readFirst:
 				for {
 					var firstMsg runtime.Msg
 					firstMsg, firstOk = firstIn.Receive(ctx)
@@ -53,16 +54,21 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := firstMsg.Struct()
-					firstData = append(firstData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
-						break
+					switch {
+					case isStreamData(firstMsg):
+						firstData = append(firstData, streamDataValue(firstMsg))
+					case isStreamClose(firstMsg):
+						break readFirst
 					}
 				}
 			})
 
-			wg.Go(func() {
+			group.Go(func() {
+				secondOk = waitStreamOpen(ctx, secondIn)
+				if !secondOk {
+					return
+				}
+			readSecond:
 				for {
 					var secondMsg runtime.Msg
 					secondMsg, secondOk = secondIn.Receive(ctx)
@@ -70,37 +76,41 @@ func (streamProduct) Create(
 						return
 					}
 
-					streamItem := secondMsg.Struct()
-					secondData = append(secondData, streamItem.Get("data"))
-
-					if streamItem.Get("last").Bool() {
-						break
+					switch {
+					case isStreamData(secondMsg):
+						secondData = append(secondData, streamDataValue(secondMsg))
+					case isStreamClose(secondMsg):
+						break readSecond
 					}
 				}
 			})
 
-			wg.Wait()
+			group.Wait()
 
 			if !firstOk || !secondOk {
 				return
 			}
 
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			for i, firstMsg := range firstData {
-				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-				for j, secondMsg := range secondData {
-					resOut.Send(
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
+				return
+			}
+
+			for _, firstMsg := range firstData {
+				for _, secondMsg := range secondData {
+					if !resOut.Send(
 						ctx,
-						streamItem(
-							runtime.NewStructMsg([]runtime.StructField{
-								runtime.NewStructField("first", firstMsg),
-								runtime.NewStructField("second", secondMsg),
-							}),
-							int64(i*len(secondData)+j),
-							i == len(firstData)-1 && j == len(secondData)-1,
-						),
-					)
+						newStreamDataMsg(runtime.NewStructMsg([]runtime.StructField{
+							runtime.NewStructField("first", firstMsg),
+							runtime.NewStructField("second", secondMsg),
+						})),
+					) {
+						return
+					}
 				}
+			}
+
+			if !resOut.Send(ctx, newStreamCloseMsg()) {
+				return
 			}
 		}
 	}, nil

@@ -1,4 +1,6 @@
-import { fmt }
+import {
+	fmt
+}
 
 const myConst string = 'Hello, World!'
 

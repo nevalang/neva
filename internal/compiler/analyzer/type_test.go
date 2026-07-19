@@ -23,7 +23,7 @@ func TestAnalyzeTypePreservesMeta(t *testing.T) {
 		Location: core.Location{
 			ModRef: core.ModuleRef{
 				Path:    "std",
-				Version: "0.36.1",
+				Version: "0.39.0",
 			},
 			Package:  "builtin",
 			Filename: "types",

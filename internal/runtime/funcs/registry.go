@@ -8,12 +8,17 @@ import (
 
 //nolint:funlen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewRegistry() map[string]runtime.FuncCreator {
+	// File-handle components share one runtime table per registry so handles
+	// remain valid across Open/Create/ReadAllFile/WriteAllFile/Close nodes.
+	fileHandles := runtime.NewFileHandles()
+
 	return map[string]runtime.FuncCreator{
-		"new":     newV2{},
-		"del":     del{},
-		"lock":    lock{},
-		"fan_in":  fanIn{},
-		"fan_out": fanOut{},
+		"new":       newV2{},
+		"del":       del{},
+		"lock":      lock{},
+		"sync_turn": turn{},
+		"fan_in":    fanIn{},
+		"fan_out":   fanOut{},
 
 		"panic": panicker{},
 
@@ -50,7 +55,9 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"dict_to_stream":       dictToStream{},
 		"stream_to_dict":       streamToDict{},
 
-		"stream_int_range": rangeInt{},
+		"stream_int_range": streamIntRange{},
+		"stream_just":      streamJust{},
+		"stream_enumerate": streamEnumerate{},
 
 		"stream_zip":      streamZip{},
 		"stream_zip_many": streamZipMany{},
@@ -121,6 +128,30 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"args":                      args{},
 		"os_exit":                   osExit{},
 		"os_environ":                osEnviron{},
+		"os_getenv":                 osGetenv{},
+		"os_lookup_env":             osLookupEnv{},
+		"os_setenv":                 osSetenv{},
+		"os_unsetenv":               osUnsetenv{},
+		"os_clearenv":               osClearenv{},
+		"os_expand_env":             osExpandEnv{},
+		"os_getwd":                  osGetwd{},
+		"os_chdir":                  osChdir{},
+		"os_getpid":                 osGetpid{},
+		"os_getppid":                osGetppid{},
+		"os_hostname":               osHostname{},
+		"os_executable":             osExecutable{},
+		"os_mkdir":                  osMkdir{},
+		"os_mkdir_all":              osMkdirAll{},
+		"os_read_dir":               osReadDir{},
+		"os_remove":                 osRemove{},
+		"os_remove_all":             osRemoveAll{},
+		"os_rename":                 osRename{},
+		"os_stat":                   osStat{},
+		"os_lstat":                  osLstat{},
+		"os_truncate":               osTruncate{},
+		"os_temp_dir":               osTempDir{},
+		"os_mkdir_temp":             osMkdirTemp{},
+		"os_create_temp":            osCreateTemp{},
 		"dotenv_load":               dotenvLoad{},
 		"dotenv_load_from":          dotenvLoadFrom{},
 		"dotenv_load_override":      dotenvLoad{override: true},
@@ -129,11 +160,19 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"printf":                    printf{},
 		"print":                     printFunc{},
 
-		"read_all":     fileReadAll{},
-		"write_all":    writeAll{},
-		"http_get":     httpGet{},
-		"image_encode": imageEncode{},
-		"image_new":    imageNew{},
+		"read_all":       fileReadAll{},
+		"write_all":      writeAll{},
+		"file_open":      fileOpen{handles: fileHandles},
+		"file_create":    fileCreate{handles: fileHandles},
+		"file_close":     fileClose{handles: fileHandles},
+		"file_read_all":  fileReadAllHandle{handles: fileHandles},
+		"file_write_all": fileWriteAllHandle{handles: fileHandles},
+		"file_stdin":     fileStdin{},
+		"file_stdout":    fileStdout{},
+		"file_stderr":    fileStderr{},
+		"http_get":       httpGet{},
+		"image_encode":   imageEncode{},
+		"image_new":      imageNew{},
 
 		"wait_group": waitGroup{},
 

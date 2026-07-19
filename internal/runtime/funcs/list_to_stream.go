@@ -8,6 +8,7 @@ import (
 
 type listToStream struct{}
 
+//nolint:gocognit // Stream framing and termination handling belong to one state machine.
 func (c listToStream) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
@@ -33,17 +34,18 @@ func (c listToStream) Create(
 			}
 
 			list := listToMsgs(data.List())
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
+				return
+			}
 
 			for idx := range list {
-				item := streamItem(
-					list[idx],
-					int64(idx),
-					idx == len(list)-1,
-				)
-
-				if !resOut.Send(ctx, item) {
+				if !resOut.Send(ctx, newStreamDataMsg(list[idx])) {
 					return
 				}
+			}
+
+			if !resOut.Send(ctx, newStreamCloseMsg()) {
+				return
 			}
 		}
 	}, nil

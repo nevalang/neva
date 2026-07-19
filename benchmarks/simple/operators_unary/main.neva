@@ -1,6 +1,8 @@
 // Benchmarks unary operator paths as one simple family scenario.
 // Keeps the family-level package name while exercising the integer unary flow.
-import { sync }
+import {
+	sync
+}
 
 def Main(start any) (stop any) {
 	inc Inc

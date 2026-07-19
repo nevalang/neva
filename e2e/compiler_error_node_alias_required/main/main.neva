@@ -1,4 +1,6 @@
-import { fmt }
+import {
+	fmt
+}
 
 def Main(start any) (stop any) {
     fmt.Println<any>

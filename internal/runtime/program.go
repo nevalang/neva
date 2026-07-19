@@ -208,14 +208,13 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 	// IDEA return channel instead of taking function
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
-	success := true
 	resultChan := make(chan bool, len(a.chans))
 
 	for idx := range a.chans {
 		wg.Go(func() {
 			select {
 			case <-ctx.Done():
-				success = false
+				resultChan <- false
 			case received := <-a.chans[idx]:
 				index := Uint8Index(idx)
 				slotAddr := PortSlotAddr{
@@ -237,10 +236,10 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 		close(resultChan)
 	}()
 
+	success := true
 	for result := range resultChan {
 		if !result {
 			success = false
-			break
 		}
 	}
 

@@ -24,18 +24,14 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 	}
 
 	return func(ctx context.Context) {
-		if _, ok := sigIn.Receive(ctx); !ok {
-			return
-		}
+		for {
+			if _, ok := sigIn.Receive(ctx); !ok {
+				return
+			}
 
-		result := make([]runtime.Msg, len(os.Args))
-		for i := range os.Args {
-			//nolint:makezero // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			result = append(result, runtime.NewStringMsg(os.Args[i]))
-		}
-
-		if !resOut.Send(ctx, runtime.NewListMsg(result)) {
-			return
+			if !resOut.Send(ctx, runtime.NewListStringMsg(os.Args)) {
+				return
+			}
 		}
 	}, nil
 }

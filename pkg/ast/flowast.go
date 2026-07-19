@@ -262,6 +262,7 @@ type MsgLiteral struct {
 
 type UnionLiteral struct {
 	EntityRef core.EntityRef `json:"entityRef"`
+	TypeArgs  TypeArgs       `json:"typeArgs,omitempty"`
 	Tag       string         `json:"tag,omitempty"`
 	Data      *ConstValue    `json:"data,omitempty"`
 	Meta      core.Meta      `json:"meta"`
@@ -313,6 +314,7 @@ type IO struct {
 type Port struct {
 	TypeExpr ts.Expr   `json:"typeExpr"`
 	Meta     core.Meta `json:"meta"`
+	Order    int       `json:"order"`
 	IsArray  bool      `json:"isArray,omitempty"`
 }
 

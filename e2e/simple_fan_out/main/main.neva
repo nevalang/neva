@@ -1,4 +1,8 @@
-import { fmt, runtime, builtin }
+import {
+	fmt
+	runtime
+	builtin
+}
 
 def Main(start any) (stop any) {
     p1 fmt.Println<any>

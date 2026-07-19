@@ -1,6 +1,8 @@
 // Benchmarks arithmetic operators as one simple family scenario.
 // Keeps type-specific paths inside the program instead of the package name.
-import { sync }
+import {
+	sync
+}
 
 def Main(start any) (stop any) {
 	int_ops IntArithmetic

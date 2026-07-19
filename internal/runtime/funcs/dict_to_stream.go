@@ -8,6 +8,7 @@ import (
 
 type dictToStream struct{}
 
+//nolint:gocognit // Stream framing and termination handling belong to one state machine.
 func (dictToStream) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
@@ -33,24 +34,21 @@ func (dictToStream) Create(
 			}
 
 			dict := dictToMsgs(dataMsg.Dict())
-			// Go map iteration order is intentionally non-deterministic.
-			size := len(dict)
-
-			idx := 0
+			if !resOut.Send(ctx, newStreamOpenMsg()) {
+				return
+			}
 			for key, valueMsg := range dict {
 				entryMsg := runtime.NewStructMsg([]runtime.StructField{
 					runtime.NewStructField("key", runtime.NewStringMsg(key)),
 					runtime.NewStructField("value", valueMsg),
 				})
 
-				if !resOut.Send(
-					ctx,
-					streamItem(entryMsg, int64(idx), idx == size-1),
-				) {
+				if !resOut.Send(ctx, newStreamDataMsg(entryMsg)) {
 					return
 				}
-
-				idx++
+			}
+			if !resOut.Send(ctx, newStreamCloseMsg()) {
+				return
 			}
 		}
 	}, nil

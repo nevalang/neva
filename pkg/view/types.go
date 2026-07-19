@@ -143,7 +143,25 @@ type Port struct {
 	ID      string       `json:"id"`
 	Name    string       `json:"name"`
 	Type    string       `json:"type"`
+	Order   int          `json:"order"`
 	IsArray bool         `json:"isArray"`
+}
+
+// DINode describes a compile-time dependency injection argument attached to a node.
+//
+//nolint:govet // JSON contract layout is intentionally readability-first, not field-alignment-first.
+type DINode struct {
+	Anchor SourceAnchor `json:"anchor"`
+	ID     string       `json:"id"`
+	Name   string       `json:"name"`
+	// NodeName is the effective dependency-node alias inside the wrapped component.
+	NodeName string `json:"nodeName"`
+	// EntityRef keeps original source reference and can point to any entity kind.
+	EntityRef     core.EntityRef `json:"entityRef"`
+	ResolvedRef   *ResolvedRef   `json:"resolvedRef,omitempty"`
+	TypeArgs      []string       `json:"typeArgs"`
+	OverloadIndex *int           `json:"overloadIndex,omitempty"`
+	ErrGuard      bool           `json:"errGuard"`
 }
 
 // Node describes a component node instance.
@@ -158,6 +176,7 @@ type Node struct {
 	EntityRef     core.EntityRef `json:"entityRef"`
 	ResolvedRef   *ResolvedRef   `json:"resolvedRef,omitempty"`
 	TypeArgs      []string       `json:"typeArgs"`
+	DIArgs        []DINode       `json:"diArgs"`
 	OverloadIndex *int           `json:"overloadIndex,omitempty"`
 	ErrGuard      bool           `json:"errGuard"`
 }

@@ -1,4 +1,8 @@
-import { sync, fmt, runtime }
+import {
+	sync
+	fmt
+	runtime
+}
 
 def Main(start any) (stop any) {
 	p1 fmt.Println<any>

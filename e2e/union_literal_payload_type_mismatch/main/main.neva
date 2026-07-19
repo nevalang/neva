@@ -1,0 +1,9 @@
+type U union {
+	Int int
+}
+
+def Main(start any) (stop any) {
+	pass Pass<U>
+	---
+	:start -> U::Int('bad') -> pass -> :stop
+}

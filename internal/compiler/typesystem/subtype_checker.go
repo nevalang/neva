@@ -144,9 +144,16 @@ func (s SubtypeChecker) checkUnionSubtype(expr, constr *Expr, params *Terminator
 			continue
 		}
 
-		// if one has type and other doesn't, they're incompatible
-		if (exprTagType == nil) != (constrTagType == nil) {
+		// A payload cannot be invented: a tag-only source is incompatible with
+		// a destination that requires a payload.
+		if exprTagType == nil {
 			return fmt.Errorf("%w: for tag %s: one has type, other doesn't", ErrUnions, tag)
+		}
+
+		// A tag-only destination observes only the tag, so a source payload is
+		// safely ignored, just as extra struct fields are safely ignored.
+		if constrTagType == nil {
+			continue
 		}
 
 		// both have types, check compatibility

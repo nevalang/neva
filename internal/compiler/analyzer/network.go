@@ -35,7 +35,12 @@ func (a Analyzer) analyzeNetwork(
 	// Read `Union:tag` wiring to bind each `Union<T>` node to a concrete tag.
 	// Example: `Union<MyU>`; `MyU::Int -> union:tag`; `42 -> union:data`
 	// We bind `tag=Int` so `union:data` must be compatible with int later.
-	unionActiveTags, err := a.buildUnionActiveTagBindings(net, nodes, scope)
+	unionActiveTags, err := a.buildUnionActiveTagBindings(
+		net,
+		nodes,
+		iface.TypeParams.ToFrame(),
+		scope,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -717,7 +722,11 @@ func (a Analyzer) getResolvedSenderType(
 	prevChainLink []src.ConnectionSender,
 ) (src.ConnectionSender, ts.Expr, bool, *compiler.Error) {
 	if sender.Const != nil {
-		resolvedConst, resolvedExpr, err := a.getConstSenderType(*sender.Const, scope)
+		resolvedConst, resolvedExpr, err := a.getConstSenderType(
+			*sender.Const,
+			iface.TypeParams.ToFrame(),
+			scope,
+		)
 		if err != nil {
 			return src.ConnectionSender{}, ts.Expr{}, false, err
 		}
@@ -830,6 +839,7 @@ func (a Analyzer) getPortSenderType(
 func (a Analyzer) getConstSenderType(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	constSender src.Const,
+	typeFrame map[string]ts.Def,
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Const, ts.Expr, *compiler.Error) {
@@ -850,8 +860,9 @@ func (a Analyzer) getConstSenderType(
 		}
 	}
 
-	resolvedExpr, err := a.resolver.ResolveExpr(
+	resolvedExpr, err := a.resolver.ResolveExprWithFrame(
 		constSender.TypeExpr,
+		typeFrame,
 		scope,
 	)
 	if err != nil {
@@ -866,6 +877,18 @@ func (a Analyzer) getConstSenderType(
 			Message: err.Error(),
 			Meta:    &constSender.Value.Message.Meta,
 		}
+	}
+
+	if constSender.Value.Message.Union != nil {
+		unionSenderType, err := a.inferUnionLiteralSenderType(
+			constSender.Value.Message.Union,
+			typeFrame,
+			scope,
+		)
+		if err != nil {
+			return src.Const{}, ts.Expr{}, err
+		}
+		resolvedExpr = unionSenderType
 	}
 
 	return src.Const{

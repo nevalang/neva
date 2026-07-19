@@ -13,6 +13,29 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
+func (s *treeShapeListener) validateImportStmt(actx *generated.ImportStmtContext) *compiler.Error {
+	if s.importCount == 0 {
+		s.importCount++
+		return nil
+	}
+
+	return &compiler.Error{
+		Message: "file must contain at most one import statement",
+		Meta: &core.Meta{
+			Text: actx.GetText(),
+			Start: core.Position{
+				Line:   actx.GetStart().GetLine(),
+				Column: actx.GetStart().GetColumn(),
+			},
+			Stop: core.Position{
+				Line:   actx.GetStop().GetLine(),
+				Column: actx.GetStop().GetColumn(),
+			},
+			Location: s.loc,
+		},
+	}
+}
+
 func (s *treeShapeListener) parseImport(actx generated.IImportDefContext) (src.Import, string) {
 	path := actx.ImportPath()
 	pkgName := path.ImportPathPkg().GetText()
@@ -409,7 +432,7 @@ func (s *treeShapeListener) parsePorts(
 	in []generated.IPortDefContext,
 ) (map[string]src.Port, *compiler.Error) {
 	parsedInports := map[string]src.Port{}
-	for _, port := range in {
+	for order, port := range in {
 		single := port.SinglePortDef()
 		arr := port.ArrayPortDef()
 
@@ -442,6 +465,7 @@ func (s *treeShapeListener) parsePorts(
 		parsedInports[portName] = src.Port{
 			IsArray:  isArr,
 			TypeExpr: v,
+			Order:    order,
 			Meta: core.Meta{
 				Text: port.GetText(),
 				Start: core.Position{
@@ -705,7 +729,7 @@ func (s *treeShapeListener) parsePortAddrIdx(
 	meta core.Meta,
 ) (*uint8, *compiler.Error) {
 	if idxText == "*" {
-		return compiler.Pointer(src.ArrayBypassIdx), nil
+		return arrayBypassIdxPointer(), nil
 	}
 
 	idxUint, err := strconv.ParseUint(idxText, 10, 8)
@@ -724,6 +748,11 @@ func (s *treeShapeListener) parsePortAddrIdx(
 
 	idxUint8 := uint8(idxUint)
 	return &idxUint8, nil
+}
+
+func arrayBypassIdxPointer() *uint8 {
+	idx := src.ArrayBypassIdx
+	return &idx
 }
 
 func (s *treeShapeListener) parseSinglePortAddr(
@@ -790,13 +819,11 @@ func (s *treeShapeListener) parseConstSenderLiteral(
 			Ref: core.EntityRef{Name: "string"},
 		}
 	case lit.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(lit.UnionLit().EntityRef())
+		parsedUnionType, err := s.parseTypeInstExpr(lit.UnionLit().TypeInstExpr())
 		if err != nil {
 			return src.Const{}, err
 		}
-		parsedConst.TypeExpr.Inst = &ts.InstExpr{
-			Ref: parsedUnionRef,
-		}
+		parsedConst.TypeExpr = *parsedUnionType
 	}
 
 	return parsedConst, nil
@@ -902,12 +929,13 @@ func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll //
 			),
 		)
 	case constVal.UnionLit() != nil:
-		parsedUnionRef, err := s.parseEntityRef(constVal.UnionLit().EntityRef())
+		parsedUnionType, err := s.parseTypeInstExpr(constVal.UnionLit().TypeInstExpr())
 		if err != nil {
 			return src.MsgLiteral{}, err
 		}
 		msg.Union = &src.UnionLiteral{
-			EntityRef: parsedUnionRef,
+			EntityRef: parsedUnionType.Inst.Ref,
+			TypeArgs:  parsedUnionType.Inst.Args,
 			Tag:       constVal.UnionLit().IDENTIFIER().GetText(),
 		}
 		if wrapped := constVal.UnionLit().ConstLit(); wrapped != nil {
@@ -1246,7 +1274,10 @@ func (s *treeShapeListener) parseConnDef(
 	meta core.Meta,
 ) (src.Connection, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing connection definition context")
+		return src.Connection{}, &compiler.Error{
+			Message: "missing connection definition",
+			Meta:    &meta,
+		}
 	}
 
 	parsedSenderSide, err := s.parseSenderSide(actx.SenderSide())
@@ -1270,7 +1301,12 @@ func (s *treeShapeListener) parseSenderSide(
 	actx generated.ISenderSideContext,
 ) ([]src.ConnectionSender, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing sender side context")
+		return nil, &compiler.Error{
+			Message: "missing sender side",
+			Meta: &core.Meta{
+				Location: s.loc,
+			},
+		}
 	}
 
 	singleSender := actx.SingleSenderSide()
@@ -1301,6 +1337,12 @@ func (s *treeShapeListener) parseSenderSide(
 		toParse = append(toParse, singleSender)
 	} else {
 		toParse = mulSenders.AllSingleSenderSide()
+		if len(toParse) == 1 {
+			return nil, &compiler.Error{
+				Message: "Multiple sender expression must contain at least two senders",
+				Meta:    &meta,
+			}
+		}
 	}
 
 	parsedSenders := []src.ConnectionSender{}
@@ -1367,7 +1409,12 @@ func (s *treeShapeListener) parseReceiverSide(
 	actx generated.IReceiverSideContext,
 ) ([]src.ConnectionReceiver, *compiler.Error) {
 	if actx == nil {
-		panic("internal invariant violated: missing receiver side context")
+		return nil, &compiler.Error{
+			Message: "missing receiver side",
+			Meta: &core.Meta{
+				Location: s.loc,
+			},
+		}
 	}
 
 	singleReceiverSide := actx.SingleReceiverSide()
