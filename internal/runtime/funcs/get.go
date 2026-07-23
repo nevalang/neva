@@ -55,65 +55,40 @@ func (g getDictValue) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Con
 				return
 			}
 
-			key := keyMsg.Str()
-			dict := dictMsg.Dict()
-			switch {
-			case func() bool {
-				values, ok := runtime.AsDictInts(dict)
-				if !ok {
-					return false
-				}
-				value, found := values[key]
-				if !found {
-					return false
-				}
-				return resOut.Send(ctx, runtime.NewIntMsg(value))
-			}():
-			case func() bool {
-				values, ok := runtime.AsDictStrings(dict)
-				if !ok {
-					return false
-				}
-				value, found := values[key]
-				if !found {
-					return false
-				}
-				return resOut.Send(ctx, runtime.NewStringMsg(value))
-			}():
-			case func() bool {
-				values, ok := runtime.AsDictBools(dict)
-				if !ok {
-					return false
-				}
-				value, found := values[key]
-				if !found {
-					return false
-				}
-				return resOut.Send(ctx, runtime.NewBoolMsg(value))
-			}():
-			case func() bool {
-				values, ok := runtime.AsDictFloats(dict)
-				if !ok {
-					return false
-				}
-				value, found := values[key]
-				if !found {
-					return false
-				}
-				return resOut.Send(ctx, runtime.NewFloatMsg(value))
-			}():
-			default:
-				valueMsg, ok := dict.Msgs()[key]
-				if !ok {
-					if !errOut.Send(ctx, errFromString("Key not found in dictionary")) {
-						return
-					}
-					continue
-				}
-				if !resOut.Send(ctx, valueMsg) {
+			valueMsg, found := dictValueByKey(dictMsg.Dict(), keyMsg.Str())
+			if !found {
+				if !errOut.Send(ctx, errFromString("Key not found in dictionary")) {
 					return
 				}
+				continue
+			}
+			if !resOut.Send(ctx, valueMsg) {
+				return
 			}
 		}
 	}, nil
+}
+
+// dictValueByKey reads one value without converting a typed dict into map[string]Msg.
+//
+//nolint:ireturn // Runtime function output is expressed as Msg.
+func dictValueByKey(dict runtime.DictMsg, key string) (runtime.Msg, bool) {
+	if values, ok := runtime.AsDictInts(dict); ok {
+		value, found := values[key]
+		return runtime.NewIntMsg(value), found
+	}
+	if values, ok := runtime.AsDictStrings(dict); ok {
+		value, found := values[key]
+		return runtime.NewStringMsg(value), found
+	}
+	if values, ok := runtime.AsDictBools(dict); ok {
+		value, found := values[key]
+		return runtime.NewBoolMsg(value), found
+	}
+	if values, ok := runtime.AsDictFloats(dict); ok {
+		value, found := values[key]
+		return runtime.NewFloatMsg(value), found
+	}
+	value, found := dict.Msgs()[key]
+	return value, found
 }

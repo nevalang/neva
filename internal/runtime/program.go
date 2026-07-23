@@ -256,37 +256,10 @@ func (s SelectedMsg) String() string {
 	return fmt.Sprint(s.OrderedMsg)
 }
 
-// recordAndSelectMsg enriches received transport envelope with runtime trace/interceptor side effects.
-func (a *ArrayInport) recordAndSelectMsg(ctx context.Context, slotIdx int, ordered OrderedMsg) SelectedMsg {
-	index := Uint8Index(slotIdx)
-	slotAddr := PortSlotAddr{
-		PortAddr: PortAddr{
-			Path: a.addr.Path,
-			Port: a.addr.Port,
-		},
-		Index: &index,
-	}
-	a.tracer.recordReceived(slotAddr, ordered)
-	ordered = a.interceptor.Received(ctx, slotAddr, ordered)
-	return SelectedMsg{
-		OrderedMsg: ordered,
-		SlotIdx:    index,
-	}
-}
-
-func (a *ArrayInport) receiveSlotIfReady(ctx context.Context, slotIdx int) (SelectedMsg, bool) {
-	select {
-	case ordered := <-a.chans[slotIdx]:
-		return a.recordAndSelectMsg(ctx, slotIdx, ordered), true
-	default:
-		return SelectedMsg{}, false
-	}
-}
-
 // Select returns the oldest
 //
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
+func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 	buf := make([]SelectedMsg, 0, len(a.chans)^2) // len(ss)^2 is an upper bound of messages that can be received
 
 	for i := 0; len(buf) == 0 || i < len(a.chans); i++ {
@@ -301,7 +274,14 @@ func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				buf = append(buf, a.recordAndSelectMsg(ctx, slotIdx, orderedMsg))
+				index := Uint8Index(slotIdx)
+				slotAddr := PortSlotAddr{
+					PortAddr: PortAddr{Path: a.addr.Path, Port: a.addr.Port},
+					Index:    &index,
+				}
+				a.tracer.recordReceived(slotAddr, orderedMsg)
+				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
+				buf = append(buf, SelectedMsg{OrderedMsg: orderedMsg, SlotIdx: index})
 			}
 		}
 	}
@@ -316,50 +296,6 @@ func (a *ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 // Select returns oldest available message across all available array inport slots.
 func (a *ArrayInport) Select(ctx context.Context) (SelectedMsg, bool) {
 	if len(a.buf) == 0 {
-		// Fast path: one slot has no ordering competition.
-		if len(a.chans) == 1 {
-			select {
-			case <-ctx.Done():
-				return SelectedMsg{}, false
-			case ordered := <-a.chans[0]:
-				return a.recordAndSelectMsg(ctx, 0, ordered), true
-			}
-		}
-
-		// Fast path: two slots can avoid batched polling + sort.
-		// Strategy:
-		// 1) Block until first message is received from either slot.
-		// 2) Try one non-blocking read from each slot to collect a possible competitor.
-		// 3) If competitor exists, return older one and buffer the newer one.
-		if len(a.chans) == 2 {
-			var first SelectedMsg
-			select {
-			case <-ctx.Done():
-				return SelectedMsg{}, false
-			case ordered := <-a.chans[0]:
-				first = a.recordAndSelectMsg(ctx, 0, ordered)
-			case ordered := <-a.chans[1]:
-				first = a.recordAndSelectMsg(ctx, 1, ordered)
-			}
-
-			// We intentionally probe both slots once after the blocking receive.
-			// If a new message arrived meanwhile, it competes by OrderedMsg.index.
-			// Reading from the same slot twice is valid and preserves ordering:
-			// older index is returned now, newer one is buffered.
-			second, ok := a.receiveSlotIfReady(ctx, 0)
-			if !ok {
-				second, ok = a.receiveSlotIfReady(ctx, 1)
-			}
-			if ok {
-				if second.OrderedMsg.index < first.OrderedMsg.index {
-					a.buf = append(a.buf, first)
-					return second, true
-				}
-				a.buf = append(a.buf, second)
-			}
-			return first, true
-		}
-
 		batch, ok := a._select(ctx)
 		if !ok {
 			return SelectedMsg{}, false
