@@ -41,12 +41,14 @@ The language server lives in `nevalang/neva-lsp`, not in this repository.
 ## Documentation
 
 Documentation is organized by primary reader, not by a one-way dependency
-graph. Link between `docs/user/` and `docs/developer/` when useful, but keep a
-topic canonical in one place.
+graph. Keep each topic canonical in one place.
 
 - Public language behavior, API semantics, and Neva style belong in `docs/user/`.
 - Compiler, runtime, standard-library implementation, and test strategy belong
   in `docs/developer/`.
+- User documentation must be self-contained and must not link to developer
+  documentation. Developer documentation may link to user documentation, since
+  contributors are expected to know the public language behavior.
 
 Start from `docs/README.md` for documentation navigation.
 

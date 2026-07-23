@@ -62,7 +62,9 @@ Programming is hard enough. There's no need to make it harder. Developers should
 
 ## AI-friendly Language
 
-Neva is not an AI‑first language. You can write it in nano with zero setup. I don't prescribe — or even encourage — AI‑generated code.
+Neva is not an AI‑first language. You can write it in nano with zero setup. It
+does not prescribe an authoring workflow or treat AI assistance as a different
+kind of tool.
 
 That said, I'm obsessed with process optimization. If AI can accelerate development, I'm interested. Neva wasn't designed around AI — the core decisions predate coding agents — but it happens to fit them well:
 
