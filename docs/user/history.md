@@ -66,13 +66,10 @@ Neva is not an AI‑first language. You can write it in nano with zero setup. It
 does not prescribe an authoring workflow or treat AI assistance as a different
 kind of tool.
 
-That said, I'm obsessed with process optimization. If AI can accelerate development, I'm interested. Neva wasn't designed around AI — the core decisions predate coding agents — but it happens to fit them well:
-
-- Minimal core and a small, orthogonal set of abstractions
-- Static typing with relatively strict, predictable compilation rules
-- Human‑readable, deterministic compiler errors
-
-This makes AI output easy to validate: we don't rely on the model's "intuition"; the compiler provides precise feedback loops. Generate code, compile, fix, repeat.
+That said, I'm obsessed with process optimization. If AI can accelerate
+development, I'm interested. Neva wasn't designed around AI — the core
+decisions predate coding agents — but its direction for AI-assisted development
+is described in the [Vision](./vision.md#4-ai-native-without-sacrificing-human-authoring).
 
 ## Neva Programming Language
 
