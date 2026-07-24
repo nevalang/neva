@@ -54,7 +54,7 @@ func (osReadDir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context
 			return nil, fmt.Errorf("os.ReadDir: %w", err)
 		}
 
-		return dirEntriesMsg(entries), nil
+		return runtime.NewListMsg(dirEntries(entries)), nil
 	})
 }
 
@@ -193,8 +193,8 @@ func fileModeFromRuntimeMsg(permMsg runtime.Msg) (os.FileMode, error) {
 	return os.FileMode(uint32(perm)), nil
 }
 
-// dirEntriesMsg converts []os.DirEntry to list<DirEntry> runtime payload.
-func dirEntriesMsg(entries []os.DirEntry) runtime.ListMsg {
+// dirEntries converts []os.DirEntry into generic runtime struct messages.
+func dirEntries(entries []os.DirEntry) []runtime.Msg {
 	msgs := make([]runtime.Msg, len(entries))
 	for i := range entries {
 		msgs[i] = runtime.NewStructMsg([]runtime.StructField{
@@ -203,7 +203,7 @@ func dirEntriesMsg(entries []os.DirEntry) runtime.ListMsg {
 		})
 	}
 
-	return runtime.NewListMsg(msgs)
+	return msgs
 }
 
 // fileInfoMsg converts os.FileInfo to std/os.FileInfo runtime payload.

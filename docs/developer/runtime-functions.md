@@ -29,6 +29,16 @@ Every message derived from received input must pass the received `OrderedMsg`
 values to `Send` as causes. This preserves runtime ordering and dataflow
 tracing.
 
+## Typed Containers
+
+The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
+can retain unboxed Go storage such as `[]int64` or `map[string]string`.
+Runtime functions should use the matching `runtime.AsList...` or
+`runtime.AsDict...` accessor on scalar-preserving hot paths. Keep the generic
+`listToMsgs` and `dictToMsgs` helpers for boundaries that genuinely require one
+`runtime.Msg` per element, such as conversion to a stream; they box every
+scalar element by design.
+
 ## Concurrent Inputs
 
 Inputs that belong to one logical operation must be received concurrently.

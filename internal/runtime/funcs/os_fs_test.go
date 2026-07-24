@@ -45,7 +45,7 @@ func TestFileModeFromRuntimeMsg(t *testing.T) {
 	}
 }
 
-func TestDirEntriesMsg(t *testing.T) {
+func TestDirEntries(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
@@ -64,7 +64,7 @@ func TestDirEntriesMsg(t *testing.T) {
 		t.Fatalf("ReadDir: %v", err)
 	}
 
-	list := dirEntriesMsg(entries).List()
+	list := dirEntries(entries)
 	if len(list) != 2 {
 		t.Fatalf("expected 2 entries, got %d", len(list))
 	}
@@ -176,8 +176,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		mkdir(t, filepath.Join(root, "subdir"))
 
 		got := runUnaryRuntimeFunc(t, osReadDir{}, "path", runtime.NewStringMsg(root))
-		if len(got.List()) != 2 {
-			t.Fatalf("read_dir len = %d, want 2", len(got.List()))
+		if got.List().Len() != 2 {
+			t.Fatalf("read_dir len = %d, want 2", got.List().Len())
 		}
 	})
 

@@ -4,6 +4,19 @@ import (
 	"testing"
 )
 
+func mustMarshal(t *testing.T, msg Msg) []byte {
+	t.Helper()
+	marshaler, ok := msg.(interface{ MarshalJSON() ([]byte, error) })
+	if !ok {
+		t.Fatalf("message type %T does not implement MarshalJSON", msg)
+	}
+	b, err := marshaler.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON() error = %v", err)
+	}
+	return b
+}
+
 func TestDictMsgMarshalJSONPreservesStringValues(t *testing.T) {
 	msg := NewDictMsg(map[string]Msg{
 		"text": NewStringMsg(`a:"b,c\d`),
@@ -13,10 +26,7 @@ func TestDictMsgMarshalJSONPreservesStringValues(t *testing.T) {
 		}),
 	})
 
-	b, err := msg.MarshalJSON()
-	if err != nil {
-		t.Fatalf("MarshalJSON() error = %v", err)
-	}
+	b := mustMarshal(t, msg)
 	if got, want := string(b), `{"nums": [1, 2], "text": "a:\"b,c\\d"}`; got != want {
 		t.Fatalf("MarshalJSON() = %q, want %q", got, want)
 	}

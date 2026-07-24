@@ -34,7 +34,18 @@ func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx cont
 
 			builder := strings.Builder{}
 			sep := sepMsg.Str()
-			writeJoinedList(&builder, dataMsg.List(), sep)
+
+			list := dataMsg.List()
+			if stringsList, ok := runtime.AsListStrings(list); ok {
+				for i := range stringsList {
+					if i > 0 {
+						builder.WriteString(sep)
+					}
+					builder.WriteString(stringsList[i])
+				}
+			} else {
+				writeJoinedList(&builder, list.Msgs(), sep)
+			}
 
 			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
 				return

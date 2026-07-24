@@ -7,8 +7,8 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-// TestListAtSupportsNegativeIndex verifies invariant: -1 returns the last element.
-func TestListAtSupportsNegativeIndex(t *testing.T) {
+// TestListAtTypedInt verifies typed int-list fast path and negative indexing invariant.
+func TestListAtTypedInt(t *testing.T) {
 	t.Parallel()
 
 	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})
@@ -23,7 +23,7 @@ func TestListAtSupportsNegativeIndex(t *testing.T) {
 		<-done
 	}()
 
-	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListMsg([]runtime.Msg{runtime.NewIntMsg(10), runtime.NewIntMsg(20), runtime.NewIntMsg(30)})}
+	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListIntMsg([]int64{10, 20, 30})}
 	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(-1)}
 
 	select {
@@ -36,7 +36,36 @@ func TestListAtSupportsNegativeIndex(t *testing.T) {
 	}
 }
 
-// TestListAtOutOfBounds verifies invariant: out-of-bounds index emits `err`.
+// TestListAtGenericFallback verifies generic list path still works for mixed/non-typed lists.
+func TestListAtGenericFallback(t *testing.T) {
+	t.Parallel()
+
+	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})
+	handler, err := (listAt{}).Create(io, nil)
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+
+	cancel, done := runHandler(handler)
+	defer func() {
+		cancel()
+		<-done
+	}()
+
+	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListMsg([]runtime.Msg{runtime.NewStringMsg("a"), runtime.NewIntMsg(2)})}
+	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(1)}
+
+	select {
+	case got := <-outChans["res"]:
+		if got.Int() != 2 {
+			t.Fatalf("result = %d, want 2", got.Int())
+		}
+	case <-time.After(time.Second):
+		t.Fatal("no result")
+	}
+}
+
+// TestListAtOutOfBounds verifies invariant: out-of-bounds index emits `err` and no success result.
 func TestListAtOutOfBounds(t *testing.T) {
 	t.Parallel()
 
@@ -52,7 +81,7 @@ func TestListAtOutOfBounds(t *testing.T) {
 		<-done
 	}()
 
-	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListMsg([]runtime.Msg{runtime.NewStringMsg("x")})}
+	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListStringMsg([]string{"x"})}
 	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(5)}
 
 	select {
@@ -68,5 +97,43 @@ func TestListAtOutOfBounds(t *testing.T) {
 	case <-outChans["res"]:
 		t.Fatal("unexpected success result")
 	case <-time.After(50 * time.Millisecond):
+	}
+}
+
+// TestListItem verifies index normalization helper for negative and out-of-bounds indexes.
+func TestListItem(t *testing.T) {
+	t.Parallel()
+
+	item, ok := listItem([]int{1, 2, 3}, -2)
+	if !ok || item != 2 {
+		t.Fatalf("listItem(-2) = (%d, %v), want (2, true)", item, ok)
+	}
+
+	_, ok = listItem([]int{1, 2, 3}, 3)
+	if ok {
+		t.Fatal("expected out-of-bounds to return ok=false")
+	}
+}
+
+// BenchmarkListAtTypedInt measures typed int-list access throughput in list_at.
+func BenchmarkListAtTypedInt(b *testing.B) {
+	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})
+	handler, err := (listAt{}).Create(io, nil)
+	if err != nil {
+		b.Fatalf("Create returned error: %v", err)
+	}
+
+	ctx := b.Context()
+	go handler(ctx)
+
+	listMsg := runtime.NewListIntMsg([]int64{1, 2, 3, 4, 5, 6, 7, 8})
+	idxMsg := runtime.NewIntMsg(4)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		inChans["data"] <- runtime.OrderedMsg{Msg: listMsg}
+		inChans["idx"] <- runtime.OrderedMsg{Msg: idxMsg}
+		<-outChans["res"]
 	}
 }
