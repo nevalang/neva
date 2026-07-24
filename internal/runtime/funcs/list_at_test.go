@@ -129,6 +129,7 @@ func BenchmarkListAtTypedInt(b *testing.B) {
 	listMsg := runtime.NewListIntMsg([]int64{1, 2, 3, 4, 5, 6, 7, 8})
 	idxMsg := runtime.NewIntMsg(4)
 
+	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		inChans["data"] <- runtime.OrderedMsg{Msg: listMsg}
