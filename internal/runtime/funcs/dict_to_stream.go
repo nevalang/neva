@@ -33,7 +33,7 @@ func (dictToStream) Create(
 				return
 			}
 
-			dict := dataMsg.Dict()
+			dict := dictToMsgs(dataMsg.Dict())
 			if !resOut.Send(ctx, newStreamOpenMsg()) {
 				return
 			}

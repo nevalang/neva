@@ -53,7 +53,7 @@ func TestMatchSendsDataIfThenCauses(t *testing.T) {
 
 	select {
 	case out := <-resOut:
-		if !out.Equal(runtime.NewStringMsg("one")) {
+		if !runtime.Equal(out, runtime.NewStringMsg("one")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, ifCause, thenCause})

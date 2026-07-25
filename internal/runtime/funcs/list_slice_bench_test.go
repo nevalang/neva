@@ -22,15 +22,11 @@ func BenchmarkListSliceHotpath(b *testing.B) {
 		<-done
 	}()
 
-	data := runtime.NewListMsg([]runtime.Msg{
-		runtime.NewIntMsg(1),
-		runtime.NewIntMsg(2),
-		runtime.NewIntMsg(3),
-		runtime.NewIntMsg(4),
-	})
+	data := runtime.NewListIntMsg([]int64{1, 2, 3, 4})
 	from := runtime.NewIntMsg(1)
 	to := runtime.NewIntMsg(3)
 
+	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
 		dataIn <- runtime.OrderedMsg{Msg: data}

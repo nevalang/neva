@@ -276,18 +276,12 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case orderedMsg := <-ch:
 				index := Uint8Index(slotIdx)
 				slotAddr := PortSlotAddr{
-					PortAddr: PortAddr{
-						Path: a.addr.Path,
-						Port: a.addr.Port,
-					},
-					Index: &index,
+					PortAddr: PortAddr{Path: a.addr.Path, Port: a.addr.Port},
+					Index:    &index,
 				}
 				a.tracer.recordReceived(slotAddr, orderedMsg)
 				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
-				buf = append(buf, SelectedMsg{
-					OrderedMsg: orderedMsg,
-					SlotIdx:    index,
-				})
+				buf = append(buf, SelectedMsg{OrderedMsg: orderedMsg, SlotIdx: index})
 			}
 		}
 	}

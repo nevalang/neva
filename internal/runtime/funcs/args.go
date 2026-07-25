@@ -29,18 +29,9 @@ func (a args) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 				return
 			}
 
-			if !resOut.Send(ctx, argsListMsg(os.Args)) {
+			if !resOut.Send(ctx, runtime.NewListStringMsg(os.Args)) {
 				return
 			}
 		}
 	}, nil
-}
-
-// argsListMsg converts argv list to runtime list message.
-func argsListMsg(argv []string) runtime.ListMsg {
-	result := make([]runtime.Msg, len(argv))
-	for i := range argv {
-		result[i] = runtime.NewStringMsg(argv[i])
-	}
-	return runtime.NewListMsg(result)
 }

@@ -45,7 +45,7 @@ func TestRaceSendsDataAndCaseCauses(t *testing.T) {
 
 	select {
 	case out := <-caseOut1:
-		if !out.Equal(runtime.NewIntMsg(42)) {
+		if !runtime.Equal(out, runtime.NewIntMsg(42)) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewIntMsg(42))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})
