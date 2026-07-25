@@ -50,7 +50,7 @@ func TestFanInSendsSingleExplicitCause(t *testing.T) {
 
 	select {
 	case out := <-resOutCh:
-		if !out.Equal(runtime.NewStringMsg("v")) {
+		if !runtime.Equal(out, runtime.NewStringMsg("v")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("v"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{cause})

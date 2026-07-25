@@ -115,7 +115,7 @@ func BenchmarkMsgEqualList(b *testing.B) {
 			b.ResetTimer()
 			//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 			for i := 0; i < b.N; i++ {
-				boolSink = left.Equal(right)
+				boolSink = Equal(left, right)
 			}
 		})
 
@@ -135,7 +135,7 @@ func BenchmarkMsgEqualList(b *testing.B) {
 			b.ResetTimer()
 			//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 			for i := 0; i < b.N; i++ {
-				boolSink = left.Equal(right)
+				boolSink = Equal(left, right)
 			}
 		})
 	}

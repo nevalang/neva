@@ -48,7 +48,7 @@ func TestStreamMessages(t *testing.T) {
 	if isStreamOpen(closeMsg) || isStreamData(closeMsg) || !isStreamClose(closeMsg) {
 		t.Fatalf("close predicates mismatch: %v", closeMsg)
 	}
-	if got := streamDataValue(dataMsg); !got.Equal(data) {
+	if got := streamDataValue(dataMsg); !runtime.Equal(got, data) {
 		t.Fatalf("streamDataValue() = %v, want %v", got, data)
 	}
 }

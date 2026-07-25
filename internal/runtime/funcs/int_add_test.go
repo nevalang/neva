@@ -34,7 +34,7 @@ func TestIntAddSendsTwoCauses(t *testing.T) {
 
 	select {
 	case out := <-resultOutput:
-		if !out.Equal(runtime.NewIntMsg(42)) {
+		if !runtime.Equal(out, runtime.NewIntMsg(42)) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewIntMsg(42))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{leftCause, rightCause})

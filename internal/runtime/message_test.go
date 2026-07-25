@@ -95,18 +95,76 @@ func TestBytesMsgEqual(t *testing.T) {
 	b := NewBytesMsg([]byte{1, 2, 3})
 	c := NewBytesMsg([]byte{1, 2, 4})
 
-	if !a.Equal(b) {
+	if !Equal(a, b) {
 		t.Fatal("Equal() = false, want true")
 	}
-	if a.Equal(c) {
+	if Equal(a, c) {
 		t.Fatal("Equal() = true, want false")
+	}
+}
+
+func TestEqualContainerRepresentations(t *testing.T) {
+	testCases := []struct {
+		left  Msg
+		right Msg
+		name  string
+		want  bool
+	}{
+		{
+			name:  "typed and untyped lists with equal integers",
+			left:  NewListIntMsg([]int64{1, 2}),
+			right: NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
+			want:  true,
+		},
+		{
+			name:  "typed lists with different scalar kinds",
+			left:  NewListIntMsg([]int64{1}),
+			right: NewListFloatMsg([]float64{1}),
+			want:  false,
+		},
+		{
+			name:  "typed and untyped dictionaries with equal integers",
+			left:  NewDictIntMsg(map[string]int64{"one": 1}),
+			right: NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}),
+			want:  true,
+		},
+		{
+			name:  "dictionaries with different values",
+			left:  NewDictStringMsg(map[string]string{"one": "first"}),
+			right: NewDictStringMsg(map[string]string{"one": "second"}),
+			want:  false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if got := Equal(testCase.left, testCase.right); got != testCase.want {
+				t.Fatalf("Equal() = %t, want %t", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestEqualStructAndUnion(t *testing.T) {
+	leftStruct := NewStructMsg([]StructField{
+		NewStructField("value", NewListIntMsg([]int64{1, 2})),
+	})
+	rightStruct := NewStructMsg([]StructField{
+		NewStructField("value", NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)})),
+	})
+	if !Equal(leftStruct, rightStruct) {
+		t.Fatal("Equal() = false, want equal structs with equivalent list storage")
+	}
+
+	if !Equal(NewUnionMsg("Value", leftStruct), NewUnionMsg("Value", rightStruct)) {
+		t.Fatal("Equal() = false, want equal unions with equivalent data")
 	}
 }
 
 func TestListMsgAccessors(t *testing.T) {
 	t.Run("untyped", func(t *testing.T) {
 		list := NewListMsg([]Msg{NewIntMsg(1)}).List()
-		if got := list.Untyped(); len(got) != 1 || !got[0].Equal(NewIntMsg(1)) {
+		if got := list.Untyped(); len(got) != 1 || !Equal(got[0], NewIntMsg(1)) {
 			t.Fatalf("Untyped() = %v, want one integer message", got)
 		}
 		mustPanic(t, func() { list.Ints() })
@@ -124,7 +182,7 @@ func TestListMsgAccessors(t *testing.T) {
 func TestDictMsgAccessors(t *testing.T) {
 	t.Run("untyped", func(t *testing.T) {
 		dict := NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}).Dict()
-		if got := dict.Untyped()["one"]; !got.Equal(NewIntMsg(1)) {
+		if got := dict.Untyped()["one"]; !Equal(got, NewIntMsg(1)) {
 			t.Fatalf("Untyped()[one] = %v, want integer message", got)
 		}
 		mustPanic(t, func() { dict.Ints() })

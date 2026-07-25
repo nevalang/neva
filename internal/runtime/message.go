@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -27,8 +26,6 @@ type Msg interface {
 	Dict() DictMsg
 	Struct() StructMsg
 	Union() UnionMsg
-
-	Equal(Msg) bool
 }
 
 // Internal
@@ -57,9 +54,6 @@ func (internalMsg) Union() UnionMsg { panic("unexpected Union method call on int
 func (internalMsg) MarshalJSON() ([]byte, error) {
 	panic("unexpected MarshalJSON method call on internal message type")
 }
-func (internalMsg) Equal(other Msg) bool {
-	panic("unexpected Equal method call on internal message type")
-}
 
 // Bool
 
@@ -71,10 +65,6 @@ type BoolMsg struct {
 func (msg BoolMsg) Bool() bool                   { return msg.v }
 func (msg BoolMsg) String() string               { return strconv.FormatBool(msg.v) }
 func (msg BoolMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg BoolMsg) Equal(other Msg) bool {
-	otherBool, ok := other.(BoolMsg)
-	return ok && msg.v == otherBool.v
-}
 
 func NewBoolMsg(b bool) BoolMsg {
 	return BoolMsg{
@@ -93,10 +83,6 @@ type IntMsg struct {
 func (msg IntMsg) Int() int64                   { return msg.v }
 func (msg IntMsg) String() string               { return strconv.Itoa(int(msg.v)) }
 func (msg IntMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg IntMsg) Equal(other Msg) bool {
-	otherInt, ok := other.(IntMsg)
-	return ok && msg.v == otherInt.v
-}
 
 func NewIntMsg(n int64) IntMsg {
 	return IntMsg{
@@ -115,10 +101,6 @@ type FloatMsg struct {
 func (msg FloatMsg) Float() float64               { return msg.v }
 func (msg FloatMsg) String() string               { return fmt.Sprint(msg.v) }
 func (msg FloatMsg) MarshalJSON() ([]byte, error) { return []byte(msg.String()), nil }
-func (msg FloatMsg) Equal(other Msg) bool {
-	otherFloat, ok := other.(FloatMsg)
-	return ok && msg.v == otherFloat.v
-}
 
 func NewFloatMsg(n float64) FloatMsg {
 	return FloatMsg{
@@ -142,11 +124,6 @@ func (msg StringMsg) String() string { return msg.v }
 func (msg StringMsg) MarshalJSON() ([]byte, error) {
 	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return json.Marshal(msg.String())
-}
-
-func (msg StringMsg) Equal(other Msg) bool {
-	otherString, ok := other.(StringMsg)
-	return ok && msg.v == otherString.v
 }
 
 func NewStringMsg(s string) StringMsg {
@@ -179,11 +156,6 @@ func (msg BytesMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
-func (msg BytesMsg) Equal(other Msg) bool {
-	otherBytes, ok := other.(BytesMsg)
-	return ok && bytes.Equal(msg.v, otherBytes.v)
-}
-
 func NewBytesMsg(v []byte) BytesMsg {
 	return BytesMsg{
 		internalMsg: internalMsg{},
@@ -205,7 +177,6 @@ type ListMsg interface {
 	Floats() []float64
 	Strings() []string
 	Len() int
-	Equal(ListMsg) bool
 }
 
 // listValueMsg adapts a ListMsg storage implementation to the Msg contract.
@@ -227,11 +198,6 @@ func (msg listValueMsg) MarshalJSON() ([]byte, error) {
 	return listMarshalJSON(msg.v)
 }
 
-func (msg listValueMsg) Equal(other Msg) bool {
-	otherList, ok := other.(listValueMsg)
-	return ok && msg.v.Equal(otherList.v)
-}
-
 // internalListMsg supplies invariant-violation methods shared by every list
 // storage implementation. Concrete implementations override their one valid
 // accessor plus Len and Equal.
@@ -243,9 +209,6 @@ func (internalListMsg) Ints() []int64     { panic("unexpected Ints method call o
 func (internalListMsg) Floats() []float64 { panic("unexpected Floats method call on list message") }
 func (internalListMsg) Strings() []string { panic("unexpected Strings method call on list message") }
 func (internalListMsg) Len() int          { panic("unexpected Len method call on internal list message") }
-func (internalListMsg) Equal(ListMsg) bool {
-	panic("unexpected Equal method call on internal list message")
-}
 func (internalListMsg) String() string {
 	panic("unexpected String method call on internal list message")
 }
@@ -297,9 +260,6 @@ func (msg untypedListMsg) String() string {
 func (msg untypedListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg untypedListMsg) Equal(other ListMsg) bool {
-	return listEqualUntyped(msg.v, other)
-}
 
 func (msg boolListMsg) Bools() []bool  { return msg.v }
 func (msg boolListMsg) Len() int       { return len(msg.v) }
@@ -309,7 +269,6 @@ func (msg boolListMsg) String() string { return mustJSON(msg) }
 func (msg boolListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg boolListMsg) Equal(other ListMsg) bool { return listEqualBool(msg.v, other) }
 
 func (msg intListMsg) Ints() []int64  { return msg.v }
 func (msg intListMsg) Len() int       { return len(msg.v) }
@@ -319,7 +278,6 @@ func (msg intListMsg) String() string { return mustJSON(msg) }
 func (msg intListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg intListMsg) Equal(other ListMsg) bool { return listEqualInt(msg.v, other) }
 
 func (msg floatListMsg) Floats() []float64 {
 	return msg.v
@@ -331,7 +289,6 @@ func (msg floatListMsg) String() string { return mustJSON(msg) }
 func (msg floatListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg floatListMsg) Equal(other ListMsg) bool { return listEqualFloat(msg.v, other) }
 
 func (msg stringListMsg) Strings() []string { return msg.v }
 func (msg stringListMsg) Len() int          { return len(msg.v) }
@@ -341,7 +298,6 @@ func (msg stringListMsg) String() string    { return mustJSON(msg) }
 func (msg stringListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg stringListMsg) Equal(other ListMsg) bool { return listEqualString(msg.v, other) }
 
 // NewListMsg creates a list with an untyped boxed representation.
 //
@@ -390,7 +346,6 @@ type DictMsg interface {
 	Floats() map[string]float64
 	Strings() map[string]string
 	Len() int
-	Equal(DictMsg) bool
 }
 
 // dictValueMsg adapts a DictMsg storage implementation to the Msg contract.
@@ -407,10 +362,6 @@ func (msg dictValueMsg) Dict() DictMsg { return msg.v }
 func (msg dictValueMsg) String() string { return dictToString(msg.v) }
 
 func (msg dictValueMsg) MarshalJSON() ([]byte, error) { return dictMarshalJSON(msg.v) }
-func (msg dictValueMsg) Equal(other Msg) bool {
-	otherDict, ok := other.(dictValueMsg)
-	return ok && msg.v.Equal(otherDict.v)
-}
 
 // internalDictMsg supplies invariant-violation methods shared by every dict
 // storage implementation. Concrete implementations override their one valid
@@ -429,9 +380,6 @@ func (internalDictMsg) Strings() map[string]string {
 	panic("unexpected Strings method call on dict message")
 }
 func (internalDictMsg) Len() int { panic("unexpected Len method call on internal dict message") }
-func (internalDictMsg) Equal(DictMsg) bool {
-	panic("unexpected Equal method call on internal dict message")
-}
 func (internalDictMsg) String() string {
 	panic("unexpected String method call on internal dict message")
 }
@@ -479,7 +427,6 @@ func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
 	}
 	return addJSONSpaces(jsonData), nil
 }
-func (msg untypedDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
 func (msg boolDictMsg) Bools() map[string]bool { return msg.v }
 func (msg boolDictMsg) Len() int               { return len(msg.v) }
@@ -489,7 +436,6 @@ func (msg boolDictMsg) String() string         { return mustJSON(msg) }
 func (msg boolDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg boolDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
 func (msg intDictMsg) Ints() map[string]int64 { return msg.v }
 func (msg intDictMsg) Len() int               { return len(msg.v) }
@@ -499,7 +445,6 @@ func (msg intDictMsg) String() string         { return mustJSON(msg) }
 func (msg intDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg intDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
 func (msg floatDictMsg) Floats() map[string]float64 { return msg.v }
 func (msg floatDictMsg) Len() int                   { return len(msg.v) }
@@ -509,7 +454,6 @@ func (msg floatDictMsg) String() string             { return mustJSON(msg) }
 func (msg floatDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg floatDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
 func (msg stringDictMsg) Strings() map[string]string { return msg.v }
 func (msg stringDictMsg) Len() int                   { return len(msg.v) }
@@ -519,7 +463,6 @@ func (msg stringDictMsg) String() string             { return mustJSON(msg) }
 func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg stringDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
 // NewDictMsg creates a dictionary with an untyped boxed representation.
 //
@@ -565,7 +508,7 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 	rightMsgs := asUntypedDict(right)
 	for key, leftVal := range leftMsgs {
 		rightVal, ok := rightMsgs[key]
-		if !ok || !leftVal.Equal(rightVal) {
+		if !ok || !Equal(leftVal, rightVal) {
 			return false
 		}
 	}
@@ -591,7 +534,7 @@ func listEqualUntyped(left []Msg, right ListMsg) bool {
 
 func listEqualUntypedToUntyped(left []Msg, right []Msg) bool {
 	for i := range left {
-		if !left[i].Equal(right[i]) {
+		if !Equal(left[i], right[i]) {
 			return false
 		}
 	}
@@ -600,7 +543,7 @@ func listEqualUntypedToUntyped(left []Msg, right []Msg) bool {
 
 func listEqualUntypedToBools(left []Msg, right []bool) bool {
 	for i := range left {
-		if !left[i].Equal(NewBoolMsg(right[i])) {
+		if !Equal(left[i], NewBoolMsg(right[i])) {
 			return false
 		}
 	}
@@ -609,7 +552,7 @@ func listEqualUntypedToBools(left []Msg, right []bool) bool {
 
 func listEqualUntypedToInts(left []Msg, right []int64) bool {
 	for i := range left {
-		if !left[i].Equal(NewIntMsg(right[i])) {
+		if !Equal(left[i], NewIntMsg(right[i])) {
 			return false
 		}
 	}
@@ -618,7 +561,7 @@ func listEqualUntypedToInts(left []Msg, right []int64) bool {
 
 func listEqualUntypedToFloats(left []Msg, right []float64) bool {
 	for i := range left {
-		if !left[i].Equal(NewFloatMsg(right[i])) {
+		if !Equal(left[i], NewFloatMsg(right[i])) {
 			return false
 		}
 	}
@@ -627,7 +570,7 @@ func listEqualUntypedToFloats(left []Msg, right []float64) bool {
 
 func listEqualUntypedToStrings(left []Msg, right []string) bool {
 	for i := range left {
-		if !left[i].Equal(NewStringMsg(right[i])) {
+		if !Equal(left[i], NewStringMsg(right[i])) {
 			return false
 		}
 	}
@@ -644,7 +587,7 @@ func listEqualBool(left []bool, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !NewBoolMsg(left[i]).Equal(rightTyped.v[i]) {
+			if !Equal(NewBoolMsg(left[i]), rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -664,7 +607,7 @@ func listEqualInt(left []int64, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !NewIntMsg(left[i]).Equal(rightTyped.v[i]) {
+			if !Equal(NewIntMsg(left[i]), rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -684,7 +627,7 @@ func listEqualFloat(left []float64, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !NewFloatMsg(left[i]).Equal(rightTyped.v[i]) {
+			if !Equal(NewFloatMsg(left[i]), rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -704,7 +647,7 @@ func listEqualString(left []string, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !NewStringMsg(left[i]).Equal(rightTyped.v[i]) {
+			if !Equal(NewStringMsg(left[i]), rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -921,29 +864,6 @@ func (msg StructMsg) String() string {
 	return string(b)
 }
 
-// Equal implements strict equality for StructMsg messages.
-// It returns false if the lengths of the names and fields are different.
-// It returns false if any of the fields are not equal.
-func (msg StructMsg) Equal(other Msg) bool {
-	otherStruct, ok := other.(StructMsg)
-	if !ok {
-		return false
-	}
-	if len(msg.fields) != len(otherStruct.fields) {
-		return false
-	}
-	for i := range msg.fields {
-		otherField, ok := otherStruct.get(msg.fields[i].name)
-		if !ok {
-			return false
-		}
-		if !msg.fields[i].value.Equal(otherField) {
-			return false
-		}
-	}
-	return true
-}
-
 func newStructMsg(fields []StructField) StructMsg {
 	if len(fields) == 0 {
 		return StructMsg{internalMsg: internalMsg{}, fields: nil}
@@ -1047,34 +967,6 @@ func Uint8Index(idx int) uint8 {
 	return uint8(idx)
 }
 
-// Equal implements strict equality for UnionMsg messages.
-// If one union has data and another doesn't, it returns false.
-// It returns false if tags are different.
-// It returns false if data is different.
-// Tags are compared as Go strings and data is compared recursevely using Equal method.
-func (msg UnionMsg) Equal(other Msg) bool {
-	otherUnion, ok := other.(UnionMsg)
-	if !ok {
-		return false
-	}
-
-	if msg.data != nil && otherUnion.data == nil {
-		return false
-	} else if msg.data == nil && otherUnion.data != nil {
-		return false
-	}
-
-	if msg.tag != otherUnion.tag {
-		return false
-	}
-
-	if msg.data == nil {
-		return true
-	}
-
-	return msg.data.Equal(otherUnion.data)
-}
-
 func NewUnionMsg(tag string, data Msg) UnionMsg {
 	return UnionMsg{
 		internalMsg: internalMsg{},
@@ -1093,14 +985,14 @@ func Match(msg Msg, pattern Msg) bool {
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	msgUnion, ok := msg.(UnionMsg)
 	if !ok {
-		return msg.Equal(pattern)
+		return Equal(msg, pattern)
 	}
 
 	// both msg and pattern must be unions to perform pattern matching
 	// if at least one of them is not, strict equality will be applied instead
 	patternUnion, ok := pattern.(UnionMsg)
 	if !ok {
-		return msg.Equal(pattern)
+		return Equal(msg, pattern)
 	}
 
 	// if tags are not equal data does not matter, there's no match
@@ -1125,7 +1017,7 @@ func Match(msg Msg, pattern Msg) bool {
 	// they both have the same tags and some data inside
 	// so we apply strict equality to the data they wrap
 	// maybe in the future we'll consider recursive matching, we'll see
-	return msgUnion.data.Equal(patternUnion.data)
+	return Equal(msgUnion.data, patternUnion.data)
 }
 
 func addJSONSpaces(jsonData []byte) []byte {

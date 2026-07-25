@@ -45,7 +45,7 @@ func TestSelectorSendsIfCause(t *testing.T) {
 
 	select {
 	case out := <-resOutCh:
-		if !out.Equal(runtime.NewStringMsg("one")) {
+		if !runtime.Equal(out, runtime.NewStringMsg("one")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{ifCause})

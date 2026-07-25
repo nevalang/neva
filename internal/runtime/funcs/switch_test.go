@@ -48,7 +48,7 @@ func TestSwitchMatchedCaseSendsTwoCauses(t *testing.T) {
 
 	select {
 	case out := <-caseOut1:
-		if !out.Equal(runtime.NewStringMsg("match")) {
+		if !runtime.Equal(out, runtime.NewStringMsg("match")) {
 			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("match"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})

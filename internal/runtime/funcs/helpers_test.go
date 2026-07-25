@@ -112,7 +112,7 @@ func assertOutputEquals(
 
 	select {
 	case got := <-outChans[outName]:
-		if !got.Equal(want) {
+		if !runtime.Equal(got, want) {
 			t.Fatalf("result = %v, want %v", got, want)
 		}
 	case <-time.After(time.Second):
@@ -237,7 +237,7 @@ func assertBinaryOperatorResult(
 
 		select {
 		case result := <-resultOutput:
-			if !result.Equal(expected) {
+			if !runtime.Equal(result, expected) {
 				t.Fatalf("result = %v, want %v (sendRightFirst=%v)", result, expected, sendRightFirst)
 			}
 		case <-time.After(time.Second):
@@ -274,7 +274,7 @@ func assertUnaryOperatorResult(
 	dataInput <- runtime.OrderedMsg{Msg: input}
 
 	result := <-resultOutput
-	if !result.Equal(expected) {
+	if !runtime.Equal(result, expected) {
 		t.Fatalf("result = %v, want %v", result, expected)
 	}
 

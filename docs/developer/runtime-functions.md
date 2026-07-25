@@ -34,10 +34,15 @@ tracing.
 The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
 can retain unboxed Go storage such as `[]int64` or `map[string]string`.
 Runtime functions should use the matching `runtime.AsList...` or
-`runtime.AsDict...` accessor on scalar-preserving hot paths. Keep the generic
+`runtime.AsDict...` accessor on scalar-preserving hot paths. Keep the untyped
 `listToMsgs` and `dictToMsgs` helpers for boundaries that genuinely require one
 `runtime.Msg` per element, such as conversion to a stream; they box every
 scalar element by design.
+
+Use `runtime.Equal(left, right)` for message equality. Equality is a pure
+runtime operation that compares equivalent typed and untyped container storage;
+runtime functions must not reimplement it or depend on representation-specific
+`Equal` methods.
 
 ## Concurrent Inputs
 
