@@ -10,6 +10,7 @@ var (
 	boolSink   bool
 	floatSink  float64
 	stringSink string
+	msgSink    Msg
 )
 
 //nolint:ireturn // benchmark helper returns runtime.Msg by design.
@@ -174,6 +175,36 @@ func BenchmarkMsgDictLookupScalars(b *testing.B) {
 		b.Run("float_hot_n="+strconv.Itoa(size), func(b *testing.B) { benchDictLookupFloat(b, size, hotKey) })
 		b.Run("bool_hot_n="+strconv.Itoa(size), func(b *testing.B) { benchDictLookupBool(b, size, hotKey) })
 		b.Run("string_hot_n="+strconv.Itoa(size), func(b *testing.B) { benchDictLookupString(b, size, hotKey) })
+	}
+}
+
+// BenchmarkMsgScalarContainerConstruction measures construction of the same
+// scalar list/dict payloads that compiler-generated literals produce.
+func BenchmarkMsgScalarContainerConstruction(b *testing.B) {
+	for _, size := range []int{8, 64, 512} {
+		b.Run("list_int_n="+strconv.Itoa(size), func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				items := make([]int64, size)
+				for i := range items {
+					items[i] = int64(i)
+				}
+				msgSink = NewListIntMsg(items)
+			}
+		})
+
+		b.Run("dict_int_n="+strconv.Itoa(size), func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				entries := make(map[string]int64, size)
+				for i := range size {
+					entries["k"+strconv.Itoa(i)] = int64(i)
+				}
+				msgSink = NewDictIntMsg(entries)
+			}
+		})
 	}
 }
 
