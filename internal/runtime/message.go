@@ -378,8 +378,6 @@ func NewListStringMsg(v []string) Msg {
 	return listValueMsg{internalMsg: internalMsg{}, v: stringListMsg{v: v}}
 }
 
-// --- DICT ---
-//
 // DictMsg provides access to the storage of a dictionary runtime message.
 //
 // Exactly one value accessor is valid for an implementation. Untyped exposes
