@@ -12,13 +12,13 @@ func TestDictValueByKeyTypedMiss(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
 		dict runtime.Msg
+		name string
 	}{
-		{"bool", runtime.NewDictBoolMsg(map[string]bool{"present": true})},
-		{"int", runtime.NewDictIntMsg(map[string]int64{"present": 1})},
-		{"float", runtime.NewDictFloatMsg(map[string]float64{"present": 1.5})},
-		{"string", runtime.NewDictStringMsg(map[string]string{"present": "x"})},
+		{dict: runtime.NewDictBoolMsg(map[string]bool{"present": true}), name: "bool"},
+		{dict: runtime.NewDictIntMsg(map[string]int64{"present": 1}), name: "int"},
+		{dict: runtime.NewDictFloatMsg(map[string]float64{"present": 1.5}), name: "float"},
+		{dict: runtime.NewDictStringMsg(map[string]string{"present": "x"}), name: "string"},
 	}
 
 	for _, tt := range tests {
