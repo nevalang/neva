@@ -82,7 +82,7 @@ func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), er
 			} else if values, ok := runtime.AsListFloats(list); ok {
 				sent = resOut.Send(ctx, runtime.NewListFloatMsg(sliceTypedList(values, from, to)))
 			} else {
-				sent = resOut.Send(ctx, runtime.NewListMsg(sliceList(list.Msgs(), from, to)))
+				sent = resOut.Send(ctx, runtime.NewListMsg(sliceList(list.Untyped(), from, to)))
 			}
 
 			if !sent {

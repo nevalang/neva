@@ -193,9 +193,13 @@ func NewBytesMsg(v []byte) BytesMsg {
 
 // --- LIST ---
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// ListMsg provides access to the storage of a list runtime message.
+//
+// Exactly one value accessor is valid for an implementation. Untyped exposes
+// the boxed representation; scalar accessors expose the corresponding typed
+// storage. Calling any other accessor is a runtime invariant violation.
 type ListMsg interface {
-	Msgs() []Msg
+	Untyped() []Msg
 	Bools() []bool
 	Ints() []int64
 	Floats() []float64
@@ -204,7 +208,9 @@ type ListMsg interface {
 	Equal(ListMsg) bool
 }
 
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// listValueMsg adapts a ListMsg storage implementation to the Msg contract.
+// Keeping this wrapper separate lets storage implementations expose only list
+// operations rather than the unrelated scalar and aggregate Msg operations.
 type listValueMsg struct {
 	internalMsg
 	v ListMsg
@@ -226,23 +232,60 @@ func (msg listValueMsg) Equal(other Msg) bool {
 	return ok && msg.v.Equal(otherList.v)
 }
 
-type genericListMsg struct{ v []Msg }
-type boolListMsg struct{ v []bool }
-type intListMsg struct{ v []int64 }
-type floatListMsg struct{ v []float64 }
-type stringListMsg struct{ v []string }
+// internalListMsg supplies invariant-violation methods shared by every list
+// storage implementation. Concrete implementations override their one valid
+// accessor plus Len and Equal.
+type internalListMsg struct{}
 
-func (msg genericListMsg) Msgs() []Msg { return msg.v }
-func (genericListMsg) Bools() []bool   { panic("unexpected Bools method call on generic list message") }
-func (genericListMsg) Ints() []int64   { panic("unexpected Ints method call on generic list message") }
-func (genericListMsg) Floats() []float64 {
-	panic("unexpected Floats method call on generic list message")
+func (internalListMsg) Untyped() []Msg    { panic("unexpected Untyped method call on typed list message") }
+func (internalListMsg) Bools() []bool     { panic("unexpected Bools method call on list message") }
+func (internalListMsg) Ints() []int64     { panic("unexpected Ints method call on list message") }
+func (internalListMsg) Floats() []float64 { panic("unexpected Floats method call on list message") }
+func (internalListMsg) Strings() []string { panic("unexpected Strings method call on list message") }
+func (internalListMsg) Len() int          { panic("unexpected Len method call on internal list message") }
+func (internalListMsg) Equal(ListMsg) bool {
+	panic("unexpected Equal method call on internal list message")
 }
-func (genericListMsg) Strings() []string {
-	panic("unexpected Strings method call on generic list message")
+func (internalListMsg) String() string {
+	panic("unexpected String method call on internal list message")
 }
-func (msg genericListMsg) Len() int { return len(msg.v) }
-func (msg genericListMsg) String() string {
+func (internalListMsg) MarshalJSON() ([]byte, error) {
+	panic("unexpected MarshalJSON method call on internal list message")
+}
+
+// untypedListMsg stores a list whose elements are already boxed messages.
+type untypedListMsg struct {
+	internalListMsg
+	v []Msg
+}
+
+// boolListMsg stores unboxed boolean list elements.
+type boolListMsg struct {
+	internalListMsg
+	v []bool
+}
+
+// intListMsg stores unboxed integer list elements.
+type intListMsg struct {
+	internalListMsg
+	v []int64
+}
+
+// floatListMsg stores unboxed float list elements.
+type floatListMsg struct {
+	internalListMsg
+	v []float64
+}
+
+// stringListMsg stores unboxed string list elements.
+type stringListMsg struct {
+	internalListMsg
+	v []string
+}
+
+func (msg untypedListMsg) Untyped() []Msg { return msg.v }
+func (msg untypedListMsg) Len() int       { return len(msg.v) }
+func (msg untypedListMsg) String() string {
 	bb, err := msg.MarshalJSON()
 	if err != nil {
 		panic(err)
@@ -251,18 +294,14 @@ func (msg genericListMsg) String() string {
 }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (msg genericListMsg) MarshalJSON() ([]byte, error) {
+func (msg untypedListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
-func (msg genericListMsg) Equal(other ListMsg) bool {
-	return listEqualGeneric(msg.v, other)
+func (msg untypedListMsg) Equal(other ListMsg) bool {
+	return listEqualUntyped(msg.v, other)
 }
 
-func (boolListMsg) Msgs() []Msg        { panic("unexpected Msgs method call on bool list message") }
 func (msg boolListMsg) Bools() []bool  { return msg.v }
-func (boolListMsg) Ints() []int64      { panic("unexpected Ints method call on bool list message") }
-func (boolListMsg) Floats() []float64  { panic("unexpected Floats method call on bool list message") }
-func (boolListMsg) Strings() []string  { panic("unexpected Strings method call on bool list message") }
 func (msg boolListMsg) Len() int       { return len(msg.v) }
 func (msg boolListMsg) String() string { return mustJSON(msg) }
 
@@ -272,11 +311,7 @@ func (msg boolListMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg boolListMsg) Equal(other ListMsg) bool { return listEqualBool(msg.v, other) }
 
-func (intListMsg) Msgs() []Msg        { panic("unexpected Msgs method call on int list message") }
-func (intListMsg) Bools() []bool      { panic("unexpected Bools method call on int list message") }
 func (msg intListMsg) Ints() []int64  { return msg.v }
-func (intListMsg) Floats() []float64  { panic("unexpected Floats method call on int list message") }
-func (intListMsg) Strings() []string  { panic("unexpected Strings method call on int list message") }
 func (msg intListMsg) Len() int       { return len(msg.v) }
 func (msg intListMsg) String() string { return mustJSON(msg) }
 
@@ -286,13 +321,9 @@ func (msg intListMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg intListMsg) Equal(other ListMsg) bool { return listEqualInt(msg.v, other) }
 
-func (floatListMsg) Msgs() []Msg   { panic("unexpected Msgs method call on float list message") }
-func (floatListMsg) Bools() []bool { panic("unexpected Bools method call on float list message") }
-func (floatListMsg) Ints() []int64 { panic("unexpected Ints method call on float list message") }
 func (msg floatListMsg) Floats() []float64 {
 	return msg.v
 }
-func (floatListMsg) Strings() []string  { panic("unexpected Strings method call on float list message") }
 func (msg floatListMsg) Len() int       { return len(msg.v) }
 func (msg floatListMsg) String() string { return mustJSON(msg) }
 
@@ -302,12 +333,6 @@ func (msg floatListMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg floatListMsg) Equal(other ListMsg) bool { return listEqualFloat(msg.v, other) }
 
-func (stringListMsg) Msgs() []Msg   { panic("unexpected Msgs method call on string list message") }
-func (stringListMsg) Bools() []bool { panic("unexpected Bools method call on string list message") }
-func (stringListMsg) Ints() []int64 { panic("unexpected Ints method call on string list message") }
-func (stringListMsg) Floats() []float64 {
-	panic("unexpected Floats method call on string list message")
-}
 func (msg stringListMsg) Strings() []string { return msg.v }
 func (msg stringListMsg) Len() int          { return len(msg.v) }
 func (msg stringListMsg) String() string    { return mustJSON(msg) }
@@ -318,26 +343,36 @@ func (msg stringListMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg stringListMsg) Equal(other ListMsg) bool { return listEqualString(msg.v, other) }
 
+// NewListMsg creates a list with an untyped boxed representation.
+//
 //nolint:ireturn // Msg contract type.
 func NewListMsg(v []Msg) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: genericListMsg{v: v}}
+	return listValueMsg{internalMsg: internalMsg{}, v: untypedListMsg{v: v}}
 }
 
+// NewListBoolMsg creates a list with unboxed boolean storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewListBoolMsg(v []bool) Msg {
 	return listValueMsg{internalMsg: internalMsg{}, v: boolListMsg{v: v}}
 }
 
+// NewListIntMsg creates a list with unboxed integer storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewListIntMsg(v []int64) Msg {
 	return listValueMsg{internalMsg: internalMsg{}, v: intListMsg{v: v}}
 }
 
+// NewListFloatMsg creates a list with unboxed float storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewListFloatMsg(v []float64) Msg {
 	return listValueMsg{internalMsg: internalMsg{}, v: floatListMsg{v: v}}
 }
 
+// NewListStringMsg creates a list with unboxed string storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewListStringMsg(v []string) Msg {
 	return listValueMsg{internalMsg: internalMsg{}, v: stringListMsg{v: v}}
@@ -345,9 +380,13 @@ func NewListStringMsg(v []string) Msg {
 
 // --- DICT ---
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// DictMsg provides access to the storage of a dictionary runtime message.
+//
+// Exactly one value accessor is valid for an implementation. Untyped exposes
+// the boxed representation; scalar accessors expose the corresponding typed
+// storage. Calling any other accessor is a runtime invariant violation.
 type DictMsg interface {
-	Msgs() map[string]Msg
+	Untyped() map[string]Msg
 	Bools() map[string]bool
 	Ints() map[string]int64
 	Floats() map[string]float64
@@ -356,7 +395,7 @@ type DictMsg interface {
 	Equal(DictMsg) bool
 }
 
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+// dictValueMsg adapts a DictMsg storage implementation to the Msg contract.
 type dictValueMsg struct {
 	internalMsg
 	v DictMsg
@@ -375,47 +414,78 @@ func (msg dictValueMsg) Equal(other Msg) bool {
 	return ok && msg.v.Equal(otherDict.v)
 }
 
-type genericDictMsg struct{ v map[string]Msg }
-type boolDictMsg struct{ v map[string]bool }
-type intDictMsg struct{ v map[string]int64 }
-type floatDictMsg struct{ v map[string]float64 }
-type stringDictMsg struct{ v map[string]string }
+// internalDictMsg supplies invariant-violation methods shared by every dict
+// storage implementation. Concrete implementations override their one valid
+// accessor plus Len and Equal.
+type internalDictMsg struct{}
 
-func (msg genericDictMsg) Msgs() map[string]Msg { return msg.v }
-func (genericDictMsg) Bools() map[string]bool {
-	panic("unexpected Bools method call on generic dict message")
+func (internalDictMsg) Untyped() map[string]Msg {
+	panic("unexpected Untyped method call on typed dict message")
 }
-func (genericDictMsg) Ints() map[string]int64 {
-	panic("unexpected Ints method call on generic dict message")
+func (internalDictMsg) Bools() map[string]bool { panic("unexpected Bools method call on dict message") }
+func (internalDictMsg) Ints() map[string]int64 { panic("unexpected Ints method call on dict message") }
+func (internalDictMsg) Floats() map[string]float64 {
+	panic("unexpected Floats method call on dict message")
 }
-func (genericDictMsg) Floats() map[string]float64 {
-	panic("unexpected Floats method call on generic dict message")
+func (internalDictMsg) Strings() map[string]string {
+	panic("unexpected Strings method call on dict message")
 }
-func (genericDictMsg) Strings() map[string]string {
-	panic("unexpected Strings method call on generic dict message")
+func (internalDictMsg) Len() int { panic("unexpected Len method call on internal dict message") }
+func (internalDictMsg) Equal(DictMsg) bool {
+	panic("unexpected Equal method call on internal dict message")
 }
-func (msg genericDictMsg) Len() int       { return len(msg.v) }
-func (msg genericDictMsg) String() string { return mustJSON(msg) }
-func (msg genericDictMsg) MarshalJSON() ([]byte, error) {
+func (internalDictMsg) String() string {
+	panic("unexpected String method call on internal dict message")
+}
+func (internalDictMsg) MarshalJSON() ([]byte, error) {
+	panic("unexpected MarshalJSON method call on internal dict message")
+}
+
+// untypedDictMsg stores a dictionary whose values are already boxed messages.
+type untypedDictMsg struct {
+	internalDictMsg
+	v map[string]Msg
+}
+
+// boolDictMsg stores unboxed boolean dictionary values.
+type boolDictMsg struct {
+	internalDictMsg
+	v map[string]bool
+}
+
+// intDictMsg stores unboxed integer dictionary values.
+type intDictMsg struct {
+	internalDictMsg
+	v map[string]int64
+}
+
+// floatDictMsg stores unboxed float dictionary values.
+type floatDictMsg struct {
+	internalDictMsg
+	v map[string]float64
+}
+
+// stringDictMsg stores unboxed string dictionary values.
+type stringDictMsg struct {
+	internalDictMsg
+	v map[string]string
+}
+
+func (msg untypedDictMsg) Untyped() map[string]Msg { return msg.v }
+func (msg untypedDictMsg) Len() int                { return len(msg.v) }
+func (msg untypedDictMsg) String() string          { return mustJSON(msg) }
+func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
 		return nil, err //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	}
 	return addJSONSpaces(jsonData), nil
 }
-func (msg genericDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
+func (msg untypedDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
-func (boolDictMsg) Msgs() map[string]Msg       { panic("unexpected Msgs method call on bool dict message") }
 func (msg boolDictMsg) Bools() map[string]bool { return msg.v }
-func (boolDictMsg) Ints() map[string]int64     { panic("unexpected Ints method call on bool dict message") }
-func (boolDictMsg) Floats() map[string]float64 {
-	panic("unexpected Floats method call on bool dict message")
-}
-func (boolDictMsg) Strings() map[string]string {
-	panic("unexpected Strings method call on bool dict message")
-}
-func (msg boolDictMsg) Len() int       { return len(msg.v) }
-func (msg boolDictMsg) String() string { return mustJSON(msg) }
+func (msg boolDictMsg) Len() int               { return len(msg.v) }
+func (msg boolDictMsg) String() string         { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg boolDictMsg) MarshalJSON() ([]byte, error) {
@@ -423,17 +493,9 @@ func (msg boolDictMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg boolDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
-func (intDictMsg) Msgs() map[string]Msg       { panic("unexpected Msgs method call on int dict message") }
-func (intDictMsg) Bools() map[string]bool     { panic("unexpected Bools method call on int dict message") }
 func (msg intDictMsg) Ints() map[string]int64 { return msg.v }
-func (intDictMsg) Floats() map[string]float64 {
-	panic("unexpected Floats method call on int dict message")
-}
-func (intDictMsg) Strings() map[string]string {
-	panic("unexpected Strings method call on int dict message")
-}
-func (msg intDictMsg) Len() int       { return len(msg.v) }
-func (msg intDictMsg) String() string { return mustJSON(msg) }
+func (msg intDictMsg) Len() int               { return len(msg.v) }
+func (msg intDictMsg) String() string         { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg intDictMsg) MarshalJSON() ([]byte, error) {
@@ -441,19 +503,9 @@ func (msg intDictMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg intDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
-func (floatDictMsg) Msgs() map[string]Msg { panic("unexpected Msgs method call on float dict message") }
-func (floatDictMsg) Bools() map[string]bool {
-	panic("unexpected Bools method call on float dict message")
-}
-func (floatDictMsg) Ints() map[string]int64 {
-	panic("unexpected Ints method call on float dict message")
-}
 func (msg floatDictMsg) Floats() map[string]float64 { return msg.v }
-func (floatDictMsg) Strings() map[string]string {
-	panic("unexpected Strings method call on float dict message")
-}
-func (msg floatDictMsg) Len() int       { return len(msg.v) }
-func (msg floatDictMsg) String() string { return mustJSON(msg) }
+func (msg floatDictMsg) Len() int                   { return len(msg.v) }
+func (msg floatDictMsg) String() string             { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg floatDictMsg) MarshalJSON() ([]byte, error) {
@@ -461,18 +513,6 @@ func (msg floatDictMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg floatDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
-func (stringDictMsg) Msgs() map[string]Msg {
-	panic("unexpected Msgs method call on string dict message")
-}
-func (stringDictMsg) Bools() map[string]bool {
-	panic("unexpected Bools method call on string dict message")
-}
-func (stringDictMsg) Ints() map[string]int64 {
-	panic("unexpected Ints method call on string dict message")
-}
-func (stringDictMsg) Floats() map[string]float64 {
-	panic("unexpected Floats method call on string dict message")
-}
 func (msg stringDictMsg) Strings() map[string]string { return msg.v }
 func (msg stringDictMsg) Len() int                   { return len(msg.v) }
 func (msg stringDictMsg) String() string             { return mustJSON(msg) }
@@ -483,26 +523,36 @@ func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
 }
 func (msg stringDictMsg) Equal(other DictMsg) bool { return dictEqual(msg, other) }
 
+// NewDictMsg creates a dictionary with an untyped boxed representation.
+//
 //nolint:ireturn // Msg contract type.
 func NewDictMsg(d map[string]Msg) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: genericDictMsg{v: d}}
+	return dictValueMsg{internalMsg: internalMsg{}, v: untypedDictMsg{v: d}}
 }
 
+// NewDictBoolMsg creates a dictionary with unboxed boolean storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewDictBoolMsg(d map[string]bool) Msg {
 	return dictValueMsg{internalMsg: internalMsg{}, v: boolDictMsg{v: d}}
 }
 
+// NewDictIntMsg creates a dictionary with unboxed integer storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewDictIntMsg(d map[string]int64) Msg {
 	return dictValueMsg{internalMsg: internalMsg{}, v: intDictMsg{v: d}}
 }
 
+// NewDictFloatMsg creates a dictionary with unboxed float storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewDictFloatMsg(d map[string]float64) Msg {
 	return dictValueMsg{internalMsg: internalMsg{}, v: floatDictMsg{v: d}}
 }
 
+// NewDictStringMsg creates a dictionary with unboxed string storage.
+//
 //nolint:ireturn // Msg contract type.
 func NewDictStringMsg(d map[string]string) Msg {
 	return dictValueMsg{internalMsg: internalMsg{}, v: stringDictMsg{v: d}}
@@ -513,8 +563,8 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 		return false
 	}
 
-	leftMsgs := asGenericDict(left)
-	rightMsgs := asGenericDict(right)
+	leftMsgs := asUntypedDict(left)
+	rightMsgs := asUntypedDict(right)
 	for key, leftVal := range leftMsgs {
 		rightVal, ok := rightMsgs[key]
 		if !ok || !leftVal.Equal(rightVal) {
@@ -524,24 +574,24 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 	return true
 }
 
-func listEqualGeneric(left []Msg, right ListMsg) bool {
+func listEqualUntyped(left []Msg, right ListMsg) bool {
 	switch rightTyped := right.(type) {
-	case genericListMsg:
-		return listEqualGenericToGeneric(left, rightTyped.v)
+	case untypedListMsg:
+		return listEqualUntypedToUntyped(left, rightTyped.v)
 	case boolListMsg:
-		return listEqualGenericToBools(left, rightTyped.v)
+		return listEqualUntypedToBools(left, rightTyped.v)
 	case intListMsg:
-		return listEqualGenericToInts(left, rightTyped.v)
+		return listEqualUntypedToInts(left, rightTyped.v)
 	case floatListMsg:
-		return listEqualGenericToFloats(left, rightTyped.v)
+		return listEqualUntypedToFloats(left, rightTyped.v)
 	case stringListMsg:
-		return listEqualGenericToStrings(left, rightTyped.v)
+		return listEqualUntypedToStrings(left, rightTyped.v)
 	default:
 		panic("unexpected list implementation")
 	}
 }
 
-func listEqualGenericToGeneric(left []Msg, right []Msg) bool {
+func listEqualUntypedToUntyped(left []Msg, right []Msg) bool {
 	for i := range left {
 		if !left[i].Equal(right[i]) {
 			return false
@@ -550,7 +600,7 @@ func listEqualGenericToGeneric(left []Msg, right []Msg) bool {
 	return true
 }
 
-func listEqualGenericToBools(left []Msg, right []bool) bool {
+func listEqualUntypedToBools(left []Msg, right []bool) bool {
 	for i := range left {
 		if !left[i].Equal(NewBoolMsg(right[i])) {
 			return false
@@ -559,7 +609,7 @@ func listEqualGenericToBools(left []Msg, right []bool) bool {
 	return true
 }
 
-func listEqualGenericToInts(left []Msg, right []int64) bool {
+func listEqualUntypedToInts(left []Msg, right []int64) bool {
 	for i := range left {
 		if !left[i].Equal(NewIntMsg(right[i])) {
 			return false
@@ -568,7 +618,7 @@ func listEqualGenericToInts(left []Msg, right []int64) bool {
 	return true
 }
 
-func listEqualGenericToFloats(left []Msg, right []float64) bool {
+func listEqualUntypedToFloats(left []Msg, right []float64) bool {
 	for i := range left {
 		if !left[i].Equal(NewFloatMsg(right[i])) {
 			return false
@@ -577,7 +627,7 @@ func listEqualGenericToFloats(left []Msg, right []float64) bool {
 	return true
 }
 
-func listEqualGenericToStrings(left []Msg, right []string) bool {
+func listEqualUntypedToStrings(left []Msg, right []string) bool {
 	for i := range left {
 		if !left[i].Equal(NewStringMsg(right[i])) {
 			return false
@@ -594,7 +644,7 @@ func listEqualBool(left []bool, right ListMsg) bool {
 				return false
 			}
 		}
-	case genericListMsg:
+	case untypedListMsg:
 		for i := range left {
 			if !NewBoolMsg(left[i]).Equal(rightTyped.v[i]) {
 				return false
@@ -614,7 +664,7 @@ func listEqualInt(left []int64, right ListMsg) bool {
 				return false
 			}
 		}
-	case genericListMsg:
+	case untypedListMsg:
 		for i := range left {
 			if !NewIntMsg(left[i]).Equal(rightTyped.v[i]) {
 				return false
@@ -634,7 +684,7 @@ func listEqualFloat(left []float64, right ListMsg) bool {
 				return false
 			}
 		}
-	case genericListMsg:
+	case untypedListMsg:
 		for i := range left {
 			if !NewFloatMsg(left[i]).Equal(rightTyped.v[i]) {
 				return false
@@ -654,7 +704,7 @@ func listEqualString(left []string, right ListMsg) bool {
 				return false
 			}
 		}
-	case genericListMsg:
+	case untypedListMsg:
 		for i := range left {
 			if !NewStringMsg(left[i]).Equal(rightTyped.v[i]) {
 				return false
@@ -666,9 +716,9 @@ func listEqualString(left []string, right ListMsg) bool {
 	return true
 }
 
-func asGenericDict(dict DictMsg) map[string]Msg {
+func asUntypedDict(dict DictMsg) map[string]Msg {
 	switch typed := dict.(type) {
-	case genericDictMsg:
+	case untypedDictMsg:
 		return typed.v
 	case boolDictMsg:
 		out := make(map[string]Msg, len(typed.v))
@@ -709,7 +759,7 @@ func mustJSON(msg interface{ MarshalJSON() ([]byte, error) }) string {
 
 func listMarshalJSON(list ListMsg) ([]byte, error) {
 	switch typed := list.(type) {
-	case genericListMsg:
+	case untypedListMsg:
 		return typed.MarshalJSON()
 	case boolListMsg:
 		return typed.MarshalJSON()
@@ -734,7 +784,7 @@ func listToString(list ListMsg) string {
 
 func dictMarshalJSON(dict DictMsg) ([]byte, error) {
 	switch typed := dict.(type) {
-	case genericDictMsg:
+	case untypedDictMsg:
 		return typed.MarshalJSON()
 	case boolDictMsg:
 		return typed.MarshalJSON()
@@ -757,51 +807,61 @@ func dictToString(dict DictMsg) string {
 	return string(b)
 }
 
-func AsListMsgs(list ListMsg) ([]Msg, bool) {
-	typed, ok := list.(genericListMsg)
+// AsListUntyped returns the boxed list representation when present.
+func AsListUntyped(list ListMsg) ([]Msg, bool) {
+	typed, ok := list.(untypedListMsg)
 	return typed.v, ok
 }
 
+// AsListBools returns the boolean list representation when present.
 func AsListBools(list ListMsg) ([]bool, bool) {
 	typed, ok := list.(boolListMsg)
 	return typed.v, ok
 }
 
+// AsListInts returns the integer list representation when present.
 func AsListInts(list ListMsg) ([]int64, bool) {
 	typed, ok := list.(intListMsg)
 	return typed.v, ok
 }
 
+// AsListFloats returns the float list representation when present.
 func AsListFloats(list ListMsg) ([]float64, bool) {
 	typed, ok := list.(floatListMsg)
 	return typed.v, ok
 }
 
+// AsListStrings returns the string list representation when present.
 func AsListStrings(list ListMsg) ([]string, bool) {
 	typed, ok := list.(stringListMsg)
 	return typed.v, ok
 }
 
-func AsDictMsgs(dict DictMsg) (map[string]Msg, bool) {
-	typed, ok := dict.(genericDictMsg)
+// AsDictUntyped returns the boxed dictionary representation when present.
+func AsDictUntyped(dict DictMsg) (map[string]Msg, bool) {
+	typed, ok := dict.(untypedDictMsg)
 	return typed.v, ok
 }
 
+// AsDictBools returns the boolean dictionary representation when present.
 func AsDictBools(dict DictMsg) (map[string]bool, bool) {
 	typed, ok := dict.(boolDictMsg)
 	return typed.v, ok
 }
 
+// AsDictInts returns the integer dictionary representation when present.
 func AsDictInts(dict DictMsg) (map[string]int64, bool) {
 	typed, ok := dict.(intDictMsg)
 	return typed.v, ok
 }
 
+// AsDictFloats returns the float dictionary representation when present.
 func AsDictFloats(dict DictMsg) (map[string]float64, bool) {
 	typed, ok := dict.(floatDictMsg)
 	return typed.v, ok
 }
 
+// AsDictStrings returns the string dictionary representation when present.
 func AsDictStrings(dict DictMsg) (map[string]string, bool) {
 	typed, ok := dict.(stringDictMsg)
 	return typed.v, ok

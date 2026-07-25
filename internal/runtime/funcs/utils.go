@@ -125,8 +125,8 @@ func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
 	return unionMsg.Data()
 }
 
-// listToMsgs converts any supported typed list view to generic []runtime.Msg.
-// Typed scalar paths avoid panicking Msgs() calls on typed list implementations.
+// listToMsgs converts any supported typed list view to untyped []runtime.Msg.
+// Typed scalar paths avoid panicking Untyped() calls on typed list implementations.
 func listToMsgs(list runtime.ListMsg) []runtime.Msg {
 	if values, ok := runtime.AsListInts(list); ok {
 		msgs := make([]runtime.Msg, len(values))
@@ -156,11 +156,11 @@ func listToMsgs(list runtime.ListMsg) []runtime.Msg {
 		}
 		return msgs
 	}
-	return list.Msgs()
+	return list.Untyped()
 }
 
-// dictToMsgs converts any supported typed dict view to generic map[string]runtime.Msg.
-// Typed scalar paths avoid panicking Msgs() calls on typed dict implementations.
+// dictToMsgs converts any supported typed dict view to untyped map[string]runtime.Msg.
+// Typed scalar paths avoid panicking Untyped() calls on typed dict implementations.
 func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
 	if values, ok := runtime.AsDictInts(dict); ok {
 		msgs := make(map[string]runtime.Msg, len(values))
@@ -190,7 +190,7 @@ func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
 		}
 		return msgs
 	}
-	return dict.Msgs()
+	return dict.Untyped()
 }
 
 // --- Trace ---

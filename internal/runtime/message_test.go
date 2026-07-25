@@ -102,3 +102,61 @@ func TestBytesMsgEqual(t *testing.T) {
 		t.Fatal("Equal() = true, want false")
 	}
 }
+
+func TestListMsgAccessors(t *testing.T) {
+	t.Run("untyped", func(t *testing.T) {
+		list := NewListMsg([]Msg{NewIntMsg(1)}).List()
+		if got := list.Untyped(); len(got) != 1 || !got[0].Equal(NewIntMsg(1)) {
+			t.Fatalf("Untyped() = %v, want one integer message", got)
+		}
+		mustPanic(t, func() { list.Ints() })
+	})
+
+	t.Run("typed", func(t *testing.T) {
+		list := NewListIntMsg([]int64{1, 2}).List()
+		if got, want := list.Ints(), []int64{1, 2}; !equalInt64s(got, want) {
+			t.Fatalf("Ints() = %v, want %v", got, want)
+		}
+		mustPanic(t, func() { list.Untyped() })
+	})
+}
+
+func TestDictMsgAccessors(t *testing.T) {
+	t.Run("untyped", func(t *testing.T) {
+		dict := NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}).Dict()
+		if got := dict.Untyped()["one"]; !got.Equal(NewIntMsg(1)) {
+			t.Fatalf("Untyped()[one] = %v, want integer message", got)
+		}
+		mustPanic(t, func() { dict.Ints() })
+	})
+
+	t.Run("typed", func(t *testing.T) {
+		dict := NewDictIntMsg(map[string]int64{"one": 1}).Dict()
+		if got, want := dict.Ints()["one"], int64(1); got != want {
+			t.Fatalf("Ints()[one] = %d, want %d", got, want)
+		}
+		mustPanic(t, func() { dict.Untyped() })
+	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+	defer func() {
+		if recover() == nil {
+			t.Fatal("function did not panic")
+		}
+	}()
+	fn()
+}
+
+func equalInt64s(left, right []int64) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if left[i] != right[i] {
+			return false
+		}
+	}
+	return true
+}

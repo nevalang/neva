@@ -511,7 +511,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 }
 
 // scalarListCtor generates typed runtime constructor for homogeneous scalar list literals.
-// Mixed or non-scalar element lists are intentionally handled by generic list ctor.
+// Mixed or non-scalar element lists are intentionally handled by the untyped list ctor.
 func scalarListCtor(list []ir.Message) (string, bool) {
 	if len(list) == 0 {
 		return "", false
@@ -553,7 +553,7 @@ func scalarListCtor(list []ir.Message) (string, bool) {
 }
 
 // scalarDictCtor generates typed runtime constructor for homogeneous scalar dict literals.
-// Mixed or non-scalar values are intentionally handled by generic dict ctor.
+// Mixed or non-scalar values are intentionally handled by the untyped dict ctor.
 func scalarDictCtor(dict map[string]ir.Message) (string, bool) {
 	if len(dict) == 0 {
 		return "", false

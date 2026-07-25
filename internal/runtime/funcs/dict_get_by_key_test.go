@@ -35,7 +35,7 @@ func TestGetDictValueTypedMissSendsError(t *testing.T) {
 	t.Parallel()
 
 	io, inputs, outputs := newIO([]string{"dict", "key"}, []string{"res", "err"})
-	handler, err := (getDictValue{}).Create(io, nil)
+	handler, err := (dictGetByKey{}).Create(io, nil)
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}

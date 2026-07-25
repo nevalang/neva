@@ -15,8 +15,8 @@ type listAt struct{}
 //  2. Positive and negative indexing are supported (`-1` means last element).
 //  3. Out-of-bounds indexes are returned via `err` outport.
 //  4. Typed scalar lists are handled first (int/string/bool/float) to avoid
-//     generic materialization in hot paths.
-//  5. Generic list fallback is used for non-scalar or mixed-value lists.
+//     untyped materialization in hot paths.
+//  5. Untyped list fallback is used for non-scalar or mixed-value lists.
 //
 //nolint:cyclop,gocognit,gocyclo,varnamelen,funlen,nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {

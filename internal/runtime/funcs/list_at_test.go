@@ -36,8 +36,8 @@ func TestListAtTypedInt(t *testing.T) {
 	}
 }
 
-// TestListAtGenericFallback verifies generic list path still works for mixed/non-typed lists.
-func TestListAtGenericFallback(t *testing.T) {
+// TestListAtUntypedFallback verifies the untyped list path works for mixed lists.
+func TestListAtUntypedFallback(t *testing.T) {
 	t.Parallel()
 
 	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})

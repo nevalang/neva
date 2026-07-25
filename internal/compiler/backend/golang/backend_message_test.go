@@ -29,7 +29,7 @@ func TestScalarListCtorMixedFallsBack(t *testing.T) {
 		{Type: ir.MsgTypeString, String: "x"},
 	})
 	if ok {
-		t.Fatal("expected generic fallback for mixed list")
+		t.Fatal("expected untyped fallback for mixed list")
 	}
 }
 
@@ -56,6 +56,6 @@ func TestScalarDictCtorNonScalarFallsBack(t *testing.T) {
 		"a": {Type: ir.MsgTypeStruct},
 	})
 	if ok {
-		t.Fatal("expected generic fallback for non-scalar dict")
+		t.Fatal("expected untyped fallback for non-scalar dict")
 	}
 }

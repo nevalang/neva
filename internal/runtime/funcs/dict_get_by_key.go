@@ -7,10 +7,11 @@ import (
 	"github.com/nevalang/neva/internal/runtime"
 )
 
-type getDictValue struct{}
+// dictGetByKey implements the internal runtime function behind the public Get component.
+type dictGetByKey struct{}
 
 //nolint:gocognit,gocyclo,cyclop,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (g getDictValue) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (dictGetByKey) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
 	dictIn, err := io.In.Single("dict")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -89,6 +90,6 @@ func dictValueByKey(dict runtime.DictMsg, key string) (runtime.Msg, bool) {
 		value, found := values[key]
 		return runtime.NewFloatMsg(value), found
 	}
-	value, found := dict.Msgs()[key]
+	value, found := dict.Untyped()[key]
 	return value, found
 }
