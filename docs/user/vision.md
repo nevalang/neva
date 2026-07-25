@@ -46,7 +46,27 @@ Neva should be ergonomic for both:
 1. human-written code (readable, maintainable, explicit);
 2. AI-generated code (predictable, structurally consistent, easy to validate).
 
-AI-native direction must not degrade manual development quality.
+Neva is not an AI-first language: its core remains general-purpose and must
+remain good for people writing code directly. But the same qualities that help
+people understand and validate programs also help coding agents: a small,
+opinionated core; explicit dataflow; strong static semantics; predictable
+compilation; and useful diagnostics. They provide a clear feedback loop:
+generate, compile, diagnose, and improve.
+
+AI-native direction must not degrade manual development quality. It also does
+not mean adding GenAI-specific language features to the core.
+
+### 5) Applied GenAI as a Library Domain
+
+Using AI to write software is distinct from building software that uses
+generative AI. Neva should be a strong option for the latter as well: for
+applications that integrate models, providers, tokens, context management,
+long-lived memory, and agent protocols.
+
+The standard library may eventually provide carefully designed, idiomatic
+packages for this domain, alongside facilities such as networking, JSON, and
+I/O. No particular API is promised today; any additions must be designed
+deliberately and preserve Neva's general-purpose character.
 
 ## Product/Application Tracks
 

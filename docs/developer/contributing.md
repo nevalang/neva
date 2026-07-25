@@ -5,6 +5,8 @@ Neva is a relatively small and simple language, don't be intimidated and feel fr
 Start with [Architecture](./architecture.md), the [engineering guide](../../AGENTS.md),
 and the [Makefile](../../Makefile).
 
+Before opening a pull request, read the [Generative AI Policy](./generative-ai-policy.md).
+
 ## Requirements
 
 - Go: https://go.dev/doc/install
