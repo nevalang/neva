@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -21,74 +20,73 @@ func sliceTypedList[T any](data []T, from int64, to int64) []T {
 	return append([]T(nil), data[start:end]...)
 }
 
-//nolint:dupl,varnamelen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (listSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
-	dataIn, err := io.In.Single("data")
+	dataIn, fromIn, toIn, resOut, err := resolveListSlicePorts(io)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	fromIn, err := io.In.Single("from")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	toIn, err := io.In.Single("to")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	resOut, err := io.Out.Single("res")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
 		for {
-			var dataMsg, fromMsg, toMsg messages.Msg
-			var dataOK, fromOK, toOK bool
-
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			var wg sync.WaitGroup
-			wg.Go(func() {
-				dataMsg, dataOK = dataIn.Receive(ctx)
-			})
-			wg.Go(func() {
-				fromMsg, fromOK = fromIn.Receive(ctx)
-			})
-			wg.Go(func() {
-				toMsg, toOK = toIn.Receive(ctx)
-			})
-			wg.Wait()
-
-			if !dataOK || !fromOK || !toOK {
+			dataMsg, fromMsg, toMsg, received := receive3(ctx, dataIn, fromIn, toIn)
+			if !received {
 				return
 			}
 
-			list := dataMsg.List()
-			from, to := fromMsg.Int(), toMsg.Int()
-
-			var sent bool
-			//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			if values, ok := messages.AsListInts(list); ok {
-				sent = resOut.Send(ctx, messages.NewListIntMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := messages.AsListStrings(list); ok {
-				sent = resOut.Send(ctx, messages.NewListStringMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := messages.AsListBools(list); ok {
-				sent = resOut.Send(ctx, messages.NewListBoolMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := messages.AsListFloats(list); ok {
-				sent = resOut.Send(ctx, messages.NewListFloatMsg(sliceTypedList(values, from, to)))
-			} else {
-				sent = resOut.Send(ctx, messages.NewListMsg(sliceList(list.Untyped(), from, to)))
-			}
-
-			if !sent {
+			if !resOut.Send(ctx, sliceMessage(dataMsg.Msg, fromMsg.Int(), toMsg.Int())) {
 				return
 			}
 		}
 	}, nil
+}
+
+func resolveListSlicePorts(
+	runtimeIO runtime.IO,
+) (
+	runtime.SingleInport,
+	runtime.SingleInport,
+	runtime.SingleInport,
+	runtime.SingleOutport,
+	error,
+) {
+	dataIn, err := getSingleInport(runtimeIO.In, "data")
+	if err != nil {
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
+	}
+
+	fromIn, err := getSingleInport(runtimeIO.In, "from")
+	if err != nil {
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
+	}
+
+	toIn, err := getSingleInport(runtimeIO.In, "to")
+	if err != nil {
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
+	}
+
+	resOut, err := getSingleOutport(runtimeIO.Out, "res")
+	if err != nil {
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
+	}
+
+	return dataIn, fromIn, toIn, resOut, nil
+}
+
+//nolint:ireturn // Runtime messages have multiple concrete representations.
+func sliceMessage(data messages.Msg, start int64, end int64) messages.Msg {
+	list := data.List()
+	if values, ok := messages.AsListInts(list); ok {
+		return messages.NewListIntMsg(sliceTypedList(values, start, end))
+	}
+	if values, ok := messages.AsListStrings(list); ok {
+		return messages.NewListStringMsg(sliceTypedList(values, start, end))
+	}
+	if values, ok := messages.AsListBools(list); ok {
+		return messages.NewListBoolMsg(sliceTypedList(values, start, end))
+	}
+	if values, ok := messages.AsListFloats(list); ok {
+		return messages.NewListFloatMsg(sliceTypedList(values, start, end))
+	}
+
+	return messages.NewListMsg(sliceList(list.Untyped(), start, end))
 }

@@ -1,13 +1,13 @@
 package golang
 
 type templateData struct {
-	CompilerVersion string
-	TraceComment    string
-	ChanVarNames    []string
-	FuncCalls       []templateFuncCall
-	UsesMessages    bool
-	Trace           bool
-	DebugValidation bool
+	CompilerVersion    string
+	TraceComment       string
+	ChanVarNames       []string
+	FuncCalls          []templateFuncCall
+	UsesConfigMessages bool
+	Trace              bool
+	DebugValidation    bool
 }
 
 type templateFuncCall struct {
@@ -56,7 +56,7 @@ import (
 
     "github.com/nevalang/neva/internal/runtime"
     "github.com/nevalang/neva/internal/runtime/funcs"
-    {{- if .UsesMessages}}
+    {{- if .UsesConfigMessages}}
     "github.com/nevalang/neva/internal/runtime/messages"
     {{- end}}
 )
