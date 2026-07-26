@@ -8,6 +8,8 @@ pre-commit:
       run: gofmt -w {staged_files}
       stage_fixed: true
     golangci-fix:
+      # Git invokes this check at commit time. The Codex Stop hook delegates to
+      # this same pre-commit group earlier, without staging changes, for feedback.
       glob: "*.go"
       run: scripts/hooks/precommit-golangci-fix.sh
       stage_fixed: true

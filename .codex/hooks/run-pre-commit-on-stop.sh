@@ -14,6 +14,8 @@ if [ -z "$changed_files" ]; then
 	exit 0
 fi
 
+# This is only a Codex trigger: lefthook.yml remains the single definition
+# of pre-commit checks and scripts/hooks remains the Go autofix implementation.
 printf '%s\n' "$changed_files" |
 	tr '\n' '\0' |
 	exec lefthook run pre-commit --files-from-stdin --no-stage-fixed
