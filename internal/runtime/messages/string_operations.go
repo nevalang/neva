@@ -1,6 +1,8 @@
 package messages
 
 import (
+	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -120,4 +122,68 @@ func IntFromString(value Msg) (IntMsg, error) {
 func IntFromStringBase(value, base, bitSize Msg) (IntMsg, error) {
 	parsed, err := strconv.ParseInt(value.Str(), int(base.Int()), int(bitSize.Int()))
 	return NewIntMsg(parsed), err
+}
+
+// StringRegexpSubmatch returns the full regular-expression match followed by
+// its submatches as a typed string list.
+//
+//nolint:ireturn // Msg is the value-layer contract.
+func StringRegexpSubmatch(pattern, value Msg) (Msg, error) {
+	expression, err := regexp.Compile(pattern.Str())
+	if err != nil {
+		return nil, err //nolint:wrapcheck // Runtime function preserves the regexp package error text as its public error.
+	}
+	return NewListStringMsg(expression.FindStringSubmatch(fmt.Sprint(value))), nil
+}
+
+// StringFormat substitutes $<index> placeholders in template with args.
+func StringFormat(template string, args []Msg) (string, error) {
+	usedArgs := make(map[int]bool)
+	var result strings.Builder
+	result.Grow(len(template))
+
+	for position := 0; position < len(template); {
+		argumentIndex, nextPosition, hasPlaceholder, err := stringPlaceholderAt(template, position)
+		if err != nil {
+			return "", err
+		}
+		if hasPlaceholder {
+			if argumentIndex >= len(args) {
+				return "", fmt.Errorf("template refers to arg %d, but only %d args given", argumentIndex, len(args))
+			}
+			usedArgs[argumentIndex] = true
+			fmt.Fprint(&result, args[argumentIndex])
+			position = nextPosition
+			continue
+		}
+
+		result.WriteByte(template[position])
+		position++
+	}
+
+	if len(usedArgs) != len(args) {
+		return "", fmt.Errorf("not all arguments are used in the template: got %v, used %v", len(args), len(usedArgs))
+	}
+	return result.String(), nil
+}
+
+func stringPlaceholderAt(template string, start int) (int, int, bool, error) {
+	if start >= len(template) || template[start] != '$' {
+		return 0, start, false, nil
+	}
+
+	digitStart := start + 1
+	digitEnd := digitStart
+	for digitEnd < len(template) && template[digitEnd] >= '0' && template[digitEnd] <= '9' {
+		digitEnd++
+	}
+	if digitStart == digitEnd {
+		return 0, start, false, nil
+	}
+
+	index, err := strconv.Atoi(template[digitStart:digitEnd])
+	if err != nil {
+		return 0, 0, false, fmt.Errorf("invalid placeholder %q: %w", template[digitStart:digitEnd], err)
+	}
+	return index, digitEnd, true, nil
 }
