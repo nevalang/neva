@@ -89,6 +89,9 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 	return pkgos.SaveFilesToDir(dst, files)
 }
 
+// usesMessages reports whether generated main.go refers to messages through a
+// runtime-function config literal. Go rejects an unused import, and programs
+// whose configs are all nil do not otherwise need the messages package.
 func usesMessages(calls []templateFuncCall) bool {
 	for _, call := range calls {
 		if strings.Contains(call.Config, "messages.") {
