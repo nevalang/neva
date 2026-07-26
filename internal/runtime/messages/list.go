@@ -14,12 +14,11 @@ type ListMsg interface {
 	Ints() []int64
 	Floats() []float64
 	Strings() []string
-	Len() int
 }
 
 // internalListMsg supplies invariant-violation methods shared by every list
 // value. Concrete implementations override List, their one valid accessor,
-// Len, String, and MarshalJSON.
+// String, and MarshalJSON.
 type internalListMsg struct{ internalMsg }
 
 func (internalListMsg) Untyped() []Msg    { panic("unexpected Untyped method call on typed list message") }
@@ -27,7 +26,6 @@ func (internalListMsg) Bools() []bool     { panic("unexpected Bools method call 
 func (internalListMsg) Ints() []int64     { panic("unexpected Ints method call on list message") }
 func (internalListMsg) Floats() []float64 { panic("unexpected Floats method call on list message") }
 func (internalListMsg) Strings() []string { panic("unexpected Strings method call on list message") }
-func (internalListMsg) Len() int          { panic("unexpected Len method call on internal list message") }
 func (internalListMsg) String() string {
 	panic("unexpected String method call on internal list message")
 }
@@ -45,7 +43,6 @@ func (msg untypedListMsg) Untyped() []Msg { return msg.v }
 
 //nolint:ireturn // ListMsg is the runtime list contract.
 func (msg untypedListMsg) List() ListMsg { return msg }
-func (msg untypedListMsg) Len() int      { return len(msg.v) }
 func (msg untypedListMsg) String() string {
 	bb, err := msg.MarshalJSON()
 	if err != nil {
@@ -69,7 +66,6 @@ func (msg boolListMsg) Bools() []bool { return msg.v }
 
 //nolint:ireturn // ListMsg is the runtime list contract.
 func (msg boolListMsg) List() ListMsg  { return msg }
-func (msg boolListMsg) Len() int       { return len(msg.v) }
 func (msg boolListMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -87,7 +83,6 @@ func (msg intListMsg) Ints() []int64 { return msg.v }
 
 //nolint:ireturn // ListMsg is the runtime list contract.
 func (msg intListMsg) List() ListMsg  { return msg }
-func (msg intListMsg) Len() int       { return len(msg.v) }
 func (msg intListMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -107,7 +102,6 @@ func (msg floatListMsg) Floats() []float64 {
 
 //nolint:ireturn // ListMsg is the runtime list contract.
 func (msg floatListMsg) List() ListMsg  { return msg }
-func (msg floatListMsg) Len() int       { return len(msg.v) }
 func (msg floatListMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -125,7 +119,6 @@ func (msg stringListMsg) Strings() []string { return msg.v }
 
 //nolint:ireturn // ListMsg is the runtime list contract.
 func (msg stringListMsg) List() ListMsg  { return msg }
-func (msg stringListMsg) Len() int       { return len(msg.v) }
 func (msg stringListMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -337,6 +330,24 @@ func AsListFloats(list ListMsg) ([]float64, bool) {
 func AsListStrings(list ListMsg) ([]string, bool) {
 	typed, ok := list.(stringListMsg)
 	return typed.v, ok
+}
+
+// ListLen returns the number of elements in list without boxing its storage.
+func ListLen(list ListMsg) int {
+	switch typed := list.(type) {
+	case untypedListMsg:
+		return len(typed.v)
+	case boolListMsg:
+		return len(typed.v)
+	case intListMsg:
+		return len(typed.v)
+	case floatListMsg:
+		return len(typed.v)
+	case stringListMsg:
+		return len(typed.v)
+	default:
+		panic("unexpected list implementation")
+	}
 }
 
 // ListToMsgs returns the boxed elements of list.

@@ -14,12 +14,11 @@ type DictMsg interface {
 	Ints() map[string]int64
 	Floats() map[string]float64
 	Strings() map[string]string
-	Len() int
 }
 
 // internalDictMsg supplies invariant-violation methods shared by every dict
 // value. Concrete implementations override Dict, their one valid accessor,
-// Len, String, and MarshalJSON.
+// String, and MarshalJSON.
 type internalDictMsg struct{ internalMsg }
 
 func (internalDictMsg) Untyped() map[string]Msg {
@@ -33,7 +32,6 @@ func (internalDictMsg) Floats() map[string]float64 {
 func (internalDictMsg) Strings() map[string]string {
 	panic("unexpected Strings method call on dict message")
 }
-func (internalDictMsg) Len() int { panic("unexpected Len method call on internal dict message") }
 func (internalDictMsg) String() string {
 	panic("unexpected String method call on internal dict message")
 }
@@ -51,7 +49,6 @@ func (msg untypedDictMsg) Untyped() map[string]Msg { return msg.v }
 
 //nolint:ireturn // DictMsg is the runtime dictionary contract.
 func (msg untypedDictMsg) Dict() DictMsg  { return msg }
-func (msg untypedDictMsg) Len() int       { return len(msg.v) }
 func (msg untypedDictMsg) String() string { return mustJSON(msg) }
 func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
@@ -71,7 +68,6 @@ func (msg boolDictMsg) Bools() map[string]bool { return msg.v }
 
 //nolint:ireturn // DictMsg is the runtime dictionary contract.
 func (msg boolDictMsg) Dict() DictMsg  { return msg }
-func (msg boolDictMsg) Len() int       { return len(msg.v) }
 func (msg boolDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -89,7 +85,6 @@ func (msg intDictMsg) Ints() map[string]int64 { return msg.v }
 
 //nolint:ireturn // DictMsg is the runtime dictionary contract.
 func (msg intDictMsg) Dict() DictMsg  { return msg }
-func (msg intDictMsg) Len() int       { return len(msg.v) }
 func (msg intDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -107,7 +102,6 @@ func (msg floatDictMsg) Floats() map[string]float64 { return msg.v }
 
 //nolint:ireturn // DictMsg is the runtime dictionary contract.
 func (msg floatDictMsg) Dict() DictMsg  { return msg }
-func (msg floatDictMsg) Len() int       { return len(msg.v) }
 func (msg floatDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -125,7 +119,6 @@ func (msg stringDictMsg) Strings() map[string]string { return msg.v }
 
 //nolint:ireturn // DictMsg is the runtime dictionary contract.
 func (msg stringDictMsg) Dict() DictMsg  { return msg }
-func (msg stringDictMsg) Len() int       { return len(msg.v) }
 func (msg stringDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -169,7 +162,7 @@ func NewDictStringMsg(d map[string]string) Msg {
 }
 
 func dictEqual(left DictMsg, right DictMsg) bool {
-	if left.Len() != right.Len() {
+	if DictLen(left) != DictLen(right) {
 		return false
 	}
 
@@ -247,6 +240,24 @@ func AsDictFloats(dict DictMsg) (map[string]float64, bool) {
 func AsDictStrings(dict DictMsg) (map[string]string, bool) {
 	typed, ok := dict.(stringDictMsg)
 	return typed.v, ok
+}
+
+// DictLen returns the number of entries in dict without boxing its storage.
+func DictLen(dict DictMsg) int {
+	switch typed := dict.(type) {
+	case untypedDictMsg:
+		return len(typed.v)
+	case boolDictMsg:
+		return len(typed.v)
+	case intDictMsg:
+		return len(typed.v)
+	case floatDictMsg:
+		return len(typed.v)
+	case stringDictMsg:
+		return len(typed.v)
+	default:
+		panic("unexpected dict implementation")
+	}
 }
 
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

@@ -2,6 +2,32 @@ package messages
 
 import "testing"
 
+func TestListLen(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		list Msg
+		name string
+		want int
+	}{
+		{name: "untyped", list: NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}), want: 2},
+		{name: "bool", list: NewListBoolMsg([]bool{true}), want: 1},
+		{name: "int", list: NewListIntMsg([]int64{1, 2, 3}), want: 3},
+		{name: "float", list: NewListFloatMsg([]float64{}), want: 0},
+		{name: "string", list: NewListStringMsg([]string{"one", "two"}), want: 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := ListLen(tt.list.List()); got != tt.want {
+				t.Fatalf("ListLen() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestListToMsgs(t *testing.T) {
 	t.Parallel()
 

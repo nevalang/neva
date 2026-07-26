@@ -2,6 +2,32 @@ package messages
 
 import "testing"
 
+func TestDictLen(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		dict Msg
+		name string
+		want int
+	}{
+		{name: "untyped", dict: NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}), want: 1},
+		{name: "bool", dict: NewDictBoolMsg(map[string]bool{"one": true, "two": false}), want: 2},
+		{name: "int", dict: NewDictIntMsg(map[string]int64{}), want: 0},
+		{name: "float", dict: NewDictFloatMsg(map[string]float64{"one": 1}), want: 1},
+		{name: "string", dict: NewDictStringMsg(map[string]string{"one": "one", "two": "two"}), want: 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := DictLen(tt.dict.Dict()); got != tt.want {
+				t.Fatalf("DictLen() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDictToMsgs(t *testing.T) {
 	t.Parallel()
 

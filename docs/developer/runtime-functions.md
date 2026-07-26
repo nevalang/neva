@@ -59,6 +59,10 @@ Equality is a pure value operation. It compares equivalent typed and untyped
 container storage; runtime functions must not reimplement it or depend on a
 particular storage representation.
 
+Container inspection and transformation are value operations as well. Keep
+representation interfaces limited to access to their storage; do not add
+semantic operations as methods on those interfaces.
+
 ## Concurrent Inputs
 
 Inputs that belong to one logical operation must be received concurrently.

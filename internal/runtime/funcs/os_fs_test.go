@@ -176,8 +176,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		mkdir(t, filepath.Join(root, "subdir"))
 
 		got := runUnaryRuntimeFunc(t, osReadDir{}, "path", messages.NewStringMsg(root))
-		if got.List().Len() != 2 {
-			t.Fatalf("read_dir len = %d, want 2", got.List().Len())
+		if messages.ListLen(got.List()) != 2 {
+			t.Fatalf("read_dir len = %d, want 2", messages.ListLen(got.List()))
 		}
 	})
 
