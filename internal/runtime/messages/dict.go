@@ -166,8 +166,8 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 		return false
 	}
 
-	leftMsgs := asUntypedDict(left)
-	rightMsgs := asUntypedDict(right)
+	leftMsgs := DictToMessageMap(left)
+	rightMsgs := DictToMessageMap(right)
 	for key, leftVal := range leftMsgs {
 		rightVal, ok := rightMsgs[key]
 		if !ok || !Equal(leftVal, rightVal) {
@@ -177,67 +177,32 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 	return true
 }
 
-func asUntypedDict(dict DictMsg) map[string]Msg {
-	switch typed := dict.(type) {
-	case untypedDictMsg:
-		return typed.v
-	case boolDictMsg:
-		out := make(map[string]Msg, len(typed.v))
-		for key, value := range typed.v {
-			out[key] = NewBoolMsg(value)
-		}
-		return out
-	case intDictMsg:
-		out := make(map[string]Msg, len(typed.v))
-		for key, value := range typed.v {
-			out[key] = NewIntMsg(value)
-		}
-		return out
-	case floatDictMsg:
-		out := make(map[string]Msg, len(typed.v))
-		for key, value := range typed.v {
-			out[key] = NewFloatMsg(value)
-		}
-		return out
-	case stringDictMsg:
-		out := make(map[string]Msg, len(typed.v))
-		for key, value := range typed.v {
-			out[key] = NewStringMsg(value)
-		}
-		return out
-	default:
-		panic("unexpected dict implementation")
-	}
-}
-
-// AsListUntyped returns the boxed list representation when present.
-
-// AsDictUntyped returns the boxed dictionary representation when present.
-func AsDictUntyped(dict DictMsg) (map[string]Msg, bool) {
+// DictAsUntyped returns the boxed dictionary representation when present.
+func DictAsUntyped(dict DictMsg) (map[string]Msg, bool) {
 	typed, ok := dict.(untypedDictMsg)
 	return typed.v, ok
 }
 
-// AsDictBools returns the boolean dictionary representation when present.
-func AsDictBools(dict DictMsg) (map[string]bool, bool) {
+// DictAsBools returns the boolean dictionary representation when present.
+func DictAsBools(dict DictMsg) (map[string]bool, bool) {
 	typed, ok := dict.(boolDictMsg)
 	return typed.v, ok
 }
 
-// AsDictInts returns the integer dictionary representation when present.
-func AsDictInts(dict DictMsg) (map[string]int64, bool) {
+// DictAsInts returns the integer dictionary representation when present.
+func DictAsInts(dict DictMsg) (map[string]int64, bool) {
 	typed, ok := dict.(intDictMsg)
 	return typed.v, ok
 }
 
-// AsDictFloats returns the float dictionary representation when present.
-func AsDictFloats(dict DictMsg) (map[string]float64, bool) {
+// DictAsFloats returns the float dictionary representation when present.
+func DictAsFloats(dict DictMsg) (map[string]float64, bool) {
 	typed, ok := dict.(floatDictMsg)
 	return typed.v, ok
 }
 
-// AsDictStrings returns the string dictionary representation when present.
-func AsDictStrings(dict DictMsg) (map[string]string, bool) {
+// DictAsStrings returns the string dictionary representation when present.
+func DictAsStrings(dict DictMsg) (map[string]string, bool) {
 	typed, ok := dict.(stringDictMsg)
 	return typed.v, ok
 }
@@ -260,69 +225,76 @@ func DictLen(dict DictMsg) int {
 	}
 }
 
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-
-// DictToMsgs returns the boxed entries of dict.
+// DictToMessageMap returns the values of dict as runtime messages.
 //
-// For an untyped dictionary, it returns the existing boxed representation. For
-// a typed scalar dictionary, it allocates a boxed map and converts every value.
-func DictToMsgs(dict DictMsg) map[string]Msg {
-	if values, ok := AsDictInts(dict); ok {
+// For an untyped dictionary, it returns the existing message map. For a typed
+// scalar dictionary, it allocates an untyped message map and converts every
+// value.
+func DictToMessageMap(dict DictMsg) map[string]Msg {
+	switch typed := dict.(type) {
+	case intDictMsg:
+		values := typed.v
 		msgs := make(map[string]Msg, len(values))
 		for key, value := range values {
 			msgs[key] = NewIntMsg(value)
 		}
 		return msgs
-	}
-	if values, ok := AsDictStrings(dict); ok {
+	case stringDictMsg:
+		values := typed.v
 		msgs := make(map[string]Msg, len(values))
 		for key, value := range values {
 			msgs[key] = NewStringMsg(value)
 		}
 		return msgs
-	}
-	if values, ok := AsDictBools(dict); ok {
+	case boolDictMsg:
+		values := typed.v
 		msgs := make(map[string]Msg, len(values))
 		for key, value := range values {
 			msgs[key] = NewBoolMsg(value)
 		}
 		return msgs
-	}
-	if values, ok := AsDictFloats(dict); ok {
+	case floatDictMsg:
+		values := typed.v
 		msgs := make(map[string]Msg, len(values))
 		for key, value := range values {
 			msgs[key] = NewFloatMsg(value)
 		}
 		return msgs
+	case untypedDictMsg:
+		return typed.v
+	default:
+		panic("unexpected dict implementation")
 	}
-
-	return dict.Untyped()
 }
 
-// GetDictValueByKey returns the value stored for key without materializing typed storage.
+// DictGetValueByKey returns the value stored for key without materializing typed storage.
 // The boolean is false when key is not present.
 //
 //nolint:ireturn // Msg is the value-layer contract.
-func GetDictValueByKey(dict DictMsg, key string) (Msg, bool) {
-	if values, ok := AsDictInts(dict); ok {
+func DictGetValueByKey(dict DictMsg, key string) (Msg, bool) {
+	switch typed := dict.(type) {
+	case intDictMsg:
+		values := typed.v
 		value, found := values[key]
 		return NewIntMsg(value), found
-	}
-	if values, ok := AsDictStrings(dict); ok {
+	case stringDictMsg:
+		values := typed.v
 		value, found := values[key]
 		return NewStringMsg(value), found
-	}
-	if values, ok := AsDictBools(dict); ok {
+	case boolDictMsg:
+		values := typed.v
 		value, found := values[key]
 		return NewBoolMsg(value), found
-	}
-	if values, ok := AsDictFloats(dict); ok {
+	case floatDictMsg:
+		values := typed.v
 		value, found := values[key]
 		return NewFloatMsg(value), found
+	case untypedDictMsg:
+		value, found := typed.v[key]
+		return value, found
+	default:
+		panic("unexpected dict implementation")
 	}
-
-	value, found := dict.Untyped()[key]
-	return value, found
 }
 
 func equalDictValue(left DictMsg, right Msg) bool {

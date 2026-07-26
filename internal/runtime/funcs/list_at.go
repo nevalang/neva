@@ -62,7 +62,7 @@ func (listAt) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), 
 			default:
 			}
 
-			data := messages.ListToMsgs(list)
+			data := messages.ListToMessageSlice(list)
 
 			l := int64(len(data))
 			if idx < -l || idx >= l {
@@ -106,16 +106,16 @@ func sendTypedListAt(
 	resOut runtime.SingleOutport,
 	errOut runtime.SingleOutport,
 ) (bool, bool) {
-	if data, ok := messages.AsListInts(list); ok {
+	if data, ok := messages.ListAsInts(list); ok {
 		return true, sendTypedListAtValue(ctx, data, idx, func(v int64) messages.Msg { return messages.NewIntMsg(v) }, resOut, errOut)
 	}
-	if data, ok := messages.AsListStrings(list); ok {
+	if data, ok := messages.ListAsStrings(list); ok {
 		return true, sendTypedListAtValue(ctx, data, idx, func(v string) messages.Msg { return messages.NewStringMsg(v) }, resOut, errOut)
 	}
-	if data, ok := messages.AsListBools(list); ok {
+	if data, ok := messages.ListAsBools(list); ok {
 		return true, sendTypedListAtValue(ctx, data, idx, func(v bool) messages.Msg { return messages.NewBoolMsg(v) }, resOut, errOut)
 	}
-	if data, ok := messages.AsListFloats(list); ok {
+	if data, ok := messages.ListAsFloats(list); ok {
 		return true, sendTypedListAtValue(ctx, data, idx, func(v float64) messages.Msg { return messages.NewFloatMsg(v) }, resOut, errOut)
 	}
 	return false, true

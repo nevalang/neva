@@ -28,7 +28,7 @@ func TestListLen(t *testing.T) {
 	}
 }
 
-func TestListToMsgs(t *testing.T) {
+func TestListToMessageSlice(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -67,24 +67,24 @@ func TestListToMsgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := ListToMsgs(tt.list.List())
+			got := ListToMessageSlice(tt.list.List())
 			if len(got) != len(tt.want) {
-				t.Fatalf("ListToMsgs length = %d, want %d", len(got), len(tt.want))
+				t.Fatalf("ListToMessageSlice length = %d, want %d", len(got), len(tt.want))
 			}
 			for i := range got {
 				if !Equal(got[i], tt.want[i]) {
-					t.Fatalf("ListToMsgs[%d] = %v, want %v", i, got[i], tt.want[i])
+					t.Fatalf("ListToMessageSlice[%d] = %v, want %v", i, got[i], tt.want[i])
 				}
 			}
 		})
 	}
 }
 
-func TestListToMsgsTypedResultDoesNotShareStorage(t *testing.T) {
+func TestListToMessageSliceTypedResultDoesNotShareStorage(t *testing.T) {
 	t.Parallel()
 
 	values := []int64{1, 2}
-	boxed := ListToMsgs(NewListIntMsg(values).List())
+	boxed := ListToMessageSlice(NewListIntMsg(values).List())
 	values[0] = 99
 
 	if got := boxed[0].Int(); got != 1 {
@@ -92,11 +92,11 @@ func TestListToMsgsTypedResultDoesNotShareStorage(t *testing.T) {
 	}
 }
 
-func TestListToMsgsUntypedReturnsExistingStorage(t *testing.T) {
+func TestListToMessageSliceUntypedReturnsExistingStorage(t *testing.T) {
 	t.Parallel()
 
 	values := []Msg{NewIntMsg(1)}
-	boxed := ListToMsgs(NewListMsg(values).List())
+	boxed := ListToMessageSlice(NewListMsg(values).List())
 	boxed[0] = NewIntMsg(2)
 
 	if got := values[0].Int(); got != 2 {

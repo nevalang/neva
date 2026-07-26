@@ -33,7 +33,7 @@ func BenchmarkMsgListIter(b *testing.B) {
 				items[i] = int64(i)
 			}
 			listMsg := NewListIntMsg(items)
-			data, ok := AsListInts(listMsg.List())
+			data, ok := ListAsInts(listMsg.List())
 			if !ok {
 				b.Fatal("expected int list message")
 			}
@@ -60,7 +60,7 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 		b.Run("hot_n="+strconv.Itoa(size), func(b *testing.B) {
 			msg := makeDictMsg(size)
 			hotKey := "k" + strconv.Itoa(size-1)
-			data, ok := AsDictInts(msg.Dict())
+			data, ok := DictAsInts(msg.Dict())
 			if !ok {
 				b.Fatal("expected int dict message")
 			}
@@ -82,7 +82,7 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 				entries[key] = int64(i)
 			}
 			msg := NewDictIntMsg(entries)
-			data, ok := AsDictInts(msg.Dict())
+			data, ok := DictAsInts(msg.Dict())
 			if !ok {
 				b.Fatal("expected int dict message")
 			}
@@ -101,19 +101,19 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 	}
 }
 
-// BenchmarkGetDictValueByKey measures lookup through the representation-independent API.
-func BenchmarkGetDictValueByKey(b *testing.B) {
+// BenchmarkDictGetValueByKey measures lookup through the representation-independent API.
+func BenchmarkDictGetValueByKey(b *testing.B) {
 	dict := NewDictIntMsg(map[string]int64{"answer": 42}).Dict()
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		msgSink, _ = GetDictValueByKey(dict, "answer")
+		msgSink, _ = DictGetValueByKey(dict, "answer")
 	}
 }
 
-// BenchmarkListToMsgs measures the explicit boxing boundary for typed lists.
-func BenchmarkListToMsgs(b *testing.B) {
+// BenchmarkListToMessageSlice measures the explicit boxing boundary for typed lists.
+func BenchmarkListToMessageSlice(b *testing.B) {
 	values := make([]int64, 128)
 	for i := range values {
 		values[i] = int64(i)
@@ -123,12 +123,12 @@ func BenchmarkListToMsgs(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		listSink = ListToMsgs(list)
+		listSink = ListToMessageSlice(list)
 	}
 }
 
-// BenchmarkDictToMsgs measures the explicit boxing boundary for typed dictionaries.
-func BenchmarkDictToMsgs(b *testing.B) {
+// BenchmarkDictToMessageMap measures the explicit boxing boundary for typed dictionaries.
+func BenchmarkDictToMessageMap(b *testing.B) {
 	values := make(map[string]int64, 128)
 	for i := range 128 {
 		values["k"+strconv.Itoa(i)] = int64(i)
@@ -138,7 +138,7 @@ func BenchmarkDictToMsgs(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		dictSink = DictToMsgs(dict)
+		dictSink = DictToMessageMap(dict)
 	}
 }
 
@@ -260,7 +260,7 @@ func benchListIterInt(b *testing.B, size int) {
 		items[i] = int64(i)
 	}
 	msg := NewListIntMsg(items)
-	data, ok := AsListInts(msg.List())
+	data, ok := ListAsInts(msg.List())
 	if !ok {
 		b.Fatal("expected int list message")
 	}
@@ -282,7 +282,7 @@ func benchListIterFloat(b *testing.B, size int) {
 		items[i] = float64(i) + 0.25
 	}
 	msg := NewListFloatMsg(items)
-	data, ok := AsListFloats(msg.List())
+	data, ok := ListAsFloats(msg.List())
 	if !ok {
 		b.Fatal("expected float list message")
 	}
@@ -304,7 +304,7 @@ func benchListIterBool(b *testing.B, size int) {
 		items[i] = i%2 == 0
 	}
 	msg := NewListBoolMsg(items)
-	data, ok := AsListBools(msg.List())
+	data, ok := ListAsBools(msg.List())
 	if !ok {
 		b.Fatal("expected bool list message")
 	}
@@ -328,7 +328,7 @@ func benchListIterString(b *testing.B, size int) {
 		items[i] = "v" + strconv.Itoa(i)
 	}
 	msg := NewListStringMsg(items)
-	data, ok := AsListStrings(msg.List())
+	data, ok := ListAsStrings(msg.List())
 	if !ok {
 		b.Fatal("expected string list message")
 	}
@@ -350,7 +350,7 @@ func benchDictLookupInt(b *testing.B, size int, hotKey string) {
 		entries["k"+strconv.Itoa(i)] = int64(i)
 	}
 	msg := NewDictIntMsg(entries)
-	data, ok := AsDictInts(msg.Dict())
+	data, ok := DictAsInts(msg.Dict())
 	if !ok {
 		b.Fatal("expected int dict message")
 	}
@@ -368,7 +368,7 @@ func benchDictLookupFloat(b *testing.B, size int, hotKey string) {
 		entries["k"+strconv.Itoa(i)] = float64(i) + 0.25
 	}
 	msg := NewDictFloatMsg(entries)
-	data, ok := AsDictFloats(msg.Dict())
+	data, ok := DictAsFloats(msg.Dict())
 	if !ok {
 		b.Fatal("expected float dict message")
 	}
@@ -386,7 +386,7 @@ func benchDictLookupBool(b *testing.B, size int, hotKey string) {
 		entries["k"+strconv.Itoa(i)] = i%2 == 0
 	}
 	msg := NewDictBoolMsg(entries)
-	data, ok := AsDictBools(msg.Dict())
+	data, ok := DictAsBools(msg.Dict())
 	if !ok {
 		b.Fatal("expected bool dict message")
 	}
@@ -404,7 +404,7 @@ func benchDictLookupString(b *testing.B, size int, hotKey string) {
 		entries["k"+strconv.Itoa(i)] = "v" + strconv.Itoa(i)
 	}
 	msg := NewDictStringMsg(entries)
-	data, ok := AsDictStrings(msg.Dict())
+	data, ok := DictAsStrings(msg.Dict())
 	if !ok {
 		b.Fatal("expected string dict message")
 	}

@@ -49,10 +49,10 @@ such as a missing dictionary key or an out-of-bounds list index.
 
 The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
 can retain unboxed Go storage such as `[]int64` or `map[string]string`.
-Preserve that representation on scalar hot paths. Box each element only at a
-boundary that genuinely requires an individual runtime message, such as
+Preserve that representation on scalar hot paths. Convert each element to an
+individual runtime message only at a boundary that genuinely requires one, such as
 conversion to a stream. Existing boxed containers may retain their backing
-storage; converting typed scalar storage deliberately allocates a new boxed
+storage; converting typed scalar storage deliberately allocates a new message
 slice or map.
 
 Equality is a pure value operation. It compares equivalent typed and untyped
@@ -62,6 +62,10 @@ particular storage representation.
 Container inspection and transformation are value operations as well. Keep
 representation interfaces limited to access to their storage; do not add
 semantic operations as methods on those interfaces.
+
+Name a public operation specific to one value type with the type first, then
+the action and any necessary detail. Constructors retain the usual `New<Type>`
+form. Generic operations over all messages are exempt from this convention.
 
 ## Concurrent Inputs
 

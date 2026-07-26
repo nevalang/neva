@@ -35,7 +35,7 @@ func (p listPush) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Contex
 				return
 			}
 
-			lstCopy := messages.ListToMsgs(lstMsg.List())
+			lstCopy := messages.ListToMessageSlice(lstMsg.List())
 
 			if !resOut.Send(
 				ctx,

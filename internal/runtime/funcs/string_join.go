@@ -60,7 +60,7 @@ func runStringJoinList(
 
 func joinList(list messages.ListMsg, sep string) string {
 	builder := strings.Builder{}
-	if stringsList, ok := messages.AsListStrings(list); ok {
+	if stringsList, ok := messages.ListAsStrings(list); ok {
 		for i := range stringsList {
 			if i > 0 {
 				builder.WriteString(sep)

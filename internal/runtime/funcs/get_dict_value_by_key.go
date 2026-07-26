@@ -68,7 +68,7 @@ func runGetDictValueByKey(ctx context.Context, ports *getDictValueByKeyPorts) {
 			return
 		}
 
-		valueMsg, found := messages.GetDictValueByKey(dictMsg.Dict(), keyMsg.Str())
+		valueMsg, found := messages.DictGetValueByKey(dictMsg.Dict(), keyMsg.Str())
 		if !found {
 			if !ports.errOut.Send(ctx, errFromString("Key not found in dictionary")) {
 				return

@@ -34,7 +34,7 @@ func (dictToStream) Create(
 				return
 			}
 
-			dict := messages.DictToMsgs(dataMsg.Dict())
+			dict := messages.DictToMessageMap(dataMsg.Dict())
 			if !resOut.Send(ctx, newStreamOpenMsg()) {
 				return
 			}

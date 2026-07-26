@@ -303,31 +303,32 @@ func listEqualString(left []string, right ListMsg) bool {
 	return true
 }
 
-func AsListUntyped(list ListMsg) ([]Msg, bool) {
+// ListAsUntyped returns the boxed list representation when present.
+func ListAsUntyped(list ListMsg) ([]Msg, bool) {
 	typed, ok := list.(untypedListMsg)
 	return typed.v, ok
 }
 
-// AsListBools returns the boolean list representation when present.
-func AsListBools(list ListMsg) ([]bool, bool) {
+// ListAsBools returns the boolean list representation when present.
+func ListAsBools(list ListMsg) ([]bool, bool) {
 	typed, ok := list.(boolListMsg)
 	return typed.v, ok
 }
 
-// AsListInts returns the integer list representation when present.
-func AsListInts(list ListMsg) ([]int64, bool) {
+// ListAsInts returns the integer list representation when present.
+func ListAsInts(list ListMsg) ([]int64, bool) {
 	typed, ok := list.(intListMsg)
 	return typed.v, ok
 }
 
-// AsListFloats returns the float list representation when present.
-func AsListFloats(list ListMsg) ([]float64, bool) {
+// ListAsFloats returns the float list representation when present.
+func ListAsFloats(list ListMsg) ([]float64, bool) {
 	typed, ok := list.(floatListMsg)
 	return typed.v, ok
 }
 
-// AsListStrings returns the string list representation when present.
-func AsListStrings(list ListMsg) ([]string, bool) {
+// ListAsStrings returns the string list representation when present.
+func ListAsStrings(list ListMsg) ([]string, bool) {
 	typed, ok := list.(stringListMsg)
 	return typed.v, ok
 }
@@ -350,41 +351,46 @@ func ListLen(list ListMsg) int {
 	}
 }
 
-// ListToMsgs returns the boxed elements of list.
+// ListToMessageSlice returns the elements of list as runtime messages.
 //
-// For an untyped list, it returns the existing boxed representation. For a
-// typed scalar list, it allocates a boxed slice and converts every element.
-func ListToMsgs(list ListMsg) []Msg {
-	if values, ok := AsListInts(list); ok {
+// For an untyped list, it returns the existing message slice. For a typed
+// scalar list, it allocates an untyped message slice and converts every
+// element.
+func ListToMessageSlice(list ListMsg) []Msg {
+	switch typed := list.(type) {
+	case intListMsg:
+		values := typed.v
 		msgs := make([]Msg, len(values))
 		for i := range values {
 			msgs[i] = NewIntMsg(values[i])
 		}
 		return msgs
-	}
-	if values, ok := AsListStrings(list); ok {
+	case stringListMsg:
+		values := typed.v
 		msgs := make([]Msg, len(values))
 		for i := range values {
 			msgs[i] = NewStringMsg(values[i])
 		}
 		return msgs
-	}
-	if values, ok := AsListBools(list); ok {
+	case boolListMsg:
+		values := typed.v
 		msgs := make([]Msg, len(values))
 		for i := range values {
 			msgs[i] = NewBoolMsg(values[i])
 		}
 		return msgs
-	}
-	if values, ok := AsListFloats(list); ok {
+	case floatListMsg:
+		values := typed.v
 		msgs := make([]Msg, len(values))
 		for i := range values {
 			msgs[i] = NewFloatMsg(values[i])
 		}
 		return msgs
+	case untypedListMsg:
+		return typed.v
+	default:
+		panic("unexpected list implementation")
 	}
-
-	return list.Untyped()
 }
 
 func equalListValue(left ListMsg, right Msg) bool {

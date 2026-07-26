@@ -12,7 +12,7 @@ type structField struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (s structField) Create(io runtime.IO, cfg messages.Msg) (func(ctx context.Context), error) {
-	typedPath, ok := messages.AsListStrings(cfg.List())
+	typedPath, ok := messages.ListAsStrings(cfg.List())
 	if !ok {
 		return nil, errors.New("field config must be list<string>")
 	}

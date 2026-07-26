@@ -28,7 +28,7 @@ func TestDictLen(t *testing.T) {
 	}
 }
 
-func TestDictToMsgs(t *testing.T) {
+func TestDictToMessageMap(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -67,24 +67,24 @@ func TestDictToMsgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := DictToMsgs(tt.dict.Dict())
+			got := DictToMessageMap(tt.dict.Dict())
 			if len(got) != len(tt.want) {
-				t.Fatalf("DictToMsgs length = %d, want %d", len(got), len(tt.want))
+				t.Fatalf("DictToMessageMap length = %d, want %d", len(got), len(tt.want))
 			}
 			for key, want := range tt.want {
 				if !Equal(got[key], want) {
-					t.Fatalf("DictToMsgs[%q] = %v, want %v", key, got[key], want)
+					t.Fatalf("DictToMessageMap[%q] = %v, want %v", key, got[key], want)
 				}
 			}
 		})
 	}
 }
 
-func TestDictToMsgsTypedResultDoesNotShareStorage(t *testing.T) {
+func TestDictToMessageMapTypedResultDoesNotShareStorage(t *testing.T) {
 	t.Parallel()
 
 	values := map[string]int64{"one": 1}
-	boxed := DictToMsgs(NewDictIntMsg(values).Dict())
+	boxed := DictToMessageMap(NewDictIntMsg(values).Dict())
 	values["one"] = 99
 
 	if got := boxed["one"].Int(); got != 1 {
@@ -92,11 +92,11 @@ func TestDictToMsgsTypedResultDoesNotShareStorage(t *testing.T) {
 	}
 }
 
-func TestDictToMsgsUntypedReturnsExistingStorage(t *testing.T) {
+func TestDictToMessageMapUntypedReturnsExistingStorage(t *testing.T) {
 	t.Parallel()
 
 	values := map[string]Msg{"one": NewIntMsg(1)}
-	boxed := DictToMsgs(NewDictMsg(values).Dict())
+	boxed := DictToMessageMap(NewDictMsg(values).Dict())
 	boxed["one"] = NewIntMsg(2)
 
 	if got := values["one"].Int(); got != 2 {
@@ -104,7 +104,7 @@ func TestDictToMsgsUntypedReturnsExistingStorage(t *testing.T) {
 	}
 }
 
-func TestGetDictValueByKey(t *testing.T) {
+func TestDictGetValueByKey(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -167,12 +167,12 @@ func TestGetDictValueByKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, found := GetDictValueByKey(tt.dict.Dict(), tt.key)
+			got, found := DictGetValueByKey(tt.dict.Dict(), tt.key)
 			if found != tt.found {
-				t.Fatalf("GetDictValueByKey found = %t, want %t", found, tt.found)
+				t.Fatalf("DictGetValueByKey found = %t, want %t", found, tt.found)
 			}
 			if found && !Equal(got, tt.want) {
-				t.Fatalf("GetDictValueByKey value = %v, want %v", got, tt.want)
+				t.Fatalf("DictGetValueByKey value = %v, want %v", got, tt.want)
 			}
 		})
 	}
