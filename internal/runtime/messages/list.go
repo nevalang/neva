@@ -400,19 +400,19 @@ func ListToMessageSlice(list ListMsg) []Msg {
 func ListAt(list ListMsg, index int64) (Msg, bool) {
 	switch typed := list.(type) {
 	case untypedListMsg:
-		value, found := listItem(typed.v, index)
+		value, found := listAt(typed.v, index)
 		return value, found
 	case boolListMsg:
-		value, found := listItem(typed.v, index)
+		value, found := listAt(typed.v, index)
 		return NewBoolMsg(value), found
 	case intListMsg:
-		value, found := listItem(typed.v, index)
+		value, found := listAt(typed.v, index)
 		return NewIntMsg(value), found
 	case floatListMsg:
-		value, found := listItem(typed.v, index)
+		value, found := listAt(typed.v, index)
 		return NewFloatMsg(value), found
 	case stringListMsg:
-		value, found := listItem(typed.v, index)
+		value, found := listAt(typed.v, index)
 		return NewStringMsg(value), found
 	default:
 		panic("unexpected list implementation")
@@ -427,15 +427,15 @@ func ListAt(list ListMsg, index int64) (Msg, bool) {
 func ListSlice(list ListMsg, from, to int64) Msg {
 	switch typed := list.(type) {
 	case untypedListMsg:
-		return NewListMsg(sliceList(typed.v, from, to))
+		return NewListMsg(listSlice(typed.v, from, to))
 	case boolListMsg:
-		return NewListBoolMsg(sliceList(typed.v, from, to))
+		return NewListBoolMsg(listSlice(typed.v, from, to))
 	case intListMsg:
-		return NewListIntMsg(sliceList(typed.v, from, to))
+		return NewListIntMsg(listSlice(typed.v, from, to))
 	case floatListMsg:
-		return NewListFloatMsg(sliceList(typed.v, from, to))
+		return NewListFloatMsg(listSlice(typed.v, from, to))
 	case stringListMsg:
-		return NewListStringMsg(sliceList(typed.v, from, to))
+		return NewListStringMsg(listSlice(typed.v, from, to))
 	default:
 		panic("unexpected list implementation")
 	}
@@ -449,28 +449,28 @@ func ListSlice(list ListMsg, from, to int64) Msg {
 func ListAppend(list ListMsg, value Msg) Msg {
 	switch typed := list.(type) {
 	case untypedListMsg:
-		return NewListMsg(appendValue(typed.v, value))
+		return NewListMsg(listAppend(typed.v, value))
 	case boolListMsg:
 		if scalar, ok := value.(BoolMsg); ok {
-			return NewListBoolMsg(appendValue(typed.v, scalar.v))
+			return NewListBoolMsg(listAppend(typed.v, scalar.v))
 		}
 	case intListMsg:
 		if scalar, ok := value.(IntMsg); ok {
-			return NewListIntMsg(appendValue(typed.v, scalar.v))
+			return NewListIntMsg(listAppend(typed.v, scalar.v))
 		}
 	case floatListMsg:
 		if scalar, ok := value.(FloatMsg); ok {
-			return NewListFloatMsg(appendValue(typed.v, scalar.v))
+			return NewListFloatMsg(listAppend(typed.v, scalar.v))
 		}
 	case stringListMsg:
 		if scalar, ok := value.(StringMsg); ok {
-			return NewListStringMsg(appendValue(typed.v, scalar.v))
+			return NewListStringMsg(listAppend(typed.v, scalar.v))
 		}
 	default:
 		panic("unexpected list implementation")
 	}
 
-	return NewListMsg(appendValue(ListToMessageSlice(list), value))
+	return NewListMsg(listAppend(ListToMessageSlice(list), value))
 }
 
 // ListPrepend returns a new list with value prepended. It preserves typed
@@ -481,32 +481,32 @@ func ListAppend(list ListMsg, value Msg) Msg {
 func ListPrepend(list ListMsg, value Msg) Msg {
 	switch typed := list.(type) {
 	case untypedListMsg:
-		return NewListMsg(prependValue(typed.v, value))
+		return NewListMsg(listPrepend(typed.v, value))
 	case boolListMsg:
 		if scalar, ok := value.(BoolMsg); ok {
-			return NewListBoolMsg(prependValue(typed.v, scalar.v))
+			return NewListBoolMsg(listPrepend(typed.v, scalar.v))
 		}
 	case intListMsg:
 		if scalar, ok := value.(IntMsg); ok {
-			return NewListIntMsg(prependValue(typed.v, scalar.v))
+			return NewListIntMsg(listPrepend(typed.v, scalar.v))
 		}
 	case floatListMsg:
 		if scalar, ok := value.(FloatMsg); ok {
-			return NewListFloatMsg(prependValue(typed.v, scalar.v))
+			return NewListFloatMsg(listPrepend(typed.v, scalar.v))
 		}
 	case stringListMsg:
 		if scalar, ok := value.(StringMsg); ok {
-			return NewListStringMsg(prependValue(typed.v, scalar.v))
+			return NewListStringMsg(listPrepend(typed.v, scalar.v))
 		}
 	default:
 		panic("unexpected list implementation")
 	}
 
-	return NewListMsg(prependValue(ListToMessageSlice(list), value))
+	return NewListMsg(listPrepend(ListToMessageSlice(list), value))
 }
 
 //nolint:ireturn // Generic helper returns a scalar storage value.
-func listItem[T any](items []T, index int64) (T, bool) {
+func listAt[T any](items []T, index int64) (T, bool) {
 	length := int64(len(items))
 	if index < -length || index >= length {
 		var zero T
@@ -518,35 +518,35 @@ func listItem[T any](items []T, index int64) (T, bool) {
 	return items[index], true
 }
 
-func sliceList[T any](items []T, from, to int64) []T {
-	start, end := normalizeSliceBounds(from, to, int64(len(items)))
+func listSlice[T any](items []T, from, to int64) []T {
+	start, end := listSliceBounds(from, to, int64(len(items)))
 	return append([]T(nil), items[start:end]...)
 }
 
-func appendValue[T any](items []T, value T) []T {
+func listAppend[T any](items []T, value T) []T {
 	result := make([]T, len(items)+1)
 	copy(result, items)
 	result[len(items)] = value
 	return result
 }
 
-func prependValue[T any](items []T, value T) []T {
+func listPrepend[T any](items []T, value T) []T {
 	result := make([]T, len(items)+1)
 	result[0] = value
 	copy(result[1:], items)
 	return result
 }
 
-func normalizeSliceBounds(from, to, length int64) (int64, int64) {
-	start := normalizeSliceIndex(from, length)
-	end := normalizeSliceIndex(to, length)
+func listSliceBounds(from, to, length int64) (int64, int64) {
+	start := listSliceIndex(from, length)
+	end := listSliceIndex(to, length)
 	if start > end {
 		start = end
 	}
 	return start, end
 }
 
-func normalizeSliceIndex(index, length int64) int64 {
+func listSliceIndex(index, length int64) int64 {
 	if index < 0 {
 		index += length
 	}

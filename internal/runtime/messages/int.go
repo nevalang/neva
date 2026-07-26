@@ -55,11 +55,23 @@ func IntDecrement(value Msg) IntMsg { return NewIntMsg(value.Int() - 1) }
 
 // IntPower returns base raised to exponent.
 func IntPower(base, exponent Msg) IntMsg {
-	result := int64(1)
-	for range exponent.Int() {
-		result *= base.Int()
+	return NewIntMsg(intPower(base.Int(), exponent.Int()))
+}
+
+func intPower(base, exponent int64) int64 {
+	if exponent < 0 {
+		return 1
 	}
-	return NewIntMsg(result)
+
+	result := int64(1)
+	for exponent > 0 {
+		if exponent&1 == 1 {
+			result *= base
+		}
+		base *= base
+		exponent >>= 1
+	}
+	return result
 }
 
 // IntBitwiseAnd returns the bitwise conjunction of left and right.

@@ -79,7 +79,7 @@ func StringJoin(list ListMsg, separator string) string {
 // The boolean is false when index is outside the string bounds.
 func StringAt(value Msg, index int64) (StringMsg, bool) {
 	runes := []rune(value.Str())
-	item, found := listItem(runes, index)
+	item, found := listAt(runes, index)
 	if !found {
 		return StringMsg{}, false
 	}
@@ -89,7 +89,7 @@ func StringAt(value Msg, index int64) (StringMsg, bool) {
 // StringSlice returns the normalized rune-indexed range of value.
 func StringSlice(value Msg, from, to int64) StringMsg {
 	runes := []rune(value.Str())
-	start, end := normalizeSliceBounds(from, to, int64(len(runes)))
+	start, end := listSliceBounds(from, to, int64(len(runes)))
 	return NewStringMsg(string(runes[start:end]))
 }
 
