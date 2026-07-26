@@ -108,10 +108,11 @@ func NewRegistry() map[string]runtime.FuncCreator {
 
 		"regexp_submatch": regexpSubmatch{},
 
-		"list_at":    listAt{},
-		"list_len":   listlen{},
-		"list_slice": listSlice{},
-		"list_push":  listPush{},
+		"list_at":      listAt{},
+		"list_len":     listlen{},
+		"list_slice":   listSlice{},
+		"list_append":  listAppend{},
+		"list_prepend": listPrepend{},
 
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},

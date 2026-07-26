@@ -12,11 +12,11 @@ type StructMsg struct {
 
 func (msg StructMsg) Struct() StructMsg { return msg }
 
-// StructGet returns the value of name in value. It panics when the field is
+// StructGetField returns the value of name in value. It panics when the field is
 // absent because that contradicts the compiler's static struct-type guarantee.
 //
 //nolint:ireturn // Msg is the value-layer contract.
-func StructGet(value StructMsg, name string) Msg {
+func StructGetField(value StructMsg, name string) Msg {
 	if field, ok := value.get(name); ok {
 		return field
 	}
@@ -24,17 +24,17 @@ func StructGet(value StructMsg, name string) Msg {
 }
 
 // Get returns the value of name in msg.
-// It forwards to StructGet for compatibility with existing internal consumers.
+// It forwards to StructGetField for compatibility with existing internal consumers.
 //
 //nolint:ireturn // Compatibility method returns the message contract.
-func (msg StructMsg) Get(name string) Msg { return StructGet(msg, name) }
+func (msg StructMsg) Get(name string) Msg { return StructGetField(msg, name) }
 
 // StructGetPath returns the nested field selected by path.
 //
 //nolint:ireturn // Msg is the value-layer contract.
 func StructGetPath(value Msg, path []string) Msg {
 	for _, name := range path {
-		value = StructGet(value.Struct(), name)
+		value = StructGetField(value.Struct(), name)
 	}
 	return value
 }

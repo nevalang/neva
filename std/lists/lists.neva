@@ -7,9 +7,13 @@ pub def FromStream<T>(data stream<T>) (res list<T>)
 #extern(array_port_to_list)
 pub def FromArray<T>([port] T) (res list<T>)
 
-// Push creates new list with appended element.
-#extern(list_push)
-pub def Push<T>(lst list<T>, data T) (res list<T>)
+// Append creates new list with appended element.
+#extern(list_append)
+pub def Append<T>(lst list<T>, data T) (res list<T>)
+
+// Prepend creates new list with data before all existing elements.
+#extern(list_prepend)
+pub def Prepend<T>(lst list<T>, data T) (res list<T>)
 
 #extern(list_at)
 pub def At<T>(data list<T>, idx int) (res T, err error)

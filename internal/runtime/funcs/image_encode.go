@@ -41,9 +41,9 @@ func (imageEncode) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Conte
 			imgStructMsg := imgMsg.Struct()
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			b := imageMsg{
-				pixels: messages.StructGet(imgStructMsg, "pixels").Bytes(),
-				width:  messages.StructGet(imgStructMsg, "width").Int(),
-				height: messages.StructGet(imgStructMsg, "height").Int(),
+				pixels: messages.StructGetField(imgStructMsg, "pixels").Bytes(),
+				width:  messages.StructGetField(imgStructMsg, "width").Int(),
+				height: messages.StructGetField(imgStructMsg, "height").Int(),
 			}
 
 			im := b.createImage()

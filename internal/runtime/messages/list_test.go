@@ -160,3 +160,24 @@ func TestListAppendPreservesCompatibleTypedStorage(t *testing.T) {
 		t.Fatal("ListAppend incompatible value did not produce untyped storage")
 	}
 }
+
+func TestListPrependPreservesCompatibleTypedStorage(t *testing.T) {
+	t.Parallel()
+
+	values := []int64{2, 3}
+	typed := ListPrepend(NewListIntMsg(values).List(), NewIntMsg(1))
+	result, ok := ListAsInts(typed.List())
+	if !ok || len(result) != 3 || result[0] != 1 || result[1] != 2 || result[2] != 3 {
+		t.Fatalf("ListPrepend typed result = %v, want typed [1 2 3]", typed)
+	}
+
+	values[0] = 99
+	if result[1] != 2 {
+		t.Fatal("ListPrepend result shares backing storage with source list")
+	}
+
+	mixed := ListPrepend(NewListIntMsg([]int64{1}).List(), NewStringMsg("zero"))
+	if _, ok := ListAsUntyped(mixed.List()); !ok {
+		t.Fatal("ListPrepend incompatible value did not produce untyped storage")
+	}
+}

@@ -19,10 +19,10 @@ type rgbaMsg struct {
 
 func (c *rgbaMsg) decode(msg messages.Msg) {
 	m := msg.Struct()
-	c.r = messages.StructGet(m, "r").Int()
-	c.g = messages.StructGet(m, "g").Int()
-	c.b = messages.StructGet(m, "b").Int()
-	c.a = messages.StructGet(m, "a").Int()
+	c.r = messages.StructGetField(m, "r").Int()
+	c.g = messages.StructGetField(m, "g").Int()
+	c.b = messages.StructGetField(m, "b").Int()
+	c.a = messages.StructGetField(m, "a").Int()
 }
 
 func (c rgbaMsg) color() color.Color {
@@ -42,9 +42,9 @@ type pixelMsg struct {
 
 func (p *pixelMsg) decode(msg messages.Msg) {
 	m := msg.Struct()
-	p.x = messages.StructGet(m, "x").Int()
-	p.y = messages.StructGet(m, "y").Int()
-	p.color.decode(messages.StructGet(m, "color"))
+	p.x = messages.StructGetField(m, "x").Int()
+	p.y = messages.StructGetField(m, "y").Int()
+	p.color.decode(messages.StructGetField(m, "color"))
 }
 
 type imageMsg struct {

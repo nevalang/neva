@@ -247,7 +247,7 @@ func BenchmarkMsgStructGet(b *testing.B) {
 	b.ResetTimer()
 	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
-		intSink = StructGet(msg.Struct(), "f31").Int()
+		intSink = StructGetField(msg.Struct(), "f31").Int()
 	}
 }
 
@@ -263,6 +263,22 @@ func BenchmarkListSlice(b *testing.B) {
 	b.ResetTimer()
 	for range b.N {
 		msgSink = ListSlice(list, 64, 448)
+	}
+}
+
+// BenchmarkListPrepend measures direct immutable prepend without transport cost.
+func BenchmarkListPrepend(b *testing.B) {
+	values := make([]int64, 512)
+	for i := range values {
+		values[i] = int64(i)
+	}
+	list := NewListIntMsg(values).List()
+	value := NewIntMsg(-1)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = ListPrepend(list, value)
 	}
 }
 
