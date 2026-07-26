@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -11,86 +10,73 @@ import (
 // dictGetByKey implements the internal runtime function behind the public Get component.
 type dictGetByKey struct{}
 
-//nolint:gocognit,gocyclo,cyclop,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (dictGetByKey) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
-	dictIn, err := io.In.Single("dict")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
+type dictGetPorts struct {
+	dictIn runtime.SingleInport
+	keyIn  runtime.SingleInport
+	resOut runtime.SingleOutport
+	errOut runtime.SingleOutport
+}
 
-	keyIn, err := io.In.Single("key")
+func (dictGetByKey) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	ports, err := resolveDictGetPorts(runtimeIO)
 	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	resOut, err := io.Out.Single("res")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	errOut, err := io.Out.Single("err")
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		for {
-			var (
-				dictMsg, keyMsg messages.Msg
-				dictOk, keyOk   bool
-			)
-
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			wg := sync.WaitGroup{}
-			wg.Go(func() {
-				dictMsg, dictOk = dictIn.Receive(ctx)
-			})
-			wg.Go(func() {
-				keyMsg, keyOk = keyIn.Receive(ctx)
-			})
-			wg.Wait()
-			if !dictOk || !keyOk {
-				return
-			}
-
-			valueMsg, found := dictValueByKey(dictMsg.Dict(), keyMsg.Str())
-			if !found {
-				if !errOut.Send(ctx, errFromString("Key not found in dictionary")) {
-					return
-				}
-				continue
-			}
-			if !resOut.Send(ctx, valueMsg) {
-				return
-			}
-		}
+		runDictGet(ctx, &ports)
 	}, nil
 }
 
-// dictValueByKey reads one value without converting a typed dict into map[string]Msg.
-//
-//nolint:ireturn // Runtime function output is expressed as Msg.
-func dictValueByKey(dict messages.DictMsg, key string) (messages.Msg, bool) {
-	if values, ok := messages.AsDictInts(dict); ok {
-		value, found := values[key]
-		return messages.NewIntMsg(value), found
+func resolveDictGetPorts(runtimeIO runtime.IO) (dictGetPorts, error) {
+	dictIn, err := runtimeIO.In.Single("dict")
+	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return dictGetPorts{}, err
 	}
-	if values, ok := messages.AsDictStrings(dict); ok {
-		value, found := values[key]
-		return messages.NewStringMsg(value), found
+
+	keyIn, err := runtimeIO.In.Single("key")
+	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return dictGetPorts{}, err
 	}
-	if values, ok := messages.AsDictBools(dict); ok {
-		value, found := values[key]
-		return messages.NewBoolMsg(value), found
+
+	resOut, err := runtimeIO.Out.Single("res")
+	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return dictGetPorts{}, err
 	}
-	if values, ok := messages.AsDictFloats(dict); ok {
-		value, found := values[key]
-		return messages.NewFloatMsg(value), found
+
+	errOut, err := runtimeIO.Out.Single("err")
+	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return dictGetPorts{}, err
 	}
-	value, found := dict.Untyped()[key]
-	return value, found
+
+	return dictGetPorts{
+		dictIn: dictIn,
+		keyIn:  keyIn,
+		resOut: resOut,
+		errOut: errOut,
+	}, nil
+}
+
+func runDictGet(ctx context.Context, ports *dictGetPorts) {
+	for {
+		dictMsg, keyMsg, received := receive2(ctx, ports.dictIn, ports.keyIn)
+		if !received {
+			return
+		}
+
+		valueMsg, found := messages.DictGet(dictMsg.Dict(), keyMsg.Str())
+		if !found {
+			if !ports.errOut.Send(ctx, errFromString("Key not found in dictionary")) {
+				return
+			}
+			continue
+		}
+		if !ports.resOut.Send(ctx, valueMsg) {
+			return
+		}
+	}
 }

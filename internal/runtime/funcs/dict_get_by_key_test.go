@@ -9,29 +9,6 @@ import (
 	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
-func TestDictValueByKeyTypedMiss(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		dict messages.Msg
-		name string
-	}{
-		{dict: messages.NewDictBoolMsg(map[string]bool{"present": true}), name: "bool"},
-		{dict: messages.NewDictIntMsg(map[string]int64{"present": 1}), name: "int"},
-		{dict: messages.NewDictFloatMsg(map[string]float64{"present": 1.5}), name: "float"},
-		{dict: messages.NewDictStringMsg(map[string]string{"present": "x"}), name: "string"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if _, found := dictValueByKey(tt.dict.Dict(), "missing"); found {
-				t.Fatal("missing key was found")
-			}
-		})
-	}
-}
-
 func TestGetDictValueTypedMissSendsError(t *testing.T) {
 	t.Parallel()
 
@@ -61,6 +38,39 @@ func TestGetDictValueTypedMissSendsError(t *testing.T) {
 	select {
 	case <-outputs["res"]:
 		t.Fatal("unexpected result")
+	case <-time.After(20 * time.Millisecond):
+	}
+}
+
+func TestGetDictValueSendsTypedValue(t *testing.T) {
+	t.Parallel()
+
+	io, inputs, outputs := newIO([]string{"dict", "key"}, []string{"res", "err"})
+	handler, err := (dictGetByKey{}).Create(io, nil)
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() { handler(ctx); close(done) }()
+	defer func() { cancel(); <-done }()
+
+	go func() {
+		inputs["dict"] <- runtime.OrderedMsg{Msg: messages.NewDictBoolMsg(map[string]bool{"present": false})}
+	}()
+	go func() { inputs["key"] <- runtime.OrderedMsg{Msg: messages.NewStringMsg("present")} }()
+
+	select {
+	case got := <-outputs["res"]:
+		if got.Bool() {
+			t.Fatal("result = true, want false")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected result output")
+	}
+	select {
+	case <-outputs["err"]:
+		t.Fatal("unexpected error output")
 	case <-time.After(20 * time.Millisecond):
 	}
 }

@@ -34,7 +34,7 @@ func (c listToStream) Create(
 				return
 			}
 
-			list := listToMsgs(data.List())
+			list := messages.ListToMsgs(data.List())
 			if !resOut.Send(ctx, newStreamOpenMsg()) {
 				return
 			}

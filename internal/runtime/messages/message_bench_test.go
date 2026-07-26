@@ -11,6 +11,8 @@ var (
 	floatSink  float64
 	stringSink string
 	msgSink    Msg
+	listSink   []Msg
+	dictSink   map[string]Msg
 )
 
 //nolint:ireturn // benchmark helper returns runtime.Msg by design.
@@ -96,6 +98,47 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 				intSink = sum
 			}
 		})
+	}
+}
+
+// BenchmarkDictGet measures lookup through the representation-independent API.
+func BenchmarkDictGet(b *testing.B) {
+	dict := NewDictIntMsg(map[string]int64{"answer": 42}).Dict()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink, _ = DictGet(dict, "answer")
+	}
+}
+
+// BenchmarkListToMsgs measures the explicit boxing boundary for typed lists.
+func BenchmarkListToMsgs(b *testing.B) {
+	values := make([]int64, 128)
+	for i := range values {
+		values[i] = int64(i)
+	}
+	list := NewListIntMsg(values).List()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		listSink = ListToMsgs(list)
+	}
+}
+
+// BenchmarkDictToMsgs measures the explicit boxing boundary for typed dictionaries.
+func BenchmarkDictToMsgs(b *testing.B) {
+	values := make(map[string]int64, 128)
+	for i := range 128 {
+		values["k"+strconv.Itoa(i)] = int64(i)
+	}
+	dict := NewDictIntMsg(values).Dict()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		dictSink = DictToMsgs(dict)
 	}
 }
 

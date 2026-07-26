@@ -62,7 +62,7 @@ func (listAt) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), 
 			default:
 			}
 
-			data := listToMsgs(list)
+			data := messages.ListToMsgs(list)
 
 			l := int64(len(data))
 			if idx < -l || idx >= l {
