@@ -36,22 +36,22 @@ func (streamToDict) Create(
 			}
 
 			switch {
-			case isStreamOpen(dataMsg.Msg):
+			case messages.IsStreamOpen(dataMsg.Msg):
 				dict = map[string]messages.Msg{}
 				continue
-			case isStreamData(dataMsg.Msg):
-				entryMsg := streamDataValue(dataMsg.Msg).Struct()
+			case messages.IsStreamData(dataMsg.Msg):
+				entryMsg := messages.StreamDataValue(dataMsg.Msg).Struct()
 				key := messages.StructGetField(entryMsg, "key").Str()
 				valueMsg := messages.StructGetField(entryMsg, "value")
 
 				// Duplicate key policy: last message for the key wins.
 				dict[key] = valueMsg
 				continue
-			case !isStreamClose(dataMsg.Msg):
+			case !messages.IsStreamClose(dataMsg.Msg):
 				continue
 			}
 
-			if !resOut.Send(ctx, messages.NewDictMsg(dict)) {
+			if !resOut.Send(ctx, messages.DictFromMessages(dict)) {
 				return
 			}
 		}

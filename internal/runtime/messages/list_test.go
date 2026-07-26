@@ -104,6 +104,74 @@ func TestListToMessageSliceUntypedReturnsExistingStorage(t *testing.T) {
 	}
 }
 
+func TestListFromMessagesUsesScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		values []Msg
+	}{
+		{
+			name:   "bool",
+			values: []Msg{NewBoolMsg(true), NewBoolMsg(false)},
+		},
+		{
+			name:   "int",
+			values: []Msg{NewIntMsg(1), NewIntMsg(2)},
+		},
+		{
+			name:   "float",
+			values: []Msg{NewFloatMsg(1.5), NewFloatMsg(2.5)},
+		},
+		{
+			name:   "string",
+			values: []Msg{NewStringMsg("one"), NewStringMsg("two")},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ListFromMessages(tt.values)
+			if _, ok := ListAsUntyped(got.List()); ok {
+				t.Fatal("ListFromMessages result did not use scalar storage")
+			}
+			if !Equal(got, NewListMsg(tt.values)) {
+				t.Fatalf("ListFromMessages() = %v, want %v", got, tt.values)
+			}
+		})
+	}
+}
+
+func TestListFromMessagesFallsBackToUntypedStorage(t *testing.T) {
+	t.Parallel()
+
+	for _, values := range [][]Msg{
+		nil,
+		{NewIntMsg(1), NewStringMsg("two")},
+		{NewListIntMsg([]int64{1})},
+	} {
+		got := ListFromMessages(values)
+		if _, ok := ListAsUntyped(got.List()); !ok {
+			t.Fatalf("ListFromMessages(%v) did not use untyped storage", values)
+		}
+	}
+}
+
+func TestListFromMessagesDoesNotShareScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	values := []Msg{NewIntMsg(1)}
+	result := ListFromMessages(values)
+	values[0] = NewIntMsg(99)
+
+	ints, ok := ListAsInts(result.List())
+	if !ok || len(ints) != 1 || ints[0] != 1 {
+		t.Fatalf("ListFromMessages result = %v, want typed [1]", result)
+	}
+}
+
 func TestListAt(t *testing.T) {
 	t.Parallel()
 

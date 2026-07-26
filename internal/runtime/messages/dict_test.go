@@ -104,6 +104,79 @@ func TestDictToMessageMapUntypedReturnsExistingStorage(t *testing.T) {
 	}
 }
 
+func TestDictFromMessagesUsesScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		values map[string]Msg
+		want   Msg
+		name   string
+	}{
+		{
+			name:   "bool",
+			values: map[string]Msg{"a": NewBoolMsg(true), "b": NewBoolMsg(false)},
+			want:   NewDictBoolMsg(map[string]bool{"a": true, "b": false}),
+		},
+		{
+			name:   "int",
+			values: map[string]Msg{"a": NewIntMsg(1), "b": NewIntMsg(2)},
+			want:   NewDictIntMsg(map[string]int64{"a": 1, "b": 2}),
+		},
+		{
+			name:   "float",
+			values: map[string]Msg{"a": NewFloatMsg(1.5), "b": NewFloatMsg(2.5)},
+			want:   NewDictFloatMsg(map[string]float64{"a": 1.5, "b": 2.5}),
+		},
+		{
+			name:   "string",
+			values: map[string]Msg{"a": NewStringMsg("one"), "b": NewStringMsg("two")},
+			want:   NewDictStringMsg(map[string]string{"a": "one", "b": "two"}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := DictFromMessages(tt.values)
+			if _, ok := DictAsUntyped(got.Dict()); ok {
+				t.Fatal("DictFromMessages result did not use scalar storage")
+			}
+			if !Equal(got, tt.want) {
+				t.Fatalf("DictFromMessages() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDictFromMessagesFallsBackToUntypedStorage(t *testing.T) {
+	t.Parallel()
+
+	for _, values := range []map[string]Msg{
+		nil,
+		{"a": NewIntMsg(1), "b": NewStringMsg("two")},
+		{"a": NewListIntMsg([]int64{1})},
+	} {
+		got := DictFromMessages(values)
+		if _, ok := DictAsUntyped(got.Dict()); !ok {
+			t.Fatalf("DictFromMessages(%v) did not use untyped storage", values)
+		}
+	}
+}
+
+func TestDictFromMessagesDoesNotShareScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	values := map[string]Msg{"one": NewIntMsg(1)}
+	result := DictFromMessages(values)
+	values["one"] = NewIntMsg(99)
+
+	ints, ok := DictAsInts(result.Dict())
+	if !ok || ints["one"] != 1 {
+		t.Fatalf("DictFromMessages result = %v, want typed {one: 1}", result)
+	}
+}
+
 func TestDictGetValueByKey(t *testing.T) {
 	t.Parallel()
 

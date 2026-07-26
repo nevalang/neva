@@ -42,23 +42,23 @@ func forwardEnumeratedMessage(
 	idx *int64,
 ) bool {
 	switch {
-	case isStreamOpen(msg):
+	case messages.IsStreamOpen(msg):
 		*idx = 0
-		return resOut.Send(ctx, newStreamOpenMsg())
-	case isStreamData(msg):
+		return resOut.Send(ctx, messages.NewStreamOpenMsg())
+	case messages.IsStreamData(msg):
 		// Enumerated<T> is the Data union payload, so encode it as a struct message first.
 		item := messages.NewStructMsg([]messages.StructField{
 			messages.NewStructField("idx", messages.NewIntMsg(*idx)),
-			messages.NewStructField("item", streamDataValue(msg)),
+			messages.NewStructField("item", messages.StreamDataValue(msg)),
 		})
-		if !resOut.Send(ctx, newStreamDataMsg(item)) {
+		if !resOut.Send(ctx, messages.NewStreamDataMsg(item)) {
 			return false
 		}
 
 		*idx++
 		return true
-	case isStreamClose(msg):
-		return resOut.Send(ctx, newStreamCloseMsg())
+	case messages.IsStreamClose(msg):
+		return resOut.Send(ctx, messages.NewStreamCloseMsg())
 	default:
 		panic("stream_enumerate: unexpected stream tag")
 	}

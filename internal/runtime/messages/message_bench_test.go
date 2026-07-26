@@ -142,6 +142,34 @@ func BenchmarkDictToMessageMap(b *testing.B) {
 	}
 }
 
+// BenchmarkListFromMessages measures scalar list materialization after stream collection.
+func BenchmarkListFromMessages(b *testing.B) {
+	values := make([]Msg, 128)
+	for i := range values {
+		values[i] = NewIntMsg(int64(i))
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = ListFromMessages(values)
+	}
+}
+
+// BenchmarkDictFromMessages measures scalar dict materialization after stream collection.
+func BenchmarkDictFromMessages(b *testing.B) {
+	values := make(map[string]Msg, 128)
+	for i := range 128 {
+		values["k"+strconv.Itoa(i)] = NewIntMsg(int64(i))
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = DictFromMessages(values)
+	}
+}
+
 // BenchmarkMsgEqualList measures list equality for equal and early-unequal inputs.
 func BenchmarkMsgEqualList(b *testing.B) {
 	for _, size := range []int{16, 128, 512} {

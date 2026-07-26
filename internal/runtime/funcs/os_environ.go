@@ -30,13 +30,7 @@ func (o osEnviron) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Conte
 				return
 			}
 
-			values := os.Environ()
-			result := make([]messages.Msg, 0, len(values))
-			for _, value := range values {
-				result = append(result, messages.NewStringMsg(value))
-			}
-
-			if !resOut.Send(ctx, messages.NewListMsg(result)) {
+			if !resOut.Send(ctx, messages.NewListStringMsg(os.Environ())) {
 				return
 			}
 		}

@@ -32,6 +32,15 @@ func TestDictMsgMarshalJSONPreservesStringValues(t *testing.T) {
 	}
 }
 
+func TestTypedDictMsgMarshalJSONUsesCanonicalFormatting(t *testing.T) {
+	msg := NewDictStringMsg(map[string]string{"text": `a:"b,c\d`})
+
+	b := mustMarshal(t, msg)
+	if got, want := string(b), `{"text": "a:\"b,c\\d"}`; got != want {
+		t.Fatalf("MarshalJSON() = %q, want %q", got, want)
+	}
+}
+
 func TestStructMsgMarshalJSONPreservesStringValues(t *testing.T) {
 	msg := NewStructMsg([]StructField{
 		NewStructField("text", NewStringMsg(`a:"b,c\d`)),

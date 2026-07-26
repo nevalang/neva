@@ -1,5 +1,7 @@
 package messages
 
+import "encoding/json"
+
 func mustJSON(msg interface{ MarshalJSON() ([]byte, error) }) string {
 	b, err := msg.MarshalJSON()
 	if err != nil {
@@ -45,4 +47,16 @@ func addJSONSpaces(jsonData []byte) []byte {
 	}
 
 	return spaced
+}
+
+// marshalDict preserves Neva's stable human-readable dictionary formatting
+// independently of the dictionary's internal storage representation.
+//
+//nolint:wrapcheck // JSON errors are part of the MarshalJSON contract.
+func marshalDict(value any) ([]byte, error) {
+	jsonData, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	return addJSONSpaces(jsonData), nil
 }

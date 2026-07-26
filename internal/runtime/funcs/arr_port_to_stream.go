@@ -31,7 +31,7 @@ func (arrayPortToStream) Create(
 		items := make([]runtime.OrderedMsg, portLen)
 
 		for {
-			if !resOut.Send(ctx, newStreamOpenMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -43,12 +43,12 @@ func (arrayPortToStream) Create(
 			}
 
 			for idx := range portLen {
-				if !resOut.Send(ctx, newStreamDataMsg(items[idx].Msg)) {
+				if !resOut.Send(ctx, messages.NewStreamDataMsg(items[idx].Msg)) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, newStreamCloseMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamCloseMsg()) {
 				return
 			}
 		}

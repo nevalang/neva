@@ -275,15 +275,21 @@ runtime tracing models graph-hop context.
 
 ### `stream<T>`
 
-Stream structure represents an element of type `T` in a sequence. Streams handle sequences of data in a flow-based programming fashion, allowing operations like mapping, filtering, reducing, and more.
+Stream represents a sequence of values of type `T` in a flow. A stream sends
+an opening event, zero or more data events, and a closing event. This lets
+processors distinguish the sequence lifecycle from its values.
 
 ```neva
-pub type stream<T> struct {
-    data T // current element of the stream
-    idx int // index of the current element
-    last bool // whether this is the last element in the stream
+pub type stream<T> union {
+    Open
+    Data T
+    Close
 }
 ```
+
+`stream<T>` does not store an index on every data item. Use
+`streams.Enumerate` when a flow needs an explicit 0-based index; it produces
+`stream<streams.Enumerated<T>>` with `idx` and `item` fields.
 
 Streams can be infinitely nested:
 
@@ -293,4 +299,5 @@ stream<stream<stream<int>>> 3 levels
 // etc.
 ```
 
-Stream processing is first-class citizen in Nevalang, so there's dedicated page about that. From data-type perspective, streams are just structures.
+Stream processing is first-class in Nevalang. From the data-type perspective,
+streams are tagged unions.

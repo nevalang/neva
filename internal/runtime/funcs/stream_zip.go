@@ -35,7 +35,7 @@ func (streamZip) Create(
 			if !waitStreamOpens(ctx, leftIn, rightIn) {
 				return
 			}
-			if !resOut.Send(ctx, newStreamOpenMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -46,7 +46,7 @@ func (streamZip) Create(
 				}
 
 				if leftClosed || rightClosed {
-					if !resOut.Send(ctx, newStreamCloseMsg()) {
+					if !resOut.Send(ctx, messages.NewStreamCloseMsg()) {
 						return
 					}
 					if !leftClosed {
@@ -65,7 +65,7 @@ func (streamZip) Create(
 					},
 				)
 
-				if !resOut.Send(ctx, newStreamDataMsg(zipped)) {
+				if !resOut.Send(ctx, messages.NewStreamDataMsg(zipped)) {
 					return
 				}
 			}
@@ -101,7 +101,7 @@ func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
 		if !ok {
 			return false
 		}
-		if isStreamOpen(msg.Msg) {
+		if messages.IsStreamOpen(msg.Msg) {
 			return true
 		}
 	}
@@ -133,9 +133,9 @@ func receiveStreamPairDataOrClose(
 //nolint:ireturn // Stream payloads are messages.Msg values by contract.
 func decodeStreamDataOrClose(msg messages.Msg) (messages.Msg, bool, bool) {
 	switch {
-	case isStreamData(msg):
-		return streamDataValue(msg), false, true
-	case isStreamClose(msg):
+	case messages.IsStreamData(msg):
+		return messages.StreamDataValue(msg), false, true
+	case messages.IsStreamClose(msg):
 		return nil, true, true
 	default:
 		return nil, false, false
@@ -148,7 +148,7 @@ func drainStreamUntilClose(ctx context.Context, in streamReceiver) {
 		if !ok {
 			return
 		}
-		if isStreamClose(msg.Msg) {
+		if messages.IsStreamClose(msg.Msg) {
 			return
 		}
 	}

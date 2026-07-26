@@ -35,17 +35,17 @@ func (c listToStream) Create(
 			}
 
 			list := messages.ListToMessageSlice(data.List())
-			if !resOut.Send(ctx, newStreamOpenMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 				return
 			}
 
 			for idx := range list {
-				if !resOut.Send(ctx, newStreamDataMsg(list[idx])) {
+				if !resOut.Send(ctx, messages.NewStreamDataMsg(list[idx])) {
 					return
 				}
 			}
 
-			if !resOut.Send(ctx, newStreamCloseMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamCloseMsg()) {
 				return
 			}
 		}

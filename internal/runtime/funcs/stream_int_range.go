@@ -47,7 +47,7 @@ func sendIntRange(
 	resOut runtime.SingleOutport,
 	from, toValue int64,
 ) bool {
-	if !resOut.Send(ctx, newStreamOpenMsg()) {
+	if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 		return false
 	}
 
@@ -59,7 +59,7 @@ func sendIntRange(
 		return sendDescendingIntRange(ctx, resOut, from, toValue)
 	}
 
-	return resOut.Send(ctx, newStreamCloseMsg())
+	return resOut.Send(ctx, messages.NewStreamCloseMsg())
 }
 
 func sendAscendingIntRange(
@@ -68,12 +68,12 @@ func sendAscendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data < toValue; data++ {
-		if !resOut.Send(ctx, newStreamDataMsg(messages.NewIntMsg(data))) {
+		if !resOut.Send(ctx, messages.NewStreamDataMsg(messages.NewIntMsg(data))) {
 			return false
 		}
 	}
 
-	return resOut.Send(ctx, newStreamCloseMsg())
+	return resOut.Send(ctx, messages.NewStreamCloseMsg())
 }
 
 func sendDescendingIntRange(
@@ -82,10 +82,10 @@ func sendDescendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data > toValue; data-- {
-		if !resOut.Send(ctx, newStreamDataMsg(messages.NewIntMsg(data))) {
+		if !resOut.Send(ctx, messages.NewStreamDataMsg(messages.NewIntMsg(data))) {
 			return false
 		}
 	}
 
-	return resOut.Send(ctx, newStreamCloseMsg())
+	return resOut.Send(ctx, messages.NewStreamCloseMsg())
 }

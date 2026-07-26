@@ -28,7 +28,7 @@ func (s streamToList) Create(
 
 	return func(ctx context.Context) {
 		// Fully materializes one stream batch before emitting resulting list.
-		list := []messages.Msg{}
+		list := make([]messages.Msg, 0, 1)
 
 		for {
 			msg, ok := seqIn.Receive(ctx)
@@ -37,17 +37,17 @@ func (s streamToList) Create(
 			}
 
 			switch {
-			case isStreamOpen(msg.Msg):
-				list = list[:0]
+			case messages.IsStreamOpen(msg.Msg):
+				list = make([]messages.Msg, 0, 1)
 				continue
-			case isStreamData(msg.Msg):
-				list = append(list, streamDataValue(msg.Msg))
+			case messages.IsStreamData(msg.Msg):
+				list = append(list, messages.StreamDataValue(msg.Msg))
 				continue
-			case !isStreamClose(msg.Msg):
+			case !messages.IsStreamClose(msg.Msg):
 				continue
 			}
 
-			if !resOut.Send(ctx, messages.NewListMsg(list)) {
+			if !resOut.Send(ctx, messages.ListFromMessages(list)) {
 				return
 			}
 		}

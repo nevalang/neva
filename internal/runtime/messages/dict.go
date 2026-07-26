@@ -1,7 +1,5 @@
 package messages
 
-import "encoding/json"
-
 // DictMsg provides access to the storage of a dictionary runtime message.
 //
 // Exactly one value accessor is valid for an implementation. Untyped exposes
@@ -51,11 +49,7 @@ func (msg untypedDictMsg) Untyped() map[string]Msg { return msg.v }
 func (msg untypedDictMsg) Dict() DictMsg  { return msg }
 func (msg untypedDictMsg) String() string { return mustJSON(msg) }
 func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
-	jsonData, err := json.Marshal(msg.v)
-	if err != nil {
-		return nil, err //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	}
-	return addJSONSpaces(jsonData), nil
+	return marshalDict(msg.v)
 }
 
 // boolDictMsg stores unboxed boolean dictionary values.
@@ -70,9 +64,8 @@ func (msg boolDictMsg) Bools() map[string]bool { return msg.v }
 func (msg boolDictMsg) Dict() DictMsg  { return msg }
 func (msg boolDictMsg) String() string { return mustJSON(msg) }
 
-//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg boolDictMsg) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msg.v)
+	return marshalDict(msg.v)
 }
 
 // intDictMsg stores unboxed integer dictionary values.
@@ -87,9 +80,8 @@ func (msg intDictMsg) Ints() map[string]int64 { return msg.v }
 func (msg intDictMsg) Dict() DictMsg  { return msg }
 func (msg intDictMsg) String() string { return mustJSON(msg) }
 
-//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg intDictMsg) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msg.v)
+	return marshalDict(msg.v)
 }
 
 // floatDictMsg stores unboxed float dictionary values.
@@ -104,9 +96,8 @@ func (msg floatDictMsg) Floats() map[string]float64 { return msg.v }
 func (msg floatDictMsg) Dict() DictMsg  { return msg }
 func (msg floatDictMsg) String() string { return mustJSON(msg) }
 
-//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg floatDictMsg) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msg.v)
+	return marshalDict(msg.v)
 }
 
 // stringDictMsg stores unboxed string dictionary values.
@@ -121,9 +112,8 @@ func (msg stringDictMsg) Strings() map[string]string { return msg.v }
 func (msg stringDictMsg) Dict() DictMsg  { return msg }
 func (msg stringDictMsg) String() string { return mustJSON(msg) }
 
-//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msg.v)
+	return marshalDict(msg.v)
 }
 
 // NewDictMsg creates a dictionary with an untyped boxed representation.
@@ -131,6 +121,90 @@ func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
 //nolint:ireturn // Msg contract type.
 func NewDictMsg(d map[string]Msg) Msg {
 	return untypedDictMsg{v: d}
+}
+
+// DictFromMessages materializes values into the most specific scalar dict
+// representation available. Mixed, nested, and empty values remain untyped.
+//
+//nolint:ireturn // Msg contract type.
+func DictFromMessages(values map[string]Msg) Msg {
+	for _, first := range values {
+		switch first.(type) {
+		case BoolMsg:
+			result, ok := dictBoolsFromMessages(values)
+			if ok {
+				return NewDictBoolMsg(result)
+			}
+		case IntMsg:
+			result, ok := dictIntsFromMessages(values)
+			if ok {
+				return NewDictIntMsg(result)
+			}
+		case FloatMsg:
+			result, ok := dictFloatsFromMessages(values)
+			if ok {
+				return NewDictFloatMsg(result)
+			}
+		case StringMsg:
+			result, ok := dictStringsFromMessages(values)
+			if ok {
+				return NewDictStringMsg(result)
+			}
+		default:
+			return NewDictMsg(values)
+		}
+		return NewDictMsg(values)
+	}
+
+	return NewDictMsg(values)
+}
+
+func dictBoolsFromMessages(values map[string]Msg) (map[string]bool, bool) {
+	result := make(map[string]bool, len(values))
+	for key, value := range values {
+		scalar, ok := value.(BoolMsg)
+		if !ok {
+			return nil, false
+		}
+		result[key] = scalar.v
+	}
+	return result, true
+}
+
+func dictIntsFromMessages(values map[string]Msg) (map[string]int64, bool) {
+	result := make(map[string]int64, len(values))
+	for key, value := range values {
+		scalar, ok := value.(IntMsg)
+		if !ok {
+			return nil, false
+		}
+		result[key] = scalar.v
+	}
+	return result, true
+}
+
+func dictFloatsFromMessages(values map[string]Msg) (map[string]float64, bool) {
+	result := make(map[string]float64, len(values))
+	for key, value := range values {
+		scalar, ok := value.(FloatMsg)
+		if !ok {
+			return nil, false
+		}
+		result[key] = scalar.v
+	}
+	return result, true
+}
+
+func dictStringsFromMessages(values map[string]Msg) (map[string]string, bool) {
+	result := make(map[string]string, len(values))
+	for key, value := range values {
+		scalar, ok := value.(StringMsg)
+		if !ok {
+			return nil, false
+		}
+		result[key] = scalar.v
+	}
+	return result, true
 }
 
 // NewDictBoolMsg creates a dictionary with unboxed boolean storage.

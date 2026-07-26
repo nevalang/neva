@@ -133,6 +133,90 @@ func NewListMsg(v []Msg) Msg {
 	return untypedListMsg{v: v}
 }
 
+// ListFromMessages materializes values into the most specific scalar list
+// representation available. Mixed, nested, and empty values remain untyped.
+//
+//nolint:ireturn // Msg contract type.
+func ListFromMessages(values []Msg) Msg {
+	if len(values) == 0 {
+		return NewListMsg(values)
+	}
+
+	switch values[0].(type) {
+	case BoolMsg:
+		result, ok := listBoolsFromMessages(values)
+		if ok {
+			return NewListBoolMsg(result)
+		}
+	case IntMsg:
+		result, ok := listIntsFromMessages(values)
+		if ok {
+			return NewListIntMsg(result)
+		}
+	case FloatMsg:
+		result, ok := listFloatsFromMessages(values)
+		if ok {
+			return NewListFloatMsg(result)
+		}
+	case StringMsg:
+		result, ok := listStringsFromMessages(values)
+		if ok {
+			return NewListStringMsg(result)
+		}
+	default:
+		return NewListMsg(values)
+	}
+	return NewListMsg(values)
+}
+
+func listBoolsFromMessages(values []Msg) ([]bool, bool) {
+	result := make([]bool, len(values))
+	for i, value := range values {
+		scalar, ok := value.(BoolMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listIntsFromMessages(values []Msg) ([]int64, bool) {
+	result := make([]int64, len(values))
+	for i, value := range values {
+		scalar, ok := value.(IntMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listFloatsFromMessages(values []Msg) ([]float64, bool) {
+	result := make([]float64, len(values))
+	for i, value := range values {
+		scalar, ok := value.(FloatMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listStringsFromMessages(values []Msg) ([]string, bool) {
+	result := make([]string, len(values))
+	for i, value := range values {
+		scalar, ok := value.(StringMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
 // NewListBoolMsg creates a list with unboxed boolean storage.
 //
 //nolint:ireturn // Msg contract type.

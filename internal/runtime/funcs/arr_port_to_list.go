@@ -39,7 +39,7 @@ func (arrayPortToList) Create(
 				list = append(list, ordered.Msg)
 			}
 
-			if !listOut.Send(ctx, messages.NewListMsg(list)) {
+			if !listOut.Send(ctx, messages.ListFromMessages(list)) {
 				return
 			}
 		}
