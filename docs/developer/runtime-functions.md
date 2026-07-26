@@ -70,6 +70,14 @@ Container inspection and transformation are value operations as well. Keep
 representation interfaces limited to access to their storage; do not add
 semantic operations as methods on those interfaces.
 
+The same ownership rule applies beyond containers. `messages` owns pure scalar
+arithmetic, comparison, conversion, parsing, formatting, string transformation,
+regular-expression matching, and struct traversal. A runtime function may map
+a returned value error to a public Neva error, but must not reimplement the
+underlying computation. Constructors such as `NewStructMsg` and `NewUnionMsg`
+remain the value-layer primitives; ports, stream framing, external I/O, state,
+and tracing remain outside `messages`.
+
 Name a public operation specific to one value type with the type first, then
 the action and any necessary detail. Constructors retain the usual `New<Type>`
 form. Generic operations over all messages are exempt from this convention.
