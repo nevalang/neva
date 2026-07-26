@@ -10,7 +10,7 @@ func TestDictLen(t *testing.T) {
 		name string
 		want int
 	}{
-		{name: "untyped", dict: NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}), want: 1},
+		{name: "untyped", dict: NewUntypedDictMsg(map[string]Msg{"one": NewIntMsg(1)}), want: 1},
 		{name: "bool", dict: NewDictBoolMsg(map[string]bool{"one": true, "two": false}), want: 2},
 		{name: "int", dict: NewDictIntMsg(map[string]int64{}), want: 0},
 		{name: "float", dict: NewDictFloatMsg(map[string]float64{"one": 1}), want: 1},
@@ -96,11 +96,84 @@ func TestDictToMessageMapUntypedReturnsExistingStorage(t *testing.T) {
 	t.Parallel()
 
 	values := map[string]Msg{"one": NewIntMsg(1)}
-	boxed := DictToMessageMap(NewDictMsg(values).Dict())
+	boxed := DictToMessageMap(NewUntypedDictMsg(values).Dict())
 	boxed["one"] = NewIntMsg(2)
 
 	if got := values["one"].Int(); got != 2 {
 		t.Fatalf("untyped storage value = %d, want 2", got)
+	}
+}
+
+func TestNewDictMsgUsesScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		values map[string]Msg
+		want   Msg
+		name   string
+	}{
+		{
+			name:   "bool",
+			values: map[string]Msg{"a": NewBoolMsg(true), "b": NewBoolMsg(false)},
+			want:   NewDictBoolMsg(map[string]bool{"a": true, "b": false}),
+		},
+		{
+			name:   "int",
+			values: map[string]Msg{"a": NewIntMsg(1), "b": NewIntMsg(2)},
+			want:   NewDictIntMsg(map[string]int64{"a": 1, "b": 2}),
+		},
+		{
+			name:   "float",
+			values: map[string]Msg{"a": NewFloatMsg(1.5), "b": NewFloatMsg(2.5)},
+			want:   NewDictFloatMsg(map[string]float64{"a": 1.5, "b": 2.5}),
+		},
+		{
+			name:   "string",
+			values: map[string]Msg{"a": NewStringMsg("one"), "b": NewStringMsg("two")},
+			want:   NewDictStringMsg(map[string]string{"a": "one", "b": "two"}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := NewDictMsg(tt.values)
+			if _, ok := DictAsUntyped(got.Dict()); ok {
+				t.Fatal("NewDictMsg result did not use scalar storage")
+			}
+			if !Equal(got, tt.want) {
+				t.Fatalf("NewDictMsg() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewDictMsgFallsBackToUntypedStorage(t *testing.T) {
+	t.Parallel()
+
+	for _, values := range []map[string]Msg{
+		nil,
+		{"a": NewIntMsg(1), "b": NewStringMsg("two")},
+		{"a": NewListIntMsg([]int64{1})},
+	} {
+		got := NewDictMsg(values)
+		if _, ok := DictAsUntyped(got.Dict()); !ok {
+			t.Fatalf("NewDictMsg(%v) did not use untyped storage", values)
+		}
+	}
+}
+
+func TestNewDictMsgDoesNotShareScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	values := map[string]Msg{"one": NewIntMsg(1)}
+	result := NewDictMsg(values)
+	values["one"] = NewIntMsg(99)
+
+	ints, ok := DictAsInts(result.Dict())
+	if !ok || ints["one"] != 1 {
+		t.Fatalf("NewDictMsg result = %v, want typed {one: 1}", result)
 	}
 }
 

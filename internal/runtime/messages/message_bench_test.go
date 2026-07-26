@@ -142,6 +142,34 @@ func BenchmarkDictToMessageMap(b *testing.B) {
 	}
 }
 
+// BenchmarkNewListMsg measures scalar list materialization after stream collection.
+func BenchmarkNewListMsg(b *testing.B) {
+	values := make([]Msg, 128)
+	for i := range values {
+		values[i] = NewIntMsg(int64(i))
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = NewListMsg(values)
+	}
+}
+
+// BenchmarkNewDictMsg measures scalar dict materialization after stream collection.
+func BenchmarkNewDictMsg(b *testing.B) {
+	values := make(map[string]Msg, 128)
+	for i := range 128 {
+		values["k"+strconv.Itoa(i)] = NewIntMsg(int64(i))
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = NewDictMsg(values)
+	}
+}
+
 // BenchmarkMsgEqualList measures list equality for equal and early-unequal inputs.
 func BenchmarkMsgEqualList(b *testing.B) {
 	for _, size := range []int{16, 128, 512} {
@@ -153,8 +181,8 @@ func BenchmarkMsgEqualList(b *testing.B) {
 				itemsLeft[i] = NewStringMsg(val)
 				itemsRight[i] = NewStringMsg(val)
 			}
-			left := NewListMsg(itemsLeft)
-			right := NewListMsg(itemsRight)
+			left := NewUntypedListMsg(itemsLeft)
+			right := NewUntypedListMsg(itemsRight)
 
 			b.ReportAllocs()
 			b.ResetTimer()
@@ -173,8 +201,8 @@ func BenchmarkMsgEqualList(b *testing.B) {
 				itemsRight[i] = NewStringMsg(val)
 			}
 			itemsRight[0] = NewStringMsg("x")
-			left := NewListMsg(itemsLeft)
-			right := NewListMsg(itemsRight)
+			left := NewUntypedListMsg(itemsLeft)
+			right := NewUntypedListMsg(itemsRight)
 
 			b.ReportAllocs()
 			b.ResetTimer()
@@ -213,7 +241,7 @@ func BenchmarkMsgEqualDict(b *testing.B) {
 
 		b.Run("typed_untyped_equal_n="+strconv.Itoa(size), func(b *testing.B) {
 			left := NewDictIntMsg(values)
-			right := NewDictMsg(boxedValues)
+			right := NewUntypedDictMsg(boxedValues)
 
 			b.ReportAllocs()
 			b.ResetTimer()

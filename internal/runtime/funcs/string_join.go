@@ -88,13 +88,13 @@ func handleJoinedStreamMessage(
 	hasSep bool,
 ) (bool, bool) {
 	switch {
-	case isStreamOpen(msg):
+	case messages.IsStreamOpen(msg):
 		builder.Reset()
 		return hasSep, true
-	case isStreamData(msg):
-		appendStreamItem(builder, streamDataValue(msg).Str(), sep)
+	case messages.IsStreamData(msg):
+		appendStreamItem(builder, messages.StreamDataValue(msg).Str(), sep)
 		return hasSep, true
-	case isStreamClose(msg):
+	case messages.IsStreamClose(msg):
 		if !resOut.Send(ctx, messages.NewStringMsg(builder.String())) {
 			return false, false
 		}

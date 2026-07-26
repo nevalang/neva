@@ -10,7 +10,7 @@ func TestListLen(t *testing.T) {
 		name string
 		want int
 	}{
-		{name: "untyped", list: NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}), want: 2},
+		{name: "untyped", list: NewUntypedListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}), want: 2},
 		{name: "bool", list: NewListBoolMsg([]bool{true}), want: 1},
 		{name: "int", list: NewListIntMsg([]int64{1, 2, 3}), want: 3},
 		{name: "float", list: NewListFloatMsg([]float64{}), want: 0},
@@ -96,11 +96,79 @@ func TestListToMessageSliceUntypedReturnsExistingStorage(t *testing.T) {
 	t.Parallel()
 
 	values := []Msg{NewIntMsg(1)}
-	boxed := ListToMessageSlice(NewListMsg(values).List())
+	boxed := ListToMessageSlice(NewUntypedListMsg(values).List())
 	boxed[0] = NewIntMsg(2)
 
 	if got := values[0].Int(); got != 2 {
 		t.Fatalf("untyped storage value = %d, want 2", got)
+	}
+}
+
+func TestNewListMsgUsesScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		values []Msg
+	}{
+		{
+			name:   "bool",
+			values: []Msg{NewBoolMsg(true), NewBoolMsg(false)},
+		},
+		{
+			name:   "int",
+			values: []Msg{NewIntMsg(1), NewIntMsg(2)},
+		},
+		{
+			name:   "float",
+			values: []Msg{NewFloatMsg(1.5), NewFloatMsg(2.5)},
+		},
+		{
+			name:   "string",
+			values: []Msg{NewStringMsg("one"), NewStringMsg("two")},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := NewListMsg(tt.values)
+			if _, ok := ListAsUntyped(got.List()); ok {
+				t.Fatal("NewListMsg result did not use scalar storage")
+			}
+			if !Equal(got, NewListMsg(tt.values)) {
+				t.Fatalf("NewListMsg() = %v, want %v", got, tt.values)
+			}
+		})
+	}
+}
+
+func TestNewListMsgFallsBackToUntypedStorage(t *testing.T) {
+	t.Parallel()
+
+	for _, values := range [][]Msg{
+		nil,
+		{NewIntMsg(1), NewStringMsg("two")},
+		{NewListIntMsg([]int64{1})},
+	} {
+		got := NewListMsg(values)
+		if _, ok := ListAsUntyped(got.List()); !ok {
+			t.Fatalf("NewListMsg(%v) did not use untyped storage", values)
+		}
+	}
+}
+
+func TestNewListMsgDoesNotShareScalarStorage(t *testing.T) {
+	t.Parallel()
+
+	values := []Msg{NewIntMsg(1)}
+	result := NewListMsg(values)
+	values[0] = NewIntMsg(99)
+
+	ints, ok := ListAsInts(result.List())
+	if !ok || len(ints) != 1 || ints[0] != 1 {
+		t.Fatalf("NewListMsg result = %v, want typed [1]", result)
 	}
 }
 
@@ -253,43 +321,34 @@ func TestListConcatCopiesInputStorage(t *testing.T) {
 func TestListConcatFallsBackToUntypedStorage(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name  string
-		left  Msg
-		right Msg
-		want  []Msg
-	}{
-		{
-			name:  "different typed scalar representations",
-			left:  NewListIntMsg([]int64{1}),
-			right: NewListStringMsg([]string{"two"}),
-			want:  []Msg{NewIntMsg(1), NewStringMsg("two")},
-		},
-		{
-			name:  "untyped and typed",
-			left:  NewListMsg([]Msg{NewIntMsg(1)}),
-			right: NewListIntMsg([]int64{2}),
-			want:  []Msg{NewIntMsg(1), NewIntMsg(2)},
-		},
+	joined := ListConcat(
+		NewListIntMsg([]int64{1}).List(),
+		NewListStringMsg([]string{"two"}).List(),
+	)
+	values, ok := ListAsUntyped(joined.List())
+	if !ok {
+		t.Fatal("ListConcat result did not use untyped storage")
 	}
+	want := []Msg{NewIntMsg(1), NewStringMsg("two")}
+	if len(values) != len(want) {
+		t.Fatalf("ListConcat length = %d, want %d", len(values), len(want))
+	}
+	for i := range values {
+		if !Equal(values[i], want[i]) {
+			t.Fatalf("ListConcat[%d] = %v, want %v", i, values[i], want[i])
+		}
+	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func TestListConcatMaterializesUntypedScalarStorage(t *testing.T) {
+	t.Parallel()
 
-			joined := ListConcat(tt.left.List(), tt.right.List())
-			values, ok := ListAsUntyped(joined.List())
-			if !ok {
-				t.Fatal("ListConcat result did not use untyped storage")
-			}
-			if len(values) != len(tt.want) {
-				t.Fatalf("ListConcat length = %d, want %d", len(values), len(tt.want))
-			}
-			for i := range values {
-				if !Equal(values[i], tt.want[i]) {
-					t.Fatalf("ListConcat[%d] = %v, want %v", i, values[i], tt.want[i])
-				}
-			}
-		})
+	joined := ListConcat(
+		NewUntypedListMsg([]Msg{NewIntMsg(1)}).List(),
+		NewListIntMsg([]int64{2}).List(),
+	)
+	values, ok := ListAsInts(joined.List())
+	if !ok || len(values) != 2 || values[0] != 1 || values[1] != 2 {
+		t.Fatalf("ListConcat result = %v, want typed [1 2]", joined)
 	}
 }

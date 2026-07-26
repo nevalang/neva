@@ -35,7 +35,7 @@ func (streamJust) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context
 }
 
 func sendSingleItemStream(ctx context.Context, resOut runtime.SingleOutport, dataMsg runtime.OrderedMsg) bool {
-	return resOut.Send(ctx, newStreamOpenMsg()) &&
-		resOut.Send(ctx, newStreamDataMsg(dataMsg.Msg)) &&
-		resOut.Send(ctx, newStreamCloseMsg())
+	return resOut.Send(ctx, messages.NewStreamOpenMsg()) &&
+		resOut.Send(ctx, messages.NewStreamDataMsg(dataMsg.Msg)) &&
+		resOut.Send(ctx, messages.NewStreamCloseMsg())
 }

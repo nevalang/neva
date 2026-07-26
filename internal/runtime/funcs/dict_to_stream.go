@@ -35,7 +35,7 @@ func (dictToStream) Create(
 			}
 
 			dict := messages.DictToMessageMap(dataMsg.Dict())
-			if !resOut.Send(ctx, newStreamOpenMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 				return
 			}
 			for key, valueMsg := range dict {
@@ -44,11 +44,11 @@ func (dictToStream) Create(
 					messages.NewStructField("value", valueMsg),
 				})
 
-				if !resOut.Send(ctx, newStreamDataMsg(entryMsg)) {
+				if !resOut.Send(ctx, messages.NewStreamDataMsg(entryMsg)) {
 					return
 				}
 			}
-			if !resOut.Send(ctx, newStreamCloseMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamCloseMsg()) {
 				return
 			}
 		}

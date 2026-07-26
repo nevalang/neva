@@ -57,9 +57,9 @@ func (streamProduct) Create(
 					}
 
 					switch {
-					case isStreamData(firstMsg):
-						firstData = append(firstData, streamDataValue(firstMsg))
-					case isStreamClose(firstMsg):
+					case messages.IsStreamData(firstMsg):
+						firstData = append(firstData, messages.StreamDataValue(firstMsg))
+					case messages.IsStreamClose(firstMsg):
 						break readFirst
 					}
 				}
@@ -80,9 +80,9 @@ func (streamProduct) Create(
 					}
 
 					switch {
-					case isStreamData(secondMsg):
-						secondData = append(secondData, streamDataValue(secondMsg))
-					case isStreamClose(secondMsg):
+					case messages.IsStreamData(secondMsg):
+						secondData = append(secondData, messages.StreamDataValue(secondMsg))
+					case messages.IsStreamClose(secondMsg):
 						break readSecond
 					}
 				}
@@ -94,7 +94,7 @@ func (streamProduct) Create(
 				return
 			}
 
-			if !resOut.Send(ctx, newStreamOpenMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamOpenMsg()) {
 				return
 			}
 
@@ -102,7 +102,7 @@ func (streamProduct) Create(
 				for _, secondMsg := range secondData {
 					if !resOut.Send(
 						ctx,
-						newStreamDataMsg(messages.NewStructMsg([]messages.StructField{
+						messages.NewStreamDataMsg(messages.NewStructMsg([]messages.StructField{
 							messages.NewStructField("first", firstMsg),
 							messages.NewStructField("second", secondMsg),
 						})),
@@ -112,7 +112,7 @@ func (streamProduct) Create(
 				}
 			}
 
-			if !resOut.Send(ctx, newStreamCloseMsg()) {
+			if !resOut.Send(ctx, messages.NewStreamCloseMsg()) {
 				return
 			}
 		}

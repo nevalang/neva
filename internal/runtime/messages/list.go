@@ -126,38 +126,136 @@ func (msg stringListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
-// NewListMsg creates a list with an untyped boxed representation.
+// NewListMsg creates the most specific scalar list representation available.
 //
-//nolint:ireturn // Msg contract type.
-func NewListMsg(v []Msg) Msg {
-	return untypedListMsg{v: v}
+// It keeps a homogeneous bool, int, float, or string message slice unboxed.
+// Use a scalar constructor such as NewListIntMsg when native scalar storage is
+// already available, or NewUntypedListMsg only when boxed storage is required.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewListMsg(values []Msg) ListMsg {
+	if len(values) == 0 {
+		return NewUntypedListMsg(values)
+	}
+
+	switch values[0].(type) {
+	case BoolMsg:
+		result, ok := listBoolsFromMessages(values)
+		if ok {
+			return NewListBoolMsg(result)
+		}
+	case IntMsg:
+		result, ok := listIntsFromMessages(values)
+		if ok {
+			return NewListIntMsg(result)
+		}
+	case FloatMsg:
+		result, ok := listFloatsFromMessages(values)
+		if ok {
+			return NewListFloatMsg(result)
+		}
+	case StringMsg:
+		result, ok := listStringsFromMessages(values)
+		if ok {
+			return NewListStringMsg(result)
+		}
+	default:
+		return NewUntypedListMsg(values)
+	}
+	return NewUntypedListMsg(values)
+}
+
+// NewUntypedListMsg creates a list with explicitly boxed message storage.
+//
+// Prefer NewListMsg, which preserves scalar storage when the values allow it.
+// Use this constructor only when boxed storage is required by the caller.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewUntypedListMsg(values []Msg) ListMsg {
+	return untypedListMsg{v: values}
+}
+
+func listBoolsFromMessages(values []Msg) ([]bool, bool) {
+	result := make([]bool, len(values))
+	for i, value := range values {
+		scalar, ok := value.(BoolMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listIntsFromMessages(values []Msg) ([]int64, bool) {
+	result := make([]int64, len(values))
+	for i, value := range values {
+		scalar, ok := value.(IntMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listFloatsFromMessages(values []Msg) ([]float64, bool) {
+	result := make([]float64, len(values))
+	for i, value := range values {
+		scalar, ok := value.(FloatMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
+}
+
+func listStringsFromMessages(values []Msg) ([]string, bool) {
+	result := make([]string, len(values))
+	for i, value := range values {
+		scalar, ok := value.(StringMsg)
+		if !ok {
+			return nil, false
+		}
+		result[i] = scalar.v
+	}
+	return result, true
 }
 
 // NewListBoolMsg creates a list with unboxed boolean storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewListBoolMsg(v []bool) Msg {
+// Prefer this constructor when boolean storage is already available.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewListBoolMsg(v []bool) ListMsg {
 	return boolListMsg{v: v}
 }
 
 // NewListIntMsg creates a list with unboxed integer storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewListIntMsg(v []int64) Msg {
+// Prefer this constructor when integer storage is already available.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewListIntMsg(v []int64) ListMsg {
 	return intListMsg{v: v}
 }
 
 // NewListFloatMsg creates a list with unboxed float storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewListFloatMsg(v []float64) Msg {
+// Prefer this constructor when float storage is already available.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewListFloatMsg(v []float64) ListMsg {
 	return floatListMsg{v: v}
 }
 
 // NewListStringMsg creates a list with unboxed string storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewListStringMsg(v []string) Msg {
+// Prefer this constructor when string storage is already available.
+//
+//nolint:ireturn // ListMsg is the runtime list contract.
+func NewListStringMsg(v []string) ListMsg {
 	return stringListMsg{v: v}
 }
 
@@ -421,7 +519,8 @@ func ListAt(list ListMsg, index int64) (Msg, bool) {
 
 // ListSlice returns an immutable copy of the normalized range of list.
 // Negative bounds count from the end, bounds are clamped, and reversed ranges
-// return an empty list. Typed scalar storage remains typed.
+// return an empty list. It retains typed scalar storage and materializes a
+// homogeneous scalar result from an untyped source.
 //
 //nolint:ireturn,varnamelen // Msg is the value-layer contract; from/to match the public slice component.
 func ListSlice(list ListMsg, from, to int64) Msg {
@@ -442,8 +541,8 @@ func ListSlice(list ListMsg, from, to int64) Msg {
 }
 
 // ListAppend returns a new list with value appended. It preserves typed scalar
-// storage when value has the matching scalar representation; otherwise it
-// returns an untyped list.
+// storage when value has the matching scalar representation. An untyped list
+// is materialized when the resulting values are homogeneous scalars.
 //
 //nolint:ireturn // Msg is the value-layer contract.
 func ListAppend(list ListMsg, value Msg) Msg {
@@ -474,8 +573,9 @@ func ListAppend(list ListMsg, value Msg) Msg {
 }
 
 // ListPrepend returns a new list with value prepended. It preserves typed
-// scalar storage when value has the matching scalar representation; otherwise
-// it returns an untyped list.
+// scalar storage when value has the matching scalar representation. An
+// untyped list is materialized when the resulting values are homogeneous
+// scalars.
 //
 //nolint:ireturn // Msg is the value-layer contract.
 func ListPrepend(list ListMsg, value Msg) Msg {
@@ -506,8 +606,9 @@ func ListPrepend(list ListMsg, value Msg) Msg {
 }
 
 // ListConcat returns a new list that contains left followed by right. It
-// preserves typed scalar storage when both lists use the same representation;
-// otherwise it returns an untyped list.
+// preserves typed scalar storage when both lists use the same representation.
+// An untyped input is materialized when the combined values are homogeneous
+// scalars; otherwise it returns an untyped list.
 //
 //nolint:ireturn // Msg is the value-layer contract.
 func ListConcat(left, right ListMsg) Msg {

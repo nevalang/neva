@@ -82,6 +82,22 @@ Name a public operation specific to one value type with the type first, then
 the action and any necessary detail. Constructors retain the usual `New<Type>`
 form. Generic operations over all messages are exempt from this convention.
 
+## Streams
+
+`stream<T>` is a concrete union value protocol: `Open`, zero or more `Data T`,
+then `Close`. `messages` owns construction, classification, and payload
+decoding of those immutable union values. Use the stream helpers in
+`messages`; do not duplicate tag strings or union assertions in runtime
+functions.
+
+Runtime functions own stream transport: port I/O, causes, cancellation,
+waiting for `Open`, draining through `Close`, and coordination state machines.
+When collecting a stream or array into a list or dict, use `NewListMsg` or
+`NewDictMsg`. They preserve typed scalar storage when all collected values
+have the same scalar representation; mixed, nested, and empty collections
+remain untyped. Use `NewUntypedListMsg` or `NewUntypedDictMsg` only when boxed
+storage is deliberately required.
+
 ## Concurrent Inputs
 
 Inputs that belong to one logical operation must be received concurrently.
