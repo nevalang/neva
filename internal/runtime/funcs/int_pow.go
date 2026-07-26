@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type intPow struct{}
 
-func (intPow) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
-	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
+func (intPow) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
+	return createBinaryFuncConcurrent(io, func(left messages.Msg, right messages.Msg) messages.Msg {
 		base := left.Int()
 		exponent := right.Int()
 		result := int64(1)
@@ -18,6 +19,6 @@ func (intPow) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error
 			result *= base
 		}
 
-		return runtime.NewIntMsg(result)
+		return messages.NewIntMsg(result)
 	})
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // ternary_test.go contains unit tests for ternarySelector runtime function.
@@ -27,12 +27,12 @@ func TestTernaryReceivesInputsConcurrently(t *testing.T) {
 	}()
 
 	for _, order := range [][]string{{"if", "then", "else"}, {"else", "then", "if"}} {
-		sendInOrder(t, inChans, order, map[string]runtime.Msg{
-			"if":   runtime.NewBoolMsg(true),
-			"then": runtime.NewStringMsg("then"),
-			"else": runtime.NewStringMsg("else"),
+		sendInOrder(t, inChans, order, map[string]messages.Msg{
+			"if":   messages.NewBoolMsg(true),
+			"then": messages.NewStringMsg("then"),
+			"else": messages.NewStringMsg("else"),
 		})
-		assertOutputEquals(t, outChans, "res", runtime.NewStringMsg("then"), order)
+		assertOutputEquals(t, outChans, "res", messages.NewStringMsg("then"), order)
 	}
 
 	cancel()

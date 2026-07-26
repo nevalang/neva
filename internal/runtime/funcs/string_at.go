@@ -5,12 +5,13 @@ import (
 	"unicode/utf8"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type stringAt struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (stringAt) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+func (stringAt) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -54,7 +55,7 @@ func (stringAt) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), err
 
 			for i, r := range data {
 				if int64(i) == idx {
-					if !resOut.Send(ctx, runtime.NewStringMsg(string(r))) {
+					if !resOut.Send(ctx, messages.NewStringMsg(string(r))) {
 						return
 					}
 					break

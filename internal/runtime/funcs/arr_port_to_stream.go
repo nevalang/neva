@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type arrayPortToStream struct{}
@@ -13,7 +14,7 @@ type arrayPortToStream struct{}
 //nolint:gocognit // Stream framing and per-port forwarding belong to one state machine.
 func (arrayPortToStream) Create(
 	runtimeIO runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(context.Context), error) {
 	portIn, err := runtimeIO.In.Array("port")
 	if err != nil {

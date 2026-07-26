@@ -1,15 +1,12 @@
-package runtime
+package messages
 
 import "bytes"
 
 // Equal reports whether two runtime messages have the same value.
 //
-// Equality is defined across typed and untyped list/dict storage. Transport
-// ordering metadata is ignored when the left-hand value is an OrderedMsg.
+// Equality is defined across typed and untyped list/dict storage.
 func Equal(left, right Msg) bool {
 	switch leftTyped := left.(type) {
-	case OrderedMsg:
-		return Equal(leftTyped.Msg, right)
 	case BoolMsg:
 		return equalBool(leftTyped, right)
 	case IntMsg:

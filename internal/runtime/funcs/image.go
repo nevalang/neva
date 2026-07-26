@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // TODO can't we use uint8 here?
@@ -17,7 +17,7 @@ type rgbaMsg struct {
 	a int64
 }
 
-func (c *rgbaMsg) decode(msg runtime.Msg) {
+func (c *rgbaMsg) decode(msg messages.Msg) {
 	m := msg.Struct()
 	c.r = m.Get("r").Int()
 	c.g = m.Get("g").Int()
@@ -40,7 +40,7 @@ type pixelMsg struct {
 	color rgbaMsg
 }
 
-func (p *pixelMsg) decode(msg runtime.Msg) {
+func (p *pixelMsg) decode(msg messages.Msg) {
 	m := msg.Struct()
 	p.x = m.Get("x").Int()
 	p.y = m.Get("y").Int()

@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type accumulator struct{}
 
 //nolint:cyclop,funlen,gocognit,gocyclo // The stream cycle and its cancellation paths must remain together.
-func (a accumulator) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (a accumulator) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	initIn, err := runtimeIO.In.Single("init")
 	if err != nil {
 		return nil, fmt.Errorf("get init inport: %w", err)
@@ -39,7 +40,7 @@ func (a accumulator) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx conte
 
 	return func(ctx context.Context) {
 		for {
-			var acc runtime.Msg
+			var acc messages.Msg
 
 			initMsg, initOk := initIn.Receive(ctx)
 			if !initOk {
@@ -53,8 +54,8 @@ func (a accumulator) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx conte
 			acc = initMsg
 
 			cycleCtx, cancel := context.WithCancel(ctx)
-			updCh := make(chan runtime.Msg)
-			flushCh := make(chan runtime.Msg)
+			updCh := make(chan messages.Msg)
+			flushCh := make(chan messages.Msg)
 
 			go func() {
 				defer close(updCh)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // match_test.go contains unit tests for matchSelector runtime function.
@@ -44,17 +45,17 @@ func TestMatchSendsDataIfThenCauses(t *testing.T) {
 	cancel, done := runHandler(handler)
 	ctx := context.Background()
 
-	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewStringMsg("k"), dataIn)
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if0"}, runtime.NewStringMsg("x"), ifInputs[0])
-	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, runtime.NewStringMsg("k"), ifInputs[1])
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, runtime.NewStringMsg("zero"), thenInputs[0])
-	thenCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, runtime.NewStringMsg("one"), thenInputs[1])
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "else"}, runtime.NewStringMsg("fallback"), elseIn)
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, messages.NewStringMsg("k"), dataIn)
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if0"}, messages.NewStringMsg("x"), ifInputs[0])
+	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, messages.NewStringMsg("k"), ifInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, messages.NewStringMsg("zero"), thenInputs[0])
+	thenCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, messages.NewStringMsg("one"), thenInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "else"}, messages.NewStringMsg("fallback"), elseIn)
 
 	select {
 	case out := <-resOut:
-		if !runtime.Equal(out, runtime.NewStringMsg("one")) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
+		if !messages.Equal(out.Msg, messages.NewStringMsg("one")) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewStringMsg("one"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, ifCause, thenCause})
 	case <-time.After(time.Second):

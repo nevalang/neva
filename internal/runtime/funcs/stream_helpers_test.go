@@ -3,7 +3,7 @@ package funcs
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestStreamTagString(t *testing.T) {
@@ -34,7 +34,7 @@ func TestStreamTagString(t *testing.T) {
 func TestStreamMessages(t *testing.T) {
 	t.Parallel()
 
-	data := runtime.NewStringMsg("value")
+	data := messages.NewStringMsg("value")
 	openMsg := newStreamOpenMsg()
 	dataMsg := newStreamDataMsg(data)
 	closeMsg := newStreamCloseMsg()
@@ -48,7 +48,7 @@ func TestStreamMessages(t *testing.T) {
 	if isStreamOpen(closeMsg) || isStreamData(closeMsg) || !isStreamClose(closeMsg) {
 		t.Fatalf("close predicates mismatch: %v", closeMsg)
 	}
-	if got := streamDataValue(dataMsg); !runtime.Equal(got, data) {
+	if got := streamDataValue(dataMsg); !messages.Equal(got, data) {
 		t.Fatalf("streamDataValue() = %v, want %v", got, data)
 	}
 }

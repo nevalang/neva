@@ -5,13 +5,14 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // dictGetByKey implements the internal runtime function behind the public Get component.
 type dictGetByKey struct{}
 
 //nolint:gocognit,gocyclo,cyclop,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (dictGetByKey) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (dictGetByKey) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dictIn, err := io.In.Single("dict")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -39,7 +40,7 @@ func (dictGetByKey) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 	return func(ctx context.Context) {
 		for {
 			var (
-				dictMsg, keyMsg runtime.Msg
+				dictMsg, keyMsg messages.Msg
 				dictOk, keyOk   bool
 			)
 
@@ -73,22 +74,22 @@ func (dictGetByKey) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 // dictValueByKey reads one value without converting a typed dict into map[string]Msg.
 //
 //nolint:ireturn // Runtime function output is expressed as Msg.
-func dictValueByKey(dict runtime.DictMsg, key string) (runtime.Msg, bool) {
-	if values, ok := runtime.AsDictInts(dict); ok {
+func dictValueByKey(dict messages.DictMsg, key string) (messages.Msg, bool) {
+	if values, ok := messages.AsDictInts(dict); ok {
 		value, found := values[key]
-		return runtime.NewIntMsg(value), found
+		return messages.NewIntMsg(value), found
 	}
-	if values, ok := runtime.AsDictStrings(dict); ok {
+	if values, ok := messages.AsDictStrings(dict); ok {
 		value, found := values[key]
-		return runtime.NewStringMsg(value), found
+		return messages.NewStringMsg(value), found
 	}
-	if values, ok := runtime.AsDictBools(dict); ok {
+	if values, ok := messages.AsDictBools(dict); ok {
 		value, found := values[key]
-		return runtime.NewBoolMsg(value), found
+		return messages.NewBoolMsg(value), found
 	}
-	if values, ok := runtime.AsDictFloats(dict); ok {
+	if values, ok := messages.AsDictFloats(dict); ok {
 		value, found := values[key]
-		return runtime.NewFloatMsg(value), found
+		return messages.NewFloatMsg(value), found
 	}
 	value, found := dict.Untyped()[key]
 	return value, found

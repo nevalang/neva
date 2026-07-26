@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // format_int_test.go contains unit tests for formatInt runtime function.
@@ -27,11 +27,11 @@ func TestFormatIntReceivesInputsConcurrently(t *testing.T) {
 	}()
 
 	for _, order := range [][]string{{"data", "base"}, {"base", "data"}} {
-		sendInOrder(t, inChans, order, map[string]runtime.Msg{
-			"data": runtime.NewIntMsg(42),
-			"base": runtime.NewIntMsg(10),
+		sendInOrder(t, inChans, order, map[string]messages.Msg{
+			"data": messages.NewIntMsg(42),
+			"base": messages.NewIntMsg(10),
 		})
-		assertOutputEquals(t, outChans, "res", runtime.NewStringMsg("42"), order)
+		assertOutputEquals(t, outChans, "res", messages.NewStringMsg("42"), order)
 	}
 
 	cancel()

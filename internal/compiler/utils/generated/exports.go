@@ -7,6 +7,7 @@ import (
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/funcs"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // suppress unused import error, standard go approach for generated code
@@ -17,7 +18,7 @@ type ParseEntityRefInput struct {
 }
 
 type ParseEntityRefOutput struct {
-	Res runtime.Msg
+	Res messages.Msg
 }
 
 func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRefOutput, error) {
@@ -84,7 +85,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__1/out", Port: "res"}, interceptor, __newv2__1_out_res_to_split_in_delim), nil),
 				}),
 			},
-			Config: runtime.NewStringMsg("."),
+			Config: messages.NewStringMsg("."),
 		},
 		{
 			Ref: "struct_builder",
@@ -122,7 +123,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__3/out", Port: "res"}, interceptor, __newv2__3_out_res_to_at_pkg_2_at_in_idx), nil),
 				}),
 			},
-			Config: runtime.NewIntMsg(0),
+			Config: messages.NewIntMsg(0),
 		},
 		{
 			Ref: "new",
@@ -134,7 +135,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__6/out", Port: "res"}, interceptor, __newv2__6_out_res_to_at_name_1_at_in_idx), nil),
 				}),
 			},
-			Config: runtime.NewIntMsg(0),
+			Config: messages.NewIntMsg(0),
 		},
 		{
 			Ref: "fan_out",
@@ -195,7 +196,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__4/out", Port: "res"}, interceptor, __newv2__4_out_res_to_at_name_2_at_in_idx), nil),
 				}),
 			},
-			Config: runtime.NewIntMsg(1),
+			Config: messages.NewIntMsg(1),
 		},
 		{
 			Ref: "new",
@@ -207,7 +208,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__5/out", Port: "res"}, interceptor, __newv2__5_out_res_to_lock_empty_pkg_in_data), nil),
 				}),
 			},
-			Config: runtime.NewStringMsg(""),
+			Config: messages.NewStringMsg(""),
 		},
 		{
 			Ref: "strings_split",
@@ -355,7 +356,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 					"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "__newv2__2/out", Port: "res"}, interceptor, __newv2__2_out_res_to_eq_in_right), nil),
 				}),
 			},
-			Config: runtime.NewIntMsg(2),
+			Config: messages.NewIntMsg(2),
 		},
 		{
 			Ref: "fan_out",
@@ -376,7 +377,7 @@ func ParseEntityRef(ctx context.Context, in ParseEntityRefInput) (ParseEntityRef
 		Stop:      stopPort,
 		FuncCalls: funcCalls,
 	}
-	startMsg := runtime.NewStringMsg(in.Ref)
+	startMsg := messages.NewStringMsg(in.Ref)
 
 	// Parse output message
 	var out ParseEntityRefOutput

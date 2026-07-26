@@ -59,12 +59,13 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 	}
 
 	tplData := templateData{
-		CompilerVersion: pkg.Version,
-		ChanVarNames:    chanVarNames,
-		FuncCalls:       funcCalls,
-		Trace:           trace,
-		TraceComment:    prog.Comment,
-		DebugValidation: b.debugValidation,
+		CompilerVersion:    pkg.Version,
+		ChanVarNames:       chanVarNames,
+		FuncCalls:          funcCalls,
+		UsesConfigMessages: usesConfigMessages(funcCalls),
+		Trace:              trace,
+		TraceComment:       prog.Comment,
+		DebugValidation:    b.debugValidation,
 	}
 
 	var buf bytes.Buffer
@@ -86,6 +87,18 @@ func (b Backend) EmitExecutable(dst string, prog *ir.Program, trace bool) error 
 
 	//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	return pkgos.SaveFilesToDir(dst, files)
+}
+
+// usesConfigMessages reports whether generated main.go refers to messages through a
+// runtime-function config literal. Go rejects an unused import, and programs
+// whose configs are all nil do not otherwise need the messages package.
+func usesConfigMessages(calls []templateFuncCall) bool {
+	for _, call := range calls {
+		if strings.Contains(call.Config, "messages.") {
+			return true
+		}
+	}
+	return false
 }
 
 //nolint:gocyclo // Export emission spans multiple steps; refactor later.
@@ -148,30 +161,30 @@ func (b Backend) EmitLibrary(dst string, exports []compiler.LibraryExport, trace
 			return "ERROR_SHOULD_NOT_BE_CALLED"
 		},
 		// getMsgFromGo generates Go code that converts a raw Go value (passed from outside)
-		// into a runtime.Msg which is understandable by Neva runtime.
-		// For example, if we have a Go int variable "x", we want to generate "runtime.NewIntMsg(x)".
-		// If the type is not a primitive, we assume it's already a runtime.Msg (e.g. StructMsg, ListMsg)
+		// into a messages.Msg which is understandable by Neva runtime.
+		// For example, if we have a Go int variable "x", we want to generate "messages.NewIntMsg(x)".
+		// If the type is not a primitive, we assume it's already a messages.Msg (e.g. StructMsg, ListMsg)
 		// and perform a type assertion.
 		"getMsgFromGo": func(prefix, field, typeName string) string {
 			switch typeName {
 			case "int":
-				return fmt.Sprintf("runtime.NewIntMsg(int64(%s.%s))", prefix, field)
+				return fmt.Sprintf("messages.NewIntMsg(int64(%s.%s))", prefix, field)
 			case "string":
-				return fmt.Sprintf("runtime.NewStringMsg(%s.%s)", prefix, field)
+				return fmt.Sprintf("messages.NewStringMsg(%s.%s)", prefix, field)
 			case "[]byte":
-				return fmt.Sprintf("runtime.NewBytesMsg(%s.%s)", prefix, field)
+				return fmt.Sprintf("messages.NewBytesMsg(%s.%s)", prefix, field)
 			case "bool":
-				return fmt.Sprintf("runtime.NewBoolMsg(%s.%s)", prefix, field)
+				return fmt.Sprintf("messages.NewBoolMsg(%s.%s)", prefix, field)
 			case "float64":
-				return fmt.Sprintf("runtime.NewFloatMsg(%s.%s)", prefix, field)
+				return fmt.Sprintf("messages.NewFloatMsg(%s.%s)", prefix, field)
 			default:
-				return fmt.Sprintf("%s.%s.(runtime.Msg)", prefix, field)
+				return fmt.Sprintf("%s.%s.(messages.Msg)", prefix, field)
 			}
 		},
-		// getGoFromMsg generates Go code that converts a runtime.Msg (received from Neva runtime)
+		// getGoFromMsg generates Go code that converts a messages.Msg (received from Neva runtime)
 		// back into a raw Go value.
 		// For example, if we have a Neva IntMsg, we want to extract the underlying int64.
-		// If the type is not a primitive (e.g. struct, list), we return the runtime.Msg as is,
+		// If the type is not a primitive (e.g. struct, list), we return the messages.Msg as is,
 		// allowing the caller to handle complex structures.
 		"getGoFromMsg": func(msgVar, typeName string) string {
 			switch typeName {
@@ -257,7 +270,7 @@ func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 	fields := make([]fieldTemplateData, 0, len(ports))
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	for name, port := range ports {
-		goType := "runtime.Msg" // Default to runtime.Msg interface for complex types
+		goType := "messages.Msg" // Default to messages.Msg interface for complex types
 		if port.TypeExpr.Inst != nil {
 			switch port.TypeExpr.Inst.Ref.Name {
 			case "int":
@@ -271,16 +284,16 @@ func (b Backend) mapFields(ports map[string]ast.Port) []fieldTemplateData {
 			case "float":
 				goType = "float64"
 			case "list":
-				goType = "[]runtime.Msg"
+				goType = "[]messages.Msg"
 			case "dict":
-				goType = "map[string]runtime.Msg"
+				goType = "map[string]messages.Msg"
 			}
 		} else if port.TypeExpr.Lit != nil {
 			switch {
 			case port.TypeExpr.Lit.Struct != nil:
-				goType = "runtime.StructMsg"
+				goType = "messages.StructMsg"
 			case port.TypeExpr.Lit.Union != nil:
-				goType = "runtime.UnionMsg"
+				goType = "messages.UnionMsg"
 			}
 		}
 
@@ -445,24 +458,24 @@ func (b Backend) buildFuncCalls(
 func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 	switch msg.Type {
 	case ir.MsgTypeBool:
-		return fmt.Sprintf("runtime.NewBoolMsg(%v)", msg.Bool), nil
+		return fmt.Sprintf("messages.NewBoolMsg(%v)", msg.Bool), nil
 	case ir.MsgTypeInt:
-		return fmt.Sprintf("runtime.NewIntMsg(%v)", msg.Int), nil
+		return fmt.Sprintf("messages.NewIntMsg(%v)", msg.Int), nil
 	case ir.MsgTypeFloat:
-		return fmt.Sprintf("runtime.NewFloatMsg(%v)", msg.Float), nil
+		return fmt.Sprintf("messages.NewFloatMsg(%v)", msg.Float), nil
 	case ir.MsgTypeString:
-		return fmt.Sprintf(`runtime.NewStringMsg(%q)`, msg.String), nil
+		return fmt.Sprintf(`messages.NewStringMsg(%q)`, msg.String), nil
 	case ir.MsgTypeBytes:
-		return fmt.Sprintf("runtime.NewBytesMsg([]byte(%q))", string(msg.Bytes)), nil
+		return fmt.Sprintf("messages.NewBytesMsg([]byte(%q))", string(msg.Bytes)), nil
 	case ir.MsgTypeUnion:
 		if msg.Union.Data == nil {
-			return fmt.Sprintf(`runtime.NewUnionMsg(%q, nil)`, msg.Union.Tag), nil
+			return fmt.Sprintf(`messages.NewUnionMsg(%q, nil)`, msg.Union.Tag), nil
 		}
 		payload, err := b.getMessageString(msg.Union.Data)
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("runtime.NewUnionMsg(%q, %s)", msg.Union.Tag, payload), nil
+		return fmt.Sprintf("messages.NewUnionMsg(%q, %s)", msg.Union.Tag, payload), nil
 	case ir.MsgTypeList:
 		if typedList, ok := scalarListCtor(msg.List); ok {
 			return typedList, nil
@@ -477,7 +490,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 			}
 			elements[idx] = el
 		}
-		return fmt.Sprintf("runtime.NewListMsg([]runtime.Msg{%s})", strings.Join(elements, ", ")), nil
+		return fmt.Sprintf("messages.NewListMsg([]messages.Msg{%s})", strings.Join(elements, ", ")), nil
 	case ir.MsgTypeDict:
 		if typedDict, ok := scalarDictCtor(msg.DictOrStruct); ok {
 			return typedDict, nil
@@ -493,7 +506,7 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 			}
 			keyValuePairs = append(keyValuePairs, fmt.Sprintf(`%q: %s`, k, el))
 		}
-		return fmt.Sprintf("runtime.NewDictMsg(map[string]runtime.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
+		return fmt.Sprintf("messages.NewDictMsg(map[string]messages.Msg{%s})", strings.Join(keyValuePairs, ", ")), nil
 	case ir.MsgTypeStruct:
 		fields := make([]string, 0, len(msg.DictOrStruct))
 		//nolint:gocritic,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -503,9 +516,9 @@ func (b Backend) getMessageString(msg *ir.Message) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			fields = append(fields, fmt.Sprintf("runtime.NewStructField(%q, %s)", k, el))
+			fields = append(fields, fmt.Sprintf("messages.NewStructField(%q, %s)", k, el))
 		}
-		return fmt.Sprintf("runtime.NewStructMsg([]runtime.StructField{%s})", strings.Join(fields, ", ")), nil
+		return fmt.Sprintf("messages.NewStructMsg([]messages.StructField{%s})", strings.Join(fields, ", ")), nil
 	}
 	return "", fmt.Errorf("%w: %v", ErrUnknownMsgType, msg.Type)
 }
@@ -540,13 +553,13 @@ func scalarListCtor(list []ir.Message) (string, bool) {
 	//nolint:exhaustive
 	switch sameType {
 	case ir.MsgTypeBool:
-		return build(func(m ir.Message) string { return strconv.FormatBool(m.Bool) }, "runtime.NewListBoolMsg([]bool{%s})")
+		return build(func(m ir.Message) string { return strconv.FormatBool(m.Bool) }, "messages.NewListBoolMsg([]bool{%s})")
 	case ir.MsgTypeInt:
-		return build(func(m ir.Message) string { return strconv.FormatInt(m.Int, 10) }, "runtime.NewListIntMsg([]int64{%s})")
+		return build(func(m ir.Message) string { return strconv.FormatInt(m.Int, 10) }, "messages.NewListIntMsg([]int64{%s})")
 	case ir.MsgTypeFloat:
-		return build(func(m ir.Message) string { return fmt.Sprintf("%v", m.Float) }, "runtime.NewListFloatMsg([]float64{%s})")
+		return build(func(m ir.Message) string { return fmt.Sprintf("%v", m.Float) }, "messages.NewListFloatMsg([]float64{%s})")
 	case ir.MsgTypeString:
-		return build(func(m ir.Message) string { return fmt.Sprintf("%q", m.String) }, "runtime.NewListStringMsg([]string{%s})")
+		return build(func(m ir.Message) string { return fmt.Sprintf("%q", m.String) }, "messages.NewListStringMsg([]string{%s})")
 	default:
 		return "", false
 	}
@@ -605,13 +618,13 @@ func scalarDictRootCtor(sameType ir.MsgType, values []string) (string, bool) {
 	//nolint:exhaustive // typed fast-path handles scalar dict values only.
 	switch sameType {
 	case ir.MsgTypeBool:
-		return fmt.Sprintf("runtime.NewDictBoolMsg(map[string]bool{%s})", joined), true
+		return fmt.Sprintf("messages.NewDictBoolMsg(map[string]bool{%s})", joined), true
 	case ir.MsgTypeInt:
-		return fmt.Sprintf("runtime.NewDictIntMsg(map[string]int64{%s})", joined), true
+		return fmt.Sprintf("messages.NewDictIntMsg(map[string]int64{%s})", joined), true
 	case ir.MsgTypeFloat:
-		return fmt.Sprintf("runtime.NewDictFloatMsg(map[string]float64{%s})", joined), true
+		return fmt.Sprintf("messages.NewDictFloatMsg(map[string]float64{%s})", joined), true
 	case ir.MsgTypeString:
-		return fmt.Sprintf("runtime.NewDictStringMsg(map[string]string{%s})", joined), true
+		return fmt.Sprintf("messages.NewDictStringMsg(map[string]string{%s})", joined), true
 	default:
 		return "", false
 	}

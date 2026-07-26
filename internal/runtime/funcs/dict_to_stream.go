@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type dictToStream struct{}
@@ -12,7 +13,7 @@ type dictToStream struct{}
 func (dictToStream) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
@@ -38,9 +39,9 @@ func (dictToStream) Create(
 				return
 			}
 			for key, valueMsg := range dict {
-				entryMsg := runtime.NewStructMsg([]runtime.StructField{
-					runtime.NewStructField("key", runtime.NewStringMsg(key)),
-					runtime.NewStructField("value", valueMsg),
+				entryMsg := messages.NewStructMsg([]messages.StructField{
+					messages.NewStructField("key", messages.NewStringMsg(key)),
+					messages.NewStructField("value", valueMsg),
 				})
 
 				if !resOut.Send(ctx, newStreamDataMsg(entryMsg)) {

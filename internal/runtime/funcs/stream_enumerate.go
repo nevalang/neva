@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamEnumerate struct{}
 
-func (streamEnumerate) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamEnumerate) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func (streamEnumerate) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx con
 				return
 			}
 
-			if !forwardEnumeratedMessage(ctx, resOut, msg, &idx) {
+			if !forwardEnumeratedMessage(ctx, resOut, msg.Msg, &idx) {
 				return
 			}
 		}
@@ -37,7 +38,7 @@ func (streamEnumerate) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx con
 func forwardEnumeratedMessage(
 	ctx context.Context,
 	resOut runtime.SingleOutport,
-	msg runtime.Msg,
+	msg messages.Msg,
 	idx *int64,
 ) bool {
 	switch {
@@ -46,9 +47,9 @@ func forwardEnumeratedMessage(
 		return resOut.Send(ctx, newStreamOpenMsg())
 	case isStreamData(msg):
 		// Enumerated<T> is the Data union payload, so encode it as a struct message first.
-		item := runtime.NewStructMsg([]runtime.StructField{
-			runtime.NewStructField("idx", runtime.NewIntMsg(*idx)),
-			runtime.NewStructField("item", streamDataValue(msg)),
+		item := messages.NewStructMsg([]messages.StructField{
+			messages.NewStructField("idx", messages.NewIntMsg(*idx)),
+			messages.NewStructField("item", streamDataValue(msg)),
 		})
 		if !resOut.Send(ctx, newStreamDataMsg(item)) {
 			return false

@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type notEq struct{}
 
-func (notEq) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
-	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
-		return runtime.NewBoolMsg(!runtime.Equal(left, right))
+func (notEq) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
+	return createBinaryFuncConcurrent(io, func(left messages.Msg, right messages.Msg) messages.Msg {
+		return messages.NewBoolMsg(!messages.Equal(left, right))
 	})
 }

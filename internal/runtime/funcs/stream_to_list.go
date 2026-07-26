@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamToList struct{}
@@ -11,7 +12,7 @@ type streamToList struct{}
 func (s streamToList) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	seqIn, err := io.In.Single("data")
 	if err != nil {
@@ -27,7 +28,7 @@ func (s streamToList) Create(
 
 	return func(ctx context.Context) {
 		// Fully materializes one stream batch before emitting resulting list.
-		list := []runtime.Msg{}
+		list := []messages.Msg{}
 
 		for {
 			msg, ok := seqIn.Receive(ctx)
@@ -36,17 +37,17 @@ func (s streamToList) Create(
 			}
 
 			switch {
-			case isStreamOpen(msg):
+			case isStreamOpen(msg.Msg):
 				list = list[:0]
 				continue
-			case isStreamData(msg):
-				list = append(list, streamDataValue(msg))
+			case isStreamData(msg.Msg):
+				list = append(list, streamDataValue(msg.Msg))
 				continue
-			case !isStreamClose(msg):
+			case !isStreamClose(msg.Msg):
 				continue
 			}
 
-			if !resOut.Send(ctx, runtime.NewListMsg(list)) {
+			if !resOut.Send(ctx, messages.NewListMsg(list)) {
 				return
 			}
 		}

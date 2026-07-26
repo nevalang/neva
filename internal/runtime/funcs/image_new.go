@@ -6,12 +6,13 @@ import (
 	"image"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type imageNew struct{}
 
 //nolint:cyclop,gocognit,gocyclo // Stream framing, image accumulation, and error forwarding share one lifecycle.
-func (imageNew) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (imageNew) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	pixelsIn, err := runtimeIO.In.Single("pixels")
 	if err != nil {
 		return nil, fmt.Errorf("get pixels inport: %w", err)
@@ -74,10 +75,10 @@ func (imageNew) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Co
 				img.Set(int(pix.x), int(pix.y), pix.color.color())
 			}
 
-			if !imgOut.Send(ctx, runtime.NewStructMsg([]runtime.StructField{
-				runtime.NewStructField("pixels", runtime.NewBytesMsg(img.Pix)),
-				runtime.NewStructField("width", runtime.NewIntMsg(int64(img.Rect.Dx()))),
-				runtime.NewStructField("height", runtime.NewIntMsg(int64(img.Rect.Dy()))),
+			if !imgOut.Send(ctx, messages.NewStructMsg([]messages.StructField{
+				messages.NewStructField("pixels", messages.NewBytesMsg(img.Pix)),
+				messages.NewStructField("width", messages.NewIntMsg(int64(img.Rect.Dx()))),
+				messages.NewStructField("height", messages.NewIntMsg(int64(img.Rect.Dy()))),
 			})) {
 				return
 			}

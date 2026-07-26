@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 //nolint:gochecknoglobals // global monotonic counter shared by all runtime outports.
 var counter atomic.Uint64
 
 type FuncCreator interface {
-	Create(IO, Msg) (func(context.Context), error)
+	Create(IO, messages.Msg) (func(context.Context), error)
 }
 
 func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (int, error) {
-	_, exitCode, err := call(ctx, prog, registry, NewStructMsg(nil))
+	_, exitCode, err := call(ctx, prog, registry, messages.NewStructMsg(nil))
 	return exitCode, err
 }
 
@@ -24,7 +26,7 @@ func Run(ctx context.Context, prog Program, registry map[string]FuncCreator) (in
 // then cancels and waits for all handlers to finish.
 //
 //nolint:ireturn,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, input Msg) (Msg, int, error) {
+func Call(ctx context.Context, prog Program, registry map[string]FuncCreator, input messages.Msg) (messages.Msg, int, error) {
 	orderedOut, exitCode, err := call(ctx, prog, registry, input)
 	if err != nil || exitCode != 0 {
 		return nil, exitCode, err
@@ -37,7 +39,7 @@ func call(
 	ctx context.Context,
 	prog Program,
 	registry map[string]FuncCreator,
-	input Msg,
+	input messages.Msg,
 ) (OrderedMsg, int, error) {
 	ctx, cancel := context.WithCancelCause(ctx)
 	ctx = contextWithCancelFunc(ctx, cancel)

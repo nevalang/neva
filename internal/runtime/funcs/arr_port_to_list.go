@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type arrayPortToList struct{}
@@ -12,7 +13,7 @@ type arrayPortToList struct{}
 func (arrayPortToList) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(context.Context), error) {
 	portIn, err := io.In.Array("port")
 	if err != nil {
@@ -29,7 +30,7 @@ func (arrayPortToList) Create(
 		l := portIn.Len()
 
 		for {
-			list := make([]runtime.Msg, 0, l)
+			list := make([]messages.Msg, 0, l)
 			for idx := range l {
 				ordered, ok := portIn.Receive(ctx, idx)
 				if !ok {
@@ -38,7 +39,7 @@ func (arrayPortToList) Create(
 				list = append(list, ordered.Msg)
 			}
 
-			if !listOut.Send(ctx, runtime.NewListMsg(list)) {
+			if !listOut.Send(ctx, messages.NewListMsg(list)) {
 				return
 			}
 		}

@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type osExit struct{}
 
-func (osExit) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+func (osExit) Create(runtimeIO runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	codeIn, err := runtimeIO.In.Single("code")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

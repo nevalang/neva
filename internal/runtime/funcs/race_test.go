@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // race_test.go contains unit tests for race runtime function.
@@ -40,13 +41,13 @@ func TestRaceSendsDataAndCaseCauses(t *testing.T) {
 
 	cancel, done := runHandler(handler)
 	ctx := context.Background()
-	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewIntMsg(42), dataIn)
-	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, runtime.NewStringMsg("pick-1"), caseInputs[1])
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, messages.NewIntMsg(42), dataIn)
+	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, messages.NewStringMsg("pick-1"), caseInputs[1])
 
 	select {
 	case out := <-caseOut1:
-		if !runtime.Equal(out, runtime.NewIntMsg(42)) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewIntMsg(42))
+		if !messages.Equal(out.Msg, messages.NewIntMsg(42)) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewIntMsg(42))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})
 	case <-time.After(time.Second):

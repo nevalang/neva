@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // New must preserve the trigger signal as a cause of emitted constant.
@@ -30,7 +31,7 @@ func TestNewV2_TracksSignalCause(t *testing.T) {
 		}),
 	}
 
-	handler, err := newV2{}.Create(io, runtime.NewIntMsg(10))
+	handler, err := newV2{}.Create(io, messages.NewIntMsg(10))
 	if err != nil {
 		t.Fatalf("create newV2 handler: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestNewV2_TracksSignalCause(t *testing.T) {
 		interceptor,
 		sigCh,
 	)
-	if !startOut.Send(ctx, runtime.NewStructMsg(nil)) {
+	if !startOut.Send(ctx, messages.NewStructMsg(nil)) {
 		t.Fatalf("send start signal")
 	}
 

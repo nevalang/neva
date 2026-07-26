@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type unionWrapper struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (unionWrapper) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (unionWrapper) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -36,7 +37,7 @@ func (unionWrapper) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 			}
 
 			tag := tagMsg.Union().Tag()
-			if !resOut.Send(ctx, runtime.NewUnionMsg(tag, dataMsg.Msg), dataMsg, tagMsg) {
+			if !resOut.Send(ctx, messages.NewUnionMsg(tag, dataMsg.Msg), dataMsg, tagMsg) {
 				return
 			}
 		}

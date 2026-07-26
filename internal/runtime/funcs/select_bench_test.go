@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkSelectHotpath measures select/then fan-in for two-slot case.
 func BenchmarkSelectHotpath(b *testing.B) {
 	runtimeIO, ifInputs, thenInputs, resultOutput := benchNewSelectRuntimeIO(2)
-	var zeroConfig runtime.Msg
+	var zeroConfig messages.Msg
 	handler, err := selector{}.Create(runtimeIO, zeroConfig)
 	if err != nil {
 		b.Fatalf("Create returned error: %v", err)
@@ -22,9 +23,9 @@ func BenchmarkSelectHotpath(b *testing.B) {
 		<-done
 	}()
 
-	ifMsg := runtime.NewBoolMsg(true)
-	then0 := runtime.NewIntMsg(1)
-	then1 := runtime.NewIntMsg(2)
+	ifMsg := messages.NewBoolMsg(true)
+	then0 := messages.NewIntMsg(1)
+	then1 := messages.NewIntMsg(2)
 
 	b.ResetTimer()
 	for range b.N {

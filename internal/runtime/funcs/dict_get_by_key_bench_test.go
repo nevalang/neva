@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkGetDictTypedInt measures a complete typed dictionary lookup through ports.
@@ -18,8 +19,8 @@ func BenchmarkGetDictTypedInt(b *testing.B) {
 	defer cancel()
 	go handler(ctx)
 
-	dict := runtime.NewDictIntMsg(map[string]int64{"answer": 42})
-	key := runtime.NewStringMsg("answer")
+	dict := messages.NewDictIntMsg(map[string]int64{"answer": 42})
+	key := messages.NewStringMsg("answer")
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {

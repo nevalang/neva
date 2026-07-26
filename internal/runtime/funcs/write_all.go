@@ -5,12 +5,13 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type writeAll struct{}
 
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (c writeAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c writeAll) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("filename")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // switch_test.go contains unit tests for switchRouter runtime function.
@@ -42,14 +43,14 @@ func TestSwitchMatchedCaseSendsTwoCauses(t *testing.T) {
 
 	cancel, done := runHandler(handler)
 	ctx := context.Background()
-	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, runtime.NewStringMsg("match"), dataIn)
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case0"}, runtime.NewStringMsg("nope"), caseInputs[0])
-	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, runtime.NewStringMsg("match"), caseInputs[1])
+	dataCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "data"}, messages.NewStringMsg("match"), dataIn)
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case0"}, messages.NewStringMsg("nope"), caseInputs[0])
+	caseCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "case1"}, messages.NewStringMsg("match"), caseInputs[1])
 
 	select {
 	case out := <-caseOut1:
-		if !runtime.Equal(out, runtime.NewStringMsg("match")) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("match"))
+		if !messages.Equal(out.Msg, messages.NewStringMsg("match")) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewStringMsg("match"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{dataCause, caseCause})
 	case <-time.After(time.Second):

@@ -5,69 +5,79 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type stringJoinList struct{}
 
-func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	dataIn, err := singleInport(runtimeIO, "data")
-	if err != nil {
-		return nil, err
-	}
-
-	sepIn, err := singleInport(runtimeIO, "sep")
-	if err != nil {
-		return nil, err
-	}
-
-	resOut, err := singleOutport(runtimeIO, "res")
+func (stringJoinList) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	dataIn, sepIn, resOut, err := resolveStringJoinPorts(runtimeIO)
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		for {
-			dataMsg, sepMsg, received := receive2(ctx, dataIn, sepIn)
-			if !received {
-				return
-			}
-
-			builder := strings.Builder{}
-			sep := sepMsg.Str()
-
-			list := dataMsg.List()
-			if stringsList, ok := runtime.AsListStrings(list); ok {
-				for i := range stringsList {
-					if i > 0 {
-						builder.WriteString(sep)
-					}
-					builder.WriteString(stringsList[i])
-				}
-			} else {
-				writeJoinedList(&builder, list.Untyped(), sep)
-			}
-
-			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
-				return
-			}
-		}
+		runStringJoinList(ctx, dataIn, sepIn, resOut)
 	}, nil
 }
 
-type stringJoinStream struct{}
-
-func (stringJoinStream) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func resolveStringJoinPorts(runtimeIO runtime.IO) (runtime.SingleInport, runtime.SingleInport, runtime.SingleOutport, error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
-		return nil, err
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
 	}
 
 	sepIn, err := singleInport(runtimeIO, "sep")
 	if err != nil {
-		return nil, err
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
 	}
 
 	resOut, err := singleOutport(runtimeIO, "res")
+	if err != nil {
+		return runtime.SingleInport{}, runtime.SingleInport{}, runtime.SingleOutport{}, err
+	}
+
+	return dataIn, sepIn, resOut, nil
+}
+
+func runStringJoinList(
+	ctx context.Context,
+	dataIn, sepIn runtime.SingleInport,
+	resOut runtime.SingleOutport,
+) {
+	for {
+		dataMsg, sepMsg, received := receive2(ctx, dataIn, sepIn)
+		if !received {
+			return
+		}
+
+		result := joinList(dataMsg.List(), sepMsg.Str())
+		if !resOut.Send(ctx, messages.NewStringMsg(result)) {
+			return
+		}
+	}
+}
+
+func joinList(list messages.ListMsg, sep string) string {
+	builder := strings.Builder{}
+	if stringsList, ok := messages.AsListStrings(list); ok {
+		for i := range stringsList {
+			if i > 0 {
+				builder.WriteString(sep)
+			}
+			builder.WriteString(stringsList[i])
+		}
+		return builder.String()
+	}
+
+	writeJoinedList(&builder, list.Untyped(), sep)
+	return builder.String()
+}
+
+type stringJoinStream struct{}
+
+func (stringJoinStream) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	dataIn, sepIn, resOut, err := resolveStringJoinPorts(runtimeIO)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +87,7 @@ func (stringJoinStream) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx co
 	}, nil
 }
 
-func writeJoinedList(builder *strings.Builder, list []runtime.Msg, sep string) {
+func writeJoinedList(builder *strings.Builder, list []messages.Msg, sep string) {
 	for idx := range list {
 		appendStreamItem(builder, list[idx].Str(), sep)
 	}
@@ -95,7 +105,7 @@ func handleJoinedStreamMessage(
 	ctx context.Context,
 	builder *strings.Builder,
 	resOut runtime.SingleOutport,
-	msg runtime.Msg,
+	msg messages.Msg,
 	sep string,
 	hasSep bool,
 ) (bool, bool) {
@@ -107,7 +117,7 @@ func handleJoinedStreamMessage(
 		appendStreamItem(builder, streamDataValue(msg).Str(), sep)
 		return hasSep, true
 	case isStreamClose(msg):
-		if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+		if !resOut.Send(ctx, messages.NewStringMsg(builder.String())) {
 			return false, false
 		}
 

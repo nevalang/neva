@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type printf struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p printf) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p printf) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	tplIn, err := io.In.Single("tpl")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -75,7 +76,7 @@ func (printf) handle(
 				continue
 			}
 
-			if !sigOut.Send(ctx, runtime.NewStringMsg(res), append(causes, templateMsg)...) {
+			if !sigOut.Send(ctx, messages.NewStringMsg(res), append(causes, templateMsg)...) {
 				return
 			}
 		}
@@ -83,7 +84,7 @@ func (printf) handle(
 }
 
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func format(tpl string, args []runtime.Msg) (string, error) {
+func format(tpl string, args []messages.Msg) (string, error) {
 	usedArgs := make(map[int]bool)
 	var result strings.Builder
 	result.Grow(len(tpl))
@@ -120,8 +121,8 @@ func format(tpl string, args []runtime.Msg) (string, error) {
 	return result.String(), nil
 }
 
-func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]runtime.Msg, []runtime.OrderedMsg, bool) {
-	args := make([]runtime.Msg, argsIn.Len())
+func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]messages.Msg, []runtime.OrderedMsg, bool) {
+	args := make([]messages.Msg, argsIn.Len())
 	causes := make([]runtime.OrderedMsg, argsIn.Len())
 	if !argsIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
 		args[idx] = ordered.Msg

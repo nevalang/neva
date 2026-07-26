@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func BenchmarkFileReadAllHandle(b *testing.B) {
@@ -17,7 +18,7 @@ func BenchmarkFileReadAllHandle(b *testing.B) {
 	resOut := mustSingleOutport(b, outChans, "res")
 	handleOut := mustSingleOutport(b, outChans, "handle")
 	errOut := mustSingleOutport(b, outChans, "err")
-	msg := runtime.OrderedMsg{Msg: runtime.NewIntMsg(handleID)}
+	msg := runtime.OrderedMsg{Msg: messages.NewIntMsg(handleID)}
 
 	b.ReportAllocs()
 	for range b.N {

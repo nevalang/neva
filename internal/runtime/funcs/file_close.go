@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileClose struct {
 	handles *runtime.FileHandles
 }
 
-func (c fileClose) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c fileClose) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	fileIn, err := rio.In.Single("file")
 	if err != nil {
 		return nil, fmt.Errorf("resolve file inport: %w", err)

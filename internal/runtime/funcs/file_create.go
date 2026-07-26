@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileCreate struct {
 	handles *runtime.FileHandles
 }
 
-func (c fileCreate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c fileCreate) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("filename")
 	if err != nil {
 		return nil, fmt.Errorf("resolve filename inport: %w", err)

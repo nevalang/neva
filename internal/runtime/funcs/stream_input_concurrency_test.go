@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestStreamZipReceivesBothInputsConcurrently(t *testing.T) {
@@ -24,15 +25,15 @@ func TestStreamZipReceivesBothInputsConcurrently(t *testing.T) {
 	inChans["left"] <- runtime.OrderedMsg{Msg: newStreamOpenMsg()}
 	assertOutputEquals(t, outChans, "res", newStreamOpenMsg(), []string{"left", "right"})
 
-	assertSendAcceptedBeforeOtherInput(t, inChans["right"], newStreamDataMsg(runtime.NewIntMsg(2)))
-	inChans["left"] <- runtime.OrderedMsg{Msg: newStreamDataMsg(runtime.NewIntMsg(1))}
-	assertOutputEquals(t, outChans, "res", newStreamDataMsg(runtime.NewStructMsg([]runtime.StructField{
-		runtime.NewStructField("left", runtime.NewIntMsg(1)),
-		runtime.NewStructField("right", runtime.NewIntMsg(2)),
+	assertSendAcceptedBeforeOtherInput(t, inChans["right"], newStreamDataMsg(messages.NewIntMsg(2)))
+	inChans["left"] <- runtime.OrderedMsg{Msg: newStreamDataMsg(messages.NewIntMsg(1))}
+	assertOutputEquals(t, outChans, "res", newStreamDataMsg(messages.NewStructMsg([]messages.StructField{
+		messages.NewStructField("left", messages.NewIntMsg(1)),
+		messages.NewStructField("right", messages.NewIntMsg(2)),
 	})), []string{"left", "right"})
 }
 
-func assertSendAcceptedBeforeOtherInput(t *testing.T, input chan<- runtime.OrderedMsg, msg runtime.Msg) {
+func assertSendAcceptedBeforeOtherInput(t *testing.T, input chan<- runtime.OrderedMsg, msg messages.Msg) {
 	t.Helper()
 
 	sent := make(chan struct{})
@@ -62,10 +63,10 @@ func TestArrayPortToStreamReceivesSlotsConcurrently(t *testing.T) {
 	})
 
 	assertOutputEquals(t, map[string]chan runtime.OrderedMsg{"res": resultOutput}, "res", newStreamOpenMsg(), []string{"port"})
-	assertSendAcceptedBeforeOtherInput(t, portInputs[1], runtime.NewIntMsg(2))
-	portInputs[0] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(1)}
-	assertOutputEquals(t, map[string]chan runtime.OrderedMsg{"res": resultOutput}, "res", newStreamDataMsg(runtime.NewIntMsg(1)), []string{"port[0]"})
-	assertOutputEquals(t, map[string]chan runtime.OrderedMsg{"res": resultOutput}, "res", newStreamDataMsg(runtime.NewIntMsg(2)), []string{"port[1]"})
+	assertSendAcceptedBeforeOtherInput(t, portInputs[1], messages.NewIntMsg(2))
+	portInputs[0] <- runtime.OrderedMsg{Msg: messages.NewIntMsg(1)}
+	assertOutputEquals(t, map[string]chan runtime.OrderedMsg{"res": resultOutput}, "res", newStreamDataMsg(messages.NewIntMsg(1)), []string{"port[0]"})
+	assertOutputEquals(t, map[string]chan runtime.OrderedMsg{"res": resultOutput}, "res", newStreamDataMsg(messages.NewIntMsg(2)), []string{"port[1]"})
 }
 
 func newArrayPortToStreamIO(size int) (runtime.IO, []chan runtime.OrderedMsg, chan runtime.OrderedMsg) {

@@ -74,6 +74,9 @@ Start from `docs/README.md` for documentation navigation.
    follow the runtime-function protocol.
 5. Keep changes scoped. Record unresolved design work in an issue or a
    repository-local plan rather than shipping speculative infrastructure.
+6. Prefer the change that minimizes total system complexity, even when it
+   requires more work now. Do not retain transitional adapters, aliases, or
+   duplicate paths solely to make the immediate change smaller.
 
 ## Operating Standards
 

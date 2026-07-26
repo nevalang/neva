@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamZip struct{}
@@ -12,7 +13,7 @@ type streamZip struct{}
 //nolint:cyclop,gocognit,gocyclo // Zip synchronizes two stream lifecycles in one state machine.
 func (streamZip) Create(
 	runtimeIO runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	leftIn, err := singleInport(runtimeIO, "left")
 	if err != nil {
@@ -57,10 +58,10 @@ func (streamZip) Create(
 					break
 				}
 
-				zipped := runtime.NewStructMsg(
-					[]runtime.StructField{
-						runtime.NewStructField("left", leftMsg),
-						runtime.NewStructField("right", rightMsg),
+				zipped := messages.NewStructMsg(
+					[]messages.StructField{
+						messages.NewStructField("left", leftMsg),
+						messages.NewStructField("right", rightMsg),
 					},
 				)
 
@@ -108,11 +109,11 @@ func waitStreamOpen(ctx context.Context, in streamReceiver) bool {
 
 // receiveStreamPairDataOrClose receives the next relevant event from both streams concurrently.
 //
-//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
+//nolint:ireturn // Stream payloads are messages.Msg values by contract.
 func receiveStreamPairDataOrClose(
 	ctx context.Context,
 	leftIn, rightIn runtime.SingleInport,
-) (runtime.Msg, bool, runtime.Msg, bool, bool) {
+) (messages.Msg, bool, messages.Msg, bool, bool) {
 	for {
 		leftMsg, rightMsg, received := receive2(ctx, leftIn, rightIn)
 		if !received {
@@ -129,8 +130,8 @@ func receiveStreamPairDataOrClose(
 
 // decodeStreamDataOrClose classifies a stream event relevant to zip processing.
 //
-//nolint:ireturn // Stream payloads are runtime.Msg values by contract.
-func decodeStreamDataOrClose(msg runtime.Msg) (runtime.Msg, bool, bool) {
+//nolint:ireturn // Stream payloads are messages.Msg values by contract.
+func decodeStreamDataOrClose(msg messages.Msg) (messages.Msg, bool, bool) {
 	switch {
 	case isStreamData(msg):
 		return streamDataValue(msg), false, true

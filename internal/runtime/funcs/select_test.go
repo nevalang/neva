@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // select_test.go contains unit tests for selector runtime function.
@@ -39,14 +40,14 @@ func TestSelectorSendsIfCause(t *testing.T) {
 
 	cancel, done := runHandler(handler)
 	ctx := context.Background()
-	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, runtime.NewBoolMsg(true), ifInputs[1])
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, runtime.NewStringMsg("zero"), thenInputs[0])
-	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, runtime.NewStringMsg("one"), thenInputs[1])
+	ifCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "if1"}, messages.NewBoolMsg(true), ifInputs[1])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then0"}, messages.NewStringMsg("zero"), thenInputs[0])
+	_ = sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "then1"}, messages.NewStringMsg("one"), thenInputs[1])
 
 	select {
 	case out := <-resOutCh:
-		if !runtime.Equal(out, runtime.NewStringMsg("one")) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("one"))
+		if !messages.Equal(out.Msg, messages.NewStringMsg("one")) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewStringMsg("one"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{ifCause})
 	case <-time.After(time.Second):

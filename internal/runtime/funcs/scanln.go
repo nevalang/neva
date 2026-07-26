@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type scanln struct{}
@@ -13,7 +14,7 @@ type scanln struct{}
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) { //nolint:gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (r scanln) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) { //nolint:gocognit,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -46,7 +47,7 @@ func (r scanln) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 				continue
 			}
 
-			if !resOut.Send(ctx, runtime.NewStringMsg(input)) {
+			if !resOut.Send(ctx, messages.NewStringMsg(input)) {
 				return
 			}
 		}

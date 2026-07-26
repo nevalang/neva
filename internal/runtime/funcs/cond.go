@@ -5,12 +5,13 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type cond struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c cond) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -37,7 +38,7 @@ func (c cond) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 
 	return func(ctx context.Context) {
 		for {
-			var dataMsg, ifMsg runtime.Msg
+			var dataMsg, ifMsg messages.Msg
 			var dataOk, ifOk bool
 
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

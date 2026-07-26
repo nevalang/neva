@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type newV2 struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (c newV2) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
+func (c newV2) Create(io runtime.IO, cfg messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

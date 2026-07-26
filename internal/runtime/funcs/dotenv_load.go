@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type dotenvLoadFrom struct {
@@ -22,7 +23,7 @@ type dotenvLoad struct {
 }
 
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d dotenvLoadFrom) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (d dotenvLoadFrom) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -68,7 +69,7 @@ func (d dotenvLoadFrom) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.
 }
 
 //nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (d dotenvLoad) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (d dotenvLoad) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

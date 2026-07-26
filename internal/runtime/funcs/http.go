@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type httpGet struct{}
 
 //nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (httpGet) Create(funcIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	urlIn, err := funcIO.In.Single("url")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -71,9 +72,9 @@ func (httpGet) Create(funcIO runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 	}, nil
 }
 
-func respMsg(statusCode int, body []byte) runtime.StructMsg {
-	return runtime.NewStructMsg([]runtime.StructField{
-		runtime.NewStructField("body", runtime.NewBytesMsg(body)),
-		runtime.NewStructField("statusCode", runtime.NewIntMsg(int64(statusCode))),
+func respMsg(statusCode int, body []byte) messages.StructMsg {
+	return messages.NewStructMsg([]messages.StructField{
+		messages.NewStructField("body", messages.NewBytesMsg(body)),
+		messages.NewStructField("statusCode", messages.NewIntMsg(int64(statusCode))),
 	})
 }

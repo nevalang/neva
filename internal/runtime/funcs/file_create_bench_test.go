@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func BenchmarkFileCreateHandle(b *testing.B) {
@@ -13,7 +14,7 @@ func BenchmarkFileCreateHandle(b *testing.B) {
 	_, _, outChans := newIO(nil, []string{"res", "err"})
 	resOut := mustSingleOutport(b, outChans, "res")
 	errOut := mustSingleOutport(b, outChans, "err")
-	msg := runtime.OrderedMsg{Msg: runtime.NewStringMsg(path)}
+	msg := runtime.OrderedMsg{Msg: messages.NewStringMsg(path)}
 
 	b.ReportAllocs()
 	b.ResetTimer()

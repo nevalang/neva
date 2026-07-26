@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamIntRange struct{}
 
-func (streamIntRange) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamIntRange) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	fromIn, err := singleInport(runtimeIO, "from")
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func sendAscendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data < toValue; data++ {
-		if !resOut.Send(ctx, newStreamDataMsg(runtime.NewIntMsg(data))) {
+		if !resOut.Send(ctx, newStreamDataMsg(messages.NewIntMsg(data))) {
 			return false
 		}
 	}
@@ -81,7 +82,7 @@ func sendDescendingIntRange(
 	from, toValue int64,
 ) bool {
 	for data := from; data > toValue; data-- {
-		if !resOut.Send(ctx, newStreamDataMsg(runtime.NewIntMsg(data))) {
+		if !resOut.Send(ctx, newStreamDataMsg(messages.NewIntMsg(data))) {
 			return false
 		}
 	}

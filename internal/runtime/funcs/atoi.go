@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type atoi struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a atoi) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (a atoi) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -54,10 +55,10 @@ func (a atoi) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a atoi) stringToRuntimeInt(str string) (runtime.Msg, error) {
+func (a atoi) stringToRuntimeInt(str string) (messages.Msg, error) {
 	v, err := strconv.Atoi(str) // equivalent to ParseInt(s, 10, 0)
 	if err != nil {
 		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 	}
-	return runtime.NewIntMsg(int64(v)), nil
+	return messages.NewIntMsg(int64(v)), nil
 }

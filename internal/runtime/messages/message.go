@@ -1,19 +1,10 @@
-package runtime
+package messages
 
 import (
 	"encoding/json"
 	"fmt"
 	"strconv"
 )
-
-// OrderedMsg is a transport envelope with payload and runtime ordering metadata.
-type OrderedMsg struct {
-	Msg
-	index uint64
-}
-
-// String is just a simple stringer that ignores index while formatting.
-func (o OrderedMsg) String() string { return fmt.Sprint(o.Msg) }
 
 //nolint:interfacebloat // Msg is runtime contract and intentionally broad.
 type Msg interface {
@@ -163,8 +154,6 @@ func NewBytesMsg(v []byte) BytesMsg {
 	}
 }
 
-// --- LIST ---
-//
 // ListMsg provides access to the storage of a list runtime message.
 //
 // Exactly one value accessor is valid for an implementation. Untyped exposes
@@ -808,8 +797,6 @@ func AsDictStrings(dict DictMsg) (map[string]string, bool) {
 	return typed.v, ok
 }
 
-// --- STRUCT ---
-//
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type StructMsg struct {
 	internalMsg
@@ -897,8 +884,6 @@ func NewStructField(name string, value Msg) StructField {
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func NewStructMsg(fields []StructField) StructMsg { return newStructMsg(fields) }
 
-// --- UNION ---
-//
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 type UnionMsg struct {
 	internalMsg
@@ -943,16 +928,8 @@ func (msg UnionMsg) MarshalJSON() ([]byte, error) {
 }
 
 func AsUnion(msg Msg) (UnionMsg, bool) {
-	unionMsg, ok := orderedPayload(msg).(UnionMsg)
+	unionMsg, ok := msg.(UnionMsg)
 	return unionMsg, ok
-}
-
-//nolint:ireturn // Msg is runtime contract type.
-func orderedPayload(msg Msg) Msg {
-	if ordered, ok := msg.(OrderedMsg); ok {
-		return ordered.Msg
-	}
-	return msg
 }
 
 // Uint8Index validates idx and returns it as uint8 or panics.
@@ -974,8 +951,6 @@ func NewUnionMsg(tag string, data Msg) UnionMsg {
 		data:        data,
 	}
 }
-
-// --- OPERATIONS ---
 
 // Match compares two messages and return true if they matches and false otherwise.
 // Unlike Equal it compares only some aspects of the messages.

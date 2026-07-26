@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type itoa struct{}
@@ -12,7 +13,7 @@ type itoa struct{}
 func (itoa) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
@@ -34,7 +35,7 @@ func (itoa) Create(
 			}
 
 			res := strconv.FormatInt(data.Int(), 10)
-			if !resOut.Send(ctx, runtime.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
 				return
 			}
 		}

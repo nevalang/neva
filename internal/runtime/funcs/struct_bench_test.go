@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkStructHotpath measures building a small struct from three inputs.
 func BenchmarkStructHotpath(b *testing.B) {
 	runtimeIO, inputs, resultOutput := benchNewStructRuntimeIO([]string{"a", "b", "c"})
-	var zeroConfig runtime.Msg
+	var zeroConfig messages.Msg
 	handler, err := structBuilder{}.Create(runtimeIO, zeroConfig)
 	if err != nil {
 		b.Fatalf("Create returned error: %v", err)
@@ -22,9 +23,9 @@ func BenchmarkStructHotpath(b *testing.B) {
 		<-done
 	}()
 
-	msgA := runtime.NewIntMsg(1)
-	msgB := runtime.NewIntMsg(2)
-	msgC := runtime.NewIntMsg(3)
+	msgA := messages.NewIntMsg(1)
+	msgB := messages.NewIntMsg(2)
+	msgC := messages.NewIntMsg(3)
 
 	b.ResetTimer()
 	for range b.N {

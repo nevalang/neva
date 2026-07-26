@@ -6,14 +6,15 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // parseFileHandleID extracts the opaque runtime file-handle ID from a Neva msg.
 //
 // File externs receive handles as Neva int values. Keeping the conversion in
 // one helper gives every handle-based extern the same type check and error text.
-func parseFileHandleID(msg runtime.Msg) (int64, error) {
-	idMsg, isIntMsg := msg.(runtime.IntMsg)
+func parseFileHandleID(msg messages.Msg) (int64, error) {
+	idMsg, isIntMsg := msg.(messages.IntMsg)
 	if !isIntMsg {
 		return 0, errors.New("file handle must be int")
 	}
@@ -36,7 +37,7 @@ func storeAndSendFileHandle(
 	errOut runtime.SingleOutport,
 ) bool {
 	handleID := handles.Add(file)
-	if resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+	if resOut.Send(ctx, messages.NewIntMsg(handleID)) {
 		return true
 	}
 

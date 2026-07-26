@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"testing"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func resetRuntimeTraceStateForTests() { counter.Store(0) }
@@ -26,7 +28,7 @@ func TestTraceStore_Linear(t *testing.T) {
 	)
 
 	ctx := context.Background()
-	if !out.Send(ctx, NewStringMsg("hello")) {
+	if !out.Send(ctx, messages.NewStringMsg("hello")) {
 		t.Fatalf("send failed")
 	}
 
@@ -83,7 +85,7 @@ func TestTraceStore_ForwardedMessageTracksParent(t *testing.T) {
 		NoEffectInterceptor{},
 	)
 
-	if !out1.Send(ctx, NewStringMsg("x")) {
+	if !out1.Send(ctx, messages.NewStringMsg("x")) {
 		t.Fatalf("first send failed")
 	}
 	mid, ok := in1.Receive(ctx)
@@ -120,7 +122,7 @@ func TestTraceStore_ForwardedMessageTracksParent(t *testing.T) {
 
 type testFanInCreator struct{}
 
-func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
+func (testFanInCreator) Create(io IO, _ messages.Msg) (func(context.Context), error) {
 	firstIn, err := io.In.Single("first")
 	if err != nil {
 		return nil, err
@@ -158,7 +160,7 @@ func (testFanInCreator) Create(io IO, _ Msg) (func(context.Context), error) {
 			return
 		}
 
-		outMsg := NewListMsg([]Msg{firstMsg, secondMsg, thirdMsg})
+		outMsg := messages.NewListMsg([]messages.Msg{firstMsg, secondMsg, thirdMsg})
 		_ = resOut.Send(ctx, outMsg, firstMsg, secondMsg, thirdMsg)
 	}, nil
 }
@@ -202,13 +204,13 @@ func TestTraceStore_FanInTracksAllParents(t *testing.T) {
 	}
 
 	go handler(handlerCtx)
-	if !firstOut.Send(sendCtx, NewStringMsg("a")) {
+	if !firstOut.Send(sendCtx, messages.NewStringMsg("a")) {
 		t.Fatalf("first send failed")
 	}
-	if !secondOut.Send(sendCtx, NewStringMsg("b")) {
+	if !secondOut.Send(sendCtx, messages.NewStringMsg("b")) {
 		t.Fatalf("second send failed")
 	}
-	if !thirdOut.Send(sendCtx, NewStringMsg("c")) {
+	if !thirdOut.Send(sendCtx, messages.NewStringMsg("c")) {
 		t.Fatalf("third send failed")
 	}
 
@@ -254,10 +256,10 @@ func TestTraceStore_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 	resOut := NewSingleOutport(tracer, PortAddr{Path: "join/out", Port: "res"}, NoEffectInterceptor{}, resCh)
 	resIn := NewSingleInport(tracer, resCh, PortAddr{Path: "prog/out", Port: "stop"}, NoEffectInterceptor{})
 
-	if !firstOut.Send(ctx, NewStringMsg("a")) {
+	if !firstOut.Send(ctx, messages.NewStringMsg("a")) {
 		t.Fatalf("first send failed")
 	}
-	if !secondOut.Send(ctx, NewStringMsg("b")) {
+	if !secondOut.Send(ctx, messages.NewStringMsg("b")) {
 		t.Fatalf("second send failed")
 	}
 
@@ -272,7 +274,7 @@ func TestTraceStore_ExplicitSendCausesTrackSynthesizedOutput(t *testing.T) {
 
 	if !resOut.Send(
 		ctx,
-		NewStringMsg(firstOrdered.Str()+secondOrdered.Str()),
+		messages.NewStringMsg(firstOrdered.Str()+secondOrdered.Str()),
 		firstOrdered,
 		secondOrdered,
 	) {

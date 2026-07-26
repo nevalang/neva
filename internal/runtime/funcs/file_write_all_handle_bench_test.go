@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func BenchmarkFileWriteAllHandle(b *testing.B) {
@@ -20,8 +21,8 @@ func BenchmarkFileWriteAllHandle(b *testing.B) {
 	_, _, outChans := newIO(nil, []string{"res", "err"})
 	resOut := mustSingleOutport(b, outChans, "res")
 	errOut := mustSingleOutport(b, outChans, "err")
-	fileMsg := runtime.OrderedMsg{Msg: runtime.NewIntMsg(handleID)}
-	dataMsg := runtime.OrderedMsg{Msg: runtime.NewBytesMsg([]byte("payload"))}
+	fileMsg := runtime.OrderedMsg{Msg: messages.NewIntMsg(handleID)}
+	dataMsg := runtime.OrderedMsg{Msg: messages.NewBytesMsg([]byte("payload"))}
 
 	b.ReportAllocs()
 	for range b.N {

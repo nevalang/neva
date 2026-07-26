@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func BenchmarkFileCloseHandle(b *testing.B) {
@@ -22,7 +23,7 @@ func BenchmarkFileCloseHandle(b *testing.B) {
 			b.Fatalf("CreateTemp() error = %v", err)
 		}
 		handleID := store.Add(file)
-		msg := runtime.OrderedMsg{Msg: runtime.NewIntMsg(handleID)}
+		msg := runtime.OrderedMsg{Msg: messages.NewIntMsg(handleID)}
 		b.StartTimer()
 
 		if !(fileClose{handles: store}).handleFileMessage(context.Background(), msg, resOut, errOut) {
