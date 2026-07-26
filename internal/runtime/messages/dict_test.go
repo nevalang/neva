@@ -78,7 +78,7 @@ func TestDictToMsgsUntypedReturnsExistingStorage(t *testing.T) {
 	}
 }
 
-func TestDictGet(t *testing.T) {
+func TestGetDictValueByKey(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -141,12 +141,12 @@ func TestDictGet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, found := DictGet(tt.dict.Dict(), tt.key)
+			got, found := GetDictValueByKey(tt.dict.Dict(), tt.key)
 			if found != tt.found {
-				t.Fatalf("DictGet found = %t, want %t", found, tt.found)
+				t.Fatalf("GetDictValueByKey found = %t, want %t", found, tt.found)
 			}
 			if found && !Equal(got, tt.want) {
-				t.Fatalf("DictGet value = %v, want %v", got, tt.want)
+				t.Fatalf("GetDictValueByKey value = %v, want %v", got, tt.want)
 			}
 		})
 	}

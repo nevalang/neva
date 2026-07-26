@@ -101,14 +101,14 @@ func BenchmarkMsgDictLookup(b *testing.B) {
 	}
 }
 
-// BenchmarkDictGet measures lookup through the representation-independent API.
-func BenchmarkDictGet(b *testing.B) {
+// BenchmarkGetDictValueByKey measures lookup through the representation-independent API.
+func BenchmarkGetDictValueByKey(b *testing.B) {
 	dict := NewDictIntMsg(map[string]int64{"answer": 42}).Dict()
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for range b.N {
-		msgSink, _ = DictGet(dict, "answer")
+		msgSink, _ = GetDictValueByKey(dict, "answer")
 	}
 }
 

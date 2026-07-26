@@ -7,53 +7,53 @@ import (
 	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
-// dictGetByKey implements the internal runtime function behind the public Get component.
-type dictGetByKey struct{}
+// getDictValueByKey implements the internal runtime function behind the public Get component.
+type getDictValueByKey struct{}
 
-type dictGetPorts struct {
+type getDictValueByKeyPorts struct {
 	dictIn runtime.SingleInport
 	keyIn  runtime.SingleInport
 	resOut runtime.SingleOutport
 	errOut runtime.SingleOutport
 }
 
-func (dictGetByKey) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
-	ports, err := resolveDictGetPorts(runtimeIO)
+func (getDictValueByKey) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	ports, err := resolveGetDictValueByKeyPorts(runtimeIO)
 	if err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) {
-		runDictGet(ctx, &ports)
+		runGetDictValueByKey(ctx, &ports)
 	}, nil
 }
 
-func resolveDictGetPorts(runtimeIO runtime.IO) (dictGetPorts, error) {
+func resolveGetDictValueByKeyPorts(runtimeIO runtime.IO) (getDictValueByKeyPorts, error) {
 	dictIn, err := runtimeIO.In.Single("dict")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return dictGetPorts{}, err
+		return getDictValueByKeyPorts{}, err
 	}
 
 	keyIn, err := runtimeIO.In.Single("key")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return dictGetPorts{}, err
+		return getDictValueByKeyPorts{}, err
 	}
 
 	resOut, err := runtimeIO.Out.Single("res")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return dictGetPorts{}, err
+		return getDictValueByKeyPorts{}, err
 	}
 
 	errOut, err := runtimeIO.Out.Single("err")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return dictGetPorts{}, err
+		return getDictValueByKeyPorts{}, err
 	}
 
-	return dictGetPorts{
+	return getDictValueByKeyPorts{
 		dictIn: dictIn,
 		keyIn:  keyIn,
 		resOut: resOut,
@@ -61,14 +61,14 @@ func resolveDictGetPorts(runtimeIO runtime.IO) (dictGetPorts, error) {
 	}, nil
 }
 
-func runDictGet(ctx context.Context, ports *dictGetPorts) {
+func runGetDictValueByKey(ctx context.Context, ports *getDictValueByKeyPorts) {
 	for {
 		dictMsg, keyMsg, received := receive2(ctx, ports.dictIn, ports.keyIn)
 		if !received {
 			return
 		}
 
-		valueMsg, found := messages.DictGet(dictMsg.Dict(), keyMsg.Str())
+		valueMsg, found := messages.GetDictValueByKey(dictMsg.Dict(), keyMsg.Str())
 		if !found {
 			if !ports.errOut.Send(ctx, errFromString("Key not found in dictionary")) {
 				return

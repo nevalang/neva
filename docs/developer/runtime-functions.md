@@ -35,6 +35,16 @@ Every message derived from received input must pass the received `OrderedMsg`
 values to `Send` as causes. This preserves runtime ordering and dataflow
 tracing.
 
+## Compiler Invariants
+
+Runtime functions may rely on the static type guarantees of the Neva compiler.
+If a received message contradicts the component's declared input type, that is
+a runtime invariant violation and must panic. Do not convert a compiler or
+runtime implementation defect into a public Neva `error` value.
+
+Use a public error output only for failures possible in a well-typed program,
+such as a missing dictionary key or an out-of-bounds list index.
+
 ## Typed Containers
 
 The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
