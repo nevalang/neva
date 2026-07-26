@@ -129,6 +129,24 @@ func TestEqualContainerRepresentations(t *testing.T) {
 			want:  true,
 		},
 		{
+			name:  "typed dictionaries with equal integer storage",
+			left:  NewDictIntMsg(map[string]int64{"one": 1, "two": 2}),
+			right: NewDictIntMsg(map[string]int64{"one": 1, "two": 2}),
+			want:  true,
+		},
+		{
+			name:  "typed dictionaries with different scalar kinds",
+			left:  NewDictIntMsg(map[string]int64{"one": 1}),
+			right: NewDictStringMsg(map[string]string{"one": "1"}),
+			want:  false,
+		},
+		{
+			name:  "typed and untyped dictionaries with a late type mismatch",
+			left:  NewDictIntMsg(map[string]int64{"one": 1, "two": 2}),
+			right: NewDictMsg(map[string]Msg{"one": NewIntMsg(1), "two": NewStringMsg("2")}),
+			want:  false,
+		},
+		{
 			name:  "dictionaries with different values",
 			left:  NewDictStringMsg(map[string]string{"one": "first"}),
 			right: NewDictStringMsg(map[string]string{"one": "second"}),
@@ -142,6 +160,36 @@ func TestEqualContainerRepresentations(t *testing.T) {
 				t.Fatalf("Equal() = %t, want %t", got, testCase.want)
 			}
 		})
+	}
+}
+
+func TestEqualNestedUntypedContainers(t *testing.T) {
+	t.Parallel()
+
+	left := NewDictMsg(map[string]Msg{
+		"value": NewListMsg([]Msg{NewDictIntMsg(map[string]int64{"one": 1})}),
+	})
+	right := NewDictMsg(map[string]Msg{
+		"value": NewListMsg([]Msg{NewDictMsg(map[string]Msg{"one": NewIntMsg(1)})}),
+	})
+
+	if !Equal(left, right) {
+		t.Fatal("Equal() = false, want equal nested typed and untyped containers")
+	}
+}
+
+func TestMatchNestedTypedAndUntypedContainers(t *testing.T) {
+	t.Parallel()
+
+	msg := NewDictMsg(map[string]Msg{
+		"value": NewListIntMsg([]int64{1, 2}),
+	})
+	pattern := NewDictMsg(map[string]Msg{
+		"value": NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
+	})
+
+	if !Match(msg, pattern) {
+		t.Fatal("Match() = false, want matching nested typed and untyped containers")
 	}
 }
 

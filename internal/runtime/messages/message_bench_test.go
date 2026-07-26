@@ -186,6 +186,55 @@ func BenchmarkMsgEqualList(b *testing.B) {
 	}
 }
 
+// BenchmarkMsgEqualDict compares equal dictionary representations without
+// materializing scalar maps as message maps.
+func BenchmarkMsgEqualDict(b *testing.B) {
+	for _, size := range []int{16, 128, 512} {
+		values := make(map[string]int64, size)
+		boxedValues := make(map[string]Msg, size)
+		stringValues := make(map[string]string, size)
+		for i := range size {
+			key := "k" + strconv.Itoa(i)
+			values[key] = int64(i)
+			boxedValues[key] = NewIntMsg(int64(i))
+			stringValues[key] = strconv.Itoa(i)
+		}
+
+		b.Run("typed_equal_n="+strconv.Itoa(size), func(b *testing.B) {
+			left := NewDictIntMsg(values)
+			right := NewDictIntMsg(values)
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				boolSink = Equal(left, right)
+			}
+		})
+
+		b.Run("typed_untyped_equal_n="+strconv.Itoa(size), func(b *testing.B) {
+			left := NewDictIntMsg(values)
+			right := NewDictMsg(boxedValues)
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				boolSink = Equal(left, right)
+			}
+		})
+
+		b.Run("typed_different_kind_n="+strconv.Itoa(size), func(b *testing.B) {
+			left := NewDictIntMsg(values)
+			right := NewDictStringMsg(stringValues)
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for range b.N {
+				boolSink = Equal(left, right)
+			}
+		})
+	}
+}
+
 // BenchmarkMsgStructGet measures repeated field lookup in a medium struct.
 func BenchmarkMsgStructGet(b *testing.B) {
 	fields := make([]StructField, 0, 32)

@@ -21,6 +21,10 @@ func NewFloatMsg(n float64) FloatMsg {
 }
 
 func equalFloat(left FloatMsg, right Msg) bool {
+	return equalFloatValue(left.v, right)
+}
+
+func equalFloatValue(left float64, right Msg) bool {
 	rightTyped, ok := right.(FloatMsg)
-	return ok && left.v == rightTyped.v
+	return ok && left == rightTyped.v
 }

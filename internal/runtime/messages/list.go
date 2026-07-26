@@ -189,7 +189,7 @@ func listEqualUntypedToUntyped(left []Msg, right []Msg) bool {
 
 func listEqualUntypedToBools(left []Msg, right []bool) bool {
 	for i := range left {
-		if !Equal(left[i], NewBoolMsg(right[i])) {
+		if !equalBoolValue(right[i], left[i]) {
 			return false
 		}
 	}
@@ -198,7 +198,7 @@ func listEqualUntypedToBools(left []Msg, right []bool) bool {
 
 func listEqualUntypedToInts(left []Msg, right []int64) bool {
 	for i := range left {
-		if !Equal(left[i], NewIntMsg(right[i])) {
+		if !equalIntValue(right[i], left[i]) {
 			return false
 		}
 	}
@@ -207,7 +207,7 @@ func listEqualUntypedToInts(left []Msg, right []int64) bool {
 
 func listEqualUntypedToFloats(left []Msg, right []float64) bool {
 	for i := range left {
-		if !Equal(left[i], NewFloatMsg(right[i])) {
+		if !equalFloatValue(right[i], left[i]) {
 			return false
 		}
 	}
@@ -216,7 +216,7 @@ func listEqualUntypedToFloats(left []Msg, right []float64) bool {
 
 func listEqualUntypedToStrings(left []Msg, right []string) bool {
 	for i := range left {
-		if !Equal(left[i], NewStringMsg(right[i])) {
+		if !equalStringValue(right[i], left[i]) {
 			return false
 		}
 	}
@@ -233,7 +233,7 @@ func listEqualBool(left []bool, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !Equal(NewBoolMsg(left[i]), rightTyped.v[i]) {
+			if !equalBoolValue(left[i], rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -253,7 +253,7 @@ func listEqualInt(left []int64, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !Equal(NewIntMsg(left[i]), rightTyped.v[i]) {
+			if !equalIntValue(left[i], rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -273,7 +273,7 @@ func listEqualFloat(left []float64, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !Equal(NewFloatMsg(left[i]), rightTyped.v[i]) {
+			if !equalFloatValue(left[i], rightTyped.v[i]) {
 				return false
 			}
 		}
@@ -293,7 +293,7 @@ func listEqualString(left []string, right ListMsg) bool {
 		}
 	case untypedListMsg:
 		for i := range left {
-			if !Equal(NewStringMsg(left[i]), rightTyped.v[i]) {
+			if !equalStringValue(left[i], rightTyped.v[i]) {
 				return false
 			}
 		}

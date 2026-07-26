@@ -166,13 +166,173 @@ func dictEqual(left DictMsg, right DictMsg) bool {
 		return false
 	}
 
-	leftMsgs := DictToMessageMap(left)
-	rightMsgs := DictToMessageMap(right)
-	for key, leftVal := range leftMsgs {
-		rightVal, ok := rightMsgs[key]
-		if !ok || !Equal(leftVal, rightVal) {
+	switch typed := left.(type) {
+	case untypedDictMsg:
+		return dictEqualUntyped(typed.v, right)
+	case boolDictMsg:
+		return dictEqualBools(typed.v, right)
+	case intDictMsg:
+		return dictEqualInts(typed.v, right)
+	case floatDictMsg:
+		return dictEqualFloats(typed.v, right)
+	case stringDictMsg:
+		return dictEqualStrings(typed.v, right)
+	default:
+		panic("unexpected dict implementation")
+	}
+}
+
+func dictEqualUntyped(left map[string]Msg, right DictMsg) bool {
+	switch typed := right.(type) {
+	case untypedDictMsg:
+		return dictEqualUntypedToUntyped(left, typed.v)
+	case boolDictMsg:
+		return dictEqualUntypedToBools(left, typed.v)
+	case intDictMsg:
+		return dictEqualUntypedToInts(left, typed.v)
+	case floatDictMsg:
+		return dictEqualUntypedToFloats(left, typed.v)
+	case stringDictMsg:
+		return dictEqualUntypedToStrings(left, typed.v)
+	default:
+		panic("unexpected dict implementation")
+	}
+}
+
+func dictEqualUntypedToUntyped(left, right map[string]Msg) bool {
+	for key, leftValue := range left {
+		rightValue, found := right[key]
+		if !found || !Equal(leftValue, rightValue) {
 			return false
 		}
+	}
+	return true
+}
+
+func dictEqualUntypedToBools(left map[string]Msg, right map[string]bool) bool {
+	for key, leftValue := range left {
+		rightValue, found := right[key]
+		if !found || !equalBoolValue(rightValue, leftValue) {
+			return false
+		}
+	}
+	return true
+}
+
+func dictEqualUntypedToInts(left map[string]Msg, right map[string]int64) bool {
+	for key, leftValue := range left {
+		rightValue, found := right[key]
+		if !found || !equalIntValue(rightValue, leftValue) {
+			return false
+		}
+	}
+	return true
+}
+
+func dictEqualUntypedToFloats(left map[string]Msg, right map[string]float64) bool {
+	for key, leftValue := range left {
+		rightValue, found := right[key]
+		if !found || !equalFloatValue(rightValue, leftValue) {
+			return false
+		}
+	}
+	return true
+}
+
+func dictEqualUntypedToStrings(left map[string]Msg, right map[string]string) bool {
+	for key, leftValue := range left {
+		rightValue, found := right[key]
+		if !found || !equalStringValue(rightValue, leftValue) {
+			return false
+		}
+	}
+	return true
+}
+
+func dictEqualBools(left map[string]bool, right DictMsg) bool {
+	switch typed := right.(type) {
+	case boolDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || leftValue != rightValue {
+				return false
+			}
+		}
+	case untypedDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || !equalBoolValue(leftValue, rightValue) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func dictEqualInts(left map[string]int64, right DictMsg) bool {
+	switch typed := right.(type) {
+	case intDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || leftValue != rightValue {
+				return false
+			}
+		}
+	case untypedDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || !equalIntValue(leftValue, rightValue) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func dictEqualFloats(left map[string]float64, right DictMsg) bool {
+	switch typed := right.(type) {
+	case floatDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || leftValue != rightValue {
+				return false
+			}
+		}
+	case untypedDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || !equalFloatValue(leftValue, rightValue) {
+				return false
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func dictEqualStrings(left map[string]string, right DictMsg) bool {
+	switch typed := right.(type) {
+	case stringDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || leftValue != rightValue {
+				return false
+			}
+		}
+	case untypedDictMsg:
+		for key, leftValue := range left {
+			rightValue, found := typed.v[key]
+			if !found || !equalStringValue(leftValue, rightValue) {
+				return false
+			}
+		}
+	default:
+		return false
 	}
 	return true
 }

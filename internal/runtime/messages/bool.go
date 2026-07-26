@@ -21,6 +21,10 @@ func NewBoolMsg(b bool) BoolMsg {
 }
 
 func equalBool(left BoolMsg, right Msg) bool {
+	return equalBoolValue(left.v, right)
+}
+
+func equalBoolValue(left bool, right Msg) bool {
 	rightTyped, ok := right.(BoolMsg)
-	return ok && left.v == rightTyped.v
+	return ok && left == rightTyped.v
 }

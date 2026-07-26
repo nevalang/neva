@@ -27,6 +27,10 @@ func NewStringMsg(s string) StringMsg {
 }
 
 func equalString(left StringMsg, right Msg) bool {
+	return equalStringValue(left.v, right)
+}
+
+func equalStringValue(left string, right Msg) bool {
 	rightTyped, ok := right.(StringMsg)
-	return ok && left.v == rightTyped.v
+	return ok && left == rightTyped.v
 }

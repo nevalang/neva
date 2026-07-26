@@ -21,6 +21,10 @@ func NewIntMsg(n int64) IntMsg {
 }
 
 func equalInt(left IntMsg, right Msg) bool {
+	return equalIntValue(left.v, right)
+}
+
+func equalIntValue(left int64, right Msg) bool {
 	rightTyped, ok := right.(IntMsg)
-	return ok && left.v == rightTyped.v
+	return ok && left == rightTyped.v
 }

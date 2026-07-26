@@ -59,6 +59,13 @@ Equality is a pure value operation. It compares equivalent typed and untyped
 container storage; runtime functions must not reimplement it or depend on a
 particular storage representation.
 
+Equality must preserve the storage representation. Compare two containers with
+the same typed scalar representation directly. Compare a typed container and
+an untyped container incrementally, without materializing an entire typed
+container as `[]Msg` or `map[string]Msg`. The same rule applies recursively:
+nested containers must not cause whole-container boxing merely to perform
+equality or matching.
+
 Container inspection and transformation are value operations as well. Keep
 representation interfaces limited to access to their storage; do not add
 semantic operations as methods on those interfaces.
