@@ -1,4 +1,4 @@
-package runtime
+package messages
 
 import (
 	"strconv"
@@ -51,6 +51,8 @@ func BenchmarkMsgListIter(b *testing.B) {
 }
 
 // BenchmarkMsgDictLookup measures dictionary lookup in hot-key and mixed-keys modes.
+//
+//nolint:gocognit // Benchmark variants are intentionally kept adjacent for comparison.
 func BenchmarkMsgDictLookup(b *testing.B) {
 	for _, size := range []int{16, 128, 1024} {
 		b.Run("hot_n="+strconv.Itoa(size), func(b *testing.B) {

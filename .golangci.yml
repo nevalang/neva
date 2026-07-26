@@ -98,6 +98,7 @@ linters:
             - "**/internal/runtime/*.go"
           allow:
             - $gostd
+            - github.com/nevalang/neva/internal/runtime/messages
         runtime_funcs:
           list-mode: strict
           files:

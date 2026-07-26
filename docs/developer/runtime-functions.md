@@ -5,8 +5,11 @@ Runtime functions implement standard-library components declared with
 boundary, not the default way to add behavior: prefer a Neva graph when the
 behavior can be expressed clearly with existing public components.
 
-`internal/runtime/` imports only the Go standard library. Runtime functions
-under `internal/runtime/funcs/` may also import `internal/runtime`.
+`internal/runtime/messages/` imports only the Go standard library and owns
+immutable language values plus pure value operations. `internal/runtime/` may
+also import `internal/runtime/messages` for ports, ordering, tracing, and
+program execution. Runtime functions under `internal/runtime/funcs/` may import
+both packages: use `messages` for pure value work and `runtime` for transport.
 
 ## Before Adding a Runtime Function
 
