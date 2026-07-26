@@ -143,6 +143,20 @@ Once again you should see `Hello, World!`.
 
 > Execute `neva build --help` to learn more - how to compile to Go, WASM or how to do cross-compilation e.g. compile linux binaries in windows.
 
+### Editor and developer tools
+
+Neva developer tools are standalone `neva-*` executables. Once a tool is
+installed on your `PATH`, the CLI provides a consistent entry point for it:
+
+```shell
+neva tool lsp
+```
+
+The command above proxies standard input, output, errors, arguments and exit
+status to `neva-lsp`. This keeps the compiler independent of individual tools:
+the same mechanism works for a future `neva-view` or another `neva-*` command.
+Install each tool using its own documented release method.
+
 ## Core Concepts
 
 ### Components

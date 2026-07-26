@@ -28,6 +28,7 @@ func NewApp(
 		Commands: []*cli.Command{
 			newVersionCmd(),
 			newUpgradeCmd(),
+			newToolCmd(),
 			newNewCmd(),
 			newGetCmd(workdir, bldr),
 			newInstallCmd(workdir, bldr, prsr, desugarer, analyzer, irgen),
