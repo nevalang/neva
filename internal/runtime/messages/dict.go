@@ -8,6 +8,7 @@ import "encoding/json"
 // the boxed representation; scalar accessors expose the corresponding typed
 // storage. Calling any other accessor is a runtime invariant violation.
 type DictMsg interface {
+	Msg
 	Untyped() map[string]Msg
 	Bools() map[string]bool
 	Ints() map[string]int64
@@ -16,25 +17,10 @@ type DictMsg interface {
 	Len() int
 }
 
-// dictValueMsg adapts a DictMsg storage implementation to the Msg contract.
-type dictValueMsg struct {
-	internalMsg
-	v DictMsg
-}
-
-//nolint:ireturn // Msg contract uses interfaces.
-func (msg dictValueMsg) Dict() DictMsg { return msg.v }
-
-// String delegates to shared dict formatter because DictMsg contract
-// intentionally does not require fmt.Stringer.
-func (msg dictValueMsg) String() string { return dictToString(msg.v) }
-
-func (msg dictValueMsg) MarshalJSON() ([]byte, error) { return dictMarshalJSON(msg.v) }
-
 // internalDictMsg supplies invariant-violation methods shared by every dict
-// storage implementation. Concrete implementations override their one valid
-// accessor plus Len and Equal.
-type internalDictMsg struct{}
+// value. Concrete implementations override Dict, their one valid accessor,
+// Len, String, and MarshalJSON.
+type internalDictMsg struct{ internalMsg }
 
 func (internalDictMsg) Untyped() map[string]Msg {
 	panic("unexpected Untyped method call on typed dict message")
@@ -61,33 +47,12 @@ type untypedDictMsg struct {
 	v map[string]Msg
 }
 
-// boolDictMsg stores unboxed boolean dictionary values.
-type boolDictMsg struct {
-	internalDictMsg
-	v map[string]bool
-}
-
-// intDictMsg stores unboxed integer dictionary values.
-type intDictMsg struct {
-	internalDictMsg
-	v map[string]int64
-}
-
-// floatDictMsg stores unboxed float dictionary values.
-type floatDictMsg struct {
-	internalDictMsg
-	v map[string]float64
-}
-
-// stringDictMsg stores unboxed string dictionary values.
-type stringDictMsg struct {
-	internalDictMsg
-	v map[string]string
-}
-
 func (msg untypedDictMsg) Untyped() map[string]Msg { return msg.v }
-func (msg untypedDictMsg) Len() int                { return len(msg.v) }
-func (msg untypedDictMsg) String() string          { return mustJSON(msg) }
+
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func (msg untypedDictMsg) Dict() DictMsg  { return msg }
+func (msg untypedDictMsg) Len() int       { return len(msg.v) }
+func (msg untypedDictMsg) String() string { return mustJSON(msg) }
 func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
 	jsonData, err := json.Marshal(msg.v)
 	if err != nil {
@@ -96,36 +61,72 @@ func (msg untypedDictMsg) MarshalJSON() ([]byte, error) {
 	return addJSONSpaces(jsonData), nil
 }
 
+// boolDictMsg stores unboxed boolean dictionary values.
+type boolDictMsg struct {
+	internalDictMsg
+	v map[string]bool
+}
+
 func (msg boolDictMsg) Bools() map[string]bool { return msg.v }
-func (msg boolDictMsg) Len() int               { return len(msg.v) }
-func (msg boolDictMsg) String() string         { return mustJSON(msg) }
+
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func (msg boolDictMsg) Dict() DictMsg  { return msg }
+func (msg boolDictMsg) Len() int       { return len(msg.v) }
+func (msg boolDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg boolDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
+// intDictMsg stores unboxed integer dictionary values.
+type intDictMsg struct {
+	internalDictMsg
+	v map[string]int64
+}
+
 func (msg intDictMsg) Ints() map[string]int64 { return msg.v }
-func (msg intDictMsg) Len() int               { return len(msg.v) }
-func (msg intDictMsg) String() string         { return mustJSON(msg) }
+
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func (msg intDictMsg) Dict() DictMsg  { return msg }
+func (msg intDictMsg) Len() int       { return len(msg.v) }
+func (msg intDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg intDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
+// floatDictMsg stores unboxed float dictionary values.
+type floatDictMsg struct {
+	internalDictMsg
+	v map[string]float64
+}
+
 func (msg floatDictMsg) Floats() map[string]float64 { return msg.v }
-func (msg floatDictMsg) Len() int                   { return len(msg.v) }
-func (msg floatDictMsg) String() string             { return mustJSON(msg) }
+
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func (msg floatDictMsg) Dict() DictMsg  { return msg }
+func (msg floatDictMsg) Len() int       { return len(msg.v) }
+func (msg floatDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg floatDictMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
+// stringDictMsg stores unboxed string dictionary values.
+type stringDictMsg struct {
+	internalDictMsg
+	v map[string]string
+}
+
 func (msg stringDictMsg) Strings() map[string]string { return msg.v }
-func (msg stringDictMsg) Len() int                   { return len(msg.v) }
-func (msg stringDictMsg) String() string             { return mustJSON(msg) }
+
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func (msg stringDictMsg) Dict() DictMsg  { return msg }
+func (msg stringDictMsg) Len() int       { return len(msg.v) }
+func (msg stringDictMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
@@ -136,35 +137,35 @@ func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
 //
 //nolint:ireturn // Msg contract type.
 func NewDictMsg(d map[string]Msg) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: untypedDictMsg{v: d}}
+	return untypedDictMsg{v: d}
 }
 
 // NewDictBoolMsg creates a dictionary with unboxed boolean storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewDictBoolMsg(d map[string]bool) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: boolDictMsg{v: d}}
+	return boolDictMsg{v: d}
 }
 
 // NewDictIntMsg creates a dictionary with unboxed integer storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewDictIntMsg(d map[string]int64) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: intDictMsg{v: d}}
+	return intDictMsg{v: d}
 }
 
 // NewDictFloatMsg creates a dictionary with unboxed float storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewDictFloatMsg(d map[string]float64) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: floatDictMsg{v: d}}
+	return floatDictMsg{v: d}
 }
 
 // NewDictStringMsg creates a dictionary with unboxed string storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewDictStringMsg(d map[string]string) Msg {
-	return dictValueMsg{internalMsg: internalMsg{}, v: stringDictMsg{v: d}}
+	return stringDictMsg{v: d}
 }
 
 func dictEqual(left DictMsg, right DictMsg) bool {
@@ -214,31 +215,6 @@ func asUntypedDict(dict DictMsg) map[string]Msg {
 	default:
 		panic("unexpected dict implementation")
 	}
-}
-
-func dictMarshalJSON(dict DictMsg) ([]byte, error) {
-	switch typed := dict.(type) {
-	case untypedDictMsg:
-		return typed.MarshalJSON()
-	case boolDictMsg:
-		return typed.MarshalJSON()
-	case intDictMsg:
-		return typed.MarshalJSON()
-	case floatDictMsg:
-		return typed.MarshalJSON()
-	case stringDictMsg:
-		return typed.MarshalJSON()
-	default:
-		panic("unexpected dict implementation")
-	}
-}
-
-func dictToString(dict DictMsg) string {
-	b, err := dictMarshalJSON(dict)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
 }
 
 // AsListUntyped returns the boxed list representation when present.
@@ -338,7 +314,7 @@ func GetDictValueByKey(dict DictMsg, key string) (Msg, bool) {
 	return value, found
 }
 
-func equalDictValues(left dictValueMsg, right Msg) bool {
-	rightTyped, ok := right.(dictValueMsg)
-	return ok && dictEqual(left.v, rightTyped.v)
+func equalDictValue(left DictMsg, right Msg) bool {
+	rightDict, ok := right.(DictMsg)
+	return ok && dictEqual(left, rightDict)
 }

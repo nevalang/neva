@@ -15,10 +15,10 @@ func Equal(left, right Msg) bool {
 		return equalString(leftTyped, right)
 	case BytesMsg:
 		return equalBytes(leftTyped, right)
-	case listValueMsg:
-		return equalListValues(leftTyped, right)
-	case dictValueMsg:
-		return equalDictValues(leftTyped, right)
+	case ListMsg:
+		return equalListValue(leftTyped, right)
+	case DictMsg:
+		return equalDictValue(leftTyped, right)
 	case StructMsg:
 		return equalStructValue(leftTyped, right)
 	case UnionMsg:

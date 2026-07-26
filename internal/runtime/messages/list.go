@@ -8,6 +8,7 @@ import "encoding/json"
 // the boxed representation; scalar accessors expose the corresponding typed
 // storage. Calling any other accessor is a runtime invariant violation.
 type ListMsg interface {
+	Msg
 	Untyped() []Msg
 	Bools() []bool
 	Ints() []int64
@@ -16,29 +17,10 @@ type ListMsg interface {
 	Len() int
 }
 
-// listValueMsg adapts a ListMsg storage implementation to the Msg contract.
-// Keeping this wrapper separate lets storage implementations expose only list
-// operations rather than the unrelated scalar and aggregate Msg operations.
-type listValueMsg struct {
-	internalMsg
-	v ListMsg
-}
-
-//nolint:ireturn // Msg contract uses interfaces.
-func (msg listValueMsg) List() ListMsg { return msg.v }
-
-func (msg listValueMsg) String() string {
-	return listToString(msg.v)
-}
-
-func (msg listValueMsg) MarshalJSON() ([]byte, error) {
-	return listMarshalJSON(msg.v)
-}
-
 // internalListMsg supplies invariant-violation methods shared by every list
-// storage implementation. Concrete implementations override their one valid
-// accessor plus Len and Equal.
-type internalListMsg struct{}
+// value. Concrete implementations override List, their one valid accessor,
+// Len, String, and MarshalJSON.
+type internalListMsg struct{ internalMsg }
 
 func (internalListMsg) Untyped() []Msg    { panic("unexpected Untyped method call on typed list message") }
 func (internalListMsg) Bools() []bool     { panic("unexpected Bools method call on list message") }
@@ -59,32 +41,11 @@ type untypedListMsg struct {
 	v []Msg
 }
 
-// boolListMsg stores unboxed boolean list elements.
-type boolListMsg struct {
-	internalListMsg
-	v []bool
-}
-
-// intListMsg stores unboxed integer list elements.
-type intListMsg struct {
-	internalListMsg
-	v []int64
-}
-
-// floatListMsg stores unboxed float list elements.
-type floatListMsg struct {
-	internalListMsg
-	v []float64
-}
-
-// stringListMsg stores unboxed string list elements.
-type stringListMsg struct {
-	internalListMsg
-	v []string
-}
-
 func (msg untypedListMsg) Untyped() []Msg { return msg.v }
-func (msg untypedListMsg) Len() int       { return len(msg.v) }
+
+//nolint:ireturn // ListMsg is the runtime list contract.
+func (msg untypedListMsg) List() ListMsg { return msg }
+func (msg untypedListMsg) Len() int      { return len(msg.v) }
 func (msg untypedListMsg) String() string {
 	bb, err := msg.MarshalJSON()
 	if err != nil {
@@ -98,7 +59,16 @@ func (msg untypedListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
-func (msg boolListMsg) Bools() []bool  { return msg.v }
+// boolListMsg stores unboxed boolean list elements.
+type boolListMsg struct {
+	internalListMsg
+	v []bool
+}
+
+func (msg boolListMsg) Bools() []bool { return msg.v }
+
+//nolint:ireturn // ListMsg is the runtime list contract.
+func (msg boolListMsg) List() ListMsg  { return msg }
 func (msg boolListMsg) Len() int       { return len(msg.v) }
 func (msg boolListMsg) String() string { return mustJSON(msg) }
 
@@ -107,7 +77,16 @@ func (msg boolListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
-func (msg intListMsg) Ints() []int64  { return msg.v }
+// intListMsg stores unboxed integer list elements.
+type intListMsg struct {
+	internalListMsg
+	v []int64
+}
+
+func (msg intListMsg) Ints() []int64 { return msg.v }
+
+//nolint:ireturn // ListMsg is the runtime list contract.
+func (msg intListMsg) List() ListMsg  { return msg }
 func (msg intListMsg) Len() int       { return len(msg.v) }
 func (msg intListMsg) String() string { return mustJSON(msg) }
 
@@ -116,9 +95,18 @@ func (msg intListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
+// floatListMsg stores unboxed float list elements.
+type floatListMsg struct {
+	internalListMsg
+	v []float64
+}
+
 func (msg floatListMsg) Floats() []float64 {
 	return msg.v
 }
+
+//nolint:ireturn // ListMsg is the runtime list contract.
+func (msg floatListMsg) List() ListMsg  { return msg }
 func (msg floatListMsg) Len() int       { return len(msg.v) }
 func (msg floatListMsg) String() string { return mustJSON(msg) }
 
@@ -127,9 +115,18 @@ func (msg floatListMsg) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg.v)
 }
 
+// stringListMsg stores unboxed string list elements.
+type stringListMsg struct {
+	internalListMsg
+	v []string
+}
+
 func (msg stringListMsg) Strings() []string { return msg.v }
-func (msg stringListMsg) Len() int          { return len(msg.v) }
-func (msg stringListMsg) String() string    { return mustJSON(msg) }
+
+//nolint:ireturn // ListMsg is the runtime list contract.
+func (msg stringListMsg) List() ListMsg  { return msg }
+func (msg stringListMsg) Len() int       { return len(msg.v) }
+func (msg stringListMsg) String() string { return mustJSON(msg) }
 
 //nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (msg stringListMsg) MarshalJSON() ([]byte, error) {
@@ -140,35 +137,35 @@ func (msg stringListMsg) MarshalJSON() ([]byte, error) {
 //
 //nolint:ireturn // Msg contract type.
 func NewListMsg(v []Msg) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: untypedListMsg{v: v}}
+	return untypedListMsg{v: v}
 }
 
 // NewListBoolMsg creates a list with unboxed boolean storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewListBoolMsg(v []bool) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: boolListMsg{v: v}}
+	return boolListMsg{v: v}
 }
 
 // NewListIntMsg creates a list with unboxed integer storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewListIntMsg(v []int64) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: intListMsg{v: v}}
+	return intListMsg{v: v}
 }
 
 // NewListFloatMsg creates a list with unboxed float storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewListFloatMsg(v []float64) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: floatListMsg{v: v}}
+	return floatListMsg{v: v}
 }
 
 // NewListStringMsg creates a list with unboxed string storage.
 //
 //nolint:ireturn // Msg contract type.
 func NewListStringMsg(v []string) Msg {
-	return listValueMsg{internalMsg: internalMsg{}, v: stringListMsg{v: v}}
+	return stringListMsg{v: v}
 }
 
 func listEqualUntyped(left []Msg, right ListMsg) bool {
@@ -313,31 +310,6 @@ func listEqualString(left []string, right ListMsg) bool {
 	return true
 }
 
-func listMarshalJSON(list ListMsg) ([]byte, error) {
-	switch typed := list.(type) {
-	case untypedListMsg:
-		return typed.MarshalJSON()
-	case boolListMsg:
-		return typed.MarshalJSON()
-	case intListMsg:
-		return typed.MarshalJSON()
-	case floatListMsg:
-		return typed.MarshalJSON()
-	case stringListMsg:
-		return typed.MarshalJSON()
-	default:
-		panic("unexpected list implementation")
-	}
-}
-
-func listToString(list ListMsg) string {
-	b, err := listMarshalJSON(list)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
 func AsListUntyped(list ListMsg) ([]Msg, bool) {
 	typed, ok := list.(untypedListMsg)
 	return typed.v, ok
@@ -404,9 +376,9 @@ func ListToMsgs(list ListMsg) []Msg {
 	return list.Untyped()
 }
 
-func equalListValues(left listValueMsg, right Msg) bool {
-	rightTyped, ok := right.(listValueMsg)
-	return ok && equalLists(left.v, rightTyped.v)
+func equalListValue(left ListMsg, right Msg) bool {
+	rightList, ok := right.(ListMsg)
+	return ok && equalLists(left, rightList)
 }
 
 func equalLists(left, right ListMsg) bool {

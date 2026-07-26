@@ -80,7 +80,7 @@ func (switchRouter) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Cont
 			}
 
 			if matchIdx != -1 {
-				caseIdx := messages.Uint8Index(matchIdx)
+				caseIdx := runtime.Uint8Index(matchIdx)
 				if !caseOut.Send(
 					ctx,
 					caseIdx,

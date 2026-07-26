@@ -185,7 +185,7 @@ func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 		return OrderedMsg{}, false
 		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		index := messages.Uint8Index(idx)
+		index := Uint8Index(idx)
 		slotAddr := PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: a.addr.Path,
@@ -218,7 +218,7 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 			case <-ctx.Done():
 				resultChan <- false
 			case received := <-a.chans[idx]:
-				index := messages.Uint8Index(idx)
+				index := Uint8Index(idx)
 				slotAddr := PortSlotAddr{
 					PortAddr: PortAddr{
 						Path: a.addr.Path,
@@ -276,7 +276,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				index := messages.Uint8Index(slotIdx)
+				index := Uint8Index(slotIdx)
 				slotAddr := PortSlotAddr{
 					PortAddr: PortAddr{Path: a.addr.Path, Port: a.addr.Port},
 					Index:    &index,
@@ -457,7 +457,7 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg messages.Msg, causes ...
 	for idx := range a.slots {
 		wg.Go(func() {
 			ordered, causes := newOrderedMsg(msg, causes)
-			i := messages.Uint8Index(idx)
+			i := Uint8Index(idx)
 			slotAddr := PortSlotAddr{
 				PortAddr: a.addr,
 				Index:    &i,

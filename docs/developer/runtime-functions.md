@@ -37,10 +37,10 @@ tracing.
 
 ## Compiler Invariants
 
-Runtime functions may rely on the static type guarantees of the Neva compiler.
-If a received message contradicts the component's declared input type, that is
-a runtime invariant violation and must panic. Do not convert a compiler or
-runtime implementation defect into a public Neva `error` value.
+The entire runtime may rely on the static type guarantees of the Neva
+compiler. A value that contradicts its declared type is a runtime invariant
+violation and must panic. Do not convert a compiler or runtime implementation
+defect into a public Neva `error` value.
 
 Use a public error output only for failures possible in a well-typed program,
 such as a missing dictionary key or an out-of-bounds list index.
@@ -49,17 +49,15 @@ such as a missing dictionary key or an out-of-bounds list index.
 
 The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
 can retain unboxed Go storage such as `[]int64` or `map[string]string`.
-Runtime functions should use the matching `messages.AsList...` or
-`messages.AsDict...` accessor on scalar-preserving hot paths. Use
-`messages.ListToMsgs` and `messages.DictToMsgs` only at boundaries that
-genuinely require one `messages.Msg` per element, such as conversion to a
-stream. They return existing boxed storage unchanged, but typed scalar storage
-is deliberately boxed into a newly allocated slice or map.
+Preserve that representation on scalar hot paths. Box each element only at a
+boundary that genuinely requires an individual runtime message, such as
+conversion to a stream. Existing boxed containers may retain their backing
+storage; converting typed scalar storage deliberately allocates a new boxed
+slice or map.
 
-Use `messages.Equal(left, right)` for message equality. Equality is a pure
-runtime operation that compares equivalent typed and untyped container storage;
-runtime functions must not reimplement it or depend on representation-specific
-`Equal` methods.
+Equality is a pure value operation. It compares equivalent typed and untyped
+container storage; runtime functions must not reimplement it or depend on a
+particular storage representation.
 
 ## Concurrent Inputs
 
