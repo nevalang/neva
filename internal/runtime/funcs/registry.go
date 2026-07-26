@@ -113,6 +113,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"list_slice":   listSlice{},
 		"list_append":  listAppend{},
 		"list_prepend": listPrepend{},
+		"list_concat":  listConcat{},
 
 		"time_delay": timeDelay{},
 		"time_after": timeAfter{},

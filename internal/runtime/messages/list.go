@@ -505,6 +505,38 @@ func ListPrepend(list ListMsg, value Msg) Msg {
 	return NewListMsg(listPrepend(ListToMessageSlice(list), value))
 }
 
+// ListConcat returns a new list that contains left followed by right. It
+// preserves typed scalar storage when both lists use the same representation;
+// otherwise it returns an untyped list.
+//
+//nolint:ireturn // Msg is the value-layer contract.
+func ListConcat(left, right ListMsg) Msg {
+	switch leftTyped := left.(type) {
+	case untypedListMsg:
+		return NewListMsg(listConcat(leftTyped.v, ListToMessageSlice(right)))
+	case boolListMsg:
+		if rightTyped, ok := right.(boolListMsg); ok {
+			return NewListBoolMsg(listConcat(leftTyped.v, rightTyped.v))
+		}
+	case intListMsg:
+		if rightTyped, ok := right.(intListMsg); ok {
+			return NewListIntMsg(listConcat(leftTyped.v, rightTyped.v))
+		}
+	case floatListMsg:
+		if rightTyped, ok := right.(floatListMsg); ok {
+			return NewListFloatMsg(listConcat(leftTyped.v, rightTyped.v))
+		}
+	case stringListMsg:
+		if rightTyped, ok := right.(stringListMsg); ok {
+			return NewListStringMsg(listConcat(leftTyped.v, rightTyped.v))
+		}
+	default:
+		panic("unexpected list implementation")
+	}
+
+	return NewListMsg(listConcat(ListToMessageSlice(left), ListToMessageSlice(right)))
+}
+
 //nolint:ireturn // Generic helper returns a scalar storage value.
 func listAt[T any](items []T, index int64) (T, bool) {
 	length := int64(len(items))
@@ -534,6 +566,13 @@ func listPrepend[T any](items []T, value T) []T {
 	result := make([]T, len(items)+1)
 	result[0] = value
 	copy(result[1:], items)
+	return result
+}
+
+func listConcat[T any](left, right []T) []T {
+	result := make([]T, len(left)+len(right))
+	copy(result, left)
+	copy(result[len(left):], right)
 	return result
 }
 

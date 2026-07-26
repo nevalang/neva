@@ -282,6 +282,24 @@ func BenchmarkListPrepend(b *testing.B) {
 	}
 }
 
+// BenchmarkListConcat measures direct immutable concatenation without transport cost.
+func BenchmarkListConcat(b *testing.B) {
+	leftValues := make([]int64, 256)
+	rightValues := make([]int64, 256)
+	for i := range leftValues {
+		leftValues[i] = int64(i)
+		rightValues[i] = int64(i + len(leftValues))
+	}
+	left := NewListIntMsg(leftValues).List()
+	right := NewListIntMsg(rightValues).List()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = ListConcat(left, right)
+	}
+}
+
 // BenchmarkMsgListIterScalars compares list traversal cost across scalar payload kinds.
 func BenchmarkMsgListIterScalars(b *testing.B) {
 	for _, size := range []int{8, 64, 512, 1024} {
