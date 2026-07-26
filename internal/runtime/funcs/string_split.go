@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -37,13 +36,7 @@ func (p stringsSplit) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Co
 				return
 			}
 
-			splitted := strings.Split(data.Str(), delim.Str())
-			res := make([]messages.Msg, len(splitted))
-			for i, s := range splitted {
-				res[i] = messages.NewStringMsg(s)
-			}
-
-			if !resOut.Send(ctx, messages.NewListMsg(res)) {
+			if !resOut.Send(ctx, messages.StringSplit(data.Msg, delim.Msg)) {
 				return
 			}
 		}

@@ -82,19 +82,19 @@ func TestFormatTemplate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := format(tc.template, argsByID[tc.argsID])
+			result, err := messages.StringFormat(tc.template, argsByID[tc.argsID])
 			if tc.expectErr {
 				if err == nil {
-					t.Fatalf("format(%q) expected error, got nil", tc.template)
+					t.Fatalf("StringFormat(%q) expected error, got nil", tc.template)
 				}
 				return
 			}
 
 			if err != nil {
-				t.Fatalf("format(%q) returned error: %v", tc.template, err)
+				t.Fatalf("StringFormat(%q) returned error: %v", tc.template, err)
 			}
 			if result != tc.expect {
-				t.Fatalf("format(%q) = %q, want %q", tc.template, result, tc.expect)
+				t.Fatalf("StringFormat(%q) = %q, want %q", tc.template, result, tc.expect)
 			}
 		})
 	}

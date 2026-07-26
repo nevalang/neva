@@ -11,6 +11,6 @@ type floatNeg struct{}
 
 func (floatNeg) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	return createUnaryFunc(io, func(input messages.Msg) messages.Msg {
-		return messages.NewFloatMsg(-input.Float())
+		return messages.FloatNegate(input)
 	})
 }

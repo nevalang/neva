@@ -7,10 +7,10 @@ import (
 	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
-type listPush struct{}
+type listAppend struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p listPush) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+func (p listAppend) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -35,13 +35,9 @@ func (p listPush) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Contex
 				return
 			}
 
-			lstCopy := messages.ListToMessageSlice(lstMsg.List())
-
 			if !resOut.Send(
 				ctx,
-				messages.NewListMsg(
-					append(lstCopy, dataMsg.Msg),
-				),
+				messages.ListAppend(lstMsg.List(), dataMsg.Msg),
 				dataMsg,
 				lstMsg,
 			) {

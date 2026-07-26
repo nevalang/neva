@@ -2,8 +2,6 @@ package funcs
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -44,7 +42,7 @@ func (r regexpSubmatch) Create(io runtime.IO, _ messages.Msg) (func(ctx context.
 				return
 			}
 
-			regex, err := regexp.Compile(regexpMsg.Str())
+			result, err := messages.StringRegexpSubmatch(regexpMsg.Msg, dataMsg.Msg)
 			if err != nil {
 				if !errOut.Send(ctx, messages.NewStringMsg(err.Error())) {
 					return
@@ -52,25 +50,9 @@ func (r regexpSubmatch) Create(io runtime.IO, _ messages.Msg) (func(ctx context.
 				continue
 			}
 
-			if !resOut.Send(
-				ctx,
-				stringsToList(
-					regex.FindStringSubmatch(
-						fmt.Sprint(dataMsg),
-					),
-				),
-			) {
+			if !resOut.Send(ctx, result) {
 				return
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func stringsToList(ss []string) messages.Msg {
-	msgs := make([]messages.Msg, 0, len(ss))
-	for _, s := range ss {
-		msgs = append(msgs, messages.NewStringMsg(s))
-	}
-	return messages.NewListMsg(msgs)
 }

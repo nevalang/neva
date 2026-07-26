@@ -7,14 +7,16 @@ import (
 	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
-type stringFromIntCodepoint struct{}
+type listPrepend struct{}
 
-func (stringFromIntCodepoint) Create(
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	io runtime.IO,
-	_ messages.Msg,
-) (func(ctx context.Context), error) {
+//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+func (p listPrepend) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
+	if err != nil {
+		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+		return nil, err
+	}
+	lstIn, err := io.In.Single("lst")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
@@ -28,12 +30,17 @@ func (stringFromIntCodepoint) Create(
 
 	return func(ctx context.Context) {
 		for {
-			data, ok := dataIn.Receive(ctx)
+			dataMsg, lstMsg, ok := receive2(ctx, dataIn, lstIn)
 			if !ok {
 				return
 			}
 
-			if !resOut.Send(ctx, messages.StringFromIntCodePoint(data.Msg)) {
+			if !resOut.Send(
+				ctx,
+				messages.ListPrepend(lstMsg.List(), dataMsg.Msg),
+				dataMsg,
+				lstMsg,
+			) {
 				return
 			}
 		}

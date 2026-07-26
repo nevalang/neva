@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"unicode/utf8"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -43,23 +42,16 @@ func (stringAt) Create(io runtime.IO, _ messages.Msg) (func(context.Context), er
 				return
 			}
 
-			idx := idxMsg.Int()
-			data := dataMsg.Str()
-			l := int64(utf8.RuneCountInString(data))
-
-			if idx < -l || idx >= l {
+			result, found := messages.StringAt(dataMsg.Msg, idxMsg.Int())
+			if !found {
 				if !errOut.Send(ctx, errFromString("index out of bounds")) {
 					return
 				}
+				continue
 			}
 
-			for i, r := range data {
-				if int64(i) == idx {
-					if !resOut.Send(ctx, messages.NewStringMsg(string(r))) {
-						return
-					}
-					break
-				}
+			if !resOut.Send(ctx, result) {
+				return
 			}
 		}
 	}, nil

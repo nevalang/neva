@@ -41,18 +41,9 @@ func (s structField) Create(io runtime.IO, cfg messages.Msg) (func(ctx context.C
 				return
 			}
 
-			if !resOut.Send(ctx, s.selector(dataMsg, pathStrings)) {
+			if !resOut.Send(ctx, messages.StructGetPath(dataMsg.Msg, pathStrings)) {
 				return
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (structField) selector(m messages.Msg, path []string) messages.Msg {
-	for len(path) > 0 {
-		m = m.Struct().Get(path[0])
-		path = path[1:]
-	}
-	return m
 }

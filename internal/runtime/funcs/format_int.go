@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -40,8 +39,7 @@ func (formatInt) Create(
 				return
 			}
 
-			res := strconv.FormatInt(data.Int(), int(base.Int()))
-			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.StringFromIntBase(data.Msg, base.Msg)) {
 				return
 			}
 		}

@@ -8,15 +8,15 @@ const f int = 69
 const l list<int> = [320, 420, 100, -100, 0, 5]
 
 def Main(start any) (stop any) {
-    push lists.Push<int>
+    append lists.Append<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
 	---
 	:start -> [
-        $l -> push:lst,
-        $f -> push:data
+		$l -> append:lst,
+		$f -> append:data
 	]
-    push -> println:data
+    append -> println:data
     println:res -> :stop
     println:err -> panic
 }

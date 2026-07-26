@@ -3,8 +3,6 @@ package funcs
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -61,7 +59,7 @@ func (printf) handle(
 				return
 			}
 
-			res, err := format(templateMsg.Str(), args)
+			res, err := messages.StringFormat(templateMsg.Str(), args)
 			if err != nil {
 				if !errOut.Send(ctx, errFromErr(err), append(causes, templateMsg)...) {
 					return
@@ -83,44 +81,6 @@ func (printf) handle(
 	}, nil
 }
 
-//nolint:gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func format(tpl string, args []messages.Msg) (string, error) {
-	usedArgs := make(map[int]bool)
-	var result strings.Builder
-	result.Grow(len(tpl))
-
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	templatePos := 0
-	for templatePos < len(tpl) {
-		placeholderIndex, nextIndex, hasPlaceholder, err := parsePlaceholderAt(tpl, templatePos)
-		if err != nil {
-			return "", err
-		}
-		//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		if hasPlaceholder {
-			if placeholderIndex >= len(args) {
-				return "", fmt.Errorf("template refers to arg %d, but only %d args given", placeholderIndex, len(args))
-			}
-			usedArgs[placeholderIndex] = true
-			fmt.Fprint(&result, args[placeholderIndex])
-			templatePos = nextIndex
-			continue
-		}
-
-		result.WriteByte(tpl[templatePos])
-		templatePos++
-	}
-
-	if len(usedArgs) != len(args) {
-		return "", fmt.Errorf(
-			"not all arguments are used in the template: got %v, used %v",
-			len(args), len(usedArgs),
-		)
-	}
-
-	return result.String(), nil
-}
-
 func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]messages.Msg, []runtime.OrderedMsg, bool) {
 	args := make([]messages.Msg, argsIn.Len())
 	causes := make([]runtime.OrderedMsg, argsIn.Len())
@@ -132,28 +92,4 @@ func receivePrintfArgs(ctx context.Context, argsIn *runtime.ArrayInport) ([]mess
 		return nil, nil, false
 	}
 	return args, causes, true
-}
-
-func parsePlaceholderAt(template string, startIdx int) (int, int, bool, error) {
-	if startIdx >= len(template) || template[startIdx] != '$' {
-		return 0, startIdx, false, nil
-	}
-
-	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	digitStart := startIdx + 1
-	digitEnd := digitStart
-	for digitEnd < len(template) && template[digitEnd] >= '0' && template[digitEnd] <= '9' {
-		digitEnd++
-	}
-
-	if digitStart == digitEnd {
-		return 0, startIdx, false, nil
-	}
-
-	argIndex, err := strconv.Atoi(template[digitStart:digitEnd])
-	if err != nil {
-		return 0, 0, false, fmt.Errorf("invalid placeholder %q: %w", template[digitStart:digitEnd], err)
-	}
-
-	return argIndex, digitEnd, true, nil
 }

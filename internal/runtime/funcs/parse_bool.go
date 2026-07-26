@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -42,7 +41,7 @@ func (parseBool) Create(
 				return
 			}
 
-			parsed, parseErr := strconv.ParseBool(data.Str())
+			parsed, parseErr := messages.BoolFromString(data.Msg)
 			if parseErr != nil {
 				parseErrMsg := strings.TrimPrefix(parseErr.Error(), "strconv.ParseBool: ")
 				if !errOut.Send(ctx, errFromString(parseErrMsg)) {
@@ -51,7 +50,7 @@ func (parseBool) Create(
 				continue
 			}
 
-			if !resOut.Send(ctx, messages.NewBoolMsg(parsed)) {
+			if !resOut.Send(ctx, parsed) {
 				return
 			}
 		}

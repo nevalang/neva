@@ -12,17 +12,31 @@ type StructMsg struct {
 
 func (msg StructMsg) Struct() StructMsg { return msg }
 
-// get returns the value of a field by name.
-// it panics if the field is not found.
-// it uses linear scan to find the field.
+// StructGetField returns the value of name in value. It panics when the field is
+// absent because that contradicts the compiler's static struct-type guarantee.
 //
-//nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (msg StructMsg) Get(name string) Msg { //nolint:ireturn,lll // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	if field, ok := msg.get(name); ok {
+//nolint:ireturn // Msg is the value-layer contract.
+func StructGetField(value StructMsg, name string) Msg {
+	if field, ok := value.get(name); ok {
 		return field
 	}
 	panic(fmt.Sprintf("field %q not found", name))
+}
+
+// Get returns the value of name in msg.
+// It forwards to StructGetField for compatibility with existing internal consumers.
+//
+//nolint:ireturn // Compatibility method returns the message contract.
+func (msg StructMsg) Get(name string) Msg { return StructGetField(msg, name) }
+
+// StructGetPath returns the nested field selected by path.
+//
+//nolint:ireturn // Msg is the value-layer contract.
+func StructGetPath(value Msg, path []string) Msg {
+	for _, name := range path {
+		value = StructGetField(value.Struct(), name)
+	}
+	return value
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

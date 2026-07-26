@@ -11,6 +11,6 @@ type intBitwiseXor struct{}
 
 func (intBitwiseXor) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	return createBinaryFuncConcurrent(io, func(left messages.Msg, right messages.Msg) messages.Msg {
-		return messages.NewIntMsg(left.Int() ^ right.Int())
+		return messages.IntBitwiseXor(left, right)
 	})
 }

@@ -9,17 +9,6 @@ import (
 
 type listSlice struct{}
 
-// sliceList returns a copy of a normalized list slice.
-func sliceList(data []messages.Msg, from int64, to int64) []messages.Msg {
-	start, end := normalizeSliceBounds(from, to, int64(len(data)))
-	return append([]messages.Msg(nil), data[start:end]...)
-}
-
-func sliceTypedList[T any](data []T, from int64, to int64) []T {
-	start, end := normalizeSliceBounds(from, to, int64(len(data)))
-	return append([]T(nil), data[start:end]...)
-}
-
 func (listSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	dataIn, fromIn, toIn, resOut, err := resolveListSlicePorts(io)
 	if err != nil {
@@ -33,7 +22,7 @@ func (listSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), e
 				return
 			}
 
-			if !resOut.Send(ctx, sliceMessage(dataMsg.Msg, fromMsg.Int(), toMsg.Int())) {
+			if !resOut.Send(ctx, messages.ListSlice(dataMsg.List(), fromMsg.Int(), toMsg.Int())) {
 				return
 			}
 		}
@@ -70,23 +59,4 @@ func resolveListSlicePorts(
 	}
 
 	return dataIn, fromIn, toIn, resOut, nil
-}
-
-//nolint:ireturn // Runtime messages have multiple concrete representations.
-func sliceMessage(data messages.Msg, start int64, end int64) messages.Msg {
-	list := data.List()
-	if values, ok := messages.ListAsInts(list); ok {
-		return messages.NewListIntMsg(sliceTypedList(values, start, end))
-	}
-	if values, ok := messages.ListAsStrings(list); ok {
-		return messages.NewListStringMsg(sliceTypedList(values, start, end))
-	}
-	if values, ok := messages.ListAsBools(list); ok {
-		return messages.NewListBoolMsg(sliceTypedList(values, start, end))
-	}
-	if values, ok := messages.ListAsFloats(list); ok {
-		return messages.NewListFloatMsg(sliceTypedList(values, start, end))
-	}
-
-	return messages.NewListMsg(sliceList(list.Untyped(), start, end))
 }
