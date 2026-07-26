@@ -1,9 +1,9 @@
 ---
-name: "neva"
+name: "neva-language"
 description: "Use for Neva source or snippets: authoring, refactoring, debugging, or review."
 ---
 
-# Neva
+# Neva Language
 
 Use this skill for changes touching `*.neva` or Neva code snippets.
 

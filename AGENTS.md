@@ -52,6 +52,18 @@ graph. Keep each topic canonical in one place.
 
 Start from `docs/README.md` for documentation navigation.
 
+## AI Engineering Harness
+
+`.codex/` configures the repository's AI engineering harness: project-local
+skills, hooks, and other agent guidance. Keep each part specific to Neva and
+avoid duplicating general-purpose agent methodology.
+
+In particular, a repository-local skill must capture project knowledge, a
+Neva-specific tool or convention, or a repeatable workflow whose correct
+execution depends on this repository. Do not add generic methodology there
+merely to prescribe how an agent should reason; use a general skill when one is
+available instead.
+
 ## Change Routing
 
 | Change | Read before editing | Update when behavior changes |
