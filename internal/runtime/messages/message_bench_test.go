@@ -247,7 +247,22 @@ func BenchmarkMsgStructGet(b *testing.B) {
 	b.ResetTimer()
 	//nolint:intrange // keeps explicit b.N form for older benchmark style consistency.
 	for i := 0; i < b.N; i++ {
-		intSink = msg.Struct().Get("f31").Int()
+		intSink = StructGet(msg.Struct(), "f31").Int()
+	}
+}
+
+// BenchmarkListSlice measures direct immutable slicing without transport cost.
+func BenchmarkListSlice(b *testing.B) {
+	values := make([]int64, 512)
+	for i := range values {
+		values[i] = int64(i)
+	}
+	list := NewListIntMsg(values).List()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		msgSink = ListSlice(list, 64, 448)
 	}
 }
 
