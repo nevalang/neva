@@ -30,7 +30,7 @@ func (p listlen) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context
 				return
 			}
 
-			l := dataMsg.List().Len()
+			l := messages.ListLen(dataMsg.List())
 
 			if !resOut.Send(ctx, messages.NewIntMsg(int64(l))) {
 				return

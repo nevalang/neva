@@ -66,7 +66,7 @@ func NewRegistry() map[string]runtime.FuncCreator {
 		"field":          structField{},
 		"struct_builder": structBuilder{},
 
-		"dict_get_by_key": dictGetByKey{},
+		"get_dict_value_by_key": getDictValueByKey{},
 
 		"int_add":    intAdd{},
 		"int_sub":    intSub{},

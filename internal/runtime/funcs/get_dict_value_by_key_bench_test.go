@@ -11,7 +11,7 @@ import (
 // BenchmarkGetDictTypedInt measures a complete typed dictionary lookup through ports.
 func BenchmarkGetDictTypedInt(b *testing.B) {
 	io, inputs, outputs := newIO([]string{"dict", "key"}, []string{"res", "err"})
-	handler, err := (dictGetByKey{}).Create(io, nil)
+	handler, err := (getDictValueByKey{}).Create(io, nil)
 	if err != nil {
 		b.Fatalf("Create returned error: %v", err)
 	}

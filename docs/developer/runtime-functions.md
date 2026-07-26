@@ -35,20 +35,44 @@ Every message derived from received input must pass the received `OrderedMsg`
 values to `Send` as causes. This preserves runtime ordering and dataflow
 tracing.
 
+## Compiler Invariants
+
+The entire runtime may rely on the static type guarantees of the Neva
+compiler. A value that contradicts its declared type is a runtime invariant
+violation and must panic. Do not convert a compiler or runtime implementation
+defect into a public Neva `error` value.
+
+Use a public error output only for failures possible in a well-typed program,
+such as a missing dictionary key or an out-of-bounds list index.
+
 ## Typed Containers
 
 The public Neva values remain `list<T>` and `dict<T>`, but scalar containers
 can retain unboxed Go storage such as `[]int64` or `map[string]string`.
-Runtime functions should use the matching `runtime.AsList...` or
-`runtime.AsDict...` accessor on scalar-preserving hot paths. Keep the untyped
-`listToMsgs` and `dictToMsgs` helpers for boundaries that genuinely require one
-`runtime.Msg` per element, such as conversion to a stream; they box every
-scalar element by design.
+Preserve that representation on scalar hot paths. Convert each element to an
+individual runtime message only at a boundary that genuinely requires one, such as
+conversion to a stream. Existing boxed containers may retain their backing
+storage; converting typed scalar storage deliberately allocates a new message
+slice or map.
 
-Use `runtime.Equal(left, right)` for message equality. Equality is a pure
-runtime operation that compares equivalent typed and untyped container storage;
-runtime functions must not reimplement it or depend on representation-specific
-`Equal` methods.
+Equality is a pure value operation. It compares equivalent typed and untyped
+container storage; runtime functions must not reimplement it or depend on a
+particular storage representation.
+
+Equality must preserve the storage representation. Compare two containers with
+the same typed scalar representation directly. Compare a typed container and
+an untyped container incrementally, without materializing an entire typed
+container as `[]Msg` or `map[string]Msg`. The same rule applies recursively:
+nested containers must not cause whole-container boxing merely to perform
+equality or matching.
+
+Container inspection and transformation are value operations as well. Keep
+representation interfaces limited to access to their storage; do not add
+semantic operations as methods on those interfaces.
+
+Name a public operation specific to one value type with the type first, then
+the action and any necessary detail. Constructors retain the usual `New<Type>`
+form. Generic operations over all messages are exempt from this convention.
 
 ## Concurrent Inputs
 

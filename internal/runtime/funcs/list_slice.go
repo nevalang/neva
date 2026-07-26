@@ -75,16 +75,16 @@ func resolveListSlicePorts(
 //nolint:ireturn // Runtime messages have multiple concrete representations.
 func sliceMessage(data messages.Msg, start int64, end int64) messages.Msg {
 	list := data.List()
-	if values, ok := messages.AsListInts(list); ok {
+	if values, ok := messages.ListAsInts(list); ok {
 		return messages.NewListIntMsg(sliceTypedList(values, start, end))
 	}
-	if values, ok := messages.AsListStrings(list); ok {
+	if values, ok := messages.ListAsStrings(list); ok {
 		return messages.NewListStringMsg(sliceTypedList(values, start, end))
 	}
-	if values, ok := messages.AsListBools(list); ok {
+	if values, ok := messages.ListAsBools(list); ok {
 		return messages.NewListBoolMsg(sliceTypedList(values, start, end))
 	}
-	if values, ok := messages.AsListFloats(list); ok {
+	if values, ok := messages.ListAsFloats(list); ok {
 		return messages.NewListFloatMsg(sliceTypedList(values, start, end))
 	}
 
