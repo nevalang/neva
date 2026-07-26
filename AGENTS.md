@@ -52,6 +52,14 @@ graph. Keep each topic canonical in one place.
 
 Start from `docs/README.md` for documentation navigation.
 
+## Repository-local Skills
+
+Keep `.codex/skills/` specific to Neva. A repository-local skill must capture
+project knowledge, a Neva-specific tool or convention, or a repeatable workflow
+whose correct execution depends on this repository. Do not add generic
+methodology there merely to prescribe how an agent should reason; use a general
+skill when one is available instead.
+
 ## Change Routing
 
 | Change | Read before editing | Update when behavior changes |
