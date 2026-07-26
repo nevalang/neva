@@ -15,5 +15,9 @@ pub def Append<T>(lst list<T>, data T) (res list<T>)
 #extern(list_prepend)
 pub def Prepend<T>(lst list<T>, data T) (res list<T>)
 
+// Concat creates a new list by combining left followed by right.
+#extern(list_concat)
+pub def Concat<T>(left list<T>, right list<T>) (res list<T>)
+
 #extern(list_at)
 pub def At<T>(data list<T>, idx int) (res T, err error)

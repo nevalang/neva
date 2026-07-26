@@ -1,0 +1,22 @@
+import {
+	fmt
+	lists
+	runtime
+}
+
+const left list<int> = [1, 2]
+const right list<int> = [3, 4]
+
+def Main(start any) (stop any) {
+	concat lists.Concat<int>
+	println fmt.Println<list<int>>
+	panic runtime.Panic
+	---
+	:start -> [
+		$left -> concat:left,
+		$right -> concat:right
+	]
+	concat -> println:data
+	println:res -> :stop
+	println:err -> panic
+}

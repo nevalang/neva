@@ -181,3 +181,115 @@ func TestListPrependPreservesCompatibleTypedStorage(t *testing.T) {
 		t.Fatal("ListPrepend incompatible value did not produce untyped storage")
 	}
 }
+
+func TestListConcatPreservesMatchingTypedStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		left  Msg
+		right Msg
+		want  Msg
+		name  string
+	}{
+		{
+			name:  "bool",
+			left:  NewListBoolMsg([]bool{true}),
+			right: NewListBoolMsg([]bool{false}),
+			want:  NewListBoolMsg([]bool{true, false}),
+		},
+		{
+			name:  "int",
+			left:  NewListIntMsg([]int64{1}),
+			right: NewListIntMsg([]int64{2}),
+			want:  NewListIntMsg([]int64{1, 2}),
+		},
+		{
+			name:  "float",
+			left:  NewListFloatMsg([]float64{1.5}),
+			right: NewListFloatMsg([]float64{2.5}),
+			want:  NewListFloatMsg([]float64{1.5, 2.5}),
+		},
+		{
+			name:  "string",
+			left:  NewListStringMsg([]string{"one"}),
+			right: NewListStringMsg([]string{"two"}),
+			want:  NewListStringMsg([]string{"one", "two"}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			joined := ListConcat(tt.left.List(), tt.right.List())
+			if _, ok := ListAsUntyped(joined.List()); ok {
+				t.Fatal("ListConcat matching scalars did not preserve typed storage")
+			}
+			if !Equal(joined, tt.want) {
+				t.Fatalf("ListConcat result = %v, want %v", joined, tt.want)
+			}
+		})
+	}
+}
+
+func TestListConcatCopiesInputStorage(t *testing.T) {
+	t.Parallel()
+
+	leftValues := []int64{1, 2}
+	rightValues := []int64{3, 4}
+	joined := ListConcat(NewListIntMsg(leftValues).List(), NewListIntMsg(rightValues).List())
+	result, ok := ListAsInts(joined.List())
+	if !ok || len(result) != 4 || result[0] != 1 || result[3] != 4 {
+		t.Fatalf("ListConcat typed result = %v, want typed [1 2 3 4]", joined)
+	}
+
+	leftValues[0] = 99
+	rightValues[1] = 99
+	if result[0] != 1 || result[3] != 4 {
+		t.Fatal("ListConcat result shares backing storage with an input list")
+	}
+}
+
+func TestListConcatFallsBackToUntypedStorage(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		left  Msg
+		right Msg
+		want  []Msg
+	}{
+		{
+			name:  "different typed scalar representations",
+			left:  NewListIntMsg([]int64{1}),
+			right: NewListStringMsg([]string{"two"}),
+			want:  []Msg{NewIntMsg(1), NewStringMsg("two")},
+		},
+		{
+			name:  "untyped and typed",
+			left:  NewListMsg([]Msg{NewIntMsg(1)}),
+			right: NewListIntMsg([]int64{2}),
+			want:  []Msg{NewIntMsg(1), NewIntMsg(2)},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			joined := ListConcat(tt.left.List(), tt.right.List())
+			values, ok := ListAsUntyped(joined.List())
+			if !ok {
+				t.Fatal("ListConcat result did not use untyped storage")
+			}
+			if len(values) != len(tt.want) {
+				t.Fatalf("ListConcat length = %d, want %d", len(values), len(tt.want))
+			}
+			for i := range values {
+				if !Equal(values[i], tt.want[i]) {
+					t.Fatalf("ListConcat[%d] = %v, want %v", i, values[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
