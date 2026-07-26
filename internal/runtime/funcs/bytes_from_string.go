@@ -30,13 +30,9 @@ func (bytesFromString) Create(io runtime.IO, _ messages.Msg) (func(ctx context.C
 				return
 			}
 
-			if !resOut.Send(ctx, messages.NewBytesMsg(fromString(dataMsg.Str()))) {
+			if !resOut.Send(ctx, messages.BytesFromString(dataMsg.Msg)) {
 				return
 			}
 		}
 	}, nil
-}
-
-func fromString(s string) []byte {
-	return []byte(s)
 }

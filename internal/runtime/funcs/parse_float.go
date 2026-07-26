@@ -3,7 +3,6 @@ package funcs
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -45,8 +44,9 @@ func (p parseFloat) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Cont
 				return
 			}
 
-			parsedNum, err := p.stringToRuntimeFloat(dataMsg, bitsMsg)
+			parsedNum, err := messages.FloatFromString(dataMsg.Msg, bitsMsg.Msg)
 			if err != nil {
+				err = errors.New(strings.TrimPrefix(err.Error(), "strconv.ParseFloat: "))
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
@@ -58,16 +58,4 @@ func (p parseFloat) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Cont
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p parseFloat) stringToRuntimeFloat(
-	data messages.Msg,
-	bits messages.Msg,
-) (messages.Msg, error) {
-	v, err := strconv.ParseFloat(data.Str(), int(bits.Int()))
-	if err != nil {
-		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.ParseFloat: "))
-	}
-	return messages.NewFloatMsg(float64(v)), nil
 }

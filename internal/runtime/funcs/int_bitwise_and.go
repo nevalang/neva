@@ -11,6 +11,6 @@ type intBitwiseAnd struct{}
 
 func (intBitwiseAnd) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	return createBinaryFuncConcurrent(io, func(left messages.Msg, right messages.Msg) messages.Msg {
-		return messages.NewIntMsg(left.Int() & right.Int())
+		return messages.IntBitwiseAnd(left, right)
 	})
 }

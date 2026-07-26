@@ -103,3 +103,60 @@ func TestListToMessageSliceUntypedReturnsExistingStorage(t *testing.T) {
 		t.Fatalf("untyped storage value = %d, want 2", got)
 	}
 }
+
+func TestListAt(t *testing.T) {
+	t.Parallel()
+
+	list := NewListIntMsg([]int64{10, 20, 30}).List()
+	item, found := ListAt(list, -2)
+	if !found || item.Int() != 20 {
+		t.Fatalf("ListAt(-2) = (%v, %t), want (20, true)", item, found)
+	}
+
+	_, found = ListAt(list, 3)
+	if found {
+		t.Fatal("ListAt(3) found = true, want false")
+	}
+}
+
+func TestListSlicePreservesRepresentationAndCopiesStorage(t *testing.T) {
+	t.Parallel()
+
+	values := []int64{1, 2, 3, 4, 5}
+	sliced := ListSlice(NewListIntMsg(values).List(), -3, 99)
+	result, ok := ListAsInts(sliced.List())
+	if !ok {
+		t.Fatal("ListSlice() did not preserve typed integer storage")
+	}
+	if got, want := len(result), 3; got != want {
+		t.Fatalf("ListSlice length = %d, want %d", got, want)
+	}
+	if result[0] != 3 || result[2] != 5 {
+		t.Fatalf("ListSlice values = %v, want [3 4 5]", result)
+	}
+
+	values[2] = 99
+	if result[0] != 3 {
+		t.Fatal("ListSlice result shares backing storage with source list")
+	}
+
+	empty := ListSlice(NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}).List(), 2, 1)
+	if got := ListLen(empty.List()); got != 0 {
+		t.Fatalf("ListSlice reversed range length = %d, want 0", got)
+	}
+}
+
+func TestListAppendPreservesCompatibleTypedStorage(t *testing.T) {
+	t.Parallel()
+
+	typed := ListAppend(NewListIntMsg([]int64{1, 2}).List(), NewIntMsg(3))
+	values, ok := ListAsInts(typed.List())
+	if !ok || len(values) != 3 || values[2] != 3 {
+		t.Fatalf("ListAppend typed result = %v, want typed [1 2 3]", typed)
+	}
+
+	mixed := ListAppend(NewListIntMsg([]int64{1}).List(), NewStringMsg("two"))
+	if _, ok := ListAsUntyped(mixed.List()); !ok {
+		t.Fatal("ListAppend incompatible value did not produce untyped storage")
+	}
+}

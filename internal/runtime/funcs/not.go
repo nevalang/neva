@@ -31,9 +31,7 @@ func (p not) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), e
 
 			if !resOut.Send(
 				ctx,
-				messages.NewBoolMsg(
-					!dataMsg.Bool(),
-				),
+				messages.BoolNot(dataMsg.Msg),
 			) {
 				return
 			}

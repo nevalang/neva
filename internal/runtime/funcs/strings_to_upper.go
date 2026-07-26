@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -31,8 +30,7 @@ func (p stringsToUpper) Create(io runtime.IO, _ messages.Msg) (func(ctx context.
 				return
 			}
 
-			result := strings.ToUpper(data.Str())
-			if !resOut.Send(ctx, messages.NewStringMsg(result)) {
+			if !resOut.Send(ctx, messages.StringToUpper(data.Msg)) {
 				return
 			}
 		}

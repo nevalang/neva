@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -53,19 +52,7 @@ func (formatFloat) Create(
 				return
 			}
 
-			format := byte('g')
-			formatStr := fmtMsg.Str()
-			if len(formatStr) > 0 {
-				format = formatStr[0]
-			}
-
-			res := strconv.FormatFloat(
-				data.Float(),
-				format,
-				int(prec.Int()),
-				int(bits.Int()),
-			)
-			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.StringFromFloat(data.Msg, fmtMsg.Msg, prec.Msg, bits.Msg)) {
 				return
 			}
 		}

@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -34,8 +33,7 @@ func (itoa) Create(
 				return
 			}
 
-			res := strconv.FormatInt(data.Int(), 10)
-			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.StringFromInt(data.Msg)) {
 				return
 			}
 		}

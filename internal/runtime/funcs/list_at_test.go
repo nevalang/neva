@@ -101,21 +101,6 @@ func TestListAtOutOfBounds(t *testing.T) {
 	}
 }
 
-// TestListItem verifies index normalization helper for negative and out-of-bounds indexes.
-func TestListItem(t *testing.T) {
-	t.Parallel()
-
-	item, ok := listItem([]int{1, 2, 3}, -2)
-	if !ok || item != 2 {
-		t.Fatalf("listItem(-2) = (%d, %v), want (2, true)", item, ok)
-	}
-
-	_, ok = listItem([]int{1, 2, 3}, 3)
-	if ok {
-		t.Fatal("expected out-of-bounds to return ok=false")
-	}
-}
-
 // BenchmarkListAtTypedInt measures typed int-list access throughput in list_at.
 func BenchmarkListAtTypedInt(b *testing.B) {
 	io, inChans, outChans := newIO([]string{"data", "idx"}, []string{"res", "err"})

@@ -3,7 +3,6 @@ package funcs
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
@@ -39,8 +38,9 @@ func (a atoi) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), 
 				return
 			}
 
-			parsedNum, err := a.stringToRuntimeInt(str.Str())
+			parsedNum, err := messages.IntFromString(str.Msg)
 			if err != nil {
+				err = errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
 				if !errOut.Send(ctx, errFromErr(err)) {
 					return
 				}
@@ -52,13 +52,4 @@ func (a atoi) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), 
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a atoi) stringToRuntimeInt(str string) (messages.Msg, error) {
-	v, err := strconv.Atoi(str) // equivalent to ParseInt(s, 10, 0)
-	if err != nil {
-		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.Atoi: "))
-	}
-	return messages.NewIntMsg(int64(v)), nil
 }

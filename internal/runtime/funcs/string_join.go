@@ -51,27 +51,11 @@ func runStringJoinList(
 			return
 		}
 
-		result := joinList(dataMsg.List(), sepMsg.Str())
+		result := messages.StringJoin(dataMsg.List(), sepMsg.Str())
 		if !resOut.Send(ctx, messages.NewStringMsg(result)) {
 			return
 		}
 	}
-}
-
-func joinList(list messages.ListMsg, sep string) string {
-	builder := strings.Builder{}
-	if stringsList, ok := messages.ListAsStrings(list); ok {
-		for i := range stringsList {
-			if i > 0 {
-				builder.WriteString(sep)
-			}
-			builder.WriteString(stringsList[i])
-		}
-		return builder.String()
-	}
-
-	writeJoinedList(&builder, list.Untyped(), sep)
-	return builder.String()
 }
 
 type stringJoinStream struct{}
@@ -85,12 +69,6 @@ func (stringJoinStream) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx c
 	return func(ctx context.Context) {
 		runStringJoinStream(ctx, dataIn, sepIn, resOut)
 	}, nil
-}
-
-func writeJoinedList(builder *strings.Builder, list []messages.Msg, sep string) {
-	for idx := range list {
-		appendStreamItem(builder, list[idx].Str(), sep)
-	}
 }
 
 func appendStreamItem(builder *strings.Builder, item, sep string) {

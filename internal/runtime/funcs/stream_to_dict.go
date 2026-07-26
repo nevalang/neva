@@ -41,8 +41,8 @@ func (streamToDict) Create(
 				continue
 			case isStreamData(dataMsg.Msg):
 				entryMsg := streamDataValue(dataMsg.Msg).Struct()
-				key := entryMsg.Get("key").Str()
-				valueMsg := entryMsg.Get("value")
+				key := messages.StructGet(entryMsg, "key").Str()
+				valueMsg := messages.StructGet(entryMsg, "value")
 
 				// Duplicate key policy: last message for the key wins.
 				dict[key] = valueMsg

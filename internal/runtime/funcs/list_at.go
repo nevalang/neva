@@ -52,87 +52,17 @@ func (listAt) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), 
 				return
 			}
 
-			idx := idxMsg.Int()
-			list := dataMsg.List()
-			switch handled, sendOK := sendTypedListAt(ctx, list, idx, resOut, errOut); {
-			case handled && !sendOK:
-				return
-			case handled:
-				continue
-			default:
-			}
-
-			data := messages.ListToMessageSlice(list)
-
-			l := int64(len(data))
-			if idx < -l || idx >= l {
+			item, found := messages.ListAt(dataMsg.List(), idxMsg.Int())
+			if !found {
 				if !errOut.Send(ctx, errFromString("index out of bounds")) {
 					return
 				}
 				continue
 			}
 
-			if idx < 0 {
-				// support negative indexing:
-				//	$l = [1, 2, 3]
-				//	$l[-1] // 3
-				idx += int64(len(data))
-			}
-
-			if !resOut.Send(ctx, data[idx]) {
+			if !resOut.Send(ctx, item) {
 				return
 			}
 		}
 	}, nil
-}
-
-//nolint:ireturn // Generic helper returns scalar value type parameter.
-func listItem[T any](data []T, idx int64) (T, bool) {
-	dataLen := int64(len(data))
-	if idx < -dataLen || idx >= dataLen {
-		var zero T
-		return zero, false
-	}
-	if idx < 0 {
-		idx += dataLen
-	}
-	return data[idx], true
-}
-
-func sendTypedListAt(
-	ctx context.Context,
-	list messages.ListMsg,
-	idx int64,
-	resOut runtime.SingleOutport,
-	errOut runtime.SingleOutport,
-) (bool, bool) {
-	if data, ok := messages.ListAsInts(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v int64) messages.Msg { return messages.NewIntMsg(v) }, resOut, errOut)
-	}
-	if data, ok := messages.ListAsStrings(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v string) messages.Msg { return messages.NewStringMsg(v) }, resOut, errOut)
-	}
-	if data, ok := messages.ListAsBools(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v bool) messages.Msg { return messages.NewBoolMsg(v) }, resOut, errOut)
-	}
-	if data, ok := messages.ListAsFloats(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v float64) messages.Msg { return messages.NewFloatMsg(v) }, resOut, errOut)
-	}
-	return false, true
-}
-
-//nolint:ireturn // Generic helper converts scalar to messages.Msg via constructor.
-func sendTypedListAtValue[T any](
-	ctx context.Context,
-	data []T,
-	idx int64,
-	toMsg func(T) messages.Msg,
-	resOut runtime.SingleOutport,
-	errOut runtime.SingleOutport,
-) bool {
-	item, valid := listItem(data, idx)
-	if !valid {
-		return errOut.Send(ctx, errFromString("index out of bounds"))
-	}
-	return resOut.Send(ctx, toMsg(item))
 }

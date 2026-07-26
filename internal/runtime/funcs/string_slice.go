@@ -10,13 +10,6 @@ import (
 
 type stringSlice struct{}
 
-// sliceString returns a normalized slice over rune indices.
-func sliceString(data string, from int64, to int64) string {
-	runes := []rune(data)
-	start, end := normalizeSliceBounds(from, to, int64(len(runes)))
-	return string(runes[start:end])
-}
-
 //nolint:dupl,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (stringSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
@@ -65,7 +58,7 @@ func (stringSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context),
 				return
 			}
 
-			res := messages.NewStringMsg(sliceString(dataMsg.Str(), fromMsg.Int(), toMsg.Int()))
+			res := messages.StringSlice(dataMsg, fromMsg.Int(), toMsg.Int())
 			if !resOut.Send(ctx, res) {
 				return
 			}

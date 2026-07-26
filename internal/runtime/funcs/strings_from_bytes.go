@@ -30,7 +30,7 @@ func (stringsFromBytes) Create(io runtime.IO, _ messages.Msg) (func(ctx context.
 				return
 			}
 
-			if !resOut.Send(ctx, messages.NewStringMsg(string(dataMsg.Bytes()))) {
+			if !resOut.Send(ctx, messages.StringFromBytes(dataMsg.Msg)) {
 				return
 			}
 		}

@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"unicode"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -34,20 +33,9 @@ func (stringFromIntCodepoint) Create(
 				return
 			}
 
-			res := codePointString(data.Int())
-			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.StringFromIntCodePoint(data.Msg)) {
 				return
 			}
 		}
 	}, nil
-}
-
-//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func codePointString(v int64) string {
-	if v < 0 || v > unicode.MaxRune || (v >= 0xD800 && v <= 0xDFFF) {
-		return string(unicode.ReplacementChar)
-	}
-
-	// #nosec G115 -- guarded by unicode range checks above
-	return string(rune(v))
 }

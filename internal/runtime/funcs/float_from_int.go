@@ -33,7 +33,7 @@ func (floatFromInt) Create(
 				return
 			}
 
-			if !resOut.Send(ctx, messages.NewFloatMsg(float64(data.Int()))) {
+			if !resOut.Send(ctx, messages.FloatFromInt(data.Msg)) {
 				return
 			}
 		}

@@ -2,7 +2,6 @@ package funcs
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -34,8 +33,7 @@ func (formatBool) Create(
 				return
 			}
 
-			res := strconv.FormatBool(data.Bool())
-			if !resOut.Send(ctx, messages.NewStringMsg(res)) {
+			if !resOut.Send(ctx, messages.StringFromBool(data.Msg)) {
 				return
 			}
 		}
