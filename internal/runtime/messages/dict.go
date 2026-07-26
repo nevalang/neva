@@ -116,18 +116,15 @@ func (msg stringDictMsg) MarshalJSON() ([]byte, error) {
 	return marshalDict(msg.v)
 }
 
-// NewDictMsg creates a dictionary with an untyped boxed representation.
+// NewDictMsg creates the most specific scalar dictionary representation
+// available.
 //
-//nolint:ireturn // Msg contract type.
-func NewDictMsg(d map[string]Msg) Msg {
-	return untypedDictMsg{v: d}
-}
-
-// DictFromMessages materializes values into the most specific scalar dict
-// representation available. Mixed, nested, and empty values remain untyped.
+// It keeps homogeneous bool, int, float, or string message values unboxed.
+// Use a scalar constructor such as NewDictIntMsg when native scalar storage is
+// already available, or NewUntypedDictMsg only when boxed storage is required.
 //
-//nolint:ireturn // Msg contract type.
-func DictFromMessages(values map[string]Msg) Msg {
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewDictMsg(values map[string]Msg) DictMsg {
 	for _, first := range values {
 		switch first.(type) {
 		case BoolMsg:
@@ -151,12 +148,22 @@ func DictFromMessages(values map[string]Msg) Msg {
 				return NewDictStringMsg(result)
 			}
 		default:
-			return NewDictMsg(values)
+			return NewUntypedDictMsg(values)
 		}
-		return NewDictMsg(values)
+		return NewUntypedDictMsg(values)
 	}
 
-	return NewDictMsg(values)
+	return NewUntypedDictMsg(values)
+}
+
+// NewUntypedDictMsg creates a dictionary with explicitly boxed message storage.
+//
+// Prefer NewDictMsg, which preserves scalar storage when the values allow it.
+// Use this constructor only when boxed storage is required by the caller.
+//
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewUntypedDictMsg(values map[string]Msg) DictMsg {
+	return untypedDictMsg{v: values}
 }
 
 func dictBoolsFromMessages(values map[string]Msg) (map[string]bool, bool) {
@@ -209,29 +216,37 @@ func dictStringsFromMessages(values map[string]Msg) (map[string]string, bool) {
 
 // NewDictBoolMsg creates a dictionary with unboxed boolean storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewDictBoolMsg(d map[string]bool) Msg {
+// Prefer this constructor when boolean storage is already available.
+//
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewDictBoolMsg(d map[string]bool) DictMsg {
 	return boolDictMsg{v: d}
 }
 
 // NewDictIntMsg creates a dictionary with unboxed integer storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewDictIntMsg(d map[string]int64) Msg {
+// Prefer this constructor when integer storage is already available.
+//
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewDictIntMsg(d map[string]int64) DictMsg {
 	return intDictMsg{v: d}
 }
 
 // NewDictFloatMsg creates a dictionary with unboxed float storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewDictFloatMsg(d map[string]float64) Msg {
+// Prefer this constructor when float storage is already available.
+//
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewDictFloatMsg(d map[string]float64) DictMsg {
 	return floatDictMsg{v: d}
 }
 
 // NewDictStringMsg creates a dictionary with unboxed string storage.
 //
-//nolint:ireturn // Msg contract type.
-func NewDictStringMsg(d map[string]string) Msg {
+// Prefer this constructor when string storage is already available.
+//
+//nolint:ireturn // DictMsg is the runtime dictionary contract.
+func NewDictStringMsg(d map[string]string) DictMsg {
 	return stringDictMsg{v: d}
 }
 

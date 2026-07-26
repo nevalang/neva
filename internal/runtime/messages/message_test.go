@@ -122,7 +122,7 @@ func TestEqualContainerRepresentations(t *testing.T) {
 		{
 			name:  "typed and untyped lists with equal integers",
 			left:  NewListIntMsg([]int64{1, 2}),
-			right: NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
+			right: NewUntypedListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
 			want:  true,
 		},
 		{
@@ -134,7 +134,7 @@ func TestEqualContainerRepresentations(t *testing.T) {
 		{
 			name:  "typed and untyped dictionaries with equal integers",
 			left:  NewDictIntMsg(map[string]int64{"one": 1}),
-			right: NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}),
+			right: NewUntypedDictMsg(map[string]Msg{"one": NewIntMsg(1)}),
 			want:  true,
 		},
 		{
@@ -175,11 +175,11 @@ func TestEqualContainerRepresentations(t *testing.T) {
 func TestEqualNestedUntypedContainers(t *testing.T) {
 	t.Parallel()
 
-	left := NewDictMsg(map[string]Msg{
+	left := NewUntypedDictMsg(map[string]Msg{
 		"value": NewListMsg([]Msg{NewDictIntMsg(map[string]int64{"one": 1})}),
 	})
-	right := NewDictMsg(map[string]Msg{
-		"value": NewListMsg([]Msg{NewDictMsg(map[string]Msg{"one": NewIntMsg(1)})}),
+	right := NewUntypedDictMsg(map[string]Msg{
+		"value": NewListMsg([]Msg{NewUntypedDictMsg(map[string]Msg{"one": NewIntMsg(1)})}),
 	})
 
 	if !Equal(left, right) {
@@ -194,7 +194,7 @@ func TestMatchNestedTypedAndUntypedContainers(t *testing.T) {
 		"value": NewListIntMsg([]int64{1, 2}),
 	})
 	pattern := NewDictMsg(map[string]Msg{
-		"value": NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
+		"value": NewUntypedListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)}),
 	})
 
 	if !Match(msg, pattern) {
@@ -207,7 +207,7 @@ func TestEqualStructAndUnion(t *testing.T) {
 		NewStructField("value", NewListIntMsg([]int64{1, 2})),
 	})
 	rightStruct := NewStructMsg([]StructField{
-		NewStructField("value", NewListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)})),
+		NewStructField("value", NewUntypedListMsg([]Msg{NewIntMsg(1), NewIntMsg(2)})),
 	})
 	if !Equal(leftStruct, rightStruct) {
 		t.Fatal("Equal() = false, want equal structs with equivalent list storage")
@@ -220,7 +220,7 @@ func TestEqualStructAndUnion(t *testing.T) {
 
 func TestListMsgAccessors(t *testing.T) {
 	t.Run("untyped", func(t *testing.T) {
-		list := NewListMsg([]Msg{NewIntMsg(1)}).List()
+		list := NewUntypedListMsg([]Msg{NewIntMsg(1)}).List()
 		if got := list.Untyped(); len(got) != 1 || !Equal(got[0], NewIntMsg(1)) {
 			t.Fatalf("Untyped() = %v, want one integer message", got)
 		}
@@ -238,7 +238,7 @@ func TestListMsgAccessors(t *testing.T) {
 
 func TestDictMsgAccessors(t *testing.T) {
 	t.Run("untyped", func(t *testing.T) {
-		dict := NewDictMsg(map[string]Msg{"one": NewIntMsg(1)}).Dict()
+		dict := NewUntypedDictMsg(map[string]Msg{"one": NewIntMsg(1)}).Dict()
 		if got := dict.Untyped()["one"]; !Equal(got, NewIntMsg(1)) {
 			t.Fatalf("Untyped()[one] = %v, want integer message", got)
 		}

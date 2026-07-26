@@ -51,7 +51,7 @@ func (streamToDict) Create(
 				continue
 			}
 
-			if !resOut.Send(ctx, messages.DictFromMessages(dict)) {
+			if !resOut.Send(ctx, messages.NewDictMsg(dict)) {
 				return
 			}
 		}

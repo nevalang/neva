@@ -98,7 +98,7 @@ func (streamZipMany) Create(
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(ctx, messages.NewStreamDataMsg(messages.ListFromMessages(zipped))) {
+				if !resOut.Send(ctx, messages.NewStreamDataMsg(messages.NewListMsg(zipped))) {
 					return
 				}
 			}

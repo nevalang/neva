@@ -47,7 +47,7 @@ func (s streamToList) Create(
 				continue
 			}
 
-			if !resOut.Send(ctx, messages.ListFromMessages(list)) {
+			if !resOut.Send(ctx, messages.NewListMsg(list)) {
 				return
 			}
 		}

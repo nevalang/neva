@@ -92,10 +92,11 @@ functions.
 
 Runtime functions own stream transport: port I/O, causes, cancellation,
 waiting for `Open`, draining through `Close`, and coordination state machines.
-When collecting a stream or array into a list or dict, use
-`ListFromMessages` or `DictFromMessages`. They preserve typed scalar storage
-when all collected values have the same scalar representation; mixed, nested,
-and empty collections remain untyped.
+When collecting a stream or array into a list or dict, use `NewListMsg` or
+`NewDictMsg`. They preserve typed scalar storage when all collected values
+have the same scalar representation; mixed, nested, and empty collections
+remain untyped. Use `NewUntypedListMsg` or `NewUntypedDictMsg` only when boxed
+storage is deliberately required.
 
 ## Concurrent Inputs
 
