@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestFileModeFromRuntimeMsg(t *testing.T) {
@@ -26,7 +26,7 @@ func TestFileModeFromRuntimeMsg(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := fileModeFromRuntimeMsg(runtime.NewIntMsg(tt.perm))
+			got, err := fileModeFromRuntimeMsg(messages.NewIntMsg(tt.perm))
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got mode=%v", got)
@@ -122,8 +122,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osMkdir{},
 			"path",
 			"perm",
-			runtime.NewStringMsg(path),
-			runtime.NewIntMsg(0o700),
+			messages.NewStringMsg(path),
+			messages.NewIntMsg(0o700),
 		)
 
 		info, err := os.Stat(path)
@@ -142,8 +142,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osMkdir{},
 			"path",
 			"perm",
-			runtime.NewStringMsg(path),
-			runtime.NewIntMsg(0o700),
+			messages.NewStringMsg(path),
+			messages.NewIntMsg(0o700),
 		)
 		if got.Struct().Get("text").Str() == "" {
 			t.Fatal("mkdir error message is empty")
@@ -157,8 +157,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osMkdirAll{},
 			"path",
 			"perm",
-			runtime.NewStringMsg(path),
-			runtime.NewIntMsg(0o755),
+			messages.NewStringMsg(path),
+			messages.NewIntMsg(0o755),
 		)
 
 		info, err := os.Stat(path)
@@ -175,7 +175,7 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		writeFile(t, filepath.Join(root, "file.txt"), "x")
 		mkdir(t, filepath.Join(root, "subdir"))
 
-		got := runUnaryRuntimeFunc(t, osReadDir{}, "path", runtime.NewStringMsg(root))
+		got := runUnaryRuntimeFunc(t, osReadDir{}, "path", messages.NewStringMsg(root))
 		if got.List().Len() != 2 {
 			t.Fatalf("read_dir len = %d, want 2", got.List().Len())
 		}
@@ -185,7 +185,7 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "file.txt")
 		writeFile(t, path, "x")
 
-		runUnaryRuntimeFunc(t, osRemove{}, "path", runtime.NewStringMsg(path))
+		runUnaryRuntimeFunc(t, osRemove{}, "path", messages.NewStringMsg(path))
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Fatalf("Stat after remove error = %v, want not exists", err)
 		}
@@ -197,7 +197,7 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		mkdir(t, nested)
 		writeFile(t, filepath.Join(nested, "file.txt"), "x")
 
-		runUnaryRuntimeFunc(t, osRemoveAll{}, "path", runtime.NewStringMsg(root))
+		runUnaryRuntimeFunc(t, osRemoveAll{}, "path", messages.NewStringMsg(root))
 		if _, err := os.Stat(root); !os.IsNotExist(err) {
 			t.Fatalf("Stat after remove_all error = %v, want not exists", err)
 		}
@@ -214,8 +214,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osRename{},
 			"oldPath",
 			"newPath",
-			runtime.NewStringMsg(oldPath),
-			runtime.NewStringMsg(newPath),
+			messages.NewStringMsg(oldPath),
+			messages.NewStringMsg(newPath),
 		)
 		if _, err := os.Stat(newPath); err != nil {
 			t.Fatalf("Stat renamed file: %v", err)
@@ -226,7 +226,7 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "file.txt")
 		writeFile(t, path, "hello")
 
-		got := runUnaryRuntimeFunc(t, osStat{}, "path", runtime.NewStringMsg(path)).Struct()
+		got := runUnaryRuntimeFunc(t, osStat{}, "path", messages.NewStringMsg(path)).Struct()
 		if got.Get("name").Str() != "file.txt" || got.Get("size").Int() != 5 {
 			t.Fatalf("stat = %v, want file.txt size 5", got)
 		}
@@ -241,7 +241,7 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			t.Skipf("symlink unavailable: %v", err)
 		}
 
-		got := runUnaryRuntimeFunc(t, osLstat{}, "path", runtime.NewStringMsg(link)).Struct()
+		got := runUnaryRuntimeFunc(t, osLstat{}, "path", messages.NewStringMsg(link)).Struct()
 		if got.Get("name").Str() != "link.txt" {
 			t.Fatalf("lstat name = %q, want link.txt", got.Get("name").Str())
 		}
@@ -256,8 +256,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osTruncate{},
 			"path",
 			"size",
-			runtime.NewStringMsg(path),
-			runtime.NewIntMsg(2),
+			messages.NewStringMsg(path),
+			messages.NewIntMsg(2),
 		)
 
 		info, err := os.Stat(path)
@@ -282,8 +282,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osMkdirTemp{},
 			"dir",
 			"pattern",
-			runtime.NewStringMsg(t.TempDir()),
-			runtime.NewStringMsg("neva-*"),
+			messages.NewStringMsg(t.TempDir()),
+			messages.NewStringMsg("neva-*"),
 		)
 		info, err := os.Stat(got.Str())
 		if err != nil {
@@ -300,8 +300,8 @@ func TestOSFilesystemRuntimeFuncs(t *testing.T) {
 			osCreateTemp{},
 			"dir",
 			"pattern",
-			runtime.NewStringMsg(t.TempDir()),
-			runtime.NewStringMsg("neva-*.txt"),
+			messages.NewStringMsg(t.TempDir()),
+			messages.NewStringMsg("neva-*.txt"),
 		)
 		if err := os.WriteFile(got.Str(), []byte("x"), 0o600); err != nil {
 			t.Fatalf("WriteFile to temp file: %v", err)

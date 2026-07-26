@@ -3,7 +3,7 @@ package funcs
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestSliceListUsesNormalizedBounds(t *testing.T) {
@@ -42,12 +42,12 @@ func TestSliceListUsesNormalizedBounds(t *testing.T) {
 		},
 	}
 
-	data := []runtime.Msg{
-		runtime.NewIntMsg(1),
-		runtime.NewIntMsg(2),
-		runtime.NewIntMsg(3),
-		runtime.NewIntMsg(4),
-		runtime.NewIntMsg(5),
+	data := []messages.Msg{
+		messages.NewIntMsg(1),
+		messages.NewIntMsg(2),
+		messages.NewIntMsg(3),
+		messages.NewIntMsg(4),
+		messages.NewIntMsg(5),
 	}
 
 	for _, tc := range testCases {
@@ -71,14 +71,14 @@ func TestSliceListUsesNormalizedBounds(t *testing.T) {
 func TestSliceListReturnsCopy(t *testing.T) {
 	t.Parallel()
 
-	data := []runtime.Msg{
-		runtime.NewIntMsg(1),
-		runtime.NewIntMsg(2),
-		runtime.NewIntMsg(3),
+	data := []messages.Msg{
+		messages.NewIntMsg(1),
+		messages.NewIntMsg(2),
+		messages.NewIntMsg(3),
 	}
 
 	got := sliceList(data, 0, 2)
-	data[0] = runtime.NewIntMsg(99)
+	data[0] = messages.NewIntMsg(99)
 
 	if got[0].Int() != 1 {
 		t.Fatalf("slice result shares backing storage with source list")

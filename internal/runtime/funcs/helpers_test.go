@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // helpers_test.go contains shared test helpers for runtime func unit tests.
@@ -81,7 +82,7 @@ func sendInOrder(
 	t *testing.T,
 	inChans map[string]chan runtime.OrderedMsg,
 	order []string,
-	payload map[string]runtime.Msg,
+	payload map[string]messages.Msg,
 ) {
 	t.Helper()
 
@@ -105,14 +106,14 @@ func assertOutputEquals(
 	t *testing.T,
 	outChans map[string]chan runtime.OrderedMsg,
 	outName string,
-	want runtime.Msg,
+	want messages.Msg,
 	order []string,
 ) {
 	t.Helper()
 
 	select {
 	case got := <-outChans[outName]:
-		if !runtime.Equal(got, want) {
+		if !messages.Equal(got.Msg, want) {
 			t.Fatalf("result = %v, want %v", got, want)
 		}
 	case <-time.After(time.Second):
@@ -165,7 +166,7 @@ func sendTracked(
 	ctx context.Context,
 	tracer *runtime.Tracer,
 	addr runtime.PortAddr,
-	msg runtime.Msg,
+	msg messages.Msg,
 	dst chan runtime.OrderedMsg,
 ) runtime.OrderedMsg {
 	t.Helper()
@@ -197,9 +198,9 @@ func sendTracked(
 func assertBinaryOperatorResult(
 	t *testing.T,
 	creator runtime.FuncCreator,
-	left runtime.Msg,
-	right runtime.Msg,
-	expected runtime.Msg,
+	left messages.Msg,
+	right messages.Msg,
+	expected messages.Msg,
 ) {
 	t.Helper()
 
@@ -237,7 +238,7 @@ func assertBinaryOperatorResult(
 
 		select {
 		case result := <-resultOutput:
-			if !runtime.Equal(result, expected) {
+			if !messages.Equal(result.Msg, expected) {
 				t.Fatalf("result = %v, want %v (sendRightFirst=%v)", result, expected, sendRightFirst)
 			}
 		case <-time.After(time.Second):
@@ -253,8 +254,8 @@ func assertBinaryOperatorResult(
 func assertUnaryOperatorResult(
 	t *testing.T,
 	creator runtime.FuncCreator,
-	input runtime.Msg,
-	expected runtime.Msg,
+	input messages.Msg,
+	expected messages.Msg,
 ) {
 	t.Helper()
 
@@ -274,7 +275,7 @@ func assertUnaryOperatorResult(
 	dataInput <- runtime.OrderedMsg{Msg: input}
 
 	result := <-resultOutput
-	if !runtime.Equal(result, expected) {
+	if !messages.Equal(result.Msg, expected) {
 		t.Fatalf("result = %v, want %v", result, expected)
 	}
 

@@ -74,6 +74,9 @@ Start from `docs/README.md` for documentation navigation.
    follow the runtime-function protocol.
 5. Keep changes scoped. Record unresolved design work in an issue or a
    repository-local plan rather than shipping speculative infrastructure.
+6. When extracting an internal package, migrate its consumers in the same
+   change. Do not leave aliases, forwarding wrappers, or re-exports solely to
+   defer that migration: they multiply API surfaces and hide ownership.
 
 ## Operating Standards
 

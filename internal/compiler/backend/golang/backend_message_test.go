@@ -16,7 +16,7 @@ func TestScalarListCtor(t *testing.T) {
 	if !ok {
 		t.Fatal("expected typed list ctor")
 	}
-	if got != "runtime.NewListIntMsg([]int64{1, 2})" {
+	if got != "messages.NewListIntMsg([]int64{1, 2})" {
 		t.Fatalf("unexpected ctor: %s", got)
 	}
 }
@@ -43,8 +43,8 @@ func TestScalarDictCtor(t *testing.T) {
 	if !ok {
 		t.Fatal("expected typed dict ctor")
 	}
-	if got != "runtime.NewDictStringMsg(map[string]string{\"a\": \"x\", \"b\": \"y\"})" &&
-		got != "runtime.NewDictStringMsg(map[string]string{\"b\": \"y\", \"a\": \"x\"})" {
+	if got != "messages.NewDictStringMsg(map[string]string{\"a\": \"x\", \"b\": \"y\"})" &&
+		got != "messages.NewDictStringMsg(map[string]string{\"b\": \"y\", \"a\": \"x\"})" {
 		t.Fatalf("unexpected ctor: %s", got)
 	}
 }

@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type listlen struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p listlen) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p listlen) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -31,7 +32,7 @@ func (p listlen) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 
 			l := dataMsg.List().Len()
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(int64(l))) {
+			if !resOut.Send(ctx, messages.NewIntMsg(int64(l))) {
 				return
 			}
 		}

@@ -7,12 +7,13 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileReadAll struct{}
 
 //nolint:cyclop,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c fileReadAll) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	filenameIn, err := rio.In.Single("filename")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -65,7 +66,7 @@ func (c fileReadAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Con
 				continue
 			}
 
-			if !resOut.Send(ctx, runtime.NewBytesMsg(data)) {
+			if !resOut.Send(ctx, messages.NewBytesMsg(data)) {
 				return
 			}
 		}

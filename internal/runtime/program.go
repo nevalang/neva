@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type Program struct {
@@ -15,7 +17,7 @@ type Program struct {
 }
 
 type FuncCall struct {
-	Config Msg
+	Config messages.Msg
 	IO     IO
 	Ref    string
 }
@@ -183,7 +185,7 @@ func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 		return OrderedMsg{}, false
 		//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		index := Uint8Index(idx)
+		index := messages.Uint8Index(idx)
 		slotAddr := PortSlotAddr{
 			PortAddr: PortAddr{
 				Path: a.addr.Path,
@@ -216,7 +218,7 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 			case <-ctx.Done():
 				resultChan <- false
 			case received := <-a.chans[idx]:
-				index := Uint8Index(idx)
+				index := messages.Uint8Index(idx)
 				slotAddr := PortSlotAddr{
 					PortAddr: PortAddr{
 						Path: a.addr.Path,
@@ -274,7 +276,7 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case <-ctx.Done():
 				return nil, false
 			case orderedMsg := <-ch:
-				index := Uint8Index(slotIdx)
+				index := messages.Uint8Index(slotIdx)
 				slotAddr := PortSlotAddr{
 					PortAddr: PortAddr{Path: a.addr.Path, Port: a.addr.Port},
 					Index:    &index,
@@ -381,7 +383,7 @@ func NewSingleOutport(
 	}
 }
 
-func (s SingleOutport) Send(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
+func (s SingleOutport) Send(ctx context.Context, msg messages.Msg, causes ...OrderedMsg) bool {
 	ordered, causes := newOrderedMsg(msg, causes)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -420,7 +422,7 @@ func NewArrayOutport(tracer *Tracer, addr PortAddr, interceptor Interceptor, slo
 	return &ArrayOutport{tracer: tracer, interceptor: interceptor, addr: addr, slots: slots}
 }
 
-func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...OrderedMsg) bool {
+func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg messages.Msg, causes ...OrderedMsg) bool {
 	ordered, causes := newOrderedMsg(msg, causes)
 	slotAddr := PortSlotAddr{
 		PortAddr: PortAddr{
@@ -447,7 +449,7 @@ func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg Msg, causes ...O
 // TODO: figure out why this is the only working version of `SendAll`
 //
 //nolint:godoclint // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMsg) bool {
+func (a *ArrayOutport) SendAll(ctx context.Context, msg messages.Msg, causes ...OrderedMsg) bool {
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	var wg sync.WaitGroup
 	success := true
@@ -455,7 +457,7 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMs
 	for idx := range a.slots {
 		wg.Go(func() {
 			ordered, causes := newOrderedMsg(msg, causes)
-			i := Uint8Index(idx)
+			i := messages.Uint8Index(idx)
 			slotAddr := PortSlotAddr{
 				PortAddr: a.addr,
 				Index:    &i,
@@ -474,7 +476,7 @@ func (a *ArrayOutport) SendAll(ctx context.Context, msg Msg, causes ...OrderedMs
 	return success
 }
 
-func newOrderedMsg(msg Msg, causes []OrderedMsg) (OrderedMsg, []OrderedMsg) {
+func newOrderedMsg(msg messages.Msg, causes []OrderedMsg) (OrderedMsg, []OrderedMsg) {
 	index := counter.Add(1)
 	ordered, ok := msg.(OrderedMsg)
 	if !ok {

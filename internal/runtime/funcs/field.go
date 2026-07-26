@@ -5,13 +5,14 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type structField struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Context), error) {
-	typedPath, ok := runtime.AsListStrings(cfg.List())
+func (s structField) Create(io runtime.IO, cfg messages.Msg) (func(ctx context.Context), error) {
+	typedPath, ok := messages.AsListStrings(cfg.List())
 	if !ok {
 		return nil, errors.New("field config must be list<string>")
 	}
@@ -48,7 +49,7 @@ func (s structField) Create(io runtime.IO, cfg runtime.Msg) (func(ctx context.Co
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (structField) selector(m runtime.Msg, path []string) runtime.Msg {
+func (structField) selector(m messages.Msg, path []string) messages.Msg {
 	for len(path) > 0 {
 		m = m.Struct().Get(path[0])
 		path = path[1:]

@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkNotEqHotpath measures `not_eq` in steady state.
 func BenchmarkNotEqHotpath(b *testing.B) {
 	runtimeIO, leftInput, rightInput, resultOutput := benchNewBinaryRuntimeIO()
-	var zeroConfig runtime.Msg
+	var zeroConfig messages.Msg
 	handler, err := notEq{}.Create(runtimeIO, zeroConfig)
 	if err != nil {
 		b.Fatalf("Create returned error: %v", err)
@@ -22,8 +23,8 @@ func BenchmarkNotEqHotpath(b *testing.B) {
 		<-done
 	}()
 
-	left := runtime.NewIntMsg(7)
-	right := runtime.NewIntMsg(42)
+	left := messages.NewIntMsg(7)
+	right := messages.NewIntMsg(42)
 
 	b.ResetTimer()
 	for range b.N {

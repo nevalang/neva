@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestCall_ReturnsCustomExitCodeFromOSExit(t *testing.T) {
@@ -47,7 +48,7 @@ func TestCall_ReturnsCustomExitCodeFromOSExit(t *testing.T) {
 		},
 	}
 
-	_, exitCode, err := runtime.Call(context.Background(), prog, NewRegistry(), runtime.NewIntMsg(7))
+	_, exitCode, err := runtime.Call(context.Background(), prog, NewRegistry(), messages.NewIntMsg(7))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

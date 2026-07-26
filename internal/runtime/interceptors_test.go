@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestJSONLPortSlotAddr_OmitsNilIndex(t *testing.T) {
@@ -17,7 +19,7 @@ func TestJSONLPortSlotAddr_OmitsNilIndex(t *testing.T) {
 				Port: "res",
 			},
 		},
-		Msg: NewStringMsg("x"),
+		Msg: messages.NewStringMsg("x"),
 	}
 
 	encoded, err := json.Marshal(evt)
@@ -42,7 +44,7 @@ func TestJSONLPortSlotAddr_EmitsArrayIndex(t *testing.T) {
 			},
 			Index: &idx,
 		},
-		Msg: NewStringMsg("x"),
+		Msg: messages.NewStringMsg("x"),
 	}
 
 	encoded, err := json.Marshal(evt)

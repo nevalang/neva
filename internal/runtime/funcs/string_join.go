@@ -5,11 +5,12 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type stringJoinList struct{}
 
-func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringJoinList) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx cont
 			sep := sepMsg.Str()
 
 			list := dataMsg.List()
-			if stringsList, ok := runtime.AsListStrings(list); ok {
+			if stringsList, ok := messages.AsListStrings(list); ok {
 				for i := range stringsList {
 					if i > 0 {
 						builder.WriteString(sep)
@@ -47,7 +48,7 @@ func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx cont
 				writeJoinedList(&builder, list.Untyped(), sep)
 			}
 
-			if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+			if !resOut.Send(ctx, messages.NewStringMsg(builder.String())) {
 				return
 			}
 		}
@@ -56,7 +57,7 @@ func (stringJoinList) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx cont
 
 type stringJoinStream struct{}
 
-func (stringJoinStream) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringJoinStream) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func (stringJoinStream) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx co
 	}, nil
 }
 
-func writeJoinedList(builder *strings.Builder, list []runtime.Msg, sep string) {
+func writeJoinedList(builder *strings.Builder, list []messages.Msg, sep string) {
 	for idx := range list {
 		appendStreamItem(builder, list[idx].Str(), sep)
 	}
@@ -95,7 +96,7 @@ func handleJoinedStreamMessage(
 	ctx context.Context,
 	builder *strings.Builder,
 	resOut runtime.SingleOutport,
-	msg runtime.Msg,
+	msg messages.Msg,
 	sep string,
 	hasSep bool,
 ) (bool, bool) {
@@ -107,7 +108,7 @@ func handleJoinedStreamMessage(
 		appendStreamItem(builder, streamDataValue(msg).Str(), sep)
 		return hasSep, true
 	case isStreamClose(msg):
-		if !resOut.Send(ctx, runtime.NewStringMsg(builder.String())) {
+		if !resOut.Send(ctx, messages.NewStringMsg(builder.String())) {
 			return false, false
 		}
 

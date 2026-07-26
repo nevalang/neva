@@ -6,12 +6,13 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type switchRouter struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (switchRouter) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -46,7 +47,7 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				wg              sync.WaitGroup
 				dataOrdered     runtime.OrderedMsg
-				cases           = make([]runtime.Msg, caseArrIn.Len())
+				cases           = make([]messages.Msg, caseArrIn.Len())
 				caseOrdereds    = make([]runtime.OrderedMsg, caseArrIn.Len())
 				dataOk, casesOk bool
 			)
@@ -72,14 +73,14 @@ func (switchRouter) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 			matchIdx := -1
 			for i, caseMsg := range cases {
-				if runtime.Match(dataMsg, caseMsg) {
+				if messages.Match(dataMsg, caseMsg) {
 					matchIdx = i
 					break
 				}
 			}
 
 			if matchIdx != -1 {
-				caseIdx := runtime.Uint8Index(matchIdx)
+				caseIdx := messages.Uint8Index(matchIdx)
 				if !caseOut.Send(
 					ctx,
 					caseIdx,

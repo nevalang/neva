@@ -6,12 +6,13 @@ import (
 	"image/png"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type imageEncode struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (imageEncode) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	imgIn, err := io.In.Single("img")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -58,7 +59,7 @@ func (imageEncode) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 
 			if !resOut.Send(
 				ctx,
-				runtime.NewBytesMsg(sb.Bytes()),
+				messages.NewBytesMsg(sb.Bytes()),
 			) {
 				return
 			}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // int_add_test.go contains unit tests for intAdd runtime function.
@@ -13,7 +14,7 @@ import (
 // TestIntAddProducesExpectedValue checks arithmetic behavior.
 func TestIntAddProducesExpectedValue(t *testing.T) {
 	t.Parallel()
-	assertBinaryOperatorResult(t, intAdd{}, runtime.NewIntMsg(7), runtime.NewIntMsg(5), runtime.NewIntMsg(12))
+	assertBinaryOperatorResult(t, intAdd{}, messages.NewIntMsg(7), messages.NewIntMsg(5), messages.NewIntMsg(12))
 }
 
 // TestIntAddSendsTwoCauses verifies binary helper path stores left/right causes.
@@ -29,13 +30,13 @@ func TestIntAddSendsTwoCauses(t *testing.T) {
 	cancel, done := runHandler(handler)
 	ctx := context.Background()
 	tracer := runtime.TracerFromIO(io)
-	leftCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "left"}, runtime.NewIntMsg(20), leftInput)
-	rightCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "right"}, runtime.NewIntMsg(22), rightInput)
+	leftCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "left"}, messages.NewIntMsg(20), leftInput)
+	rightCause := sendTracked(t, ctx, tracer, runtime.PortAddr{Path: "src/out", Port: "right"}, messages.NewIntMsg(22), rightInput)
 
 	select {
 	case out := <-resultOutput:
-		if !runtime.Equal(out, runtime.NewIntMsg(42)) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewIntMsg(42))
+		if !messages.Equal(out.Msg, messages.NewIntMsg(42)) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewIntMsg(42))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{leftCause, rightCause})
 	case <-time.After(time.Second):

@@ -3,7 +3,7 @@ package funcs
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // streamTag identifies the union tag used by the stream protocol.
@@ -29,37 +29,37 @@ func (tag streamTag) String() string {
 }
 
 // newStreamOpenMsg creates the Open union event for a stream.
-func newStreamOpenMsg() runtime.UnionMsg {
-	return runtime.NewUnionMsg(streamTagOpen.String(), nil)
+func newStreamOpenMsg() messages.UnionMsg {
+	return messages.NewUnionMsg(streamTagOpen.String(), nil)
 }
 
 // newStreamDataMsg creates the Data union event carrying a stream item payload.
-func newStreamDataMsg(data runtime.Msg) runtime.UnionMsg {
-	return runtime.NewUnionMsg(streamTagData.String(), data)
+func newStreamDataMsg(data messages.Msg) messages.UnionMsg {
+	return messages.NewUnionMsg(streamTagData.String(), data)
 }
 
 // newStreamCloseMsg creates the Close union event for a stream.
-func newStreamCloseMsg() runtime.UnionMsg {
-	return runtime.NewUnionMsg(streamTagClose.String(), nil)
+func newStreamCloseMsg() messages.UnionMsg {
+	return messages.NewUnionMsg(streamTagClose.String(), nil)
 }
 
-func isStreamOpen(msg runtime.Msg) bool {
+func isStreamOpen(msg messages.Msg) bool {
 	return hasStreamTag(msg, streamTagOpen)
 }
 
-func isStreamData(msg runtime.Msg) bool {
+func isStreamData(msg messages.Msg) bool {
 	return hasStreamTag(msg, streamTagData)
 }
 
-func isStreamClose(msg runtime.Msg) bool {
+func isStreamClose(msg messages.Msg) bool {
 	return hasStreamTag(msg, streamTagClose)
 }
 
 // streamDataValue returns the payload of a stream Data event.
 //
 //nolint:ireturn // Stream payloads are Msg values by runtime contract.
-func streamDataValue(msg runtime.Msg) runtime.Msg {
-	unionMsg, ok := runtime.AsUnion(msg)
+func streamDataValue(msg messages.Msg) messages.Msg {
+	unionMsg, ok := messages.AsUnion(msg)
 	if !ok {
 		panic(fmt.Sprintf("runtime: expected stream union message, got %T", msg))
 	}
@@ -73,7 +73,7 @@ func streamDataValue(msg runtime.Msg) runtime.Msg {
 	return unionMsg.Data()
 }
 
-func hasStreamTag(msg runtime.Msg, tag streamTag) bool {
-	unionMsg, ok := runtime.AsUnion(msg)
+func hasStreamTag(msg messages.Msg, tag streamTag) bool {
+	unionMsg, ok := messages.AsUnion(msg)
 	return ok && unionMsg.Tag() == tag.String()
 }

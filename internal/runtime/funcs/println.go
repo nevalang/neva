@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type printlnFunc struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (printlnFunc) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (printlnFunc) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

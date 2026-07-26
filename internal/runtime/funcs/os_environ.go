@@ -5,12 +5,13 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type osEnviron struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (o osEnviron) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (o osEnviron) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -30,12 +31,12 @@ func (o osEnviron) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 			}
 
 			values := os.Environ()
-			result := make([]runtime.Msg, 0, len(values))
+			result := make([]messages.Msg, 0, len(values))
 			for _, value := range values {
-				result = append(result, runtime.NewStringMsg(value))
+				result = append(result, messages.NewStringMsg(value))
 			}
 
-			if !resOut.Send(ctx, runtime.NewListMsg(result)) {
+			if !resOut.Send(ctx, messages.NewListMsg(result)) {
 				return
 			}
 		}

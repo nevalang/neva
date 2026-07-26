@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
-type binaryOperator func(left runtime.Msg, right runtime.Msg) runtime.Msg
+type binaryOperator func(left messages.Msg, right messages.Msg) messages.Msg
 
-type unaryOperator func(input runtime.Msg) runtime.Msg
+type unaryOperator func(input messages.Msg) messages.Msg
 
 func createBinaryFuncConcurrent(runtimeIO runtime.IO, apply binaryOperator) (func(context.Context), error) {
 	leftInput, rightInput, resultOutput, err := resolveBinaryPorts(runtimeIO)

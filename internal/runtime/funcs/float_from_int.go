@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type floatFromInt struct{}
@@ -11,7 +12,7 @@ type floatFromInt struct{}
 func (floatFromInt) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
@@ -32,7 +33,7 @@ func (floatFromInt) Create(
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewFloatMsg(float64(data.Int()))) {
+			if !resOut.Send(ctx, messages.NewFloatMsg(float64(data.Int()))) {
 				return
 			}
 		}

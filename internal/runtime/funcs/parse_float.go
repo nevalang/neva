@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type parseFloat struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p parseFloat) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p parseFloat) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -61,12 +62,12 @@ func (p parseFloat) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (p parseFloat) stringToRuntimeFloat(
-	data runtime.Msg,
-	bits runtime.Msg,
-) (runtime.Msg, error) {
+	data messages.Msg,
+	bits messages.Msg,
+) (messages.Msg, error) {
 	v, err := strconv.ParseFloat(data.Str(), int(bits.Int()))
 	if err != nil {
 		return nil, errors.New(strings.TrimPrefix(err.Error(), "strconv.ParseFloat: "))
 	}
-	return runtime.NewFloatMsg(float64(v)), nil
+	return messages.NewFloatMsg(float64(v)), nil
 }

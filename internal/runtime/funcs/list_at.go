@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type listAt struct{}
@@ -19,7 +20,7 @@ type listAt struct{}
 //  5. Untyped list fallback is used for non-scalar or mixed-value lists.
 //
 //nolint:cyclop,gocognit,gocyclo,varnamelen,funlen,nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (listAt) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (listAt) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -100,32 +101,32 @@ func listItem[T any](data []T, idx int64) (T, bool) {
 
 func sendTypedListAt(
 	ctx context.Context,
-	list runtime.ListMsg,
+	list messages.ListMsg,
 	idx int64,
 	resOut runtime.SingleOutport,
 	errOut runtime.SingleOutport,
 ) (bool, bool) {
-	if data, ok := runtime.AsListInts(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v int64) runtime.Msg { return runtime.NewIntMsg(v) }, resOut, errOut)
+	if data, ok := messages.AsListInts(list); ok {
+		return true, sendTypedListAtValue(ctx, data, idx, func(v int64) messages.Msg { return messages.NewIntMsg(v) }, resOut, errOut)
 	}
-	if data, ok := runtime.AsListStrings(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v string) runtime.Msg { return runtime.NewStringMsg(v) }, resOut, errOut)
+	if data, ok := messages.AsListStrings(list); ok {
+		return true, sendTypedListAtValue(ctx, data, idx, func(v string) messages.Msg { return messages.NewStringMsg(v) }, resOut, errOut)
 	}
-	if data, ok := runtime.AsListBools(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v bool) runtime.Msg { return runtime.NewBoolMsg(v) }, resOut, errOut)
+	if data, ok := messages.AsListBools(list); ok {
+		return true, sendTypedListAtValue(ctx, data, idx, func(v bool) messages.Msg { return messages.NewBoolMsg(v) }, resOut, errOut)
 	}
-	if data, ok := runtime.AsListFloats(list); ok {
-		return true, sendTypedListAtValue(ctx, data, idx, func(v float64) runtime.Msg { return runtime.NewFloatMsg(v) }, resOut, errOut)
+	if data, ok := messages.AsListFloats(list); ok {
+		return true, sendTypedListAtValue(ctx, data, idx, func(v float64) messages.Msg { return messages.NewFloatMsg(v) }, resOut, errOut)
 	}
 	return false, true
 }
 
-//nolint:ireturn // Generic helper converts scalar to runtime.Msg via constructor.
+//nolint:ireturn // Generic helper converts scalar to messages.Msg via constructor.
 func sendTypedListAtValue[T any](
 	ctx context.Context,
 	data []T,
 	idx int64,
-	toMsg func(T) runtime.Msg,
+	toMsg func(T) messages.Msg,
 	resOut runtime.SingleOutport,
 	errOut runtime.SingleOutport,
 ) bool {

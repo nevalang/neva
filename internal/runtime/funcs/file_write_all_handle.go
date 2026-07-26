@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileWriteAllHandle struct {
 	handles *runtime.FileHandles
 }
 
-func (c fileWriteAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c fileWriteAllHandle) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	fileIn, err := rio.In.Single("file")
 	if err != nil {
 		return nil, fmt.Errorf("resolve file inport: %w", err)
@@ -64,11 +65,11 @@ func (c fileWriteAllHandle) handleFileMessage(
 	}
 
 	if _, err := file.Write(dataMsg.Bytes()); err != nil {
-		if !resOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+		if !resOut.Send(ctx, messages.NewIntMsg(handleID)) {
 			return false
 		}
 		return errOut.Send(ctx, errFromErr(err))
 	}
 
-	return resOut.Send(ctx, runtime.NewIntMsg(handleID))
+	return resOut.Send(ctx, messages.NewIntMsg(handleID))
 }

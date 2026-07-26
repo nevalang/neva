@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // runSignalLoop handles signal-triggered runtime functions.
@@ -12,7 +13,7 @@ func runSignalLoop(
 	sigIn runtime.SingleInport,
 	resOut runtime.SingleOutport,
 	errOut *runtime.SingleOutport,
-	step func() (runtime.Msg, error),
+	step func() (messages.Msg, error),
 ) {
 	for {
 		if _, received := sigIn.Receive(ctx); !received {
@@ -42,7 +43,7 @@ func runSignalLoop(
 func createSignalLoop(
 	rio runtime.IO,
 	withErr bool,
-	step func() (runtime.Msg, error),
+	step func() (messages.Msg, error),
 ) (func(ctx context.Context), error) {
 	sigIn, err := singleInport(rio, "sig")
 	if err != nil {
@@ -74,7 +75,7 @@ func createUnaryLoop(
 	rio runtime.IO,
 	inName string,
 	withErr bool,
-	step func(runtime.OrderedMsg) (runtime.Msg, error),
+	step func(runtime.OrderedMsg) (messages.Msg, error),
 ) (func(ctx context.Context), error) {
 	inputIn, err := singleInport(rio, inName)
 	if err != nil {
@@ -106,7 +107,7 @@ func createBinaryLoop(
 	rio runtime.IO,
 	firstName string,
 	secondName string,
-	step func(runtime.OrderedMsg, runtime.OrderedMsg) (runtime.Msg, error),
+	step func(runtime.OrderedMsg, runtime.OrderedMsg) (messages.Msg, error),
 ) (func(ctx context.Context), error) {
 	firstIn, err := singleInport(rio, firstName)
 	if err != nil {
@@ -139,7 +140,7 @@ func runUnaryLoop(
 	inputIn runtime.SingleInport,
 	resOut runtime.SingleOutport,
 	errOut *runtime.SingleOutport,
-	step func(runtime.OrderedMsg) (runtime.Msg, error),
+	step func(runtime.OrderedMsg) (messages.Msg, error),
 ) {
 	for {
 		input, received := inputIn.Receive(ctx)
@@ -173,7 +174,7 @@ func runBinaryLoop(
 	secondIn runtime.SingleInport,
 	resOut runtime.SingleOutport,
 	errOut *runtime.SingleOutport,
-	step func(runtime.OrderedMsg, runtime.OrderedMsg) (runtime.Msg, error),
+	step func(runtime.OrderedMsg, runtime.OrderedMsg) (messages.Msg, error),
 ) {
 	for {
 		firstInput, secondInput, received := receive2(ctx, firstIn, secondIn)

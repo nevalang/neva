@@ -6,13 +6,14 @@ import (
 	"io"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileReadAllHandle struct {
 	handles *runtime.FileHandles
 }
 
-func (c fileReadAllHandle) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (c fileReadAllHandle) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	fileIn, err := rio.In.Single("file")
 	if err != nil {
 		return nil, fmt.Errorf("resolve file inport: %w", err)
@@ -66,15 +67,15 @@ func (c fileReadAllHandle) handleFileMessage(
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		if !handleOut.Send(ctx, runtime.NewIntMsg(handleID)) {
+		if !handleOut.Send(ctx, messages.NewIntMsg(handleID)) {
 			return false
 		}
 		return errOut.Send(ctx, errFromErr(err))
 	}
 
-	if !resOut.Send(ctx, runtime.NewBytesMsg(data)) {
+	if !resOut.Send(ctx, messages.NewBytesMsg(data)) {
 		return false
 	}
 
-	return handleOut.Send(ctx, runtime.NewIntMsg(handleID))
+	return handleOut.Send(ctx, messages.NewIntMsg(handleID))
 }

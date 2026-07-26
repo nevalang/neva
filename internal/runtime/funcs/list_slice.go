@@ -5,14 +5,15 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type listSlice struct{}
 
 // sliceList returns a copy of a normalized list slice.
-func sliceList(data []runtime.Msg, from int64, to int64) []runtime.Msg {
+func sliceList(data []messages.Msg, from int64, to int64) []messages.Msg {
 	start, end := normalizeSliceBounds(from, to, int64(len(data)))
-	return append([]runtime.Msg(nil), data[start:end]...)
+	return append([]messages.Msg(nil), data[start:end]...)
 }
 
 func sliceTypedList[T any](data []T, from int64, to int64) []T {
@@ -21,7 +22,7 @@ func sliceTypedList[T any](data []T, from int64, to int64) []T {
 }
 
 //nolint:dupl,varnamelen,gocognit // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+func (listSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -48,7 +49,7 @@ func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), er
 
 	return func(ctx context.Context) {
 		for {
-			var dataMsg, fromMsg, toMsg runtime.Msg
+			var dataMsg, fromMsg, toMsg messages.Msg
 			var dataOK, fromOK, toOK bool
 
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -73,16 +74,16 @@ func (listSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), er
 
 			var sent bool
 			//nolint:nestif // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			if values, ok := runtime.AsListInts(list); ok {
-				sent = resOut.Send(ctx, runtime.NewListIntMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := runtime.AsListStrings(list); ok {
-				sent = resOut.Send(ctx, runtime.NewListStringMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := runtime.AsListBools(list); ok {
-				sent = resOut.Send(ctx, runtime.NewListBoolMsg(sliceTypedList(values, from, to)))
-			} else if values, ok := runtime.AsListFloats(list); ok {
-				sent = resOut.Send(ctx, runtime.NewListFloatMsg(sliceTypedList(values, from, to)))
+			if values, ok := messages.AsListInts(list); ok {
+				sent = resOut.Send(ctx, messages.NewListIntMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := messages.AsListStrings(list); ok {
+				sent = resOut.Send(ctx, messages.NewListStringMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := messages.AsListBools(list); ok {
+				sent = resOut.Send(ctx, messages.NewListBoolMsg(sliceTypedList(values, from, to)))
+			} else if values, ok := messages.AsListFloats(list); ok {
+				sent = resOut.Send(ctx, messages.NewListFloatMsg(sliceTypedList(values, from, to)))
 			} else {
-				sent = resOut.Send(ctx, runtime.NewListMsg(sliceList(list.Untyped(), from, to)))
+				sent = resOut.Send(ctx, messages.NewListMsg(sliceList(list.Untyped(), from, to)))
 			}
 
 			if !sent {

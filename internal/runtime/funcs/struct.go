@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type structBuilder struct{}
@@ -13,7 +14,7 @@ type structBuilder struct{}
 func (s structBuilder) Create(
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	io runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	if len(io.In.Ports()) == 0 {
 		return nil, errors.New("cannot create struct builder without inports")
@@ -42,7 +43,7 @@ func (structBuilder) Handle(
 ) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		for {
-			fields := make([]runtime.StructField, 0, len(inports))
+			fields := make([]messages.StructField, 0, len(inports))
 			causes := make([]runtime.OrderedMsg, 0, len(inports))
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 			var mu sync.Mutex
@@ -55,7 +56,7 @@ func (structBuilder) Handle(
 						return
 					}
 					mu.Lock()
-					fields = append(fields, runtime.NewStructField(inportName, ordered.Msg))
+					fields = append(fields, messages.NewStructField(inportName, ordered.Msg))
 					causes = append(causes, ordered)
 					mu.Unlock()
 				})
@@ -63,7 +64,7 @@ func (structBuilder) Handle(
 
 			wg.Wait()
 
-			if !outport.Send(ctx, runtime.NewStructMsg(fields), causes...) {
+			if !outport.Send(ctx, messages.NewStructMsg(fields), causes...) {
 				return
 			}
 		}

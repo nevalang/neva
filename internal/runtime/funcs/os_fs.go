@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type osMkdir struct{}
 
 // Create creates runtime function for os.Mkdir wrapper.
-func (osMkdir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osMkdir) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (messages.Msg, error) {
 		mode, err := fileModeFromRuntimeMsg(permMsg)
 		if err != nil {
 			return nil, err
@@ -29,8 +30,8 @@ func (osMkdir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 type osMkdirAll struct{}
 
 // Create creates runtime function for os.MkdirAll wrapper.
-func (osMkdirAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osMkdirAll) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "path", "perm", func(pathMsg, permMsg runtime.OrderedMsg) (messages.Msg, error) {
 		mode, err := fileModeFromRuntimeMsg(permMsg)
 		if err != nil {
 			return nil, err
@@ -47,22 +48,22 @@ func (osMkdirAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 type osReadDir struct{}
 
 // Create creates runtime function for os.ReadDir wrapper.
-func (osReadDir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osReadDir) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		entries, err := os.ReadDir(pathMsg.Str())
 		if err != nil {
 			return nil, fmt.Errorf("os.ReadDir: %w", err)
 		}
 
-		return runtime.NewListMsg(dirEntries(entries)), nil
+		return messages.NewListMsg(dirEntries(entries)), nil
 	})
 }
 
 type osRemove struct{}
 
 // Create creates runtime function for os.Remove wrapper.
-func (osRemove) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osRemove) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		if err := os.Remove(pathMsg.Str()); err != nil {
 			return nil, fmt.Errorf("os.Remove: %w", err)
 		}
@@ -74,8 +75,8 @@ func (osRemove) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 type osRemoveAll struct{}
 
 // Create creates runtime function for os.RemoveAll wrapper.
-func (osRemoveAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osRemoveAll) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		if err := os.RemoveAll(pathMsg.Str()); err != nil {
 			return nil, fmt.Errorf("os.RemoveAll: %w", err)
 		}
@@ -87,8 +88,8 @@ func (osRemoveAll) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Conte
 type osRename struct{}
 
 // Create creates runtime function for os.Rename wrapper.
-func (osRename) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "oldPath", "newPath", func(oldPathMsg, newPathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osRename) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "oldPath", "newPath", func(oldPathMsg, newPathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		if err := os.Rename(oldPathMsg.Str(), newPathMsg.Str()); err != nil {
 			return nil, fmt.Errorf("os.Rename: %w", err)
 		}
@@ -100,8 +101,8 @@ func (osRename) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context)
 type osStat struct{}
 
 // Create creates runtime function for os.Stat wrapper.
-func (osStat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osStat) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		info, err := os.Stat(pathMsg.Str())
 		if err != nil {
 			return nil, fmt.Errorf("os.Stat: %w", err)
@@ -114,8 +115,8 @@ func (osStat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), 
 type osLstat struct{}
 
 // Create creates runtime function for os.Lstat wrapper.
-func (osLstat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osLstat) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createUnaryLoop(rio, "path", true, func(pathMsg runtime.OrderedMsg) (messages.Msg, error) {
 		info, err := os.Lstat(pathMsg.Str())
 		if err != nil {
 			return nil, fmt.Errorf("os.Lstat: %w", err)
@@ -128,8 +129,8 @@ func (osLstat) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context),
 type osTruncate struct{}
 
 // Create creates runtime function for os.Truncate wrapper.
-func (osTruncate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "path", "size", func(pathMsg, sizeMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osTruncate) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "path", "size", func(pathMsg, sizeMsg runtime.OrderedMsg) (messages.Msg, error) {
 		if err := os.Truncate(pathMsg.Str(), sizeMsg.Int()); err != nil {
 			return nil, fmt.Errorf("os.Truncate: %w", err)
 		}
@@ -141,31 +142,31 @@ func (osTruncate) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 type osTempDir struct{}
 
 // Create creates runtime function for os.TempDir wrapper.
-func (osTempDir) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createSignalLoop(rio, false, func() (runtime.Msg, error) {
-		return runtime.NewStringMsg(os.TempDir()), nil
+func (osTempDir) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createSignalLoop(rio, false, func() (messages.Msg, error) {
+		return messages.NewStringMsg(os.TempDir()), nil
 	})
 }
 
 type osMkdirTemp struct{}
 
 // Create creates runtime function for os.MkdirTemp wrapper.
-func (osMkdirTemp) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osMkdirTemp) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (messages.Msg, error) {
 		path, err := os.MkdirTemp(dirMsg.Str(), patternMsg.Str())
 		if err != nil {
 			return nil, fmt.Errorf("os.MkdirTemp: %w", err)
 		}
 
-		return runtime.NewStringMsg(path), nil
+		return messages.NewStringMsg(path), nil
 	})
 }
 
 type osCreateTemp struct{}
 
 // Create creates runtime function for os.CreateTemp wrapper.
-func (osCreateTemp) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
-	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (runtime.Msg, error) {
+func (osCreateTemp) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
+	return createBinaryLoop(rio, "dir", "pattern", func(dirMsg, patternMsg runtime.OrderedMsg) (messages.Msg, error) {
 		file, err := os.CreateTemp(dirMsg.Str(), patternMsg.Str())
 		if err != nil {
 			return nil, fmt.Errorf("os.CreateTemp: %w", err)
@@ -176,14 +177,14 @@ func (osCreateTemp) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 			return nil, fmt.Errorf("close temp file: %w", err)
 		}
 
-		return runtime.NewStringMsg(fileName), nil
+		return messages.NewStringMsg(fileName), nil
 	})
 }
 
 const maxUint32AsInt64 = int64(^uint32(0))
 
 // fileModeFromRuntimeMsg parses os.FileMode from a runtime integer message.
-func fileModeFromRuntimeMsg(permMsg runtime.Msg) (os.FileMode, error) {
+func fileModeFromRuntimeMsg(permMsg messages.Msg) (os.FileMode, error) {
 	perm := permMsg.Int()
 	if perm < 0 || perm > maxUint32AsInt64 {
 		return 0, fmt.Errorf("permission value out of range: %d", perm)
@@ -194,12 +195,12 @@ func fileModeFromRuntimeMsg(permMsg runtime.Msg) (os.FileMode, error) {
 }
 
 // dirEntries converts []os.DirEntry into generic runtime struct messages.
-func dirEntries(entries []os.DirEntry) []runtime.Msg {
-	msgs := make([]runtime.Msg, len(entries))
+func dirEntries(entries []os.DirEntry) []messages.Msg {
+	msgs := make([]messages.Msg, len(entries))
 	for i := range entries {
-		msgs[i] = runtime.NewStructMsg([]runtime.StructField{
-			runtime.NewStructField("name", runtime.NewStringMsg(entries[i].Name())),
-			runtime.NewStructField("isDir", runtime.NewBoolMsg(entries[i].IsDir())),
+		msgs[i] = messages.NewStructMsg([]messages.StructField{
+			messages.NewStructField("name", messages.NewStringMsg(entries[i].Name())),
+			messages.NewStructField("isDir", messages.NewBoolMsg(entries[i].IsDir())),
 		})
 	}
 
@@ -207,12 +208,12 @@ func dirEntries(entries []os.DirEntry) []runtime.Msg {
 }
 
 // fileInfoMsg converts os.FileInfo to std/os.FileInfo runtime payload.
-func fileInfoMsg(info os.FileInfo) runtime.StructMsg {
-	return runtime.NewStructMsg([]runtime.StructField{
-		runtime.NewStructField("name", runtime.NewStringMsg(info.Name())),
-		runtime.NewStructField("size", runtime.NewIntMsg(info.Size())),
-		runtime.NewStructField("mode", runtime.NewIntMsg(int64(info.Mode()))),
-		runtime.NewStructField("modTimeUnix", runtime.NewIntMsg(info.ModTime().Unix())),
-		runtime.NewStructField("isDir", runtime.NewBoolMsg(info.IsDir())),
+func fileInfoMsg(info os.FileInfo) messages.StructMsg {
+	return messages.NewStructMsg([]messages.StructField{
+		messages.NewStructField("name", messages.NewStringMsg(info.Name())),
+		messages.NewStructField("size", messages.NewIntMsg(info.Size())),
+		messages.NewStructField("mode", messages.NewIntMsg(int64(info.Mode()))),
+		messages.NewStructField("modTimeUnix", messages.NewIntMsg(info.ModTime().Unix())),
+		messages.NewStructField("isDir", messages.NewBoolMsg(info.IsDir())),
 	})
 }

@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamJust struct{}
 
-func (streamJust) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (streamJust) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := singleInport(runtimeIO, "data")
 	if err != nil {
 		return nil, err

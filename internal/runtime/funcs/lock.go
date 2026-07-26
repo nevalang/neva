@@ -5,12 +5,13 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type lock struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (l lock) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := io.In.Single("sig")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -34,7 +35,7 @@ func (l lock) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), e
 			var (
 				//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 				wg            sync.WaitGroup
-				data          runtime.Msg
+				data          messages.Msg
 				dataOk, sigOk bool
 			)
 

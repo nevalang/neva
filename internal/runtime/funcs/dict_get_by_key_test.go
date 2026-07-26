@@ -6,19 +6,20 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestDictValueByKeyTypedMiss(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		dict runtime.Msg
+		dict messages.Msg
 		name string
 	}{
-		{dict: runtime.NewDictBoolMsg(map[string]bool{"present": true}), name: "bool"},
-		{dict: runtime.NewDictIntMsg(map[string]int64{"present": 1}), name: "int"},
-		{dict: runtime.NewDictFloatMsg(map[string]float64{"present": 1.5}), name: "float"},
-		{dict: runtime.NewDictStringMsg(map[string]string{"present": "x"}), name: "string"},
+		{dict: messages.NewDictBoolMsg(map[string]bool{"present": true}), name: "bool"},
+		{dict: messages.NewDictIntMsg(map[string]int64{"present": 1}), name: "int"},
+		{dict: messages.NewDictFloatMsg(map[string]float64{"present": 1.5}), name: "float"},
+		{dict: messages.NewDictStringMsg(map[string]string{"present": "x"}), name: "string"},
 	}
 
 	for _, tt := range tests {
@@ -45,9 +46,9 @@ func TestGetDictValueTypedMissSendsError(t *testing.T) {
 	defer func() { cancel(); <-done }()
 
 	go func() {
-		inputs["dict"] <- runtime.OrderedMsg{Msg: runtime.NewDictIntMsg(map[string]int64{"present": 1})}
+		inputs["dict"] <- runtime.OrderedMsg{Msg: messages.NewDictIntMsg(map[string]int64{"present": 1})}
 	}()
-	go func() { inputs["key"] <- runtime.OrderedMsg{Msg: runtime.NewStringMsg("missing")} }()
+	go func() { inputs["key"] <- runtime.OrderedMsg{Msg: messages.NewStringMsg("missing")} }()
 
 	select {
 	case got := <-outputs["err"]:

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // jsonlTraceEventVersion tracks JSONL schema version for emitted runtime events.
@@ -137,7 +139,7 @@ const (
 )
 
 type jsonlSentEvent struct {
-	Msg          Msg            `json:"message"`
+	Msg          messages.Msg   `json:"message"`
 	PortSlotAddr PortSlotAddr   `json:"port"`
 	EventKind    jsonlEventKind `json:"event"`
 	CauseIndexes []uint64       `json:"causeIndexes"`
@@ -146,7 +148,7 @@ type jsonlSentEvent struct {
 }
 
 type jsonlRecvEvent struct {
-	Msg          Msg            `json:"message"`
+	Msg          messages.Msg   `json:"message"`
 	PortSlotAddr PortSlotAddr   `json:"port"`
 	Event        jsonlEventKind `json:"event"`
 	Version      int            `json:"v"`

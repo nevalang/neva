@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestOSGetwdRuntimeFuncReturnsCurrentDirectory(t *testing.T) {
@@ -32,7 +32,7 @@ func TestOSChdirRuntimeFuncChangesCurrentDirectory(t *testing.T) {
 	})
 
 	dir := t.TempDir()
-	runUnaryRuntimeFunc(t, osChdir{}, "path", runtime.NewStringMsg(dir))
+	runUnaryRuntimeFunc(t, osChdir{}, "path", messages.NewStringMsg(dir))
 
 	got, err := os.Getwd()
 	if err != nil {
@@ -56,7 +56,7 @@ func TestOSChdirRuntimeFuncReportsMissingDirectory(t *testing.T) {
 		t,
 		osChdir{},
 		"path",
-		runtime.NewStringMsg(t.TempDir()+"/missing"),
+		messages.NewStringMsg(t.TempDir()+"/missing"),
 	)
 	if !strings.Contains(got.Struct().Get("text").Str(), "os.Chdir") {
 		t.Fatalf("chdir error = %v, want os.Chdir", got)

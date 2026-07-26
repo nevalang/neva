@@ -3,11 +3,13 @@ package runtime
 import (
 	"context"
 	"testing"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type testPanicCreator struct{}
 
-func (testPanicCreator) Create(io IO, _ Msg) (func(context.Context), error) {
+func (testPanicCreator) Create(io IO, _ messages.Msg) (func(context.Context), error) {
 	inport, err := io.In.Single("data")
 	if err != nil {
 		return nil, err
@@ -68,7 +70,7 @@ func TestCall_ReturnsExitCodeOnProgramPanic(t *testing.T) {
 		"panic": testPanicCreator{},
 	}
 
-	_, exitCode, err := Call(context.Background(), prog, registry, NewStringMsg("boom"))
+	_, exitCode, err := Call(context.Background(), prog, registry, messages.NewStringMsg("boom"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

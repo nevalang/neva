@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // turn serializes data messages after the first message.
 type turn struct{}
 
-func (turn) Create(runtimeIO runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (turn) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	doneIn, err := singleInport(runtimeIO, "done")
 	if err != nil {
 		return nil, err

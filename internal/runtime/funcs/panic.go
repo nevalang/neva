@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type panicker struct{}
 
 func (p panicker) Create(
 	runtimeIO runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	msgIn, err := runtimeIO.In.Single("data")
 	if err != nil {

@@ -6,12 +6,13 @@ import (
 	"regexp"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type regexpSubmatch struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (r regexpSubmatch) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	regexpIn, err := io.In.Single("regexp")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -45,7 +46,7 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 
 			regex, err := regexp.Compile(regexpMsg.Str())
 			if err != nil {
-				if !errOut.Send(ctx, runtime.NewStringMsg(err.Error())) {
+				if !errOut.Send(ctx, messages.NewStringMsg(err.Error())) {
 					return
 				}
 				continue
@@ -66,10 +67,10 @@ func (r regexpSubmatch) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 }
 
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func stringsToList(ss []string) runtime.Msg {
-	msgs := make([]runtime.Msg, 0, len(ss))
+func stringsToList(ss []string) messages.Msg {
+	msgs := make([]messages.Msg, 0, len(ss))
 	for _, s := range ss {
-		msgs = append(msgs, runtime.NewStringMsg(s))
+		msgs = append(msgs, messages.NewStringMsg(s))
 	}
-	return runtime.NewListMsg(msgs)
+	return messages.NewListMsg(msgs)
 }

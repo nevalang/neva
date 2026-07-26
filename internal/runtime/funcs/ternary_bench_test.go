@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkTernaryElseHotpath measures ternary selector cost on else path.
 func BenchmarkTernaryElseHotpath(b *testing.B) {
 	runtimeIO, ifIn, thenIn, elseIn, resultOutput := benchNewTernaryRuntimeIO()
-	var zeroConfig runtime.Msg
+	var zeroConfig messages.Msg
 	handler, err := ternarySelector{}.Create(runtimeIO, zeroConfig)
 	if err != nil {
 		b.Fatalf("Create returned error: %v", err)
@@ -22,9 +23,9 @@ func BenchmarkTernaryElseHotpath(b *testing.B) {
 		<-done
 	}()
 
-	ifMsg := runtime.NewBoolMsg(false)
-	thenMsg := runtime.NewIntMsg(42)
-	elseMsg := runtime.NewIntMsg(0)
+	ifMsg := messages.NewBoolMsg(false)
+	thenMsg := messages.NewIntMsg(42)
+	elseMsg := messages.NewIntMsg(0)
 
 	b.ResetTimer()
 	for range b.N {

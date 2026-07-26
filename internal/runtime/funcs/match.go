@@ -5,12 +5,13 @@ import (
 	"errors"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type matchSelector struct{}
 
 //nolint:cyclop,gocognit,gocyclo,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (matchSelector) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -77,7 +78,7 @@ func (matchSelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Cont
 			resMsg := elseInMsg.Msg
 			causes := []runtime.OrderedMsg{dataMsg, elseInMsg}
 			for i, ifMsg := range ifMsgs {
-				if runtime.Match(dataMsg.Msg, ifMsg.Msg) {
+				if messages.Match(dataMsg.Msg, ifMsg.Msg) {
 					resMsg = thenMsgs[i].Msg
 					causes = []runtime.OrderedMsg{dataMsg, ifMsg, thenMsgs[i]}
 					break

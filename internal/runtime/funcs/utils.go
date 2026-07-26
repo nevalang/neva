@@ -8,25 +8,26 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // --- Errors ---
 
-func errFromErr(err error) runtime.StructMsg {
+func errFromErr(err error) messages.StructMsg {
 	return errFromString(err.Error())
 }
 
-func errFromString(s string) runtime.StructMsg {
-	return runtime.NewStructMsg([]runtime.StructField{
-		runtime.NewStructField("text", runtime.NewStringMsg(s)),
-		runtime.NewStructField("child", runtime.NewUnionMsg("None", nil)),
+func errFromString(s string) messages.StructMsg {
+	return messages.NewStructMsg([]messages.StructField{
+		messages.NewStructField("text", messages.NewStringMsg(s)),
+		messages.NewStructField("child", messages.NewUnionMsg("None", nil)),
 	})
 }
 
 // --- Structs ---
 
-func emptyStruct() runtime.StructMsg {
-	return runtime.NewStructMsg(nil)
+func emptyStruct() messages.StructMsg {
+	return messages.NewStructMsg(nil)
 }
 
 // --- Receives ---
@@ -112,8 +113,8 @@ func receive4(
 // otherwise it returns the original message unchanged.
 //
 //nolint:ireturn // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
-	unionMsg, ok := runtime.AsUnion(msg)
+func tryToUnboxIfUnion(msg messages.Msg) messages.Msg {
+	unionMsg, ok := messages.AsUnion(msg)
 	if !ok {
 		return msg
 	}
@@ -125,68 +126,68 @@ func tryToUnboxIfUnion(msg runtime.Msg) runtime.Msg {
 	return unionMsg.Data()
 }
 
-// listToMsgs converts any supported typed list view to untyped []runtime.Msg.
+// listToMsgs converts any supported typed list view to untyped []messages.Msg.
 // Typed scalar paths avoid panicking Untyped() calls on typed list implementations.
-func listToMsgs(list runtime.ListMsg) []runtime.Msg {
-	if values, ok := runtime.AsListInts(list); ok {
-		msgs := make([]runtime.Msg, len(values))
+func listToMsgs(list messages.ListMsg) []messages.Msg {
+	if values, ok := messages.AsListInts(list); ok {
+		msgs := make([]messages.Msg, len(values))
 		for i := range values {
-			msgs[i] = runtime.NewIntMsg(values[i])
+			msgs[i] = messages.NewIntMsg(values[i])
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsListStrings(list); ok {
-		msgs := make([]runtime.Msg, len(values))
+	if values, ok := messages.AsListStrings(list); ok {
+		msgs := make([]messages.Msg, len(values))
 		for i := range values {
-			msgs[i] = runtime.NewStringMsg(values[i])
+			msgs[i] = messages.NewStringMsg(values[i])
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsListBools(list); ok {
-		msgs := make([]runtime.Msg, len(values))
+	if values, ok := messages.AsListBools(list); ok {
+		msgs := make([]messages.Msg, len(values))
 		for i := range values {
-			msgs[i] = runtime.NewBoolMsg(values[i])
+			msgs[i] = messages.NewBoolMsg(values[i])
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsListFloats(list); ok {
-		msgs := make([]runtime.Msg, len(values))
+	if values, ok := messages.AsListFloats(list); ok {
+		msgs := make([]messages.Msg, len(values))
 		for i := range values {
-			msgs[i] = runtime.NewFloatMsg(values[i])
+			msgs[i] = messages.NewFloatMsg(values[i])
 		}
 		return msgs
 	}
 	return list.Untyped()
 }
 
-// dictToMsgs converts any supported typed dict view to untyped map[string]runtime.Msg.
+// dictToMsgs converts any supported typed dict view to untyped map[string]messages.Msg.
 // Typed scalar paths avoid panicking Untyped() calls on typed dict implementations.
-func dictToMsgs(dict runtime.DictMsg) map[string]runtime.Msg {
-	if values, ok := runtime.AsDictInts(dict); ok {
-		msgs := make(map[string]runtime.Msg, len(values))
+func dictToMsgs(dict messages.DictMsg) map[string]messages.Msg {
+	if values, ok := messages.AsDictInts(dict); ok {
+		msgs := make(map[string]messages.Msg, len(values))
 		for key, value := range values {
-			msgs[key] = runtime.NewIntMsg(value)
+			msgs[key] = messages.NewIntMsg(value)
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsDictStrings(dict); ok {
-		msgs := make(map[string]runtime.Msg, len(values))
+	if values, ok := messages.AsDictStrings(dict); ok {
+		msgs := make(map[string]messages.Msg, len(values))
 		for key, value := range values {
-			msgs[key] = runtime.NewStringMsg(value)
+			msgs[key] = messages.NewStringMsg(value)
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsDictBools(dict); ok {
-		msgs := make(map[string]runtime.Msg, len(values))
+	if values, ok := messages.AsDictBools(dict); ok {
+		msgs := make(map[string]messages.Msg, len(values))
 		for key, value := range values {
-			msgs[key] = runtime.NewBoolMsg(value)
+			msgs[key] = messages.NewBoolMsg(value)
 		}
 		return msgs
 	}
-	if values, ok := runtime.AsDictFloats(dict); ok {
-		msgs := make(map[string]runtime.Msg, len(values))
+	if values, ok := messages.AsDictFloats(dict); ok {
+		msgs := make(map[string]messages.Msg, len(values))
 		for key, value := range values {
-			msgs[key] = runtime.NewFloatMsg(value)
+			msgs[key] = messages.NewFloatMsg(value)
 		}
 		return msgs
 	}

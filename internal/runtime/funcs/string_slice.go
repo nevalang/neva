@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type stringSlice struct{}
@@ -17,7 +18,7 @@ func sliceString(data string, from int64, to int64) string {
 }
 
 //nolint:dupl,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (stringSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
+func (stringSlice) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -44,7 +45,7 @@ func (stringSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), 
 
 	return func(ctx context.Context) {
 		for {
-			var dataMsg, fromMsg, toMsg runtime.Msg
+			var dataMsg, fromMsg, toMsg messages.Msg
 			var dataOK, fromOK, toOK bool
 
 			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -64,7 +65,7 @@ func (stringSlice) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), 
 				return
 			}
 
-			res := runtime.NewStringMsg(sliceString(dataMsg.Str(), fromMsg.Int(), toMsg.Int()))
+			res := messages.NewStringMsg(sliceString(dataMsg.Str(), fromMsg.Int(), toMsg.Int()))
 			if !resOut.Send(ctx, res) {
 				return
 			}

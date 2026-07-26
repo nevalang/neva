@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type stringsFromBytes struct{}
 
 //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (stringsFromBytes) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (stringsFromBytes) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	dataIn, err := io.In.Single("data")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -29,7 +30,7 @@ func (stringsFromBytes) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.C
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewStringMsg(string(dataMsg.Bytes()))) {
+			if !resOut.Send(ctx, messages.NewStringMsg(string(dataMsg.Bytes()))) {
 				return
 			}
 		}

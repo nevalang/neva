@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamProduct struct{}
@@ -13,7 +14,7 @@ type streamProduct struct{}
 //nolint:cyclop,funlen,gocognit,gocyclo // Collecting both stream lifecycles and emitting the product are one operation.
 func (streamProduct) Create(
 	runtimeIO runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	firstIn, err := runtimeIO.In.Single("first")
 	if err != nil {
@@ -35,8 +36,8 @@ func (streamProduct) Create(
 		for {
 			var (
 				firstOk, secondOk bool
-				firstData         = []runtime.Msg{}
-				secondData        = []runtime.Msg{}
+				firstData         = []messages.Msg{}
+				secondData        = []messages.Msg{}
 			)
 
 			var group sync.WaitGroup
@@ -48,8 +49,9 @@ func (streamProduct) Create(
 				}
 			readFirst:
 				for {
-					var firstMsg runtime.Msg
-					firstMsg, firstOk = firstIn.Receive(ctx)
+					var firstMsg messages.Msg
+					firstOrdered, firstOK := firstIn.Receive(ctx)
+					firstMsg, firstOk = firstOrdered.Msg, firstOK
 					if !firstOk {
 						return
 					}
@@ -70,8 +72,9 @@ func (streamProduct) Create(
 				}
 			readSecond:
 				for {
-					var secondMsg runtime.Msg
-					secondMsg, secondOk = secondIn.Receive(ctx)
+					var secondMsg messages.Msg
+					secondOrdered, secondOK := secondIn.Receive(ctx)
+					secondMsg, secondOk = secondOrdered.Msg, secondOK
 					if !secondOk {
 						return
 					}
@@ -99,9 +102,9 @@ func (streamProduct) Create(
 				for _, secondMsg := range secondData {
 					if !resOut.Send(
 						ctx,
-						newStreamDataMsg(runtime.NewStructMsg([]runtime.StructField{
-							runtime.NewStructField("first", firstMsg),
-							runtime.NewStructField("second", secondMsg),
+						newStreamDataMsg(messages.NewStructMsg([]messages.StructField{
+							messages.NewStructField("first", firstMsg),
+							messages.NewStructField("second", secondMsg),
 						})),
 					) {
 						return

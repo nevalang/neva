@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type streamZipMany struct{}
@@ -14,7 +15,7 @@ type streamZipMany struct{}
 //nolint:cyclop,funlen,gocognit,gocyclo // Coordinated collection and emission across all streams form one operation.
 func (streamZipMany) Create(
 	runtimeIO runtime.IO,
-	_ runtime.Msg,
+	_ messages.Msg,
 ) (func(ctx context.Context), error) {
 	dataIn, err := runtimeIO.In.Array("data")
 	if err != nil {
@@ -34,7 +35,7 @@ func (streamZipMany) Create(
 
 		for {
 			type streamState struct {
-				data []runtime.Msg
+				data []messages.Msg
 			}
 
 			states := make([]streamState, streamsCount)
@@ -49,7 +50,7 @@ func (streamZipMany) Create(
 				go func() {
 					defer group.Done()
 
-					collected := make([]runtime.Msg, 0)
+					collected := make([]messages.Msg, 0)
 
 					if !waitStreamOpen(ctx, &dataInSlot{arr: dataIn, idx: idx}) {
 						aborted.Store(true)
@@ -64,9 +65,9 @@ func (streamZipMany) Create(
 						}
 
 						switch {
-						case isStreamData(msg):
-							collected = append(collected, streamDataValue(msg))
-						case isStreamClose(msg):
+						case isStreamData(msg.Msg):
+							collected = append(collected, streamDataValue(msg.Msg))
+						case isStreamClose(msg.Msg):
 							states[idx] = streamState{data: collected}
 							return
 						}
@@ -92,12 +93,12 @@ func (streamZipMany) Create(
 			}
 
 			for idx := range count {
-				zipped := make([]runtime.Msg, streamsCount)
+				zipped := make([]messages.Msg, streamsCount)
 				for streamIdx := range streamsCount {
 					zipped[streamIdx] = states[streamIdx].data[idx]
 				}
 
-				if !resOut.Send(ctx, newStreamDataMsg(runtime.NewListMsg(zipped))) {
+				if !resOut.Send(ctx, newStreamDataMsg(messages.NewListMsg(zipped))) {
 					return
 				}
 			}

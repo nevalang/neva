@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // TestListAtTypedInt verifies typed int-list fast path and negative indexing invariant.
@@ -23,8 +24,8 @@ func TestListAtTypedInt(t *testing.T) {
 		<-done
 	}()
 
-	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListIntMsg([]int64{10, 20, 30})}
-	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(-1)}
+	inChans["data"] <- runtime.OrderedMsg{Msg: messages.NewListIntMsg([]int64{10, 20, 30})}
+	inChans["idx"] <- runtime.OrderedMsg{Msg: messages.NewIntMsg(-1)}
 
 	select {
 	case got := <-outChans["res"]:
@@ -52,8 +53,8 @@ func TestListAtUntypedFallback(t *testing.T) {
 		<-done
 	}()
 
-	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListMsg([]runtime.Msg{runtime.NewStringMsg("a"), runtime.NewIntMsg(2)})}
-	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(1)}
+	inChans["data"] <- runtime.OrderedMsg{Msg: messages.NewListMsg([]messages.Msg{messages.NewStringMsg("a"), messages.NewIntMsg(2)})}
+	inChans["idx"] <- runtime.OrderedMsg{Msg: messages.NewIntMsg(1)}
 
 	select {
 	case got := <-outChans["res"]:
@@ -81,8 +82,8 @@ func TestListAtOutOfBounds(t *testing.T) {
 		<-done
 	}()
 
-	inChans["data"] <- runtime.OrderedMsg{Msg: runtime.NewListStringMsg([]string{"x"})}
-	inChans["idx"] <- runtime.OrderedMsg{Msg: runtime.NewIntMsg(5)}
+	inChans["data"] <- runtime.OrderedMsg{Msg: messages.NewListStringMsg([]string{"x"})}
+	inChans["idx"] <- runtime.OrderedMsg{Msg: messages.NewIntMsg(5)}
 
 	select {
 	case got := <-outChans["err"]:
@@ -126,8 +127,8 @@ func BenchmarkListAtTypedInt(b *testing.B) {
 	ctx := b.Context()
 	go handler(ctx)
 
-	listMsg := runtime.NewListIntMsg([]int64{1, 2, 3, 4, 5, 6, 7, 8})
-	idxMsg := runtime.NewIntMsg(4)
+	listMsg := messages.NewListIntMsg([]int64{1, 2, 3, 4, 5, 6, 7, 8})
+	idxMsg := messages.NewIntMsg(4)
 
 	b.ReportAllocs()
 	b.ResetTimer()

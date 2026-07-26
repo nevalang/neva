@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // fan_in_test.go contains unit tests for fanIn runtime function.
@@ -44,14 +45,14 @@ func TestFanInSendsSingleExplicitCause(t *testing.T) {
 		ctx,
 		tracer,
 		runtime.PortAddr{Path: "src/out", Port: "data1"},
-		runtime.NewStringMsg("v"),
+		messages.NewStringMsg("v"),
 		dataInputs[1],
 	)
 
 	select {
 	case out := <-resOutCh:
-		if !runtime.Equal(out, runtime.NewStringMsg("v")) {
-			t.Fatalf("payload = %v, want %v", out, runtime.NewStringMsg("v"))
+		if !messages.Equal(out.Msg, messages.NewStringMsg("v")) {
+			t.Fatalf("payload = %v, want %v", out, messages.NewStringMsg("v"))
 		}
 		assertHopCauseIndexes(t, tracer, out, []runtime.OrderedMsg{cause})
 	case <-time.After(time.Second):

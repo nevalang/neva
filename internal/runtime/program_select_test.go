@@ -3,6 +3,8 @@ package runtime
 import (
 	"context"
 	"testing"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func newTestArrayInport(chans ...<-chan OrderedMsg) *ArrayInport {
@@ -18,7 +20,7 @@ func TestArrayInportSelectSingleSlot(t *testing.T) {
 	t.Parallel()
 
 	ch := make(chan OrderedMsg, 1)
-	ch <- OrderedMsg{Msg: NewIntMsg(7), index: 10}
+	ch <- OrderedMsg{Msg: messages.NewIntMsg(7), index: 10}
 	in := newTestArrayInport(ch)
 
 	selected, ok := in.Select(context.Background())
@@ -38,8 +40,8 @@ func TestArrayInportSelectTwoSlotsOrdersByIndex(t *testing.T) {
 
 	ch0 := make(chan OrderedMsg, 2)
 	ch1 := make(chan OrderedMsg, 2)
-	ch0 <- OrderedMsg{Msg: NewStringMsg("new"), index: 200}
-	ch1 <- OrderedMsg{Msg: NewStringMsg("old"), index: 100}
+	ch0 <- OrderedMsg{Msg: messages.NewStringMsg("new"), index: 200}
+	ch1 <- OrderedMsg{Msg: messages.NewStringMsg("old"), index: 100}
 	in := newTestArrayInport(ch0, ch1)
 
 	first, ok := in.Select(context.Background())

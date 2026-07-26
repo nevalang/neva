@@ -10,6 +10,8 @@ immutable language values plus pure value operations. `internal/runtime/` may
 also import `internal/runtime/messages` for ports, ordering, tracing, and
 program execution. Runtime functions under `internal/runtime/funcs/` may import
 both packages: use `messages` for pure value work and `runtime` for transport.
+Import `messages` directly; do not add compatibility aliases, forwarding
+wrappers, or re-exports in `runtime` to postpone a package migration.
 
 ## Before Adding a Runtime Function
 

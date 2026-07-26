@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type intIsGreaterOrEqual struct{}
 
-func (intIsGreaterOrEqual) Create(io runtime.IO, _ runtime.Msg) (func(context.Context), error) {
-	return createBinaryFuncConcurrent(io, func(left runtime.Msg, right runtime.Msg) runtime.Msg {
-		return runtime.NewBoolMsg(left.Int() >= right.Int())
+func (intIsGreaterOrEqual) Create(io runtime.IO, _ messages.Msg) (func(context.Context), error) {
+	return createBinaryFuncConcurrent(io, func(left messages.Msg, right messages.Msg) messages.Msg {
+		return messages.NewBoolMsg(left.Int() >= right.Int())
 	})
 }

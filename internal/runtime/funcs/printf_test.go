@@ -3,7 +3,7 @@ package funcs
 import (
 	"testing"
 
-	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestFormatTemplate(t *testing.T) {
@@ -62,19 +62,19 @@ func TestFormatTemplate(t *testing.T) {
 		},
 	}
 
-	argsByID := map[int][]runtime.Msg{
+	argsByID := map[int][]messages.Msg{
 		argsNone: {},
 		argsOneInt: {
-			runtime.NewIntMsg(42),
+			messages.NewIntMsg(42),
 		},
 		argsThreeStrings: {
-			runtime.NewStringMsg("A"),
-			runtime.NewStringMsg("B"),
-			runtime.NewStringMsg("C"),
+			messages.NewStringMsg("A"),
+			messages.NewStringMsg("B"),
+			messages.NewStringMsg("C"),
 		},
 		argsTwoStrings: {
-			runtime.NewStringMsg("A"),
-			runtime.NewStringMsg("B"),
+			messages.NewStringMsg("A"),
+			messages.NewStringMsg("B"),
 		},
 	}
 

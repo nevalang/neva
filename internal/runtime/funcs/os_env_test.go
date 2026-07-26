@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestLookupEnvResultMsg(t *testing.T) {
@@ -41,14 +42,14 @@ func TestLookupEnvResultMsg(t *testing.T) {
 func TestOSGetenvRuntimeFunc(t *testing.T) {
 	t.Setenv("NEVA_OS_GETENV", "value")
 
-	got := runUnaryRuntimeFunc(t, osGetenv{}, "key", runtime.NewStringMsg("NEVA_OS_GETENV"))
+	got := runUnaryRuntimeFunc(t, osGetenv{}, "key", messages.NewStringMsg("NEVA_OS_GETENV"))
 	if got.Str() != "value" {
 		t.Fatalf("getenv = %q, want value", got.Str())
 	}
 }
 
 func TestOSLookupEnvRuntimeFuncReportsMissing(t *testing.T) {
-	got := runUnaryRuntimeFunc(t, osLookupEnv{}, "key", runtime.NewStringMsg("NEVA_OS_MISSING"))
+	got := runUnaryRuntimeFunc(t, osLookupEnv{}, "key", messages.NewStringMsg("NEVA_OS_MISSING"))
 	fields := got.Struct()
 	if fields.Get("value").Str() != "" || fields.Get("exists").Bool() {
 		t.Fatalf("lookup missing = %v, want empty/false", got)
@@ -61,8 +62,8 @@ func TestOSSetenvRuntimeFuncStoresValue(t *testing.T) {
 		osSetenv{},
 		"key",
 		"value",
-		runtime.NewStringMsg("NEVA_OS_SETENV"),
-		runtime.NewStringMsg("stored"),
+		messages.NewStringMsg("NEVA_OS_SETENV"),
+		messages.NewStringMsg("stored"),
 	)
 	if got := getenv(t, "NEVA_OS_SETENV"); got != "stored" {
 		t.Fatalf("setenv stored %q, want stored", got)
@@ -75,8 +76,8 @@ func TestOSSetenvRuntimeFuncReportsInvalidKey(t *testing.T) {
 		osSetenv{},
 		"key",
 		"value",
-		runtime.NewStringMsg("BAD=KEY"),
-		runtime.NewStringMsg("value"),
+		messages.NewStringMsg("BAD=KEY"),
+		messages.NewStringMsg("value"),
 	)
 	if !strings.Contains(got.Struct().Get("text").Str(), "os.Setenv") {
 		t.Fatalf("setenv error = %v, want os.Setenv", got)
@@ -86,7 +87,7 @@ func TestOSSetenvRuntimeFuncReportsInvalidKey(t *testing.T) {
 func TestOSUnsetenvRuntimeFuncRemovesValue(t *testing.T) {
 	t.Setenv("NEVA_OS_UNSETENV", "value")
 
-	runUnaryRuntimeFunc(t, osUnsetenv{}, "key", runtime.NewStringMsg("NEVA_OS_UNSETENV"))
+	runUnaryRuntimeFunc(t, osUnsetenv{}, "key", messages.NewStringMsg("NEVA_OS_UNSETENV"))
 	if _, ok := lookupEnv(t, "NEVA_OS_UNSETENV"); ok {
 		t.Fatal("unsetenv left variable set")
 	}
@@ -95,7 +96,7 @@ func TestOSUnsetenvRuntimeFuncRemovesValue(t *testing.T) {
 func TestOSExpandEnvRuntimeFuncSubstitutesValue(t *testing.T) {
 	t.Setenv("NEVA_OS_EXPAND", "expanded")
 
-	got := runUnaryRuntimeFunc(t, osExpandEnv{}, "data", runtime.NewStringMsg("$NEVA_OS_EXPAND"))
+	got := runUnaryRuntimeFunc(t, osExpandEnv{}, "data", messages.NewStringMsg("$NEVA_OS_EXPAND"))
 	if got.Str() != "expanded" {
 		t.Fatalf("expand_env = %q, want expanded", got.Str())
 	}
@@ -137,7 +138,7 @@ func runUnaryRuntimeFunc(
 	t *testing.T,
 	creator runtime.FuncCreator,
 	inName string,
-	input runtime.Msg,
+	input messages.Msg,
 ) runtime.OrderedMsg {
 	t.Helper()
 
@@ -161,7 +162,7 @@ func runUnaryRuntimeFuncErr(
 	t *testing.T,
 	creator runtime.FuncCreator,
 	inName string,
-	input runtime.Msg,
+	input messages.Msg,
 ) runtime.OrderedMsg {
 	t.Helper()
 
@@ -186,8 +187,8 @@ func runBinaryRuntimeFunc(
 	creator runtime.FuncCreator,
 	firstName string,
 	secondName string,
-	first runtime.Msg,
-	second runtime.Msg,
+	first messages.Msg,
+	second messages.Msg,
 ) runtime.OrderedMsg {
 	t.Helper()
 
@@ -203,7 +204,7 @@ func runBinaryRuntimeFunc(
 		<-done
 	}()
 
-	sendInOrder(t, inChans, []string{secondName, firstName}, map[string]runtime.Msg{
+	sendInOrder(t, inChans, []string{secondName, firstName}, map[string]messages.Msg{
 		firstName:  first,
 		secondName: second,
 	})
@@ -215,8 +216,8 @@ func runBinaryRuntimeFuncErr(
 	creator runtime.FuncCreator,
 	firstName string,
 	secondName string,
-	first runtime.Msg,
-	second runtime.Msg,
+	first messages.Msg,
+	second messages.Msg,
 ) runtime.OrderedMsg {
 	t.Helper()
 
@@ -232,7 +233,7 @@ func runBinaryRuntimeFuncErr(
 		<-done
 	}()
 
-	sendInOrder(t, inChans, []string{secondName, firstName}, map[string]runtime.Msg{
+	sendInOrder(t, inChans, []string{secondName, firstName}, map[string]messages.Msg{
 		firstName:  first,
 		secondName: second,
 	})

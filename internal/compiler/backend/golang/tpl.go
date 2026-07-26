@@ -5,6 +5,7 @@ type templateData struct {
 	TraceComment    string
 	ChanVarNames    []string
 	FuncCalls       []templateFuncCall
+	UsesMessages    bool
 	Trace           bool
 	DebugValidation bool
 }
@@ -55,6 +56,9 @@ import (
 
     "github.com/nevalang/neva/internal/runtime"
     "github.com/nevalang/neva/internal/runtime/funcs"
+    {{- if .UsesMessages}}
+    "github.com/nevalang/neva/internal/runtime/messages"
+    {{- end}}
 )
 
 func main() {
@@ -263,6 +267,7 @@ import (
 
 	"{{.RuntimeImportPath}}"
 	"{{.RuntimeImportPath}}/funcs"
+	"{{.RuntimeImportPath}}/messages"
 )
 
 // suppress unused import error, standard go approach for generated code
@@ -349,12 +354,12 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 	startMsg := {{getMsgFromGo "in" $field.Name $field.Type}}
 	{{- else}}
 	// Prepare input message (StructMsg)
-	inFields := []runtime.StructField{
+	inFields := []messages.StructField{
 		{{- range .InFields}}
-		runtime.NewStructField("{{.Port}}", {{getMsgFromGo "in" .Name .Type}}),
+		messages.NewStructField("{{.Port}}", {{getMsgFromGo "in" .Name .Type}}),
 		{{- end}}
 	}
-	startMsg := runtime.NewStructMsg(inFields)
+	startMsg := messages.NewStructMsg(inFields)
 	{{- end}}
 
 		// Parse output message
@@ -377,7 +382,7 @@ func {{.Name}}(ctx context.Context, in {{.Name}}Input) ({{.Name}}Output, error) 
 	out.{{$field.Name}} = {{getGoFromMsg "res" $field.Type}}
 	{{- else}}
 	// We expect a StructMsg as output
-	outStruct, ok := res.(runtime.StructMsg)
+	outStruct, ok := res.(messages.StructMsg)
 	if !ok {
 		return out, fmt.Errorf("expected StructMsg, got %v", res)
 	}

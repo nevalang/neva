@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type ternarySelector struct{}
 
 //nolint:gocognit,varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-func (p ternarySelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (p ternarySelector) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	ifIn, err := io.In.Single("if")
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -41,7 +42,7 @@ func (p ternarySelector) Create(io runtime.IO, _ runtime.Msg) (func(ctx context.
 				return
 			}
 
-			var resMsg runtime.Msg
+			var resMsg messages.Msg
 			if dataMsg.Bool() {
 				resMsg = thenMsg
 			} else {

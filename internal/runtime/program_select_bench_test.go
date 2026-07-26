@@ -3,6 +3,8 @@ package runtime
 import (
 	"context"
 	"testing"
+
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 // BenchmarkArrayInportSelectTwoSlots measures the two-slot fast-path in Select:
@@ -14,8 +16,8 @@ func BenchmarkArrayInportSelectTwoSlots(b *testing.B) {
 	ctx := context.Background()
 
 	for i := range b.N {
-		ch0 <- OrderedMsg{Msg: NewIntMsg(1), index: uint64(i*2 + 2)}
-		ch1 <- OrderedMsg{Msg: NewIntMsg(2), index: uint64(i*2 + 1)}
+		ch0 <- OrderedMsg{Msg: messages.NewIntMsg(1), index: uint64(i*2 + 2)}
+		ch1 <- OrderedMsg{Msg: messages.NewIntMsg(2), index: uint64(i*2 + 1)}
 
 		if _, ok := in.Select(ctx); !ok {
 			b.Fatal("unexpected canceled select")

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 func TestTraceFromOrderedMsg_ReconstructsFanInTree(t *testing.T) {
@@ -23,10 +24,10 @@ func TestTraceFromOrderedMsg_ReconstructsFanInTree(t *testing.T) {
 	resOut := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "join/out", Port: "res"}, runtime.NoEffectInterceptor{}, resCh)
 	resIn := runtime.NewSingleInport(tracer, resCh, runtime.PortAddr{Path: "prog/out", Port: "stop"}, runtime.NoEffectInterceptor{})
 
-	if !firstOut.Send(ctx, runtime.NewStringMsg("a")) {
+	if !firstOut.Send(ctx, messages.NewStringMsg("a")) {
 		t.Fatalf("first send failed")
 	}
-	if !secondOut.Send(ctx, runtime.NewStringMsg("b")) {
+	if !secondOut.Send(ctx, messages.NewStringMsg("b")) {
 		t.Fatalf("second send failed")
 	}
 
@@ -39,7 +40,7 @@ func TestTraceFromOrderedMsg_ReconstructsFanInTree(t *testing.T) {
 		t.Fatalf("second receive failed")
 	}
 
-	if !resOut.Send(ctx, runtime.NewStringMsg("ab"), firstMsg, secondMsg) {
+	if !resOut.Send(ctx, messages.NewStringMsg("ab"), firstMsg, secondMsg) {
 		t.Fatalf("result send failed")
 	}
 	out, ok := resIn.Receive(ctx)
@@ -76,7 +77,7 @@ func TestFormatTerminationDataflowTrace_ContainsSinkAndComponent(t *testing.T) {
 	out := runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "producer/out", Port: "res"}, runtime.NoEffectInterceptor{}, ch)
 	in := runtime.NewSingleInport(tracer, ch, runtime.PortAddr{Path: "prog/out", Port: "stop"}, runtime.NoEffectInterceptor{})
 
-	if !out.Send(ctx, runtime.NewStringMsg("hello")) {
+	if !out.Send(ctx, messages.NewStringMsg("hello")) {
 		t.Fatalf("send failed")
 	}
 	msg, ok := in.Receive(ctx)

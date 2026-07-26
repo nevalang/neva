@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/runtime"
+	"github.com/nevalang/neva/internal/runtime/messages"
 )
 
 type fileStdin struct{}
 
-func (fileStdin) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (fileStdin) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		return nil, fmt.Errorf("resolve sig inport: %w", err)
@@ -26,7 +27,7 @@ func (fileStdin) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StdinFileHandleID)) {
+			if !resOut.Send(ctx, messages.NewIntMsg(runtime.StdinFileHandleID)) {
 				return
 			}
 		}
@@ -35,7 +36,7 @@ func (fileStdin) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context
 
 type fileStdout struct{}
 
-func (fileStdout) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (fileStdout) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		return nil, fmt.Errorf("resolve sig inport: %w", err)
@@ -52,7 +53,7 @@ func (fileStdout) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StdoutFileHandleID)) {
+			if !resOut.Send(ctx, messages.NewIntMsg(runtime.StdoutFileHandleID)) {
 				return
 			}
 		}
@@ -61,7 +62,7 @@ func (fileStdout) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 
 type fileStderr struct{}
 
-func (fileStderr) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Context), error) {
+func (fileStderr) Create(rio runtime.IO, _ messages.Msg) (func(ctx context.Context), error) {
 	sigIn, err := rio.In.Single("sig")
 	if err != nil {
 		return nil, fmt.Errorf("resolve sig inport: %w", err)
@@ -78,7 +79,7 @@ func (fileStderr) Create(rio runtime.IO, _ runtime.Msg) (func(ctx context.Contex
 				return
 			}
 
-			if !resOut.Send(ctx, runtime.NewIntMsg(runtime.StderrFileHandleID)) {
+			if !resOut.Send(ctx, messages.NewIntMsg(runtime.StderrFileHandleID)) {
 				return
 			}
 		}
