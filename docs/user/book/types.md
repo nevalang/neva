@@ -19,13 +19,10 @@ streams.ZipResult<int, float> // instantiation with 2 type-arguments
 Type expressions can be infinitely nested:
 
 ```neva
-dict<
-    string,
-    list<struct{
-        foo list<dict<int, float>>
-        bar dict<float, list<int | string>>
-    }>
->
+list<struct {
+    foo list<dict<float>>
+    bar dict<list<int>>
+}>
 ```
 
 ### Literal
@@ -35,8 +32,11 @@ Literal expressions are used for structs and unions, which cannot be expressed a
 ```neva
 struct { a int, b float } // struct with 2 fields
 union { Foo, Bar, Baz } // tagged union with 3 variants
-int | string | float | struct{} // union with 4 elements
 ```
+
+Nevalang has tagged unions only. A union literal declares named tags, and a
+tag can optionally carry a value. It has no `int | string`-style untagged
+union syntax.
 
 ## Definition
 
@@ -49,9 +49,8 @@ Examples:
 type foo int
 // id `bar` with expr `list<T>` and 1 type-param `T`
 type bar<T> list<T>
-// id `baz` with expr `dict<T, Y>`
-// and 2 type-param `T` and `Y`, Y has `int | float` constraint
-type baz<T, Y int | float> dict<T, Y>
+// id `baz` with expr `dict<T>` and 1 type-param `T`
+type baz<T> dict<T>
 ```
 
 With these type definitions, `foo`, `bar`, and `baz` can be used as `int`, `list`, and `dict` respectively.
@@ -83,7 +82,7 @@ Type resolution is the process of reducing type expressions to their base types,
 ```neva
 type foo int
 type bar list<int>
-type baz<T> dict<int, T>
+type baz<T> dict<T>
 type bax<T, Y foo> struct { x T, y baz<Y> }
 ```
 
@@ -128,7 +127,7 @@ Now apply the algorithm to the body:
 ```
 struct { x maybe<float>, y baz<int> }
 // =>
-struct { x maybe<float>, y dict<int, int> }
+struct { x maybe<float>, y dict<int> }
 ```
 
 **Final Result**
@@ -140,7 +139,7 @@ bax<maybe<float>, int>
 // =>
 struct { x maybe<float>, y baz<int> }
 // =>
-struct { x maybe<float>, y dict<int, int> }
+struct { x maybe<float>, y dict<int> }
 ```
 
 ### Type Compatibility
@@ -162,13 +161,6 @@ Struct literal `S1` is compatible with `S2` if `S1` is a superset of `S2` and ea
 #### Tagged Union Literals
 
 Tagged union literal `U1` is compatible with `U2` if `U1` is a subset of `U2` (all variants in `U1` exist in `U2`).
-
-#### Union Literals
-
-Union literal `U1` is compatible with `U2` if:
-
-1. `U1` has fewer or equal elements than `U2`
-2. Each element of `U1` has a compatible element in `U2`
 
 ## Base Types
 

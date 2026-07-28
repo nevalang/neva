@@ -13,11 +13,17 @@ pub def Println<T>(data T) (res T, err error)
 
 ### Overloading
 
-Native components can be overloaded using `#extern(t1 f1, t2 f2, ...)`. These components must have one type parameter with a union constraint. The compiler selects the appropriate implementation based on the data type. For instance:
+Overloading uses multiple declarations with the same component name. Each
+declaration has one ordinary `#extern` directive; the compiler selects the
+compatible declaration.
 
 ```neva
-#extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(left T, right T) (res T)
+#extern(int_add)
+pub def Add(left int, right int) (res int)
+#extern(float_add)
+pub def Add(left float, right float) (res float)
+#extern(string_add)
+pub def Add(left string, right string) (res string)
 ```
 
 ## `#bind`

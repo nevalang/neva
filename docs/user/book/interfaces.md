@@ -29,26 +29,17 @@ Interfaces in Nevalang are used for:
 interface IAdd(left int, right int) (res int)
 ```
 
-What if we want to add not just integers but also support `float` and `string`? You could use `union` for that
-
-```neva
-type addable int | float | string
-interface IAdd(left addable, right addable) (res addable)
-```
-
-This solution is problematic because it allows mixing types, e.g., `int` for `:left` and `float` for `:right`. The `:res` message will have a union type `int | float | string`, making the code complex. To maintain type-safety, use type-parameters in the interface definition:
+What if we want the same interface to support several types while requiring
+both inputs to have the same type? Use a type parameter:
 
 ```neva
 interface IAdd<T>(left T, right T) (res T)
 ```
 
-This ensures `:left` and `:right` receive compatible types, and `:res` matches their type. However, our current definition allows any type, including `IAdd<bool, bool>`, which we don't want. To fix this, we can explicitly constrain `T` using our union:
-
-```neva
-interface IAdd<T int | float | string>(left T, right T) (res T)
-```
-
-Now only `IAdd<int, int>`, `IAdd<float, float>` or `IAdd<string, string>` (and their compatible variants) are possible. `IAdd:res` will always be `int`, `float`, or `string`.
+This ensures `:left` and `:right` receive compatible types, and `:res` matches
+their type. The current language has tagged unions, not `int | float`-style
+untagged unions; such a scalar-only constraint is therefore not expressible
+with union syntax.
 
 Type-expressions in interface definitions follow type-system rules, so you can pass `T` to other type-expressions. Example:
 

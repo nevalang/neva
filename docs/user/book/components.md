@@ -15,21 +15,25 @@ def And(a bool, b bool) (res bool)
 
 ### Overloading
 
-Native components can be overloaded, allowing multiple implementations with the same signature for different data types. The compiler chooses the appropriate implementation based on the given data type. Overloading is limited to native components in the standard library and not available for user-defined components.
-
-Overloaded native components use a modified extern directive: `#extern(t1 f1, t2 f2, ...)`. These components must have exactly one type parameter with a union constraint. Example:
+Native components can be overloaded by declaring the same component name with
+different concrete signatures. Each declaration has its own ordinary
+`#extern` directive. The compiler selects the compatible declaration.
+Overloading is limited to native components in the standard library and is not
+available for user-defined components.
 
 ```neva
-#extern(int int_add, float float_add, string string_add)
-pub def Add<T int | float | string>(left T, right T) (res T)
+#extern(int_add)
+pub def Add(left int, right int) (res int)
+#extern(float_add)
+pub def Add(left float, right float) (res float)
+#extern(string_add)
+pub def Add(left string, right string) (res string)
 ```
 
 Usage:
 
 ```
-Add<int> // int_add will be used
-Add<float> // float_add will be used
-Add<string> // string_add will be used
+Add // compiler selects the compatible declaration
 ```
 
 ## Normal Components
