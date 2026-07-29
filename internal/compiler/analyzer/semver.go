@@ -37,23 +37,13 @@ func (a Analyzer) semverCheck(mod src.Module, modRef core.ModuleRef) *compiler.E
 	// if got major more than ours, then compatibility in that program is broken
 	// and vice versa if got major less than ours
 	if moduleVersion.Major() != compilerVersion.Major() {
-		return &compiler.Error{
-			Message: fmt.Sprintf(
-				"Incompatible compiler versions: module %v wants %v while current is %v",
-				modRef, mod.Manifest.LanguageVersion, pkg.Version,
-			),
-		}
+		return incompatibleCompilerVersionError(modRef, mod.Manifest.LanguageVersion)
 	}
 
 	// if majors are equal, then minor should be less or equal
 	// so we make sure module don't want any features we don't have
 	if moduleVersion.Minor() > compilerVersion.Minor() {
-		return &compiler.Error{
-			Message: fmt.Sprintf(
-				"Incompatible compiler versions: module %v wants %v while current is %v",
-				modRef, mod.Manifest.LanguageVersion, pkg.Version,
-			),
-		}
+		return incompatibleCompilerVersionError(modRef, mod.Manifest.LanguageVersion)
 	}
 
 	// at this point we sure we have same majors and got.Minor >= want.Minor
@@ -71,14 +61,26 @@ func (a Analyzer) semverCheck(mod src.Module, modRef core.ModuleRef) *compiler.E
 	// it's ok if we have some patches that module doesn't rely on
 	// but it's not ok if module a wants some patch we don't really have
 	if moduleVersion.Patch() > compilerVersion.Patch() {
-		return &compiler.Error{
-			Message: fmt.Sprintf(
-				"Incompatible compiler versions: module %v wants %v while current is %v",
-				modRef, mod.Manifest.LanguageVersion, pkg.Version,
-			),
-		}
+		return incompatibleCompilerVersionError(modRef, mod.Manifest.LanguageVersion)
 	}
 
 	// versions are strictly equal
 	return nil
+}
+
+func incompatibleCompilerVersionError(modRef core.ModuleRef, requiredVersion string) *compiler.Error {
+	manifest := "the module manifest (neva.yaml or neva.yml)"
+	module := fmt.Sprintf("module %v", modRef)
+	if modRef.Path == "@" {
+		module = "workspace module @"
+		manifest = "the workspace manifest (neva.yaml or neva.yml)"
+	}
+
+	return &compiler.Error{
+		Message: fmt.Sprintf(
+			"Incompatible compiler versions: %s wants %v while current is %v. "+
+				"Update Neva with `neva upgrade`, or change the `neva:` version in %s.",
+			module, requiredVersion, pkg.Version, manifest,
+		),
+	}
 }
