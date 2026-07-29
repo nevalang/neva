@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os/exec"
+	"runtime"
 
 	cli "github.com/urfave/cli/v2"
 
@@ -56,16 +57,32 @@ func newUpgradeCmd() *cli.Command {
 		Name:  "upgrade",
 		Usage: "Upgrade to newest Nevalang version",
 		Action: func(cliCtx *cli.Context) error {
-			curlCmd := "curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash"
-			err := exec.CommandContext(cliCtx.Context, curlCmd).Run()
+			command, args := upgradeCommand(runtime.GOOS)
+			err := exec.CommandContext(cliCtx.Context, command, args...).Run()
 			if err != nil {
-				fmt.Println("Upgrading Nevalang failed :" + err.Error())
+				fmt.Println("Upgrading Nevalang failed: " + err.Error())
 			} else {
-				fmt.Println("Upgrading Nevalang completed. Upgraded to version: " + pkg.Version)
+				fmt.Println("Upgrading Nevalang completed. Restart your terminal or VS Code, then run `neva version` to verify the installed version.")
 			}
 			return nil
 		},
 	}
+}
+
+func upgradeCommand(goos string) (string, []string) {
+	const unixInstaller = "https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh"
+	if goos == "windows" {
+		const windowsInstaller = "https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.bat"
+		return "powershell", []string{
+			"-NoProfile",
+			"-Command",
+			"$script = Join-Path $env:TEMP 'neva-install.bat'; " +
+				"Invoke-WebRequest '" + windowsInstaller + "' -OutFile $script; " +
+				"cmd /c $script",
+		}
+	}
+
+	return "sh", []string{"-c", "curl -fsSL " + unixInstaller + " | sh"}
 }
 
 func newGetCmd(workdir string, bldr builder.Builder) *cli.Command {
