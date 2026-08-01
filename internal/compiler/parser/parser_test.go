@@ -106,7 +106,7 @@ func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	require.Equal(t, "file must contain at most one import statement", err.Message)
 }
 
-func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
+func TestParser_ParseFile_AllowsOneImportPerLine(t *testing.T) {
 	tests := []struct {
 		name string
 		text string
@@ -116,8 +116,11 @@ func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
 			text: "import { fmt }",
 		},
 		{
-			name: "comma separated",
-			text: "import { fmt, runtime }",
+			name: "block",
+			text: `import {
+				fmt
+				runtime
+			}`,
 		},
 	}
 
@@ -128,6 +131,63 @@ func TestParser_ParseFile_AllowsExistingSingleImportForms(t *testing.T) {
 			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 
 			require.Nil(t, err)
+		})
+	}
+}
+
+func TestParser_ParseFile_RejectsCommaSeparatedImports(t *testing.T) {
+	p := New()
+
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+		import { fmt, runtime }
+	`))
+
+	require.NotNil(t, err)
+}
+
+func TestParser_ParseFile_RejectsCommaSeparatedNodes(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "component body",
+			text: `
+				def C1() () {
+					first First, second Second
+					---
+					first -> second
+				}
+			`,
+		},
+		{
+			name: "dependency injection",
+			text: `
+				def C1() () {
+					parent Parent{first First, second Second}
+					---
+				}
+			`,
+		},
+		{
+			name: "without separator",
+			text: `
+				def C1() () {
+					first First second Second
+					---
+					first -> second
+				}
+			`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+
+			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
+
+			require.NotNil(t, err)
 		})
 	}
 }

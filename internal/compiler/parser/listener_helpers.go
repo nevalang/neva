@@ -546,8 +546,23 @@ func (s *treeShapeListener) parseNodes(
 ) (map[string]src.Node, *compiler.Error) {
 	result := map[string]src.Node{}
 	missingAliasCounter := 0
+	nodeLines := map[int]struct{}{}
 
 	for _, node := range actx.AllCompNodeDef() {
+		line := node.GetStart().GetLine()
+		if _, exists := nodeLines[line]; exists {
+			return nil, &compiler.Error{
+				Message: "only one node declaration is allowed per line",
+				Meta: &core.Meta{
+					Text:     node.GetText(),
+					Start:    core.Position{Line: line, Column: node.GetStart().GetColumn()},
+					Stop:     core.Position{Line: node.GetStop().GetLine(), Column: node.GetStop().GetColumn()},
+					Location: s.loc,
+				},
+			}
+		}
+		nodeLines[line] = struct{}{}
+
 		nodeInst := node.NodeInst()
 
 		directives := s.parseCompilerDirectives(node.CompilerDirectives())

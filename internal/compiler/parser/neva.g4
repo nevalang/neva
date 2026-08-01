@@ -17,9 +17,12 @@ compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
 compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
 
 // Imports
-importStmt: IMPORT NEWLINE* LBRACE NEWLINE* importBlockItem* RBRACE;
-importBlockItem: (importDef | COMMENT) NEWLINE*;
-importDef: importAlias? importPath (COMMA)? COMMENT? NEWLINE*;
+importStmt:
+	IMPORT NEWLINE* LBRACE NEWLINE* RBRACE
+	| IMPORT NEWLINE* LBRACE importDef RBRACE
+	| IMPORT NEWLINE* LBRACE NEWLINE+ importBlockItem* RBRACE;
+importBlockItem: (importDef | COMMENT) NEWLINE+;
+importDef: importAlias? importPath COMMENT?;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;
 importPathMod: AT | importMod;
@@ -90,7 +93,7 @@ compBody:
 
 // Nodes
 compNodesDef: compNodesDefBody NEWLINE+ DASH3;
-compNodesDefBody: ((compNodeDef (COMMA)? | COMMENT) NEWLINE*)+;
+compNodesDefBody: ((compNodeDef | COMMENT) NEWLINE*)+;
 // Alias stays optional in grammar to support anonymous DI args in `{ ... }`.
 // Top-level component nodes are validated in analyzer and must have explicit aliases.
 compNodeDef: compilerDirectives? IDENTIFIER? nodeInst;
