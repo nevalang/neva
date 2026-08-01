@@ -4,7 +4,9 @@ import {
 }
 
 def Main(start any) (stop any) {
-    foo Foo, println fmt.Println<int>, panic runtime.Panic
+    foo Foo
+    println fmt.Println<int>
+    panic runtime.Panic
     ---
     :start -> foo:sig
     foo:res -> .a -> println:data

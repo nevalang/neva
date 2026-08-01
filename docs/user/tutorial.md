@@ -114,7 +114,10 @@ Hello, World!
 If you open `my_awesome_project/src/main.neva` with your favorite IDE, you'll see this:
 
 ```neva
-import { fmt, runtime }
+import {
+	fmt
+	runtime
+}
 
 // main prints a greeting and propagates failures to the runtime panic node.
 def Main(start any) (stop any) {

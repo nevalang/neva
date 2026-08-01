@@ -86,7 +86,8 @@ Consider an application that performs some business logic with logging:
 
 ```neva
 def App(data) (sig) {
-   Logic, Log
+   logic Logic
+   log Log
    ---
    :data -> logic -> log -> :sig
 }
@@ -96,7 +97,10 @@ Now imagine we want to replace `Logger` with another component based on a condit
 
 ```neva
 def App(data any, prod bool) (sig any) {
-   Cond, Logic, ProdLogger, MockLogger
+   cond Cond
+   businessLogic Logic
+   prodLogger ProdLogger
+   mockLogger MockLogger
    ---
    :data -> businessLogic -> cond:data
    :prod -> cond:if
@@ -108,8 +112,6 @@ def App(data any, prod bool) (sig any) {
 
 This not only makes the code more complex but also means we have to initialize both implementations: `ProdLogger` in the test environment and `MockLogger` in the production environment, even though they are not needed in those respective contexts. What if you need to read environment variables to initialize a component? For example, your logger might need to send requests to a third-party service to collect errors. And finally, imagine if it were not a boolean flag but a tagged union with several possible states. The complexity would increase dramatically.
 
-> As you can see it's possible to write nodes in a single line, separated by comma: `Cond, Logic, Mock`. Don't abuse this style - Nevalang is not about clever one-liners, as you can see with `Println`.
-
 Let's implement this using dependency injection. First, define an interface:
 
 ```neva
@@ -120,7 +122,8 @@ Next, define the dependency (interface node):
 
 ```neva
 def App(data) (sig) {
-   Logic, ILog
+   logic Logic
+   iLog ILog
    ---
    :data -> logic -> iLog -> :sig
 }
@@ -189,7 +192,8 @@ Components can pass type parameters from their interface to node expressions:
 
 ```neva
 def Bar<T>(data T) (sig any) {
-   Println<T>, Panic
+   println Println<T>
+   panic Panic
    ---
    :data -> println
    println:res -> :sig
