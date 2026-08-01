@@ -10,7 +10,6 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 
 	"github.com/nevalang/neva/internal/compiler"
-	generated "github.com/nevalang/neva/internal/compiler/parser/generated"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
 )
@@ -89,18 +88,10 @@ func (p Parser) parseFile(
 	fileName string,
 	content []byte,
 ) (src.File, *compiler.Error) {
-	input := antlr.NewInputStream(string(content))
-	lexer := generated.NewnevaLexer(input)
-	lexerErrors := &CustomErrorListener{}
-	lexer.RemoveErrorListeners()
-	lexer.AddErrorListener(lexerErrors)
-	tokenStream := antlr.NewCommonTokenStream(lexer, 0)
-
-	parserErrors := &CustomErrorListener{}
-	prsr := generated.NewnevaParser(tokenStream)
-	prsr.RemoveErrorListeners()
-	prsr.AddErrorListener(parserErrors)
-	prsr.BuildParseTrees = true
+	parsed, err := ParseSource(content)
+	if err != nil {
+		return src.File{}, err
+	}
 
 	listener := &treeShapeListener{
 		loc: core.Location{
@@ -111,16 +102,8 @@ func (p Parser) parseFile(
 		sourceLines: strings.Split(string(content), "\n"),
 	}
 
-	if err := walkTree(listener, prsr.Prog()); err != nil {
+	if err := walkTree(listener, parsed.Tree); err != nil {
 		return src.File{}, err
-	}
-
-	if len(lexerErrors.Errors) > 0 {
-		return src.File{}, lexerErrors.Errors[0]
-	}
-
-	if len(parserErrors.Errors) > 0 {
-		return src.File{}, parserErrors.Errors[0]
 	}
 
 	return listener.state, nil

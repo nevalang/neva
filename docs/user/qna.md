@@ -319,3 +319,10 @@ Operators should follow same pattern for simplicity of desugarer and usage by us
 ## Why does Neva have overloading, and why can’t users define it?
 
 Neva uses overloading internally to keep the standard library conceptually small without forcing users to deal with tagged unions, explicit type arguments, or name explosions for every concrete type. This improves day-to-day DX in an operator-less, component-only language. However, exposing overloading to users would introduce mental-model complexity: it makes APIs harder to reason about as systems grow. By keeping overloading limited to the `builtin` package, Neva captures the ergonomic benefits where they matter most while preserving a simple, predictable model for user code.
+
+## Why will Neva ship `neva fmt` instead of requiring a separate formatter?
+
+`neva fmt` is part of the language toolchain, so developers, editors, and CI
+use the formatter version that matches the parser. It needs no project config
+or successful build. Separately installed tools belong under `neva tool`; lint
+and refactorings remain separate from formatting.
