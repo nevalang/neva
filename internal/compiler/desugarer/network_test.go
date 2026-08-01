@@ -332,7 +332,7 @@ func TestDesugarNetwork(t *testing.T) {
 				nodesToInsert: map[string]src.Node{
 					"__field__1": {
 						EntityRef:  core.EntityRef{Pkg: "builtin", Name: "Field"},
-						Directives: src.Directives{src.NewBindDirective("__const__1")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "__const__1"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -425,7 +425,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: src.Directives{src.NewBindDirective("foo")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "foo"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{},
@@ -517,7 +517,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: src.Directives{src.NewBindDirective("c")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "c"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{},
@@ -601,7 +601,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: src.Directives{src.NewBindDirective("__const__1")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "__const__1"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -676,7 +676,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: src.Directives{src.NewBindDirective("__const__1")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "__const__1"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -761,7 +761,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: src.Directives{src.NewBindDirective("__const__1")},
+						Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: "__const__1"})},
 					},
 				},
 				constsToInsert: map[string]src.Const{

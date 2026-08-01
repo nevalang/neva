@@ -1041,6 +1041,7 @@ func (s *treeShapeListener) parseMessage( //nolint:cyclop,funlen,gocognit,lll //
 	return msg, nil
 }
 
+// parseCompilerDirectives preserves directive order for semantic analysis.
 func (s *treeShapeListener) parseCompilerDirectives(
 	actx generated.ICompilerDirectivesContext,
 ) (src.Directives, *compiler.Error) {
@@ -1061,6 +1062,7 @@ func (s *treeShapeListener) parseCompilerDirectives(
 	return result, nil
 }
 
+// parseCompilerDirective builds the typed AST variant for one known directive.
 func (s *treeShapeListener) parseCompilerDirective(
 	directive generated.ICompilerDirectiveContext,
 ) (src.Directive, *compiler.Error) {
@@ -1080,25 +1082,36 @@ func (s *treeShapeListener) parseCompilerDirective(
 	arg := directive.CompilerDirectiveArg()
 
 	switch src.DirectiveKind(name) {
-	case src.ExternDirective, src.BindDirective:
-		identifier, err := s.parseDirectiveIdentifier(name, arg, &meta)
+	case src.DirectiveKindExtern:
+		ref, err := s.parseDirectiveRef(name, arg, &meta)
 		if err != nil {
 			return src.Directive{}, err
 		}
 		return src.Directive{
-			Kind:       src.DirectiveKind(name),
-			Identifier: identifier,
-			Meta:       meta,
+			Extern: &src.ExternDirective{Ref: ref.Name, Meta: ref.Meta},
+			Meta:   meta,
 		}, nil
-	case src.AutoportsDirective:
+	case src.DirectiveKindBind:
+		ref, err := s.parseDirectiveRef(name, arg, &meta)
+		if err != nil {
+			return src.Directive{}, err
+		}
+		return src.Directive{
+			Bind: &src.BindDirective{ConstRef: ref},
+			Meta: meta,
+		}, nil
+	case src.DirectiveKindAutoports:
 		if arg != nil {
 			return src.Directive{}, &compiler.Error{
 				Message: "#autoports does not accept an argument",
 				Meta:    &meta,
 			}
 		}
-		return src.Directive{Kind: src.AutoportsDirective, Meta: meta}, nil
-	case src.BindTypeDirective:
+		return src.Directive{
+			Autoports: &src.AutoportsDirective{},
+			Meta:      meta,
+		}, nil
+	case src.DirectiveKindBindType:
 		if arg == nil {
 			return src.Directive{}, &compiler.Error{
 				Message: "#bind_type requires a type expression",
@@ -1110,8 +1123,7 @@ func (s *treeShapeListener) parseCompilerDirective(
 			return src.Directive{}, err
 		}
 		return src.Directive{
-			Kind:     src.BindTypeDirective,
-			TypeExpr: &typeExpr,
+			BindType: &src.BindTypeDirective{TypeExpr: typeExpr},
 			Meta:     meta,
 		}, nil
 	default:
@@ -1122,13 +1134,14 @@ func (s *treeShapeListener) parseCompilerDirective(
 	}
 }
 
-func (s *treeShapeListener) parseDirectiveIdentifier(
+// parseDirectiveRef parses the local identifier accepted by #extern and #bind.
+func (s *treeShapeListener) parseDirectiveRef(
 	name string,
 	arg generated.ICompilerDirectiveArgContext,
 	directiveMeta *core.Meta,
-) (*src.DirectiveIdentifier, *compiler.Error) {
+) (core.EntityRef, *compiler.Error) {
 	if arg == nil {
-		return nil, &compiler.Error{
+		return core.EntityRef{}, &compiler.Error{
 			Message: "#" + name + " requires an identifier argument",
 			Meta:    directiveMeta,
 		}
@@ -1137,16 +1150,19 @@ func (s *treeShapeListener) parseDirectiveIdentifier(
 	typeExpr := arg.TypeExpr()
 	instExpr := typeExpr.TypeInstExpr()
 	if instExpr == nil || instExpr.TypeArgs() != nil || instExpr.EntityRef().LocalEntityRef() == nil {
-		return nil, &compiler.Error{
+		return core.EntityRef{}, &compiler.Error{
 			Message: "#" + name + " requires an identifier argument",
 			Meta:    directiveMeta,
 		}
 	}
 
-	return &src.DirectiveIdentifier{
-		Value: instExpr.GetText(),
-		Meta:  s.getTypeExprMeta(typeExpr),
-	}, nil
+	ref, err := s.parseEntityRef(instExpr.EntityRef())
+	if err != nil {
+		return core.EntityRef{}, err
+	}
+	ref.Meta = s.getTypeExprMeta(typeExpr)
+
+	return ref, nil
 }
 
 func (s *treeShapeListener) parseTypeDef(

@@ -152,35 +152,64 @@ type Component struct {
 type DirectiveKind string
 
 const (
-	ExternDirective    DirectiveKind = "extern"
-	BindDirective      DirectiveKind = "bind"
-	AutoportsDirective DirectiveKind = "autoports"
-	BindTypeDirective  DirectiveKind = "bind_type"
+	DirectiveKindExtern    DirectiveKind = "extern"
+	DirectiveKindBind      DirectiveKind = "bind"
+	DirectiveKindAutoports DirectiveKind = "autoports"
+	DirectiveKindBindType  DirectiveKind = "bind_type"
 )
 
-// Directive is a parsed compiler instruction with a directive-specific argument.
+// Directive is a typed compiler instruction. Exactly one variant must be set.
 type Directive struct {
-	Identifier *DirectiveIdentifier `json:"identifier,omitempty"`
-	TypeExpr   *ts.Expr             `json:"typeExpr,omitempty"`
-	Kind       DirectiveKind        `json:"kind"`
-	Meta       core.Meta            `json:"meta"`
+	Extern    *ExternDirective    `json:"extern,omitempty"`
+	Bind      *BindDirective      `json:"bind,omitempty"`
+	Autoports *AutoportsDirective `json:"autoports,omitempty"`
+	BindType  *BindTypeDirective  `json:"bindType,omitempty"`
+	Meta      core.Meta           `json:"meta"`
 }
 
-// DirectiveIdentifier is an identifier argument and its source location.
-type DirectiveIdentifier struct {
-	Value string    `json:"value"`
-	Meta  core.Meta `json:"meta"`
+// ExternDirective names a runtime-function registry entry.
+type ExternDirective struct {
+	Ref  string    `json:"ref"`
+	Meta core.Meta `json:"meta"`
+}
+
+// BindDirective identifies the constant bound to a node.
+type BindDirective struct {
+	ConstRef core.EntityRef `json:"constRef"`
+}
+
+// AutoportsDirective requests ports derived from a component type argument.
+type AutoportsDirective struct{}
+
+// BindTypeDirective carries a source-level type expression for later resolution.
+type BindTypeDirective struct {
+	TypeExpr ts.Expr `json:"typeExpr"`
 }
 
 // Directives preserves source order and duplicate directives for analysis.
 type Directives []Directive
 
+// Kind returns the kind of the populated directive variant.
+func (d *Directive) Kind() DirectiveKind {
+	switch {
+	case d.Extern != nil:
+		return DirectiveKindExtern
+	case d.Bind != nil:
+		return DirectiveKindBind
+	case d.Autoports != nil:
+		return DirectiveKindAutoports
+	case d.BindType != nil:
+		return DirectiveKindBindType
+	default:
+		return ""
+	}
+}
+
 // Find returns the first directive with the requested kind.
 func (d Directives) Find(kind DirectiveKind) (Directive, bool) {
 	for i := range d {
-		directive := d[i]
-		if directive.Kind == kind {
-			return directive, true
+		if d[i].Kind() == kind {
+			return d[i], true
 		}
 	}
 
@@ -193,26 +222,11 @@ func (d Directives) Has(kind DirectiveKind) bool {
 	return ok
 }
 
-// FirstDuplicate returns the first repeated directive in source order.
-func (d Directives) FirstDuplicate() (Directive, bool) {
-	seen := make(map[DirectiveKind]struct{}, len(d))
-	for i := range d {
-		directive := d[i]
-		if _, ok := seen[directive.Kind]; ok {
-			return directive, true
-		}
-		seen[directive.Kind] = struct{}{}
-	}
-
-	return Directive{}, false
-}
-
 // NewBindDirective constructs a compiler-generated #bind directive.
-func NewBindDirective(value string) Directive {
+func NewBindDirective(ref *core.EntityRef) Directive {
 	return Directive{
-		Kind: BindDirective,
-		Identifier: &DirectiveIdentifier{
-			Value: value,
+		Bind: &BindDirective{
+			ConstRef: *ref,
 		},
 	}
 }

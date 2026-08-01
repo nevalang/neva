@@ -72,7 +72,7 @@ func (Desugarer) handleNode(
 	}
 
 	// only if node component uses #autoports
-	hasAutportsDirectory := version.Directives.Has(src.AutoportsDirective)
+	hasAutportsDirectory := version.Directives.Has(src.DirectiveKindAutoports)
 
 	// autoports and anonymous dependency are everything we need to desugar
 	if !hasAutportsDirectory && len(node.DIArgs) != 1 {

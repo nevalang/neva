@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAnalyzeComponentRejectsDuplicateDirectives verifies component cardinality diagnostics.
 func TestAnalyzeComponentRejectsDuplicateDirectives(t *testing.T) {
 	duplicateMeta := core.Meta{Start: core.Position{Line: 2}}
 	component := src.Component{
 		Directives: src.Directives{
-			{Kind: src.ExternDirective},
-			{Kind: src.ExternDirective, Meta: duplicateMeta},
+			{Extern: &src.ExternDirective{}},
+			{Extern: &src.ExternDirective{}, Meta: duplicateMeta},
 		},
 	}
 
@@ -24,12 +25,13 @@ func TestAnalyzeComponentRejectsDuplicateDirectives(t *testing.T) {
 	require.Equal(t, &duplicateMeta, err.Meta)
 }
 
+// TestAnalyzeNodeRejectsDuplicateDirectives verifies node cardinality diagnostics.
 func TestAnalyzeNodeRejectsDuplicateDirectives(t *testing.T) {
 	duplicateMeta := core.Meta{Start: core.Position{Line: 3}}
 	node := src.Node{
 		Directives: src.Directives{
-			{Kind: src.BindDirective},
-			{Kind: src.BindDirective, Meta: duplicateMeta},
+			{Bind: &src.BindDirective{}},
+			{Bind: &src.BindDirective{}, Meta: duplicateMeta},
 		},
 	}
 

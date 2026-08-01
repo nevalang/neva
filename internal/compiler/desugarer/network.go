@@ -465,7 +465,7 @@ func (d *Desugarer) desugarChainedConnection(
 				},
 				TypeArgs: []ts.Expr{constTypeExpr},
 				Directives: src.Directives{
-					src.NewBindDirective(chainHead.Const.Value.Ref.String()),
+					src.NewBindDirective(chainHead.Const.Value.Ref),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -482,7 +482,7 @@ func (d *Desugarer) desugarChainedConnection(
 				},
 				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},
 				Directives: src.Directives{
-					src.NewBindDirective(virtualConstName),
+					src.NewBindDirective(&core.EntityRef{Name: virtualConstName}),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -736,7 +736,7 @@ func (d *Desugarer) handleLiteralSender(
 	locOnlyMeta := core.Meta{Location: constant.Meta.Location}
 
 	emitterNode := src.Node{
-		Directives: src.Directives{src.NewBindDirective(constName)},
+		Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: constName})},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef().Pkg,
 			Name: newComponentRef().Name,
@@ -775,7 +775,7 @@ func (d *Desugarer) handleConstRefSender(
 
 	emitterNode := src.Node{
 		// don't forget to bind
-		Directives: src.Directives{src.NewBindDirective(ref.String())},
+		Directives: src.Directives{src.NewBindDirective(&ref)},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef().Pkg,
 			Name: newComponentRef().Name,

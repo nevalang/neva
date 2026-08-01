@@ -121,13 +121,7 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 		}
 	}
 
-	bind, hasBind := node.Directives.Find(src.BindDirective)
-	if hasBind && bind.Identifier == nil {
-		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message: "Node with #bind directive must provide exactly one argument",
-			Meta:    nodeEntity.Meta(),
-		}
-	}
+	_, hasBind := node.Directives.Find(src.DirectiveKindBind)
 
 	if hasBind && nodeEntity.Kind == src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
@@ -330,7 +324,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 		}
 	}
 
-	hasExtern := version.Directives.Has(src.ExternDirective)
+	hasExtern := version.Directives.Has(src.DirectiveKindExtern)
 	if hasBind && !hasExtern {
 		return src.Interface{}, nil, &compiler.Error{
 			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
@@ -340,7 +334,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 
 	versionIface := version.Interface
 
-	hasAutoPortsDirective := version.Directives.Has(src.AutoportsDirective)
+	hasAutoPortsDirective := version.Directives.Has(src.DirectiveKindAutoports)
 	if !hasAutoPortsDirective {
 		return versionIface, overloadIndex, nil
 	}
@@ -1474,7 +1468,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) isNativeComponentWithMultipleExterns(component src.Component, entity src.Entity) bool {
 	// check if this component has extern directive
-	hasExtern := component.Directives.Has(src.ExternDirective)
+	hasExtern := component.Directives.Has(src.DirectiveKindExtern)
 	if !hasExtern {
 		return false
 	}

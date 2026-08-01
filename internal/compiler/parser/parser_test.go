@@ -494,34 +494,35 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	d1, ok := got.Entities["C1"].Component[0].Directives.Find(src.ExternDirective)
+	d1, ok := got.Entities["C1"].Component[0].Directives.Find(src.DirectiveKindExtern)
 	require.True(t, ok)
-	require.Equal(t, "d1", d1.Identifier.Value)
+	require.Equal(t, "d1", d1.Extern.Ref)
 
 	c2 := got.Entities["C2"].Component
 
-	d2, ok := c2[0].Directives.Find(src.ExternDirective)
+	d2, ok := c2[0].Directives.Find(src.DirectiveKindExtern)
 	require.True(t, ok)
-	require.Equal(t, "d2", d2.Identifier.Value)
+	require.Equal(t, "d2", d2.Extern.Ref)
 
-	d3, ok := c2[0].Nodes["n1"].Directives.Find(src.BindDirective)
+	d3, ok := c2[0].Nodes["n1"].Directives.Find(src.DirectiveKindBind)
 	require.True(t, ok)
-	require.Equal(t, "d3", d3.Identifier.Value)
+	require.Equal(t, "d3", d3.Bind.ConstRef.Name)
 
-	d4, ok := c2[0].Nodes["n2"].Directives.Find(src.BindDirective)
+	d4, ok := c2[0].Nodes["n2"].Directives.Find(src.DirectiveKindBind)
 	require.True(t, ok)
-	require.Equal(t, "d4", d4.Identifier.Value)
+	require.Equal(t, "d4", d4.Bind.ConstRef.Name)
 
 	c3 := got.Entities["C3"].Component
-	require.True(t, c3[0].Directives.Has(src.AutoportsDirective))
+	require.True(t, c3[0].Directives.Has(src.DirectiveKindAutoports))
 
 	c4 := got.Entities["C4"].Component
-	d5, ok := c4[0].Directives.Find(src.ExternDirective)
+	d5, ok := c4[0].Directives.Find(src.DirectiveKindExtern)
 	require.Equal(t, true, ok)
-	require.Equal(t, "d5", d5.Identifier.Value)
-	require.True(t, c4[0].Directives.Has(src.AutoportsDirective))
+	require.Equal(t, "d5", d5.Extern.Ref)
+	require.True(t, c4[0].Directives.Has(src.DirectiveKindAutoports))
 }
 
+// TestParser_ParseFile_BindTypeDirective verifies nested type expressions and source metadata.
 func TestParser_ParseFile_BindTypeDirective(t *testing.T) {
 	text := []byte("#bind_type(list<T>)\ndef C<T>() ()\n\n" +
 		"#bind_type(struct { value list<T> })\ndef D<T>() ()\n")
@@ -534,24 +535,25 @@ func TestParser_ParseFile_BindTypeDirective(t *testing.T) {
 	)
 	require.Nil(t, err)
 
-	directive, ok := got.Entities["C"].Component[0].Directives.Find(src.BindTypeDirective)
+	directive, ok := got.Entities["C"].Component[0].Directives.Find(src.DirectiveKindBindType)
 	require.True(t, ok)
-	require.NotNil(t, directive.TypeExpr)
-	require.Equal(t, "list", directive.TypeExpr.Inst.Ref.Name)
-	require.Len(t, directive.TypeExpr.Inst.Args, 1)
-	require.Equal(t, "T", directive.TypeExpr.Inst.Args[0].Inst.Ref.Name)
+	require.NotNil(t, directive.BindType)
+	require.Equal(t, "list", directive.BindType.TypeExpr.Inst.Ref.Name)
+	require.Len(t, directive.BindType.TypeExpr.Inst.Args, 1)
+	require.Equal(t, "T", directive.BindType.TypeExpr.Inst.Args[0].Inst.Ref.Name)
 	require.Equal(t, core.Position{Line: 1, Column: 0}, directive.Meta.Start)
 	require.Equal(t, location, directive.Meta.Location)
-	require.Equal(t, core.Position{Line: 1, Column: 11}, directive.TypeExpr.Meta.Start)
+	require.Equal(t, core.Position{Line: 1, Column: 11}, directive.BindType.TypeExpr.Meta.Start)
 
-	structDirective, ok := got.Entities["D"].Component[0].Directives.Find(src.BindTypeDirective)
+	structDirective, ok := got.Entities["D"].Component[0].Directives.Find(src.DirectiveKindBindType)
 	require.True(t, ok)
-	require.NotNil(t, structDirective.TypeExpr.Lit)
-	field := structDirective.TypeExpr.Lit.Struct["value"]
+	require.NotNil(t, structDirective.BindType.TypeExpr.Lit)
+	field := structDirective.BindType.TypeExpr.Lit.Struct["value"]
 	require.Equal(t, "list", field.Inst.Ref.Name)
 	require.Equal(t, "T", field.Inst.Args[0].Inst.Ref.Name)
 }
 
+// TestParser_ParseFile_DirectiveDuplicatesArePreserved verifies source-order retention.
 func TestParser_ParseFile_DirectiveDuplicatesArePreserved(t *testing.T) {
 	text := []byte("#extern(first)\n#extern(second)\ndef C() ()\n")
 
@@ -565,11 +567,12 @@ func TestParser_ParseFile_DirectiveDuplicatesArePreserved(t *testing.T) {
 
 	directives := got.Entities["C"].Component[0].Directives
 	require.Len(t, directives, 2)
-	require.Equal(t, "first", directives[0].Identifier.Value)
-	require.Equal(t, "second", directives[1].Identifier.Value)
+	require.Equal(t, "first", directives[0].Extern.Ref)
+	require.Equal(t, "second", directives[1].Extern.Ref)
 	require.Equal(t, 2, directives[1].Meta.Start.Line)
 }
 
+// TestParser_ParseFile_InvalidDirectiveSyntax verifies directive-specific parse diagnostics.
 func TestParser_ParseFile_InvalidDirectiveSyntax(t *testing.T) {
 	tests := map[string]struct {
 		source  string
@@ -1282,21 +1285,21 @@ func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
 	require.Equal(t, 3, len(entity.Component))
 
 	// check extern directives preserved and inputs match
-	v1, ok := entity.Component[0].Directives.Find(src.ExternDirective)
+	v1, ok := entity.Component[0].Directives.Find(src.DirectiveKindExtern)
 	require.True(t, ok)
-	require.Equal(t, "v1", v1.Identifier.Value)
+	require.Equal(t, "v1", v1.Extern.Ref)
 	require.Equal(t, "int", entity.Component[0].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "int", entity.Component[0].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
-	v2, ok := entity.Component[1].Directives.Find(src.ExternDirective)
+	v2, ok := entity.Component[1].Directives.Find(src.DirectiveKindExtern)
 	require.True(t, ok)
-	require.Equal(t, "v2", v2.Identifier.Value)
+	require.Equal(t, "v2", v2.Extern.Ref)
 	require.Equal(t, "float", entity.Component[1].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "float", entity.Component[1].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
-	v3, ok := entity.Component[2].Directives.Find(src.ExternDirective)
+	v3, ok := entity.Component[2].Directives.Find(src.DirectiveKindExtern)
 	require.True(t, ok)
-	require.Equal(t, "v3", v3.Identifier.Value)
+	require.Equal(t, "v3", v3.Extern.Ref)
 	require.Equal(t, "string", entity.Component[2].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "string", entity.Component[2].IO.In["right"].TypeExpr.Inst.Ref.Name)
 }

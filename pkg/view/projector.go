@@ -256,13 +256,17 @@ func projectComponent(
 		directives := make(map[string]string, len(node.Directives))
 		for _, directive := range node.Directives {
 			var argument string
-			switch {
-			case directive.Identifier != nil:
-				argument = directive.Identifier.Value
-			case directive.TypeExpr != nil:
-				argument = directive.TypeExpr.String()
+			switch directive.Kind() {
+			case ast.DirectiveKindExtern:
+				argument = directive.Extern.Ref
+			case ast.DirectiveKindBind:
+				argument = directive.Bind.ConstRef.String()
+			case ast.DirectiveKindBindType:
+				argument = directive.BindType.TypeExpr.String()
+			case ast.DirectiveKindAutoports:
+				argument = ""
 			}
-			directives[string(directive.Kind)] = argument
+			directives[string(directive.Kind())] = argument
 		}
 		out.Nodes = append(out.Nodes, Node{
 			ID:            nodeID(componentRefID, nodeName),

@@ -16,13 +16,7 @@ func (a Analyzer) analyzeComponent(
 		return src.Component{}, err
 	}
 
-	extern, hasExtern := component.Directives.Find(src.ExternDirective)
-	if hasExtern && extern.Identifier == nil {
-		return src.Component{}, &compiler.Error{
-			Message: "Component that use #extern directive must provide at least one argument",
-			Meta:    &component.Meta,
-		}
-	}
+	_, hasExtern := component.Directives.Find(src.DirectiveKindExtern)
 
 	resolvedIface, err := a.analyzeInterface(
 		component.Interface,

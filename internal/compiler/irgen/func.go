@@ -1,9 +1,6 @@
 package irgen
 
 import (
-	"context"
-
-	"github.com/nevalang/neva/internal/compiler"
 	"github.com/nevalang/neva/internal/compiler/ir"
 	src "github.com/nevalang/neva/pkg/ast"
 )
@@ -17,29 +14,23 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 		version = versions[*node.OverloadIndex]
 	}
 
-	extern, hasExtern := version.Directives.Find(src.ExternDirective)
+	extern, hasExtern := version.Directives.Find(src.DirectiveKindExtern)
 	if !hasExtern {
 		return "", version
 	}
 
-	return extern.Identifier.Value, version
+	return extern.Extern.Ref, version
 }
 
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
-	bind, hasBind := node.Directives.Find(src.BindDirective)
+	bind, hasBind := node.Directives.Find(src.DirectiveKindBind)
 	if !hasBind {
 		//nolint:nilnil // nil config is expected when no bind directive is present
 		return nil, nil
 	}
 
-	entityRef, err := compiler.ParseEntityRef(context.Background(), bind.Identifier.Value)
-	if err != nil {
-		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-		return nil, err
-	}
-
-	entity, location, err := scope.Entity(entityRef)
+	entity, location, err := scope.Entity(bind.Bind.ConstRef)
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err
