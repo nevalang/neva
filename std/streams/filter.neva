@@ -4,6 +4,10 @@ import {
 
 // Filter filters a stream based on a predicate.
 // It produces a new stream containing only the elements that satisfy the predicate.
+//
+// @inport data Receives the stream whose Data messages are tested.
+//
+// @outport res Sends boundaries and Data messages accepted by the predicate.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
 	split Split<T>{predicate IPredicate<T>}
 	---
@@ -12,6 +16,11 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 }
 
 // Split splits a stream into two streams based on a predicate.
+//
+// @inport data Receives the stream whose Data messages are classified.
+//
+// @outport then Sends boundaries and Data messages accepted by the predicate.
+// @outport else Sends boundaries and Data messages rejected by the predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	turn sync.Turn<stream<T>>
 	classify Classify<T>{predicate IPredicate<T>}
@@ -83,6 +92,10 @@ def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, don
 	done_output -> :done
 }
 
-// IPredicate represents a logic that determines if a value satisfies a condition.
-// It is used by components like Filter and Split to decide how to process stream elements.
+// IPredicate decides whether a stream Data message is accepted.
+// It is used by Filter and Split.
+//
+// @inport data Receives the Data message being classified.
+//
+// @outport res Sends whether that message satisfies the predicate.
 pub interface IPredicate<T>(T) (bool)

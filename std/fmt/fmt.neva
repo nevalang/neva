@@ -1,8 +1,20 @@
-// Println prints to stdout with newline and then sends message further.
+// Println writes each message to standard output followed by a newline.
+// It then forwards the same message for further processing.
+//
+// @inport data Receives the message written to standard output.
+//
+// @outport res Forwards the written message after output succeeds.
+// @outport err Sends an output error instead of `res` when writing fails.
 #extern(println)
 pub def Println<T>(data T) (res T, err error)
 
-// Print prints to stdout without newline and then sends message further.
+// Print writes each message to standard output without adding a newline.
+// It then forwards the same message for further processing.
+//
+// @inport data Receives the message written to standard output.
+//
+// @outport res Forwards the written message after output succeeds.
+// @outport err Sends an output error instead of `res` when writing fails.
 #extern(print)
 pub def Print<T>(data T) (res T, err error)
 
@@ -10,9 +22,20 @@ pub def Print<T>(data T) (res T, err error)
 // and prints to the standard output.
 // The same argument can be referenced multiple times, but every provided argument
 // must be referenced at least once (otherwise it returns an error).
+//
+// @inport tpl Receives the template whose placeholders select arguments.
+// @inport args Receives the indexed messages substituted into the template.
+//
+// @outport sig Sends a completion signal after the formatted text is written.
+// @outport err Sends a template or output error instead of `sig` on failure.
 #extern(printf)
 pub def Printf(tpl string, [args] any) (sig any, err error)
 
-// Scanln scans text read from the standard input and then sends it further.
+// Scanln reads one line from standard input.
+//
+// @inport sig Receives the signal that starts one line read.
+//
+// @outport res Sends the line read from standard input.
+// @outport err Sends a read error instead of `res` when reading fails.
 #extern(scanln)
 pub def Scanln(sig any) (res string, err error)

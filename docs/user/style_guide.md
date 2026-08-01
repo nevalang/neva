@@ -80,33 +80,39 @@ read:res -> fromBytes -> :res
 
 ## Comments
 
-Good comments explain why.
+Good comments explain the entity's purpose and the behavior a user needs to
+compose it correctly.
 
-Use leading `//` block immediately above entity.
+Use a leading `//` block immediately above an entity. Exported entities should
+have at least a short comment explaining their purpose.
 
-Exported entities should have at least a short leading comment explaining their purpose.
-
-- Free text is allowed and should describe intent/constraints.
-- Use `@inport <name> <text>` for inport semantics.
-- Use `@outport <name> <text>` for outport semantics.
-- Use `@example <text>` for external usage examples (how to use component from outside).
-- Multiple `@example` lines are allowed.
-- Separate logical sections with an empty commented line (`//`).
+- Free text describes intent, constraints, and other entity-level behavior.
+- Use `@inport <name> <text>` and `@outport <name> <text>` for port behavior.
+  Describe when that port receives or sends messages, what those messages mean,
+  and the port's role in the component. Include ordering, completion, errors,
+  or side effects when they matter to composition. Do not use port tags merely
+  to restate a port's type or to describe an abstract value detached from the
+  port's behavior.
+- When an interface or component uses port tags, document every one of its
+  inports and outports.
+- Use `@example <text>` for an external usage example when it makes the
+  component easier to apply. Multiple `@example` lines are allowed.
+- Separate meaningful sections with an empty commented line (`//`).
 
 Example:
 
 ```neva
-// Processes payload and returns normalized result.
-// Keeps stable behavior for repeated start signals.
+// Normalizes each input message after a start signal arrives.
+// Repeated start messages begin independent normalization requests.
 //
-// @inport start Trigger signal.
-// @inport data Input payload.
+// @inport start Starts one normalization request.
+// @inport data Supplies the message normalized by that request.
 //
-// @outport res Normalized payload.
-// @outport err Processing error.
+// @outport res Sends the normalized message when processing succeeds.
+// @outport err Sends the error for a failed request instead of `res`.
 //
 // @example :start -> process:start
-// @example 'hello' -> process:data
+// @example ' hello ' -> process:data
 // @example process:res -> :stop
 def Process(start any, data string) (res string, err error)
 ```

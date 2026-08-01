@@ -1,6 +1,6 @@
 // RGBA represents a color in the RGBA 64-bit color space.
 pub type RGBA struct {
-        r int
+	r int
 	g int
 	b int
 	a int
@@ -22,10 +22,20 @@ pub type Image struct {
 	height int
 }
 
-// New creates a new RGBA image from the given pixels.
+// New builds an RGBA image from a stream of pixels.
+//
+// @inport pixels Receives the pixel stream used to build the image.
+//
+// @outport img Sends the image after the pixel stream closes.
+// @outport err Sends an error instead of `img` when image construction fails.
 #extern(image_new)
 pub def New(pixels stream<Pixel>) (img Image, err error)
 
-// Encode a PNG image or return an error.
+// Encode serializes an RGBA image as PNG bytes.
+//
+// @inport img Receives the image encoded as PNG.
+//
+// @outport res Sends the encoded PNG bytes.
+// @outport err Sends an error instead of `res` when PNG encoding fails.
 #extern(image_encode)
 pub def Encode(img Image) (res bytes, err error)

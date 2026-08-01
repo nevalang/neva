@@ -10,6 +10,11 @@ import {
 // This prevents concurrency issues in side-effecting handlers.
 //
 // To wait for all items to be processed, use it with streams.Wait.
+//
+// @inport data Receives the stream whose Data messages invoke the handler.
+//
+// @outport res Forwards the original Open/Data/Close stream in handler order.
+// @outport err Sends an error emitted by a handler invocation.
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	turn sync.Turn<stream<T>>
 	hold Lock<stream<T>>
@@ -34,5 +39,10 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	hold -> [turn:done, :res]
 }
 
-// IForEachHandler is a dependency for ForEach.
+// IForEachHandler performs one side effect for ForEach.
+//
+// @inport data Receives one input stream Data message.
+//
+// @outport res Sends a completion message that permits the next stream item.
+// @outport err Sends an error from that handler invocation.
 pub interface IForEachHandler<T>(T) (res any, err error)

@@ -2,13 +2,21 @@ import {
 	@:sync
 }
 
-// IMapHandler is a dependency for Map.
+// IMapHandler transforms one Data message for Map.
+//
+// @inport data Receives each input stream Data message.
+//
+// @outport res Sends the replacement Data message.
 pub interface IMapHandler<T, Y>(T) (Y)
 
 // Map maps one stream onto another while preserving stream event order.
 //
 // It applies backpressure per Data item to guarantee Open/Data/Close sequencing.
 // Use ForEach instead when the handler performs side effects.
+//
+// @inport data Receives the stream whose Data messages are transformed.
+//
+// @outport res Sends an Open/Data/Close stream with transformed Data messages.
 pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 	turn sync.Turn<stream<T>>
 	event_switch Switch<stream<T>>

@@ -1,5 +1,6 @@
 // --- Sources ---
 
+// Enumerated carries a stream item with its zero-based position.
 pub type Enumerated<T> struct {
 	idx int
 	item T
@@ -7,10 +8,18 @@ pub type Enumerated<T> struct {
 
 // FromArray iterates over all array-inport's slots in order
 // and produces a stream of messages.
+//
+// @inport port Receives messages from each array slot in slot order.
+//
+// @outport res Sends an Open/Data/Close stream containing those messages.
 #extern(array_port_to_stream)
 pub def FromArray<T>([port] T) (res stream<T>)
 
 // FromList creates a stream from a list by sending each element as a stream item.
+//
+// @inport data Receives the list converted into a stream.
+//
+// @outport res Sends an Open/Data/Close stream of the list items in order.
 #extern(list_to_stream)
 pub def FromList<T>(data list<T>) (res stream<T>)
 
@@ -18,6 +27,10 @@ pub def FromList<T>(data list<T>) (res stream<T>)
 // Each stream item is a single-code-point string (Go rune semantics).
 // This intentionally does not iterate bytes: multibyte UTF-8 characters
 // must remain whole stream elements.
+//
+// @inport data Receives the text converted into Unicode-code-point messages.
+//
+// @outport res Sends an Open/Data/Close stream of one-code-point strings.
 #extern(string_to_stream)
 pub def FromString(data string) (res stream<string>)
 // Just creates a stream that contains exactly one Data item.
@@ -25,7 +38,7 @@ pub def FromString(data string) (res stream<string>)
 // This is useful when an API expects a stream but the producer has one value,
 // for example when adapting scalar data to a stream combinator.
 //
-// @inport data Value to emit as the only Data item.
+// @inport data Receives the message emitted as the only Data item.
 //
 // @outport res Stream that emits Open, Data(data), and Close.
 #extern(stream_just)
@@ -33,22 +46,38 @@ pub def Just<T>(data T) (res stream<T>)
 
 // FromDict creates a stream of dictionary entries.
 // Dictionary iteration order is not guaranteed.
+//
+// @inport data Receives the dictionary converted into entry messages.
+//
+// @outport res Sends an Open/Data/Close stream of dictionary entries.
 #extern(dict_to_stream)
 pub def FromDict<T>(data dict<T>) (res stream<DictEntry<T>>)
 
-// Range sends stream of integers starting and ending with given `from` and `to`.
-// It supports negative ranges e.g. `-3, 0`. Integers are decremented in that case.
-// It emits stream only after both inports receive messages.
+// Range sends integers from `from` toward `to` as a stream.
+// It supports negative ranges and starts only after both bounds arrive.
+//
+// @inport from Receives the inclusive range bound where the stream starts.
+// @inport to Receives the exclusive range bound where the stream ends.
+//
+// @outport res Sends an Open/Data/Close stream of the range integers.
 #extern(stream_int_range)
 pub def Range(from int, to int) (res stream<int>)
 
 // Enumerate attaches a 0-based index to each Data item in a stream.
+//
+// @inport data Receives the stream whose Data messages are indexed.
+//
+// @outport res Sends the same stream protocol with each Data item enumerated.
 #extern(stream_enumerate)
 pub def Enumerate<T>(data stream<T>) (res stream<Enumerated<T>>)
 
 // --- Synchronization ---
 
-// Wait blocks until stream closes, then sends a signal.
+// Wait forwards a signal after an input stream closes.
+//
+// @inport data Receives the stream observed until its Close message.
+//
+// @outport sig Sends a completion signal after Close arrives.
 pub def Wait(data stream<any>) (sig any) {
 	switch Switch<stream<any>>
 	---
@@ -61,30 +90,41 @@ pub def Wait(data stream<any>) (sig any) {
 
 // --- Combinators ---
 
-// Produces a stream of tuples of the form (left, right)
-// where left is from the left stream and right is from the right stream.
-// Stops when either stream is exhausted.
+// Zip pairs corresponding items from two streams until either stream closes.
+//
+// @inport left Receives the stream providing the first member of each pair.
+// @inport right Receives the stream providing the second member of each pair.
+//
+// @outport res Sends an Open/Data/Close stream of paired items.
 #extern(stream_zip)
 pub def Zip<T, R>(left stream<T>, right stream<R>) (res stream<ZipResult<T, R>>)
 
+// ZipResult carries one pair emitted by Zip.
 pub type ZipResult<T, R> struct {
-    left T
-    right R
+	left T
+	right R
 }
 
-// Produces a stream of lists where each list contains items from the
-// corresponding positions of the input streams. Stops when any stream is
-// exhausted.
+// ZipMany groups corresponding input items until one stream closes.
+//
+// @inport data Receives the streams whose corresponding items are grouped.
+//
+// @outport res Sends an Open/Data/Close stream of grouped item lists.
 #extern(stream_zip_many)
 pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 
-// Product waits for each input stream to complete,
-// then outputs stream of every combination of elements from the first stream with
-// elements from the second.
+// Product collects two streams, then emits every pair of their items.
+// It waits for both streams to close and may use unbounded memory.
+//
+// @inport first Receives the first stream used to form product pairs.
+// @inport second Receives the second stream used to form product pairs.
+//
+// @outport res Sends an Open/Data/Close stream of every product pair.
 #extern(stream_product)
 pub def Product<T, Y>(first stream<T>, second stream<Y>) (res stream<ProductResult<T, Y>>)
 
+// ProductResult carries one pair emitted by Product.
 pub type ProductResult<T, Y> struct {
-    first T
-    second Y
+	first T
+	second Y
 }

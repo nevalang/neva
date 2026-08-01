@@ -1,13 +1,25 @@
 // Int converts float to int.
 // Fractional part is discarded (toward zero), like in Go.
+//
+// @inport data Receives the floating-point message to convert.
+//
+// @outport res Sends the converted integer message.
 #extern(int_from_float)
 pub def Int(data float) (res int)
 
 // Float converts int to float, like in Go.
+//
+// @inport data Receives the integer message to convert.
+//
+// @outport res Sends the converted floating-point message.
 #extern(float_from_int)
 pub def Float(data int) (res float)
 
 // String converts int to UTF-8 string by Unicode code point value.
 // This matches Go's string(int) conversion semantics, not decimal formatting.
+//
+// @inport data Receives the integer interpreted as a Unicode code point.
+//
+// @outport res Sends the one-code-point UTF-8 string.
 #extern(string_from_int_codepoint)
 pub def String(data int) (res string)

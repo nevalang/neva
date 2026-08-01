@@ -1,16 +1,51 @@
+// Join combines list elements with a separator.
+//
+// @inport data Receives the list of strings joined into one message.
+// @inport sep Receives the separator inserted between adjacent elements.
+//
+// @outport res Sends the joined string.
 #extern(strings_join_list)
 pub def Join(data list<string>, sep string) (res string)
+
+// Join combines stream items with a separator after the stream closes.
+// It waits for the full stream and may use unbounded memory.
+//
+// @inport data Receives the stream of strings collected for joining.
+// @inport sep Receives the separator inserted between adjacent stream items.
+//
+// @outport res Sends the joined string after the input stream closes.
 #extern(strings_join_stream)
 pub def Join(data stream<string>, sep string) (res string)
 
+// Split separates text around each occurrence of a delimiter.
+//
+// @inport data Receives the text to split.
+// @inport delim Receives the delimiter used to find boundaries.
+//
+// @outport res Sends the resulting list of substrings.
 #extern(strings_split)
 pub def Split(data string, delim string) (res list<string>)
 
+// ToUpper converts text to uppercase using Unicode case mapping.
+//
+// @inport data Receives the text to convert.
+//
+// @outport res Sends the uppercased text.
 #extern(strings_to_upper)
 pub def ToUpper(data string) (res string)
 
+// ToLower converts text to lowercase using Unicode case mapping.
+//
+// @inport data Receives the text to convert.
+//
+// @outport res Sends the lowercased text.
 #extern(strings_to_lower)
 pub def ToLower(data string) (res string)
 
+// FromBytes decodes bytes as UTF-8 text.
+//
+// @inport data Receives the bytes to decode.
+//
+// @outport res Sends the decoded string.
 #extern(strings_from_bytes)
 pub def FromBytes(data bytes) (res string)

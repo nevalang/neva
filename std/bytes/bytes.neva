@@ -1,5 +1,9 @@
 // FromString converts text into raw bytes.
 //
 // This conversion is byte-preserving and does not validate UTF-8.
+//
+// @inport data Receives the text whose encoded bytes are needed.
+//
+// @outport res Sends the bytes of each received text message.
 #extern(bytes_from_string)
 pub def FromString(data string) (res bytes)

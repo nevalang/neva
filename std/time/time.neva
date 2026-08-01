@@ -8,16 +8,22 @@ pub const second      Duration = 1000000000
 pub const minute      Duration = 60000000000
 pub const hour        Duration = 3600000000000
 
-// After blocks the flow for (at least) provided duration.
-// When enough time has passed, it sends a signal to its output port.
-// If you want to delay a message, use Delay instead.
+// After waits for at least the requested duration before signalling completion.
+// Use Delay when a message must continue after the wait.
+//
+// @inport dur Receives the duration that starts one timer.
+//
+// @outport sig Sends a completion signal after that timer expires.
 #extern(time_after)
 pub def After(dur Duration) (sig any)
 
-// Delay waits for both dur and data messages.
-// As soon as they both arrive it starts waiting
-// for (at least) provided duration.
-// When enough time has passed, it sends a data to its output port.
-// If all you need is just block the flow, use Sleep instead.
+// Delay waits for a duration and a message, then forwards that message later.
+// The timer starts only after both ports receive messages. Use After when only
+// a completion signal is needed.
+//
+// @inport dur Receives the duration for one delayed message.
+// @inport data Receives the message held until the duration expires.
+//
+// @outport res Sends the held message after the timer expires.
 #extern(time_delay)
 pub def Delay<T>(dur Duration, data T) (res T)

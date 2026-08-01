@@ -2,10 +2,12 @@
 // It is intended to be used with #bind directive.
 // You should prefer constant references and literals over New.
 // New requires a trigger signal to prevent buffer overflow.
+//
+// @inport sig Receives the trigger for one newly constructed message.
+//
+// @outport res Sends the configured message for that trigger.
 #extern(new)
 pub def New<T>(sig any) (res T)
-
-
 
 // Del receives and discards the message.
 // You should avoid using it because compiler will insert it automatically
@@ -15,6 +17,11 @@ pub def New<T>(sig any) (res T)
 pub def Del(data any) ()
 
 // Lock allows to delay receiving data until a signal arrives.
+//
+// @inport sig Receives the signal that permits the next blocked message.
+// @inport data Receives the message held until a signal arrives.
+//
+// @outport res Sends the held message after the matching signal.
 #extern(lock)
 pub def Lock<T>(sig any, data T) (res T)
 
@@ -25,6 +32,11 @@ pub def Lock<T>(sig any, data T) (res T)
 // - if `true` never arrives, `data` remains blocked
 //
 // This component is event-based (latch-like), not pairwise filtering.
+//
+// @inport data Receives the message held until a true condition arrives.
+// @inport if Receives conditions; false is ignored and true opens the gate.
+//
+// @outport res Sends held data after a true condition opens the gate.
 pub def Gate<T>(data T, if bool) (res T) {
     if If<T>
     lock Lock<T>
@@ -37,12 +49,20 @@ pub def Gate<T>(data T, if bool) (res T) {
 
 // FanIn merges several sources of data into single one.
 // It makes sure order of incoming messages is respected.
+//
+// @inport data Receives messages from each input array slot.
+//
+// @outport res Sends the merged messages while preserving incoming order.
 #extern(fan_in)
 pub def FanIn<T>([data] T) (res T)
 
 // FanOut is used to broadcast a message from one sender to multiple receivers.
 // You should use multiple receivers syntax `-> [...]` instead.
 // Multiple receivers is a syntax sugar over explicit FanOut.
+//
+// @inport data Receives each message broadcast to every output slot.
+//
+// @outport data Sends every received message to each output array slot.
 #extern(fan_out)
 pub def FanOut<T>(data T) ([data] T)
 
@@ -59,25 +79,42 @@ pub def Struct<T struct {}> () (res T)
 // Dot notation is a syntax sugar for Field.
 // Field is unsafe in terms of types because the type system is not sound enough
 // to express "each struct with at least these fields".
+//
+// @inport data Receives the structure whose selected field is read.
+//
+// @outport res Sends the selected field message.
 #extern(field)
 pub def Field<T>(data struct {}) (res T)
 
 // Union wraps data into a union tag.
 // `tag` must be a union literal constant (literal or const ref) identifying the member.
 // `data` must be compatible with the member's type.
+//
+// @inport data Receives the message wrapped in the selected union member.
+// @inport tag Receives the union tag identifying that member.
+//
+// @outport res Sends the tagged union message.
 #extern(union_wrap)
 pub def Union<T Type>(data Type, tag T) (res T)
 
-// Get retrieves a value from a dictionary using the provided key.
-// It has two inports: 'dict' for the dictionary and 'key' for the lookup key.
-// Sends result to 'res' outport, or error to 'err' if key not found.
+// Get retrieves a dictionary message by key.
+//
+// @inport dict Receives the dictionary searched for the key.
+// @inport key Receives the key being looked up.
+//
+// @outport res Sends the matching dictionary message.
+// @outport err Sends an error instead of `res` when the key is absent.
 #extern(get_dict_value_by_key)
 pub def Get<T>(dict dict<T>, key T) (res T, err error)
 
-// Pass is used to pass data through. It receives data and sends it to outport.
+// Pass forwards each message unchanged.
 // E.g. when you want to trigger a constant before fan-in wiring
 // and then use it as a sender in fan-in receiver-side:
 // :start -> 99 -> pass; [pass, receiver2] -> ...
+//
+// @inport data Receives the message forwarded unchanged.
+//
+// @outport res Sends the same message.
 pub def Pass<T>(data T) (res T) {
     :data -> :res
 }
@@ -91,6 +128,11 @@ pub def Pass<T>(data T) (res T) {
 // sends a signal when finishes. Signal could be of any type, so no need for
 // dealing with locks manually. Handler can send error, in that case `Tap` will
 // propagate it up to parent node.
+//
+// @inport data Receives the message passed to the side-effect handler.
+//
+// @outport res Sends the original message after the handler succeeds.
+// @outport err Sends an error emitted by the handler.
 pub def Tap<T>(data T) (res T, err error) {
     handler ITapHandler<T>
     race Race<T>
@@ -102,6 +144,12 @@ pub def Tap<T>(data T) (res T, err error) {
     race:case[1] -> del
 }
 
+// ITapHandler performs the side effect used by Tap.
+//
+// @inport data Receives the message observed by the handler.
+//
+// @outport res Sends a completion message after the side effect succeeds.
+// @outport err Sends an error from the side effect.
 pub interface ITapHandler<T>(T) (res any, err error)
 
 // Enrich runs a handler and returns both the original input and handler result.
@@ -119,12 +167,16 @@ def Enrich<T, Y>(data T) (res EnrichResult<T, Y>, err error) {
     builder -> :res
 }
 
-// EnrichResult is a structure that holds original input
-// and the result of an enrichment operation.
+// EnrichResult holds the original input and an enrichment result.
 type EnrichResult<T, Y> struct {
     data T
     res Y
 }
 
-// IEnrichHandler is an interface for enrich handlers.
+// IEnrichHandler supplies an enrichment result.
+//
+// @inport data Receives the message being enriched.
+//
+// @outport res Sends the enrichment result.
+// @outport err Sends an error when enrichment fails.
 interface IEnrichHandler<T, Y>(data T) (res Y, err error)

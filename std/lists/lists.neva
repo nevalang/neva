@@ -1,23 +1,53 @@
 // FromStream fully materializes stream into list.
 // It blocks until the stream is completed and may use unbounded memory.
+//
+// @inport data Receives stream messages collected until Close.
+//
+// @outport res Sends the list after the input stream closes.
 #extern(stream_to_list)
 pub def FromStream<T>(data stream<T>) (res list<T>)
 
 // FromArray iterates over all array-inport's slots in order and returns a list.
+//
+// @inport port Receives messages from each array slot in slot order.
+//
+// @outport res Sends one list containing the messages from every slot.
 #extern(array_port_to_list)
 pub def FromArray<T>([port] T) (res list<T>)
 
 // Append creates new list with appended element.
+//
+// @inport lst Receives the list extended by the following data message.
+// @inport data Receives the element added after the existing list items.
+//
+// @outport res Sends the newly extended list.
 #extern(list_append)
 pub def Append<T>(lst list<T>, data T) (res list<T>)
 
 // Prepend creates new list with data before all existing elements.
+//
+// @inport lst Receives the list extended by the preceding data message.
+// @inport data Receives the element added before the existing list items.
+//
+// @outport res Sends the newly extended list.
 #extern(list_prepend)
 pub def Prepend<T>(lst list<T>, data T) (res list<T>)
 
 // Concat creates a new list by combining left followed by right.
+//
+// @inport left Receives the list placed first in the result.
+// @inport right Receives the list appended after `left`.
+//
+// @outport res Sends the combined list.
 #extern(list_concat)
 pub def Concat<T>(left list<T>, right list<T>) (res list<T>)
 
+// At retrieves the item at a list index.
+//
+// @inport data Receives the list searched for an item.
+// @inport idx Receives the index of the requested item.
+//
+// @outport res Sends the item at that index.
+// @outport err Sends an error instead of `res` when the index is out of range.
 #extern(list_at)
 pub def At<T>(data list<T>, idx int) (res T, err error)

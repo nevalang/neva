@@ -2,5 +2,9 @@
 // If the same key appears multiple times, last value wins.
 // It fully materializes input stream, blocks until completion,
 // and may use unbounded memory.
+//
+// @inport data Receives stream entries collected until Close.
+//
+// @outport res Sends the dictionary after the input stream closes.
 #extern(stream_to_dict)
 pub def FromStream<T>(data stream<DictEntry<T>>) (res dict<T>)
