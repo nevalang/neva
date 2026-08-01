@@ -64,30 +64,6 @@ In practice, this means:
 - Human-readable scalar-to-string formatting should also live in `strconv` (Go style),
   for example `strconv.Itoa`/`FormatFloat`/`FormatBool`.
 
-## Why will Neva ship `neva fmt` instead of requiring a separate formatter?
-
-Formatting source code is a first-party language-tooling contract, not a
-third-party convention. Neva will ship one canonical formatter as `neva fmt`
-with the main Neva release, so a developer, CI system, and editor use the same
-formatter version as the parser that accepts the source.
-
-This follows the Go model: formatting should work immediately after installing
-the language toolchain, should require no project-specific style configuration,
-and should remove whitespace-only review discussion. The formatter will parse
-one source file at a time; it will not require a successful build, resolved
-dependencies, or type checking.
-
-`neva tool` remains useful for separately installed developer tools such as a
-language server or experimental integrations. It is not the primary entry
-point for canonical source formatting, because an independently installed
-formatter could be incompatible with the installed Neva language version.
-
-The formatter intentionally has a narrow job: preserve program meaning and
-comments while rendering canonical layout. Import policy, naming, complexity
-warnings, and semantic rewrites belong to `neva lint`, editor code actions, or
-future refactoring commands rather than silently changing source under the
-name of formatting.
-
 ## What determines which entities are in the builtin package?
 
 Builtin is Neva's implicit prelude. Every file can reference builtin entities
@@ -343,3 +319,10 @@ Operators should follow same pattern for simplicity of desugarer and usage by us
 ## Why does Neva have overloading, and why can’t users define it?
 
 Neva uses overloading internally to keep the standard library conceptually small without forcing users to deal with tagged unions, explicit type arguments, or name explosions for every concrete type. This improves day-to-day DX in an operator-less, component-only language. However, exposing overloading to users would introduce mental-model complexity: it makes APIs harder to reason about as systems grow. By keeping overloading limited to the `builtin` package, Neva captures the ergonomic benefits where they matter most while preserving a simple, predictable model for user code.
+
+## Why will Neva ship `neva fmt` instead of requiring a separate formatter?
+
+`neva fmt` is part of the language toolchain, so developers, editors, and CI
+use the formatter version that matches the parser. It needs no project config
+or successful build. Separately installed tools belong under `neva tool`; lint
+and refactorings remain separate from formatting.

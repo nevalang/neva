@@ -10,7 +10,7 @@ import (
 func TestParseSourcePreservesSourceTokensAndTree(t *testing.T) {
 	t.Parallel()
 
-	source := []byte("// Greets the caller\n" +
+	source := []byte("// Passes start through.\n" +
 		"def Main(start any) (stop any) {\n" +
 		"\t:start -> :stop\n" +
 		"}\n")
