@@ -12,7 +12,7 @@ func (a Analyzer) analyzeComponent(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	if err := validateDirectiveCardinality(component.Directives); err != nil {
+	if err := validateDuplicateDirectives(component.Directives); err != nil {
 		return src.Component{}, err
 	}
 

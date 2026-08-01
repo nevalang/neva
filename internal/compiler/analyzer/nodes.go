@@ -89,7 +89,7 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 	net []src.Connection, // network of the component that contains the node
 ) (src.Node, foundInterface, *compiler.Error) {
 	parentTypeParams := iface.TypeParams
-	if err := validateDirectiveCardinality(node.Directives); err != nil {
+	if err := validateDuplicateDirectives(node.Directives); err != nil {
 		return src.Node{}, foundInterface{}, err
 	}
 

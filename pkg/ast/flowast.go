@@ -169,8 +169,7 @@ type Directive struct {
 
 // ExternDirective names a runtime-function registry entry.
 type ExternDirective struct {
-	Ref  string    `json:"ref"`
-	Meta core.Meta `json:"meta"`
+	Ref string `json:"ref"`
 }
 
 // BindDirective identifies the constant bound to a node.

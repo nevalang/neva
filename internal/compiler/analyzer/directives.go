@@ -5,8 +5,8 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
-// validateDirectiveCardinality rejects repeated directive variants.
-func validateDirectiveCardinality(directives src.Directives) *compiler.Error {
+// validateDuplicateDirectives rejects repeated directive variants.
+func validateDuplicateDirectives(directives src.Directives) *compiler.Error {
 	seen := make(map[src.DirectiveKind]struct{}, len(directives))
 	for i := range directives {
 		directive := directives[i]

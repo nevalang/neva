@@ -1088,7 +1088,7 @@ func (s *treeShapeListener) parseCompilerDirective(
 			return src.Directive{}, err
 		}
 		return src.Directive{
-			Extern: &src.ExternDirective{Ref: ref.Name, Meta: ref.Meta},
+			Extern: &src.ExternDirective{Ref: ref.Name},
 			Meta:   meta,
 		}, nil
 	case src.DirectiveKindBind:
