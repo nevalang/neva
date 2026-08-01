@@ -1,2 +1,10 @@
+// Submatch matches each text message against a regular expression.
+// It reports an error when the expression cannot be compiled.
+//
+// @inport regexp Receives the regular expression used for a match.
+// @inport data Receives the text matched against that expression.
+//
+// @outport res Sends the full match and captured submatches.
+// @outport err Sends a compilation error instead of `res` for invalid syntax.
 #extern(regexp_submatch)
 pub def Submatch(regexp string, data string) (res list<string>, err error)

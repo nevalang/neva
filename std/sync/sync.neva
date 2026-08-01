@@ -1,21 +1,15 @@
-// WaitGroup implements a "wait group" which outputs a signal after the count decreases to 0 via sending to :sig.
+// WaitGroup signals after its counter reaches zero.
+// It waits for an initial count before treating `sig` messages as decrements.
 //
-// Send to :count to set the initial counter.
-// Send to :sig to decrement the counter.
-// WaitGroup will not output a signal until it received at least :count.
+// @inport count Receives the initial number of completion signals required.
+// @inport sig Receives each signal that decrements the current count.
 //
-// Example:
-//  sync.WaitGroup
-// ---
-//  :start -> 2 -> wg:count
-//  task1 -> true -> wg:sig
-//  task2 -> true -> wg:sig
-//  wg -> :stop  // Signals after both tasks are done.
+// @outport sig Sends one signal when the counter reaches zero.
 //
-// Example:
-//  sync.Wg
-// ---
-//  wg -> :stop  // Blocks forever.
+// @example :start -> 2 -> wg:count
+// @example task1 -> true -> wg:sig
+// @example task2 -> true -> wg:sig
+// @example wg -> :stop
 #extern(wait_group)
 pub def WaitGroup(count int, sig any) (sig any)
 
@@ -57,5 +51,10 @@ pub def Sync<T>(data T) (res T, err error) {
 	lock -> [turn:done, :res]
 }
 
-// ISyncHandler completes one sequential unit of work.
+// ISyncHandler completes one sequential unit of work for Sync.
+//
+// @inport data Receives the message handled by one unit of work.
+//
+// @outport res Sends a completion message after the work succeeds.
+// @outport err Sends the error that ends the unit of work.
 pub interface ISyncHandler<T>(data T) (res any, err error)

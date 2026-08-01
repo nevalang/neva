@@ -1,10 +1,20 @@
 // --- Reduce ---
 
-// IReducer is a dependency for Reduce.
+// IReducer combines the current reduction result with the next stream message.
+//
+// @inport left Receives the current accumulated result.
+// @inport right Receives the next input stream Data message.
+//
+// @outport res Sends the next accumulated result.
 pub interface IReducer<T, Y>(left T, right T) (res Y)
 
-// Reduce applies a reduction component to a stream of messages, accumulating the result.
-// It takes an initial value and a stream of data, and produces a single result.
+// Reduce accumulates a stream with a reduction handler and initial result.
+// It emits only after the input stream closes.
+//
+// @inport data Receives the stream whose Data messages are reduced.
+// @inport init Receives the initial accumulated result.
+//
+// @outport res Sends the final accumulated result after the stream closes.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
 	del_open Del
 	reducer IReducer<T, Y>

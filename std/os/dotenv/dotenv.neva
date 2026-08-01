@@ -1,32 +1,42 @@
 // Package dotenv loads environment variables from dotenv files into the
 // current process environment.
 
-// LoadFrom loads environment variables from the provided dotenv file path.
-// The input port "data" is the filename to load from. It does not override
-// existing environment variables. The output port "res" sends a signal when
-// loading completes. If you want to load from the default ".env" in the
-// working directory, use Load instead.
+// LoadFrom loads a dotenv file without replacing existing environment values.
+// Use Load for the default `.env` file in the working directory.
+//
+// @inport data Receives the dotenv file path loaded into the environment.
+//
+// @outport res Sends a completion signal after the file is loaded.
+// @outport err Sends a read or parse error instead of `res` when loading fails.
 #extern(dotenv_load_from)
 pub def LoadFrom(data string) (res any, err error)
 
-// Load loads environment variables from ".env" in the working directory.
-// It does not override existing environment variables. The output port "res"
-// sends a signal when loading completes. If you need to load a specific path,
-// use LoadFrom instead.
+// Load loads `.env` without replacing existing environment values.
+// Use LoadFrom when the dotenv file has a different path.
+//
+// @inport sig Receives the signal that starts loading the default dotenv file.
+//
+// @outport res Sends a completion signal after the file is loaded.
+// @outport err Sends a read or parse error instead of `res` when loading fails.
 #extern(dotenv_load)
 pub def Load(sig any) (res any, err error)
 
-// LoadFromOverride loads environment variables from the provided dotenv file
-// path and overrides existing environment variables. The input port "data" is
-// the filename to load from. The output port "res" sends a signal when loading
-// completes. If you want to override using the default ".env" path, use
-// LoadOverride instead.
+// LoadFromOverride loads a dotenv file and replaces environment values.
+// Use LoadOverride for the default `.env` file in the working directory.
+//
+// @inport data Receives the dotenv file path loaded into the environment.
+//
+// @outport res Sends a completion signal after the file is loaded.
+// @outport err Sends a read or parse error instead of `res` when loading fails.
 #extern(dotenv_load_from_override)
 pub def LoadFromOverride(data string) (res any, err error)
 
-// LoadOverride loads environment variables from ".env" in the working
-// directory and overrides existing environment variables. The output port
-// "res" sends a signal when loading completes. If you need to override values
-// from a specific path, use LoadFromOverride instead.
+// LoadOverride loads `.env` and replaces existing environment values.
+// Use LoadFromOverride when the dotenv file has a different path.
+//
+// @inport sig Receives the signal that starts loading the default dotenv file.
+//
+// @outport res Sends a completion signal after the file is loaded.
+// @outport err Sends a read or parse error instead of `res` when loading fails.
 #extern(dotenv_load_override)
 pub def LoadOverride(sig any) (res any, err error)

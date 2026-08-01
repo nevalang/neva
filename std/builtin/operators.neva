@@ -1,24 +1,55 @@
 // === UNARY ===
 
 // Not sends true if data is false, and false if data is true.
+//
+// @inport data Receives the boolean inverted by this operation.
+//
+// @outport res Sends the inverted boolean.
 #extern(not)
 pub def Not(data bool) (res bool)
 
 // Inc increments data by 1 and sends to result. Can be used with streams.Map.
+//
+// @inport data Receives the integer incremented by one.
+//
+// @outport res Sends the incremented integer.
 #extern(int_inc)
 pub def Inc(data int) (res int)
+// Inc increments a floating-point message by one.
+//
+// @inport data Receives the floating-point number incremented by one.
+//
+// @outport res Sends the incremented floating-point number.
 #extern(float_inc)
 pub def Inc(data float) (res float)
 
 // Dec decrements data by 1 and sends to result. Can be used with streams.Map.
+//
+// @inport data Receives the integer decremented by one.
+//
+// @outport res Sends the decremented integer.
 #extern(int_dec)
 pub def Dec(data int) (res int)
+// Dec decrements a floating-point message by one.
+//
+// @inport data Receives the floating-point number decremented by one.
+//
+// @outport res Sends the decremented floating-point number.
 #extern(float_dec)
 pub def Dec(data float) (res float)
 
 // Neg negates data and sends to result. Can be used with streams.Map.
+//
+// @inport data Receives the integer whose sign is reversed.
+//
+// @outport res Sends the negated integer.
 #extern(int_neg)
 pub def Neg(data int) (res int)
+// Neg reverses the sign of a floating-point message.
+//
+// @inport data Receives the floating-point number whose sign is reversed.
+//
+// @outport res Sends the negated floating-point number.
 #extern(float_neg)
 pub def Neg(data float) (res float)
 
@@ -27,109 +58,282 @@ pub def Neg(data float) (res float)
 // --- Arithmetic ---
 
 // Add sums left with right and sends to result. It can be used with Reduce.
+//
+// @inport left Receives the first integer addend.
+// @inport right Receives the integer added to `left`.
+//
+// @outport res Sends their sum.
 #extern(int_add)
 pub def Add(left int, right int) (res int)
+// Add sums two floating-point messages.
+//
+// @inport left Receives the first floating-point addend.
+// @inport right Receives the floating-point number added to `left`.
+//
+// @outport res Sends their sum.
 #extern(float_add)
 pub def Add(left float, right float) (res float)
+// Add concatenates two strings.
+//
+// @inport left Receives the string placed first in the result.
+// @inport right Receives the string appended after `left`.
+//
+// @outport res Sends the concatenated string.
 #extern(string_add)
 pub def Add(left string, right string) (res string)
 
 // Sub subtracts right from left and sends to result. It can be used with Reduce.
+//
+// @inport left Receives the integer minuend.
+// @inport right Receives the integer subtracted from `left`.
+//
+// @outport res Sends the difference.
 #extern(int_sub)
 pub def Sub(left int, right int) (res int)
+// Sub subtracts one floating-point message from another.
+//
+// @inport left Receives the floating-point minuend.
+// @inport right Receives the number subtracted from `left`.
+//
+// @outport res Sends the difference.
 #extern(float_sub)
 pub def Sub(left float, right float) (res float)
 
 // Mul multiplies left with right and sends to result. It can be used with Reduce.
+//
+// @inport left Receives the first integer factor.
+// @inport right Receives the integer multiplied by `left`.
+//
+// @outport res Sends the product.
 #extern(int_mul)
 pub def Mul(left int, right int) (res int)
+// Mul multiplies two floating-point messages.
+//
+// @inport left Receives the first floating-point factor.
+// @inport right Receives the number multiplied by `left`.
+//
+// @outport res Sends the product.
 #extern(float_mul)
 pub def Mul(left float, right float) (res float)
 
 // Div divides left by right and sends to result. It can be used with Reduce.
+//
+// @inport left Receives the integer dividend.
+// @inport right Receives the integer divisor.
+//
+// @outport res Sends the quotient.
 #extern(int_div)
 pub def Div(left int, right int) (res int)
+// Div divides one floating-point message by another.
+//
+// @inport left Receives the floating-point dividend.
+// @inport right Receives the floating-point divisor.
+//
+// @outport res Sends the quotient.
 #extern(float_div)
 pub def Div(left float, right float) (res float)
 
 // Mod calculates num modulo den and sends to result.
+//
+// @inport left Receives the integer dividend.
+// @inport right Receives the integer divisor.
+//
+// @outport res Sends the remainder.
 #extern(int_mod)
 pub def Mod(left int, right int) (res int)
 
 // Pow raises left to the power of right and sends to result.
+//
+// @inport left Receives the integer base.
+// @inport right Receives the integer exponent.
+//
+// @outport res Sends the resulting power.
 #extern(int_pow)
 pub def Pow(left int, right int) (res int)
 
 // --- Comparison ---
 
 // Eq sends true if left is equal to right, otherwise false.
+//
+// @inport left Receives the first message compared for equality.
+// @inport right Receives the message compared with `left`.
+//
+// @outport res Sends whether the messages are equal.
 #extern(eq)
 pub def Eq<T>(left T, right T) (res bool)
 
 // Ne sends true if left is not equal to right, otherwise false.
+//
+// @inport left Receives the first message compared for inequality.
+// @inport right Receives the message compared with `left`.
+//
+// @outport res Sends whether the messages differ.
 #extern(ne)
 pub def Ne<T>(left T, right T) (res bool)
 
 // Gt sends true if left is greater than right, otherwise false.
+//
+// @inport left Receives the integer compared with `right`.
+// @inport right Receives the integer compared with `left`.
+//
+// @outport res Sends whether `left` is greater than `right`.
 #extern(int_is_greater)
 pub def Gt(left int, right int) (res bool)
+// Gt compares two floating-point messages.
+//
+// @inport left Receives the floating-point number compared with `right`.
+// @inport right Receives the number compared with `left`.
+//
+// @outport res Sends whether `left` is greater than `right`.
 #extern(float_is_greater)
 pub def Gt(left float, right float) (res bool)
+// Gt compares two strings lexicographically.
+//
+// @inport left Receives the string compared with `right`.
+// @inport right Receives the string compared with `left`.
+//
+// @outport res Sends whether `left` is greater than `right`.
 #extern(string_is_greater)
 pub def Gt(left string, right string) (res bool)
 
 // Lt sends true if left is lesser than right, otherwise false.
+//
+// @inport left Receives the integer compared with `right`.
+// @inport right Receives the integer compared with `left`.
+//
+// @outport res Sends whether `left` is less than `right`.
 #extern(int_is_lesser)
 pub def Lt(left int, right int) (res bool)
+// Lt compares two floating-point messages.
+//
+// @inport left Receives the floating-point number compared with `right`.
+// @inport right Receives the number compared with `left`.
+//
+// @outport res Sends whether `left` is less than `right`.
 #extern(float_is_lesser)
 pub def Lt(left float, right float) (res bool)
+// Lt compares two strings lexicographically.
+//
+// @inport left Receives the string compared with `right`.
+// @inport right Receives the string compared with `left`.
+//
+// @outport res Sends whether `left` is less than `right`.
 #extern(string_is_lesser)
 pub def Lt(left string, right string) (res bool)
 
 // Ge sends true if left is greater than or equal to right, otherwise false.
+//
+// @inport left Receives the integer compared with `right`.
+// @inport right Receives the integer compared with `left`.
+//
+// @outport res Sends whether `left` is greater than or equal to `right`.
 #extern(int_is_greater_or_equal)
 pub def Ge(left int, right int) (res bool)
+// Ge compares two floating-point messages.
+//
+// @inport left Receives the floating-point number compared with `right`.
+// @inport right Receives the number compared with `left`.
+//
+// @outport res Sends whether `left` is greater than or equal to `right`.
 #extern(float_is_greater_or_equal)
 pub def Ge(left float, right float) (res bool)
+// Ge compares two strings lexicographically.
+//
+// @inport left Receives the string compared with `right`.
+// @inport right Receives the string compared with `left`.
+//
+// @outport res Sends whether `left` is greater than or equal to `right`.
 #extern(string_is_greater_or_equal)
 pub def Ge(left string, right string) (res bool)
 
 // Le sends true if left is lesser than or equal to right, otherwise false.
+//
+// @inport left Receives the integer compared with `right`.
+// @inport right Receives the integer compared with `left`.
+//
+// @outport res Sends whether `left` is less than or equal to `right`.
 #extern(int_is_lesser_or_equal)
 pub def Le(left int, right int) (res bool)
+// Le compares two floating-point messages.
+//
+// @inport left Receives the floating-point number compared with `right`.
+// @inport right Receives the number compared with `left`.
+//
+// @outport res Sends whether `left` is less than or equal to `right`.
 #extern(float_is_lesser_or_equal)
 pub def Le(left float, right float) (res bool)
+// Le compares two strings lexicographically.
+//
+// @inport left Receives the string compared with `right`.
+// @inport right Receives the string compared with `left`.
+//
+// @outport res Sends whether `left` is less than or equal to `right`.
 #extern(string_is_lesser_or_equal)
 pub def Le(left string, right string) (res bool)
 
 // --- Logical ---
 
 // And sends true if both left and right are true, otherwise false.
+//
+// @inport left Receives the first boolean condition.
+// @inport right Receives the second boolean condition.
+//
+// @outport res Sends whether both conditions are true.
 #extern(and)
 pub def And(left bool, right bool) (res bool)
 
 // Or sends true if either left or right are true, otherwise false.
+//
+// @inport left Receives the first boolean condition.
+// @inport right Receives the second boolean condition.
+//
+// @outport res Sends whether either condition is true.
 #extern(or)
 pub def Or(left bool, right bool) (res bool)
 
 // --- Bitwise ---
 
 // And performs a binary AND on each bit of two numbers.
+//
+// @inport left Receives the first integer bit pattern.
+// @inport right Receives the integer combined with `left`.
+//
+// @outport res Sends their bitwise AND.
 #extern(int_bitwise_and)
 pub def BitAnd(left int, right int) (res int)
 
 // Or performs a binary OR on each bit of two numbers.
-#extern(int_bitwise_or) 
+//
+// @inport left Receives the first integer bit pattern.
+// @inport right Receives the integer combined with `left`.
+//
+// @outport res Sends their bitwise OR.
+#extern(int_bitwise_or)
 pub def BitOr(left int, right int) (res int)
 
 // Xor performs a binary XOR on each bit of two numbers.
+//
+// @inport left Receives the first integer bit pattern.
+// @inport right Receives the integer combined with `left`.
+//
+// @outport res Sends their bitwise XOR.
 #extern(int_bitwise_xor)
 pub def BitXor(left int, right int) (res int)
 
 // Lsh shifts bits to the left, filling with zeros.
+//
+// @inport left Receives the integer whose bits are shifted.
+// @inport right Receives the number of positions shifted left.
+//
+// @outport res Sends the shifted integer.
 #extern(int_bitwise_lsh)
 pub def BitLsh(left int, right int) (res int)
 
 // Rsh shifts bits to the right, preserving the sign bit.
+//
+// @inport left Receives the integer whose bits are shifted.
+// @inport right Receives the number of positions shifted right.
+//
+// @outport res Sends the shifted integer.
 #extern(int_bitwise_rsh)
 pub def BitRsh(left int, right int) (res int)

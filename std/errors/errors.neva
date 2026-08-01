@@ -3,12 +3,20 @@ import {
 }
 
 // New creates a new error with the given text.
+//
+// @inport data Receives the text carried by the new error.
+//
+// @outport res Sends the constructed error.
 #extern(errors_new)
 pub def New(data string) (res error)
 
 // Must converts a node that has an error outport to one that doesn't.
 // It handles the error internally by panicking.
 // Just like Panic, should only be used for fatal errors.
+//
+// @inport data Receives the message passed to the wrapped handler.
+//
+// @outport res Sends the handler result when it succeeds.
 pub def Must<T, Y>(data T) (res Y) {
     handler IMustHandler<T, Y>
     panic runtime.Panic
@@ -18,10 +26,21 @@ pub def Must<T, Y>(data T) (res Y) {
     handler:err -> panic
 }
 
+// IMustHandler supplies a result or fatal error for Must.
+//
+// @inport _ Receives the message handled by Must.
+//
+// @outport res Sends the successful handler result.
+// @outport err Sends the error that causes Must to panic.
 pub interface IMustHandler<T, Y>(T) (res Y, err error)
 
 // Lift converts a node that doesn't have an error outport to one that does.
 // The error outport is fictional and will always be silent.
+//
+// @inport data Receives the message passed to the wrapped handler.
+//
+// @outport res Sends the handler result.
+// @outport err Never sends; it makes Lift compatible with error flows.
 pub def Lift<T, Y>(data T) (res Y, err error) {
     handler ILiftHandler<T, Y>
     del Del
@@ -37,4 +56,9 @@ pub def Lift<T, Y>(data T) (res Y, err error) {
     s:else -> del
 }
 
+// ILiftHandler supplies a result for Lift without an error path.
+//
+// @inport _ Receives the message handled by Lift.
+//
+// @outport _ Sends the handler result.
 pub interface ILiftHandler<T, Y>(T) (Y)

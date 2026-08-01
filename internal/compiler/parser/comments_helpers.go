@@ -70,6 +70,7 @@ func (s *treeShapeListener) parseLeadingComments(
 	return comments, nil
 }
 
+//nolint:gocognit,cyclop // TODO(strict-lint phase 1): split port-tag handling from generic tags.
 func (s *treeShapeListener) consumeTag(
 	comments *src.Comments,
 	ports *src.IO,
@@ -84,6 +85,11 @@ func (s *treeShapeListener) consumeTag(
 			return s.commentParseError("invalid @inport tag: port name is required", startLine)
 		}
 		if ports != nil {
+			var err *compiler.Error
+			portName, err = s.resolveCommentPortReference(ports.In, portName, "inport", startLine)
+			if err != nil {
+				return err
+			}
 			if _, ok := ports.In[portName]; !ok {
 				return s.commentParseError("unknown @inport reference: "+portName, startLine)
 			}
@@ -95,6 +101,11 @@ func (s *treeShapeListener) consumeTag(
 			return s.commentParseError("invalid @outport tag: port name is required", startLine)
 		}
 		if ports != nil {
+			var err *compiler.Error
+			portName, err = s.resolveCommentPortReference(ports.Out, portName, "outport", startLine)
+			if err != nil {
+				return err
+			}
 			if _, ok := ports.Out[portName]; !ok {
 				return s.commentParseError("unknown @outport reference: "+portName, startLine)
 			}
@@ -111,6 +122,30 @@ func (s *treeShapeListener) consumeTag(
 	}
 
 	return nil
+}
+
+// resolveCommentPortReference maps '_' in a port tag to the single anonymous
+// port. Anonymous ports are only valid when they are the sole port on a side.
+func (s *treeShapeListener) resolveCommentPortReference(
+	ports map[string]src.Port,
+	portName string,
+	tagName string,
+	startLine int,
+) (string, *compiler.Error) {
+	if portName != "_" {
+		return portName, nil
+	}
+
+	if len(ports) == 1 {
+		if _, ok := ports[""]; ok {
+			return "", nil
+		}
+	}
+
+	return "", s.commentParseError(
+		"invalid @"+tagName+" _: '_' may document only a single anonymous port",
+		startLine,
+	)
 }
 
 func (s *treeShapeListener) flushTextBlock(comments *src.Comments, textLines []string) {

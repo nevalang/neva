@@ -6,6 +6,7 @@ pub type string
 pub type bytes
 pub type dict<T>
 pub type list<T>
+// maybe represents either a present message or no message.
 pub type maybe<T> union {
     Some T
     None
@@ -13,17 +14,20 @@ pub type maybe<T> union {
 
 type Type any
 
+// error carries a human-readable failure and an optional underlying error.
 pub type error struct {
     text string
     child maybe<error>
 }
 
+// stream represents an ordered Open, zero or more Data, then Close protocol.
 pub type stream<T> union {
     Open
     Data T
     Close
 }
 
+// DictEntry carries one key and its associated dictionary message.
 pub type DictEntry<T> struct {
     key string
     value T

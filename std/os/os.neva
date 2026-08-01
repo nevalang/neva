@@ -20,6 +20,10 @@ pub type FileInfo struct {
 }
 
 // Args returns command-line arguments.
+//
+// @inport sig Receives the signal that requests the process arguments.
+//
+// @outport res Sends the complete command-line argument list.
 #extern(args)
 pub def Args(sig any) (res list<string>)
 
@@ -32,101 +36,225 @@ pub def Exit(code int) ()
 // It returns a list of strings (not a stream) because the runtime function
 // produces a full list at once. If you need only specific values, filter the
 // returned list in your flow.
+//
+// @inport sig Receives the signal that requests the current environment.
+//
+// @outport res Sends the complete KEY=VALUE environment list.
 #extern(os_environ)
 pub def Environ(sig any) (res list<string>)
 
 // Getenv returns the value of environment variable key.
+//
+// @inport key Receives the environment-variable name to look up.
+//
+// @outport res Sends its text, or an empty string when it is unset.
 #extern(os_getenv)
 pub def Getenv(key string) (res string)
 
 // LookupEnv returns the value and existence flag for environment variable key.
+//
+// @inport key Receives the environment-variable name to look up.
+//
+// @outport res Sends the variable value together with whether it exists.
 #extern(os_lookup_env)
 pub def LookupEnv(key string) (res LookupEnvResult)
 
 // Setenv sets environment variable key to value.
+//
+// @inport key Receives the name of the environment variable updated.
+// @inport value Receives the text assigned to that variable.
+//
+// @outport res Sends a completion signal after the process environment changes.
+// @outport err Sends an update error instead of `res` when the name is invalid.
 #extern(os_setenv)
 pub def Setenv(key string, value string) (res any, err error)
 
 // Unsetenv unsets environment variable key.
+//
+// @inport key Receives the name of the environment variable removed.
+//
+// @outport res Sends a completion signal after the variable is removed.
+// @outport err Sends an update error instead of `res` when the name is invalid.
 #extern(os_unsetenv)
 pub def Unsetenv(key string) (res any, err error)
 
 // Clearenv deletes all environment variables.
+//
+// @inport sig Receives the signal that clears the process environment.
+//
+// @outport res Sends a completion signal after all variables are removed.
 #extern(os_clearenv)
 pub def Clearenv(sig any) (res any)
 
 // ExpandEnv replaces ${var} and $var with environment values.
+//
+// @inport data Receives the text containing environment-variable references.
+//
+// @outport res Sends the text after references are expanded.
 #extern(os_expand_env)
 pub def ExpandEnv(data string) (res string)
 
 // Getwd returns the current working directory.
+//
+// @inport sig Receives the signal that requests the current directory.
+//
+// @outport res Sends the process working-directory path.
+// @outport err Sends an error instead of `res` when lookup fails.
 #extern(os_getwd)
 pub def Getwd(sig any) (res string, err error)
 
 // Chdir changes the current working directory.
+//
+// @inport path Receives the directory that becomes the working directory.
+//
+// @outport res Sends a completion signal after the directory changes.
+// @outport err Sends an error instead of `res` when changing directories fails.
 #extern(os_chdir)
 pub def Chdir(path string) (res any, err error)
 
 // Getpid returns process identifier.
+//
+// @inport sig Receives the signal that requests the process identifier.
+//
+// @outport res Sends the current process identifier.
 #extern(os_getpid)
 pub def Getpid(sig any) (res int)
 
 // Getppid returns the parent process identifier.
+//
+// @inport sig Receives the signal that requests the parent process identifier.
+//
+// @outport res Sends the parent process identifier.
 #extern(os_getppid)
 pub def Getppid(sig any) (res int)
 
 // Hostname returns the host name.
+//
+// @inport sig Receives the signal that requests the host name.
+//
+// @outport res Sends the current host name.
+// @outport err Sends an error instead of `res` when lookup fails.
 #extern(os_hostname)
 pub def Hostname(sig any) (res string, err error)
 
 // Executable returns path of the running executable.
+//
+// @inport sig Receives the signal that requests the executable path.
+//
+// @outport res Sends the path of the running executable.
+// @outport err Sends an error instead of `res` when the path is unavailable.
 #extern(os_executable)
 pub def Executable(sig any) (res string, err error)
 
 // Mkdir creates a directory with provided permissions.
+//
+// @inport path Receives the directory path created by this operation.
+// @inport perm Receives the permission bits assigned to the new directory.
+//
+// @outport res Sends a completion signal after the directory is created.
+// @outport err Sends a creation error instead of `res` when it fails.
 #extern(os_mkdir)
 pub def Mkdir(path string, perm int) (res any, err error)
 
 // MkdirAll creates a directory path and parents with provided permissions.
+//
+// @inport path Receives the directory path and missing parents to create.
+// @inport perm Receives the permission bits assigned to created directories.
+//
+// @outport res Sends a completion signal after the directory tree exists.
+// @outport err Sends a creation error instead of `res` when it fails.
 #extern(os_mkdir_all)
 pub def MkdirAll(path string, perm int) (res any, err error)
 
 // ReadDir reads directory entries sorted by filename.
+//
+// @inport path Receives the directory path whose entries are listed.
+//
+// @outport res Sends the entries sorted by filename.
+// @outport err Sends a read error instead of `res` when listing fails.
 #extern(os_read_dir)
 pub def ReadDir(path string) (res list<DirEntry>, err error)
 
 // Remove removes path.
+//
+// @inport path Receives the file or empty directory path removed.
+//
+// @outport res Sends a completion signal after the path is removed.
+// @outport err Sends a removal error instead of `res` when it fails.
 #extern(os_remove)
 pub def Remove(path string) (res any, err error)
 
 // RemoveAll removes path and all children recursively.
+//
+// @inport path Receives the path whose entire tree is removed.
+//
+// @outport res Sends a completion signal after recursive removal finishes.
+// @outport err Sends a removal error instead of `res` when it fails.
 #extern(os_remove_all)
 pub def RemoveAll(path string) (res any, err error)
 
 // Rename renames or moves oldPath to newPath.
+//
+// @inport oldPath Receives the existing path renamed or moved.
+// @inport newPath Receives the destination path.
+//
+// @outport res Sends a completion signal after the rename succeeds.
+// @outport err Sends a rename error instead of `res` when it fails.
 #extern(os_rename)
 pub def Rename(oldPath string, newPath string) (res any, err error)
 
 // Stat returns file information for path.
+//
+// @inport path Receives the path inspected while following symlinks.
+//
+// @outport res Sends the file information for that path.
+// @outport err Sends a lookup error instead of `res` when inspection fails.
 #extern(os_stat)
 pub def Stat(path string) (res FileInfo, err error)
 
 // Lstat returns file information for path without following symlinks.
+//
+// @inport path Receives the path inspected without following its final symlink.
+//
+// @outport res Sends the file information for that path.
+// @outport err Sends a lookup error instead of `res` when inspection fails.
 #extern(os_lstat)
 pub def Lstat(path string) (res FileInfo, err error)
 
 // Truncate changes size of the named file.
+//
+// @inport path Receives the file path resized by this operation.
+// @inport size Receives the target size in bytes.
+//
+// @outport res Sends a completion signal after the file size changes.
+// @outport err Sends a resize error instead of `res` when it fails.
 #extern(os_truncate)
 pub def Truncate(path string, size int) (res any, err error)
 
 // TempDir returns default directory for temporary files.
+//
+// @inport sig Receives the signal that requests the default temporary path.
+//
+// @outport res Sends the default temporary-directory path.
 #extern(os_temp_dir)
 pub def TempDir(sig any) (res string)
 
 // MkdirTemp creates a new temporary directory.
+//
+// @inport dir Receives the parent path, or an empty string for the default.
+// @inport pattern Receives the name pattern for the temporary directory.
+//
+// @outport res Sends the path of the newly created directory.
+// @outport err Sends a creation error instead of `res` when it fails.
 #extern(os_mkdir_temp)
 pub def MkdirTemp(dir string, pattern string) (res string, err error)
 
 // CreateTemp creates a new temporary file and returns its name.
+//
+// @inport dir Receives the parent path, or an empty string for the default.
+// @inport pattern Receives the name pattern for the temporary file.
+//
+// @outport res Sends the path of the newly created file.
+// @outport err Sends a creation error instead of `res` when it fails.
 #extern(os_create_temp)
 pub def CreateTemp(dir string, pattern string) (res string, err error)

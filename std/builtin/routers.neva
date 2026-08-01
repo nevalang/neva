@@ -1,4 +1,9 @@
 // If is shorthand for Switch with two cases: true and false.
+//
+// @inport data Receives the boolean that selects an output route.
+//
+// @outport then Sends messages received as true.
+// @outport else Sends messages received as false.
 pub def If<T>(data bool) (then any, else any) {
     switch Switch<bool>
     ---
@@ -10,15 +15,32 @@ pub def If<T>(data bool) (then any, else any) {
 }
 
 // `Cond` is like `If`, but also allows to route data based on a condition.
+//
+// @inport data Receives the message routed by the condition.
+// @inport if Receives the boolean selecting `then` or `else`.
+//
+// @outport then Sends `data` when `if` is true.
+// @outport else Sends `data` when `if` is false.
 #extern(cond)
 pub def Cond<T>(data T, if bool) (then T, else T)
 
 // Switch is a more powerful version of `Cond` that handles multiple cases.
 // Just like `Cond`, it is used for data routing.
 // If you need mapping, use Match or Select instead.
+//
+// @inport data Receives messages compared against the case messages.
+// @inport case Receives the case messages that select matching output slots.
+//
+// @outport case Sends each matched data message through its matching case slot.
+// @outport else Sends data messages that match no case.
 #extern(switch_router)
 pub def Switch<T>(data T, [case] T) ([case] Type, else T)
 
-// Race is like Select but router.
+// Race routes each data message to the slot of the first received case signal.
+//
+// @inport data Receives the messages routed by the next winning case signal.
+// @inport case Receives signals; the first selects its matching output.
+//
+// @outport case Sends data through the output selected by the winning signal.
 #extern(race)
 pub def Race<T>(data T, [case] any) ([case] T)

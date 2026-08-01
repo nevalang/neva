@@ -7,35 +7,78 @@
 
 // ParseBool returns the boolean value represented by the string.
 // It accepts Go-compatible values: 1,t,T,TRUE,true,True,0,f,F,FALSE,false,False.
+//
+// @inport data Receives the text parsed as a boolean.
+//
+// @outport res Sends the parsed boolean.
+// @outport err Sends a parse error instead of `res` for unsupported text.
 #extern(parse_bool)
 pub def ParseBool(data string) (res bool, err error)
 
 // FormatBool returns "true" or "false" according to the boolean input.
+//
+// @inport data Receives the boolean formatted as text.
+//
+// @outport res Sends `true` or `false`.
 #extern(format_bool)
 pub def FormatBool(data bool) (res string)
 
 // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
+//
+// @inport data Receives base-10 text parsed as an integer.
+//
+// @outport res Sends the parsed integer.
+// @outport err Sends a parse error instead of `res` for invalid text.
 #extern(atoi)
 pub def Atoi(data string) (res int, err error)
 
 // Itoa is equivalent to FormatInt(i, 10).
+//
+// @inport data Receives the integer formatted in base 10.
+//
+// @outport res Sends the base-10 text.
 #extern(itoa)
 pub def Itoa(data int) (res string)
 
-// ParseInt parses an integer from a string `data` with given `base` (2, 8, 10, 16).
+// ParseInt parses an integer from text in the requested base and bit size.
+//
+// @inport data Receives the text parsed as an integer.
+// @inport base Receives the numerical base accepted by Go strconv parsing.
+// @inport bits Receives the target integer bit size.
+//
+// @outport res Sends the parsed integer.
+// @outport err Sends a parse error instead of `res` for invalid text or bounds.
 #extern(parse_int)
 pub def ParseInt(data string, base int, bits int) (res int, err error)
 
 // FormatInt formats integer `data` in provided `base`.
 // The base should follow Go's strconv.FormatInt rules (2 to 36).
+//
+// @inport data Receives the integer formatted as text.
+// @inport base Receives the base used for the textual representation.
+//
+// @outport res Sends the formatted integer text.
 #extern(format_int)
 pub def FormatInt(data int, base int) (res string)
 
-// ParseFloat parses a float from a string `data` with given `bits` (32 or 64).
+// ParseFloat parses a floating-point number at the requested precision.
+//
+// @inport data Receives the text parsed as a floating-point number.
+// @inport bits Receives the target floating-point bit size.
+//
+// @outport res Sends the parsed floating-point number.
+// @outport err Sends a parse error instead of `res` for invalid text or bounds.
 #extern(parse_float)
 pub def ParseFloat(data string, bits int) (res float, err error)
 
 // FormatFloat formats float using Go strconv.FormatFloat semantics.
 // `fmt` verbs: b, e, E, f, g, G, x, X.
+//
+// @inport data Receives the floating-point number formatted as text.
+// @inport fmt Receives the formatting verb.
+// @inport prec Receives the precision interpreted by the selected verb.
+// @inport bits Receives the source floating-point bit size.
+//
+// @outport res Sends the formatted floating-point text.
 #extern(format_float)
 pub def FormatFloat(data float, fmt string, prec int, bits int) (res string)

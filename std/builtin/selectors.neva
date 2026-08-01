@@ -1,17 +1,35 @@
 // Ternary is a weaker version of Match that only handles 2 cases: true and false.
 // Just like Match, it is used for mapping.
 // If you need routing, use If instead.
+//
+// @inport if Receives the boolean selecting the result message.
+// @inport then Receives the result sent when `if` is true.
+// @inport else Receives the result sent when `if` is false.
+//
+// @outport res Sends the selected result message.
 #extern(ternary)
 pub def Ternary<T>(if bool, then T, else T) (res T)
 
 // Match is a more powerful version of Ternary that handles multiple cases.
 // Just like Ternary it is used for mapping.
 // If you need routing, use `Switch` instead.
+//
+// @inport data Receives the message compared against each case.
+// @inport if Receives case messages associated with result slots.
+// @inport then Receives result messages selected by matching cases.
+// @inport else Receives the fallback result when no case matches.
+//
+// @outport res Sends the selected result message.
 #extern(match)
 pub def Match<T>(data T, [if] T, [then] T, else T) (res T)
 
-// Select allows to select message based on a trigger.
+// Select allows selection of a message based on a trigger.
 // It is useful when it's important where input signal came from.
 // If it's important what the signal is, use `Match` or `Switch` instead.
+//
+// @inport if Receives trigger signals associated with result slots.
+// @inport then Receives result messages selected by their trigger slot.
+//
+// @outport res Sends the result for the trigger that arrives.
 #extern(select)
 pub def Select<T>([if] any, [then] T) (res T)
