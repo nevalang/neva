@@ -93,6 +93,8 @@ have at least a short comment explaining their purpose.
   or side effects when they matter to composition. Do not use port tags merely
   to restate a port's type or to describe an abstract value detached from the
   port's behavior.
+- For an interface's single anonymous input or output port, use `_` in place
+  of its name: `@inport _ <text>` or `@outport _ <text>`.
 - When an interface or component uses port tags, document every one of its
   inports and outports.
 - Use `@example <text>` for an external usage example when it makes the

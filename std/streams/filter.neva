@@ -95,7 +95,7 @@ def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, don
 // IPredicate decides whether a stream Data message is accepted.
 // It is used by Filter and Split.
 //
-// @inport data Receives the Data message being classified.
+// @inport _ Receives the Data message being classified.
 //
-// @outport res Sends whether that message satisfies the predicate.
+// @outport _ Sends whether that message satisfies the predicate.
 pub interface IPredicate<T>(T) (bool)

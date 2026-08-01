@@ -28,7 +28,7 @@ pub def Must<T, Y>(data T) (res Y) {
 
 // IMustHandler supplies a result or fatal error for Must.
 //
-// @inport data Receives the message handled by Must.
+// @inport _ Receives the message handled by Must.
 //
 // @outport res Sends the successful handler result.
 // @outport err Sends the error that causes Must to panic.
@@ -58,7 +58,7 @@ pub def Lift<T, Y>(data T) (res Y, err error) {
 
 // ILiftHandler supplies a result for Lift without an error path.
 //
-// @inport data Receives the message handled by Lift.
+// @inport _ Receives the message handled by Lift.
 //
-// @outport res Sends the handler result.
+// @outport _ Sends the handler result.
 pub interface ILiftHandler<T, Y>(T) (Y)

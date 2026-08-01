@@ -146,7 +146,7 @@ pub def Tap<T>(data T) (res T, err error) {
 
 // ITapHandler performs the side effect used by Tap.
 //
-// @inport data Receives the message observed by the handler.
+// @inport _ Receives the message observed by the handler.
 //
 // @outport res Sends a completion message after the side effect succeeds.
 // @outport err Sends an error from the side effect.

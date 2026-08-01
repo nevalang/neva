@@ -4,9 +4,9 @@ import {
 
 // IMapHandler transforms one Data message for Map.
 //
-// @inport data Receives each input stream Data message.
+// @inport _ Receives each input stream Data message.
 //
-// @outport res Sends the replacement Data message.
+// @outport _ Sends the replacement Data message.
 pub interface IMapHandler<T, Y>(T) (Y)
 
 // Map maps one stream onto another while preserving stream event order.

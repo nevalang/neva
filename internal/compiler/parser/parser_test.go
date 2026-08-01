@@ -375,6 +375,38 @@ func TestParser_ParseFile_EntityCommentsUnknownPortFails(t *testing.T) {
 	require.Contains(t, err.Message, "unknown @inport reference")
 }
 
+func TestParser_ParseFile_EntityCommentsAnonymousInterfacePorts(t *testing.T) {
+	text := []byte(`
+		// Transforms one message.
+		//
+		// @inport _ Receives the message to transform.
+		//
+		// @outport _ Sends the transformed message.
+		interface Transform<T, Y>(T) (Y)
+	`)
+
+	p := New()
+	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.True(t, err == nil)
+
+	comments := got.Entities["Transform"].Comments
+	require.Equal(t, "Receives the message to transform.", comments.Inports[""])
+	require.Equal(t, "Sends the transformed message.", comments.Outports[""])
+}
+
+func TestParser_ParseFile_EntityCommentsAnonymousPortMarkerRequiresAnonymousPort(t *testing.T) {
+	text := []byte(`
+		// @inport _ Does not name an actual port.
+		// @outport res Sends a result.
+		def Process(data any) (res any)
+	`)
+
+	p := New()
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
+	require.NotNil(t, err)
+	require.Contains(t, err.Message, "'_' may document only a single anonymous port")
+}
+
 func TestParser_ParseFile_Directives(t *testing.T) {
 	text := []byte(`
 		#extern(d1)
