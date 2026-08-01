@@ -1,47 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to detect platform and architecture
+set -euo pipefail
+
 detect_platform() {
-    local os=$(uname -s | tr '[:upper:]' '[:lower:]')
-    local arch=$(uname -m)
-    case $arch in
-        x86_64)
-            arch="amd64"
-            ;;
-        arm64|aarch64)
-            arch="arm64"
-            ;;
-        loong64|loongarch64)
-            arch="loong64"
-            ;;
-        *)
-            echo "不支持的架构: $arch"
-            exit 1
-            ;;
-    esac
-    echo "${os}-${arch}"
+	local os arch
+	os=$(uname -s | tr '[:upper:]' '[:lower:]')
+	arch=$(uname -m)
+	case "$arch" in
+		x86_64) arch="amd64" ;;
+		arm64|aarch64) arch="arm64" ;;
+		loong64|loongarch64) arch="loong64" ;;
+		*)
+			echo "不支持的架构: $arch" >&2
+			exit 1
+			;;
+	esac
+	printf '%s-%s\n' "$os" "$arch"
 }
 
-# Determine latest release tag
-LATEST_TAG=$(curl -s https://api.github.com/repos/nevalang/neva/releases/latest | grep "tag_name" | cut -d '"' -f 4)
-echo "最新版本: $LATEST_TAG"
+latest_tag=$(curl -fsSL https://api.github.com/repos/nevalang/neva/releases/latest | grep '"tag_name"' | cut -d '"' -f 4)
+if [[ -z "$latest_tag" ]]; then
+	echo '无法确定最新 Neva 版本。' >&2
+	exit 1
+fi
+echo "最新版本: $latest_tag"
 
-# Determine platform
-PLATFORM=$(detect_platform)
-echo "平台: $PLATFORM"
+platform=$(detect_platform)
+echo "平台: $platform"
 
-# Build the release URL
-BIN_NAME="neva"
-BIN_URL="https://github.moeyy.xyz/https://github.com/nevalang/neva/releases/download/$LATEST_TAG/${BIN_NAME}-${PLATFORM}"
+install_dir="${NEVA_INSTALL_DIR:-$HOME/.local/bin}"
+binary_path="$(mktemp)"
+trap 'rm -f "$binary_path"' EXIT
 
-# Download the binary
-echo "下载中..."
-curl -L $BIN_URL -o $BIN_NAME
+echo '下载中...'
+curl -fL "https://github.moeyy.xyz/https://github.com/nevalang/neva/releases/download/$latest_tag/neva-$platform" -o "$binary_path"
+chmod +x "$binary_path"
+mkdir -p "$install_dir"
+install -m 0755 "$binary_path" "$install_dir/neva"
 
-# Make the binary executable
-chmod +x $BIN_NAME
-
-# Move the binary to a location in the user's PATH
-INSTALL_DIR="/usr/local/bin"
-sudo mv $BIN_NAME $INSTALL_DIR
-echo "已经将 $BIN_NAME 成功安装到 $INSTALL_DIR"
+echo "Neva 已成功安装到 $install_dir/neva"
+case ":$PATH:" in
+	*":$install_dir:"*) ;;
+	*) echo "请将 $install_dir 添加到 PATH，然后重启终端或 VS Code。" ;;
+esac

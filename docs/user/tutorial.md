@@ -43,6 +43,10 @@ For Mac OS and Linux:
 curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
 
+The script installs `neva` into `~/.local/bin` by default. Ensure that
+directory is in your `PATH`, then restart your terminal or VS Code. To choose
+another user-writable destination, set `NEVA_INSTALL_DIR` before running it.
+
 If your device is connected to a chinese network:
 
 ```shell

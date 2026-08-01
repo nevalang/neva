@@ -7,6 +7,14 @@ on:
   pull_request:
 
 jobs:
+
+  installer_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test Unix installers
+      run: bash scripts/install_test.sh
+
   unit_tests:
     runs-on: ubuntu-latest
     steps:
