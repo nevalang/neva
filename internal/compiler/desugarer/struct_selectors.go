@@ -3,7 +3,6 @@ package desugarer
 import (
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
@@ -32,7 +31,7 @@ func (d *Desugarer) desugarStructSelectors(
 	selectorNodeName := fmt.Sprintf("__field__%d", d.virtualSelectorsCount)
 
 	selectorNode := src.Node{
-		Directives: map[src.Directive]string{compiler.BindDirective: constName},
+		Directives: src.Directives{src.NewBindDirective(constName)},
 		EntityRef: core.EntityRef{
 			Pkg:  "builtin",
 			Name: "Field",

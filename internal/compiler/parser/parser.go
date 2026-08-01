@@ -105,7 +105,6 @@ func (p Parser) parseFile(
 	if err := walkTree(listener, parsed.Tree); err != nil {
 		return src.File{}, err
 	}
-
 	return listener.state, nil
 }
 

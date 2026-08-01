@@ -17,23 +17,23 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 		version = versions[*node.OverloadIndex]
 	}
 
-	externArg, hasExtern := version.Directives[compiler.ExternDirective]
+	extern, hasExtern := version.Directives.Find(src.ExternDirective)
 	if !hasExtern {
 		return "", version
 	}
 
-	return externArg, version
+	return extern.Identifier.Value, version
 }
 
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
-	bindArg, hasBind := node.Directives[compiler.BindDirective]
+	bind, hasBind := node.Directives.Find(src.BindDirective)
 	if !hasBind {
 		//nolint:nilnil // nil config is expected when no bind directive is present
 		return nil, nil
 	}
 
-	entityRef, err := compiler.ParseEntityRef(context.Background(), bindArg)
+	entityRef, err := compiler.ParseEntityRef(context.Background(), bind.Identifier.Value)
 	if err != nil {
 		//nolint:wrapcheck // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		return nil, err

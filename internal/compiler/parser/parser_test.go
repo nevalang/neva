@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
 	"github.com/stretchr/testify/require"
@@ -495,30 +494,121 @@ func TestParser_ParseFile_Directives(t *testing.T) {
 	got, err := p.parseFile(location.ModRef, location.Package, location.Filename, text)
 	require.True(t, err == nil)
 
-	d1 := got.Entities["C1"].Component[0].Directives[compiler.ExternDirective]
-	require.Equal(t, "d1", d1)
+	d1, ok := got.Entities["C1"].Component[0].Directives.Find(src.ExternDirective)
+	require.True(t, ok)
+	require.Equal(t, "d1", d1.Identifier.Value)
 
 	c2 := got.Entities["C2"].Component
 
-	d2 := c2[0].Directives[compiler.ExternDirective]
-	require.Equal(t, "d2", d2)
+	d2, ok := c2[0].Directives.Find(src.ExternDirective)
+	require.True(t, ok)
+	require.Equal(t, "d2", d2.Identifier.Value)
 
-	d3 := c2[0].Nodes["n1"].Directives[compiler.BindDirective]
-	require.Equal(t, "d3", d3)
+	d3, ok := c2[0].Nodes["n1"].Directives.Find(src.BindDirective)
+	require.True(t, ok)
+	require.Equal(t, "d3", d3.Identifier.Value)
 
-	d4 := c2[0].Nodes["n2"].Directives[compiler.BindDirective]
-	require.Equal(t, "d4", d4)
+	d4, ok := c2[0].Nodes["n2"].Directives.Find(src.BindDirective)
+	require.True(t, ok)
+	require.Equal(t, "d4", d4.Identifier.Value)
 
 	c3 := got.Entities["C3"].Component
-	_, ok := c3[0].Directives[compiler.AutoportsDirective]
-	require.Equal(t, true, ok)
+	require.True(t, c3[0].Directives.Has(src.AutoportsDirective))
 
 	c4 := got.Entities["C4"].Component
-	d5, ok := c4[0].Directives[compiler.ExternDirective]
+	d5, ok := c4[0].Directives.Find(src.ExternDirective)
 	require.Equal(t, true, ok)
-	require.Equal(t, "d5", d5)
-	_, ok = c4[0].Directives[compiler.AutoportsDirective]
-	require.Equal(t, true, ok)
+	require.Equal(t, "d5", d5.Identifier.Value)
+	require.True(t, c4[0].Directives.Has(src.AutoportsDirective))
+}
+
+func TestParser_ParseFile_BindTypeDirective(t *testing.T) {
+	text := []byte("#bind_type(list<T>)\ndef C<T>() ()\n\n" +
+		"#bind_type(struct { value list<T> })\ndef D<T>() ()\n")
+
+	got, err := New().parseFile(
+		location.ModRef,
+		location.Package,
+		location.Filename,
+		text,
+	)
+	require.Nil(t, err)
+
+	directive, ok := got.Entities["C"].Component[0].Directives.Find(src.BindTypeDirective)
+	require.True(t, ok)
+	require.NotNil(t, directive.TypeExpr)
+	require.Equal(t, "list", directive.TypeExpr.Inst.Ref.Name)
+	require.Len(t, directive.TypeExpr.Inst.Args, 1)
+	require.Equal(t, "T", directive.TypeExpr.Inst.Args[0].Inst.Ref.Name)
+	require.Equal(t, core.Position{Line: 1, Column: 0}, directive.Meta.Start)
+	require.Equal(t, location, directive.Meta.Location)
+	require.Equal(t, core.Position{Line: 1, Column: 11}, directive.TypeExpr.Meta.Start)
+
+	structDirective, ok := got.Entities["D"].Component[0].Directives.Find(src.BindTypeDirective)
+	require.True(t, ok)
+	require.NotNil(t, structDirective.TypeExpr.Lit)
+	field := structDirective.TypeExpr.Lit.Struct["value"]
+	require.Equal(t, "list", field.Inst.Ref.Name)
+	require.Equal(t, "T", field.Inst.Args[0].Inst.Ref.Name)
+}
+
+func TestParser_ParseFile_DirectiveDuplicatesArePreserved(t *testing.T) {
+	text := []byte("#extern(first)\n#extern(second)\ndef C() ()\n")
+
+	got, err := New().parseFile(
+		location.ModRef,
+		location.Package,
+		location.Filename,
+		text,
+	)
+	require.Nil(t, err)
+
+	directives := got.Entities["C"].Component[0].Directives
+	require.Len(t, directives, 2)
+	require.Equal(t, "first", directives[0].Identifier.Value)
+	require.Equal(t, "second", directives[1].Identifier.Value)
+	require.Equal(t, 2, directives[1].Meta.Start.Line)
+}
+
+func TestParser_ParseFile_InvalidDirectiveSyntax(t *testing.T) {
+	tests := map[string]struct {
+		source  string
+		message string
+	}{
+		"unknown directive": {
+			source:  "#unknown\ndef C() ()\n",
+			message: "unknown compiler directive #unknown",
+		},
+		"missing identifier": {
+			source:  "#extern\ndef C() ()\n",
+			message: "#extern requires an identifier argument",
+		},
+		"non-identifier argument": {
+			source:  "#bind(list<int>)\ndef C() ()\n",
+			message: "#bind requires an identifier argument",
+		},
+		"unexpected autoports argument": {
+			source:  "#autoports(value)\ndef C() ()\n",
+			message: "#autoports does not accept an argument",
+		},
+		"missing type expression": {
+			source:  "#bind_type()\ndef C() ()\n",
+			message: "mismatched input ')' expecting",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := New().parseFile(
+				location.ModRef,
+				location.Package,
+				location.Filename,
+				[]byte(test.source),
+			)
+			require.NotNil(t, err)
+			require.Contains(t, err.Message, test.message)
+		})
+	}
 }
 
 func TestParser_ParseFile_IONodes(t *testing.T) {
@@ -1192,15 +1282,21 @@ func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
 	require.Equal(t, 3, len(entity.Component))
 
 	// check extern directives preserved and inputs match
-	require.Equal(t, "v1", entity.Component[0].Directives[compiler.ExternDirective])
+	v1, ok := entity.Component[0].Directives.Find(src.ExternDirective)
+	require.True(t, ok)
+	require.Equal(t, "v1", v1.Identifier.Value)
 	require.Equal(t, "int", entity.Component[0].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "int", entity.Component[0].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
-	require.Equal(t, "v2", entity.Component[1].Directives[compiler.ExternDirective])
+	v2, ok := entity.Component[1].Directives.Find(src.ExternDirective)
+	require.True(t, ok)
+	require.Equal(t, "v2", v2.Identifier.Value)
 	require.Equal(t, "float", entity.Component[1].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "float", entity.Component[1].IO.In["right"].TypeExpr.Inst.Ref.Name)
 
-	require.Equal(t, "v3", entity.Component[2].Directives[compiler.ExternDirective])
+	v3, ok := entity.Component[2].Directives.Find(src.ExternDirective)
+	require.True(t, ok)
+	require.Equal(t, "v3", v3.Identifier.Value)
 	require.Equal(t, "string", entity.Component[2].IO.In["left"].TypeExpr.Inst.Ref.Name)
 	require.Equal(t, "string", entity.Component[2].IO.In["right"].TypeExpr.Inst.Ref.Name)
 }

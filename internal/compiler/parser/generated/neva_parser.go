@@ -45,7 +45,7 @@ func nevaParserInit() {
 		"INT", "FLOAT", "STRING", "COMMENT", "NEWLINE", "WS",
 	}
 	staticData.RuleNames = []string{
-		"prog", "stmt", "compilerDirectives", "compilerDirective", "compilerDirectivesArg",
+		"prog", "stmt", "compilerDirectives", "compilerDirective", "compilerDirectiveArg",
 		"importStmt", "importBlockItem", "importDef", "importAlias", "importPath",
 		"importPathMod", "importMod", "importModeDelim", "importPathPkg", "entityRef",
 		"localEntityRef", "importedEntityRef", "pkgRef", "entityName", "typeStmt",
@@ -217,7 +217,7 @@ func nevaParserInit() {
 		0, 0, 184, 182, 1, 0, 0, 0, 184, 185, 1, 0, 0, 0, 185, 5, 1, 0, 0, 0, 186,
 		187, 5, 28, 0, 0, 187, 189, 5, 33, 0, 0, 188, 190, 3, 8, 4, 0, 189, 188,
 		1, 0, 0, 0, 189, 190, 1, 0, 0, 0, 190, 7, 1, 0, 0, 0, 191, 192, 5, 16,
-		0, 0, 192, 193, 5, 33, 0, 0, 193, 194, 5, 17, 0, 0, 194, 9, 1, 0, 0, 0,
+		0, 0, 192, 193, 3, 48, 24, 0, 193, 194, 5, 17, 0, 0, 194, 9, 1, 0, 0, 0,
 		195, 199, 5, 8, 0, 0, 196, 198, 5, 38, 0, 0, 197, 196, 1, 0, 0, 0, 198,
 		201, 1, 0, 0, 0, 199, 197, 1, 0, 0, 0, 199, 200, 1, 0, 0, 0, 200, 202,
 		1, 0, 0, 0, 201, 199, 1, 0, 0, 0, 202, 206, 5, 18, 0, 0, 203, 205, 5, 38,
@@ -598,87 +598,87 @@ const (
 
 // nevaParser rules.
 const (
-	nevaParserRULE_prog                  = 0
-	nevaParserRULE_stmt                  = 1
-	nevaParserRULE_compilerDirectives    = 2
-	nevaParserRULE_compilerDirective     = 3
-	nevaParserRULE_compilerDirectivesArg = 4
-	nevaParserRULE_importStmt            = 5
-	nevaParserRULE_importBlockItem       = 6
-	nevaParserRULE_importDef             = 7
-	nevaParserRULE_importAlias           = 8
-	nevaParserRULE_importPath            = 9
-	nevaParserRULE_importPathMod         = 10
-	nevaParserRULE_importMod             = 11
-	nevaParserRULE_importModeDelim       = 12
-	nevaParserRULE_importPathPkg         = 13
-	nevaParserRULE_entityRef             = 14
-	nevaParserRULE_localEntityRef        = 15
-	nevaParserRULE_importedEntityRef     = 16
-	nevaParserRULE_pkgRef                = 17
-	nevaParserRULE_entityName            = 18
-	nevaParserRULE_typeStmt              = 19
-	nevaParserRULE_typeDef               = 20
-	nevaParserRULE_typeParams            = 21
-	nevaParserRULE_typeParamList         = 22
-	nevaParserRULE_typeParam             = 23
-	nevaParserRULE_typeExpr              = 24
-	nevaParserRULE_typeInstExpr          = 25
-	nevaParserRULE_typeArgs              = 26
-	nevaParserRULE_typeLitExpr           = 27
-	nevaParserRULE_structTypeExpr        = 28
-	nevaParserRULE_structFields          = 29
-	nevaParserRULE_structField           = 30
-	nevaParserRULE_unionTypeExpr         = 31
-	nevaParserRULE_unionFields           = 32
-	nevaParserRULE_unionField            = 33
-	nevaParserRULE_interfaceStmt         = 34
-	nevaParserRULE_interfaceDef          = 35
-	nevaParserRULE_inPortsDef            = 36
-	nevaParserRULE_outPortsDef           = 37
-	nevaParserRULE_portsDef              = 38
-	nevaParserRULE_portDef               = 39
-	nevaParserRULE_singlePortDef         = 40
-	nevaParserRULE_arrayPortDef          = 41
-	nevaParserRULE_constStmt             = 42
-	nevaParserRULE_constDef              = 43
-	nevaParserRULE_constLit              = 44
-	nevaParserRULE_bool                  = 45
-	nevaParserRULE_unionLit              = 46
-	nevaParserRULE_listLit               = 47
-	nevaParserRULE_listItems             = 48
-	nevaParserRULE_compositeItem         = 49
-	nevaParserRULE_structLit             = 50
-	nevaParserRULE_structValueFields     = 51
-	nevaParserRULE_structValueField      = 52
-	nevaParserRULE_compStmt              = 53
-	nevaParserRULE_compDef               = 54
-	nevaParserRULE_compBody              = 55
-	nevaParserRULE_compNodesDef          = 56
-	nevaParserRULE_compNodesDefBody      = 57
-	nevaParserRULE_compNodeDef           = 58
-	nevaParserRULE_nodeInst              = 59
-	nevaParserRULE_errGuard              = 60
-	nevaParserRULE_nodeDIArgs            = 61
-	nevaParserRULE_connDefList           = 62
-	nevaParserRULE_connDef               = 63
-	nevaParserRULE_senderSide            = 64
-	nevaParserRULE_multipleSenderSide    = 65
-	nevaParserRULE_singleSenderSide      = 66
-	nevaParserRULE_senderConstRef        = 67
-	nevaParserRULE_receiverSide          = 68
-	nevaParserRULE_chainedNormConn       = 69
-	nevaParserRULE_portAddr              = 70
-	nevaParserRULE_lonelySinglePortAddr  = 71
-	nevaParserRULE_lonelyArrPortAddr     = 72
-	nevaParserRULE_singlePortAddr        = 73
-	nevaParserRULE_arrPortAddr           = 74
-	nevaParserRULE_portAddrNode          = 75
-	nevaParserRULE_portAddrPort          = 76
-	nevaParserRULE_portAddrIdx           = 77
-	nevaParserRULE_structSelectors       = 78
-	nevaParserRULE_singleReceiverSide    = 79
-	nevaParserRULE_multipleReceiverSide  = 80
+	nevaParserRULE_prog                 = 0
+	nevaParserRULE_stmt                 = 1
+	nevaParserRULE_compilerDirectives   = 2
+	nevaParserRULE_compilerDirective    = 3
+	nevaParserRULE_compilerDirectiveArg = 4
+	nevaParserRULE_importStmt           = 5
+	nevaParserRULE_importBlockItem      = 6
+	nevaParserRULE_importDef            = 7
+	nevaParserRULE_importAlias          = 8
+	nevaParserRULE_importPath           = 9
+	nevaParserRULE_importPathMod        = 10
+	nevaParserRULE_importMod            = 11
+	nevaParserRULE_importModeDelim      = 12
+	nevaParserRULE_importPathPkg        = 13
+	nevaParserRULE_entityRef            = 14
+	nevaParserRULE_localEntityRef       = 15
+	nevaParserRULE_importedEntityRef    = 16
+	nevaParserRULE_pkgRef               = 17
+	nevaParserRULE_entityName           = 18
+	nevaParserRULE_typeStmt             = 19
+	nevaParserRULE_typeDef              = 20
+	nevaParserRULE_typeParams           = 21
+	nevaParserRULE_typeParamList        = 22
+	nevaParserRULE_typeParam            = 23
+	nevaParserRULE_typeExpr             = 24
+	nevaParserRULE_typeInstExpr         = 25
+	nevaParserRULE_typeArgs             = 26
+	nevaParserRULE_typeLitExpr          = 27
+	nevaParserRULE_structTypeExpr       = 28
+	nevaParserRULE_structFields         = 29
+	nevaParserRULE_structField          = 30
+	nevaParserRULE_unionTypeExpr        = 31
+	nevaParserRULE_unionFields          = 32
+	nevaParserRULE_unionField           = 33
+	nevaParserRULE_interfaceStmt        = 34
+	nevaParserRULE_interfaceDef         = 35
+	nevaParserRULE_inPortsDef           = 36
+	nevaParserRULE_outPortsDef          = 37
+	nevaParserRULE_portsDef             = 38
+	nevaParserRULE_portDef              = 39
+	nevaParserRULE_singlePortDef        = 40
+	nevaParserRULE_arrayPortDef         = 41
+	nevaParserRULE_constStmt            = 42
+	nevaParserRULE_constDef             = 43
+	nevaParserRULE_constLit             = 44
+	nevaParserRULE_bool                 = 45
+	nevaParserRULE_unionLit             = 46
+	nevaParserRULE_listLit              = 47
+	nevaParserRULE_listItems            = 48
+	nevaParserRULE_compositeItem        = 49
+	nevaParserRULE_structLit            = 50
+	nevaParserRULE_structValueFields    = 51
+	nevaParserRULE_structValueField     = 52
+	nevaParserRULE_compStmt             = 53
+	nevaParserRULE_compDef              = 54
+	nevaParserRULE_compBody             = 55
+	nevaParserRULE_compNodesDef         = 56
+	nevaParserRULE_compNodesDefBody     = 57
+	nevaParserRULE_compNodeDef          = 58
+	nevaParserRULE_nodeInst             = 59
+	nevaParserRULE_errGuard             = 60
+	nevaParserRULE_nodeDIArgs           = 61
+	nevaParserRULE_connDefList          = 62
+	nevaParserRULE_connDef              = 63
+	nevaParserRULE_senderSide           = 64
+	nevaParserRULE_multipleSenderSide   = 65
+	nevaParserRULE_singleSenderSide     = 66
+	nevaParserRULE_senderConstRef       = 67
+	nevaParserRULE_receiverSide         = 68
+	nevaParserRULE_chainedNormConn      = 69
+	nevaParserRULE_portAddr             = 70
+	nevaParserRULE_lonelySinglePortAddr = 71
+	nevaParserRULE_lonelyArrPortAddr    = 72
+	nevaParserRULE_singlePortAddr       = 73
+	nevaParserRULE_arrPortAddr          = 74
+	nevaParserRULE_portAddrNode         = 75
+	nevaParserRULE_portAddrPort         = 76
+	nevaParserRULE_portAddrIdx          = 77
+	nevaParserRULE_structSelectors      = 78
+	nevaParserRULE_singleReceiverSide   = 79
+	nevaParserRULE_multipleReceiverSide = 80
 )
 
 // IProgContext is an interface to support dynamic dispatch.
@@ -1283,7 +1283,7 @@ type ICompilerDirectiveContext interface {
 	// Getter signatures
 	HASH() antlr.TerminalNode
 	IDENTIFIER() antlr.TerminalNode
-	CompilerDirectivesArg() ICompilerDirectivesArgContext
+	CompilerDirectiveArg() ICompilerDirectiveArgContext
 
 	// IsCompilerDirectiveContext differentiates from other interfaces.
 	IsCompilerDirectiveContext()
@@ -1329,10 +1329,10 @@ func (s *CompilerDirectiveContext) IDENTIFIER() antlr.TerminalNode {
 	return s.GetToken(nevaParserIDENTIFIER, 0)
 }
 
-func (s *CompilerDirectiveContext) CompilerDirectivesArg() ICompilerDirectivesArgContext {
+func (s *CompilerDirectiveContext) CompilerDirectiveArg() ICompilerDirectiveArgContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(ICompilerDirectivesArgContext); ok {
+		if _, ok := ctx.(ICompilerDirectiveArgContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -1342,7 +1342,7 @@ func (s *CompilerDirectiveContext) CompilerDirectivesArg() ICompilerDirectivesAr
 		return nil
 	}
 
-	return t.(ICompilerDirectivesArgContext)
+	return t.(ICompilerDirectiveArgContext)
 }
 
 func (s *CompilerDirectiveContext) GetRuleContext() antlr.RuleContext {
@@ -1397,7 +1397,7 @@ func (p *nevaParser) CompilerDirective() (localctx ICompilerDirectiveContext) {
 	if _la == nevaParserLPAREN {
 		{
 			p.SetState(188)
-			p.CompilerDirectivesArg()
+			p.CompilerDirectiveArg()
 		}
 
 	}
@@ -1415,8 +1415,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// ICompilerDirectivesArgContext is an interface to support dynamic dispatch.
-type ICompilerDirectivesArgContext interface {
+// ICompilerDirectiveArgContext is an interface to support dynamic dispatch.
+type ICompilerDirectiveArgContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -1424,80 +1424,92 @@ type ICompilerDirectivesArgContext interface {
 
 	// Getter signatures
 	LPAREN() antlr.TerminalNode
-	IDENTIFIER() antlr.TerminalNode
+	TypeExpr() ITypeExprContext
 	RPAREN() antlr.TerminalNode
 
-	// IsCompilerDirectivesArgContext differentiates from other interfaces.
-	IsCompilerDirectivesArgContext()
+	// IsCompilerDirectiveArgContext differentiates from other interfaces.
+	IsCompilerDirectiveArgContext()
 }
 
-type CompilerDirectivesArgContext struct {
+type CompilerDirectiveArgContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyCompilerDirectivesArgContext() *CompilerDirectivesArgContext {
-	var p = new(CompilerDirectivesArgContext)
+func NewEmptyCompilerDirectiveArgContext() *CompilerDirectiveArgContext {
+	var p = new(CompilerDirectiveArgContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_compilerDirectivesArg
+	p.RuleIndex = nevaParserRULE_compilerDirectiveArg
 	return p
 }
 
-func InitEmptyCompilerDirectivesArgContext(p *CompilerDirectivesArgContext) {
+func InitEmptyCompilerDirectiveArgContext(p *CompilerDirectiveArgContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = nevaParserRULE_compilerDirectivesArg
+	p.RuleIndex = nevaParserRULE_compilerDirectiveArg
 }
 
-func (*CompilerDirectivesArgContext) IsCompilerDirectivesArgContext() {}
+func (*CompilerDirectiveArgContext) IsCompilerDirectiveArgContext() {}
 
-func NewCompilerDirectivesArgContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *CompilerDirectivesArgContext {
-	var p = new(CompilerDirectivesArgContext)
+func NewCompilerDirectiveArgContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *CompilerDirectiveArgContext {
+	var p = new(CompilerDirectiveArgContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = nevaParserRULE_compilerDirectivesArg
+	p.RuleIndex = nevaParserRULE_compilerDirectiveArg
 
 	return p
 }
 
-func (s *CompilerDirectivesArgContext) GetParser() antlr.Parser { return s.parser }
+func (s *CompilerDirectiveArgContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *CompilerDirectivesArgContext) LPAREN() antlr.TerminalNode {
+func (s *CompilerDirectiveArgContext) LPAREN() antlr.TerminalNode {
 	return s.GetToken(nevaParserLPAREN, 0)
 }
 
-func (s *CompilerDirectivesArgContext) IDENTIFIER() antlr.TerminalNode {
-	return s.GetToken(nevaParserIDENTIFIER, 0)
+func (s *CompilerDirectiveArgContext) TypeExpr() ITypeExprContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(ITypeExprContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(ITypeExprContext)
 }
 
-func (s *CompilerDirectivesArgContext) RPAREN() antlr.TerminalNode {
+func (s *CompilerDirectiveArgContext) RPAREN() antlr.TerminalNode {
 	return s.GetToken(nevaParserRPAREN, 0)
 }
 
-func (s *CompilerDirectivesArgContext) GetRuleContext() antlr.RuleContext {
+func (s *CompilerDirectiveArgContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *CompilerDirectivesArgContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *CompilerDirectiveArgContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *CompilerDirectivesArgContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *CompilerDirectiveArgContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.EnterCompilerDirectivesArg(s)
+		listenerT.EnterCompilerDirectiveArg(s)
 	}
 }
 
-func (s *CompilerDirectivesArgContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *CompilerDirectiveArgContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(nevaListener); ok {
-		listenerT.ExitCompilerDirectivesArg(s)
+		listenerT.ExitCompilerDirectiveArg(s)
 	}
 }
 
-func (p *nevaParser) CompilerDirectivesArg() (localctx ICompilerDirectivesArgContext) {
-	localctx = NewCompilerDirectivesArgContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 8, nevaParserRULE_compilerDirectivesArg)
+func (p *nevaParser) CompilerDirectiveArg() (localctx ICompilerDirectiveArgContext) {
+	localctx = NewCompilerDirectiveArgContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 8, nevaParserRULE_compilerDirectiveArg)
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(191)
@@ -1509,11 +1521,7 @@ func (p *nevaParser) CompilerDirectivesArg() (localctx ICompilerDirectivesArgCon
 	}
 	{
 		p.SetState(192)
-		p.Match(nevaParserIDENTIFIER)
-		if p.HasError() {
-			// Recognition error - abort rule
-			goto errorExit
-		}
+		p.TypeExpr()
 	}
 	{
 		p.SetState(193)

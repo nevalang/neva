@@ -45,6 +45,15 @@ mini-language encoded in strings for later stages to parse again. When syntax
 changes, update the grammar and generated parser artifacts together and run the
 parser smoke tests.
 
+Compiler directives follow the same boundary. `pkg/ast` owns the finite
+directive vocabulary and directive-specific argument nodes, while the parser
+rejects unknown names and malformed argument shapes. It preserves source order,
+duplicates, and source locations rather than collapsing directives into a map.
+The analyzer then owns semantic rules such as declaration placement,
+cardinality, compatible combinations, scope lookup, and type resolution.
+Lowering and backends consume those validated AST values; they must not split
+or reparse directive strings.
+
 The analyzer owns graph correctness: entities resolve in their lexical/module
 scope, connections refer to valid compatible ports, and type expressions are
 resolved through `typesystem/`. Some standard-library directives are compiler

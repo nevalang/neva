@@ -254,8 +254,15 @@ func projectComponent(
 	for _, nodeName := range nodeNames {
 		node := component.Nodes[nodeName]
 		directives := make(map[string]string, len(node.Directives))
-		for key, value := range node.Directives {
-			directives[string(key)] = value
+		for _, directive := range node.Directives {
+			var argument string
+			switch {
+			case directive.Identifier != nil:
+				argument = directive.Identifier.Value
+			case directive.TypeExpr != nil:
+				argument = directive.TypeExpr.String()
+			}
+			directives[string(directive.Kind)] = argument
 		}
 		out.Nodes = append(out.Nodes, Node{
 			ID:            nodeID(componentRefID, nodeName),

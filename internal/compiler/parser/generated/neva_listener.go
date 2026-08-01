@@ -19,8 +19,8 @@ type nevaListener interface {
 	// EnterCompilerDirective is called when entering the compilerDirective production.
 	EnterCompilerDirective(c *CompilerDirectiveContext)
 
-	// EnterCompilerDirectivesArg is called when entering the compilerDirectivesArg production.
-	EnterCompilerDirectivesArg(c *CompilerDirectivesArgContext)
+	// EnterCompilerDirectiveArg is called when entering the compilerDirectiveArg production.
+	EnterCompilerDirectiveArg(c *CompilerDirectiveArgContext)
 
 	// EnterImportStmt is called when entering the importStmt production.
 	EnterImportStmt(c *ImportStmtContext)
@@ -262,8 +262,8 @@ type nevaListener interface {
 	// ExitCompilerDirective is called when exiting the compilerDirective production.
 	ExitCompilerDirective(c *CompilerDirectiveContext)
 
-	// ExitCompilerDirectivesArg is called when exiting the compilerDirectivesArg production.
-	ExitCompilerDirectivesArg(c *CompilerDirectivesArgContext)
+	// ExitCompilerDirectiveArg is called when exiting the compilerDirectiveArg production.
+	ExitCompilerDirectiveArg(c *CompilerDirectiveArgContext)
 
 	// ExitImportStmt is called when exiting the importStmt production.
 	ExitImportStmt(c *ImportStmtContext)

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
-	"github.com/nevalang/neva/internal/compiler"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
@@ -332,10 +331,8 @@ func TestDesugarNetwork(t *testing.T) {
 				},
 				nodesToInsert: map[string]src.Node{
 					"__field__1": {
-						EntityRef: core.EntityRef{Pkg: "builtin", Name: "Field"},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__const__1",
-						},
+						EntityRef:  core.EntityRef{Pkg: "builtin", Name: "Field"},
+						Directives: src.Directives{src.NewBindDirective("__const__1")},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -428,9 +425,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "foo",
-						},
+						Directives: src.Directives{src.NewBindDirective("foo")},
 					},
 				},
 				constsToInsert: map[string]src.Const{},
@@ -522,9 +517,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "c",
-						},
+						Directives: src.Directives{src.NewBindDirective("c")},
 					},
 				},
 				constsToInsert: map[string]src.Const{},
@@ -608,9 +601,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__const__1",
-						},
+						Directives: src.Directives{src.NewBindDirective("__const__1")},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -685,9 +676,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__const__1",
-						},
+						Directives: src.Directives{src.NewBindDirective("__const__1")},
 					},
 				},
 				constsToInsert: map[string]src.Const{
@@ -772,9 +761,7 @@ func TestDesugarNetwork(t *testing.T) {
 								},
 							},
 						},
-						Directives: map[src.Directive]string{
-							compiler.BindDirective: "__const__1",
-						},
+						Directives: src.Directives{src.NewBindDirective("__const__1")},
 					},
 				},
 				constsToInsert: map[string]src.Const{

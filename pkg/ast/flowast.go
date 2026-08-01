@@ -141,15 +141,81 @@ const (
 //
 
 type Component struct {
-	Directives map[Directive]string `json:"directives,omitempty"`
-	Nodes      map[string]Node      `json:"nodes,omitempty"`
-	Net        []Connection         `json:"net,omitempty"`
+	Directives Directives      `json:"directives,omitempty"`
+	Nodes      map[string]Node `json:"nodes,omitempty"`
+	Net        []Connection    `json:"net,omitempty"`
 	Interface  `json:"interface"`
 	Meta       core.Meta `json:"meta"`
 }
 
-// Directive is an explicit instruction for compiler.
-type Directive string
+// DirectiveKind identifies a compiler directive understood by the parser.
+type DirectiveKind string
+
+const (
+	ExternDirective    DirectiveKind = "extern"
+	BindDirective      DirectiveKind = "bind"
+	AutoportsDirective DirectiveKind = "autoports"
+	BindTypeDirective  DirectiveKind = "bind_type"
+)
+
+// Directive is a parsed compiler instruction with a directive-specific argument.
+type Directive struct {
+	Identifier *DirectiveIdentifier `json:"identifier,omitempty"`
+	TypeExpr   *ts.Expr             `json:"typeExpr,omitempty"`
+	Kind       DirectiveKind        `json:"kind"`
+	Meta       core.Meta            `json:"meta"`
+}
+
+// DirectiveIdentifier is an identifier argument and its source location.
+type DirectiveIdentifier struct {
+	Value string    `json:"value"`
+	Meta  core.Meta `json:"meta"`
+}
+
+// Directives preserves source order and duplicate directives for analysis.
+type Directives []Directive
+
+// Find returns the first directive with the requested kind.
+func (d Directives) Find(kind DirectiveKind) (Directive, bool) {
+	for i := range d {
+		directive := d[i]
+		if directive.Kind == kind {
+			return directive, true
+		}
+	}
+
+	return Directive{}, false
+}
+
+// Has reports whether a directive of the requested kind is present.
+func (d Directives) Has(kind DirectiveKind) bool {
+	_, ok := d.Find(kind)
+	return ok
+}
+
+// FirstDuplicate returns the first repeated directive in source order.
+func (d Directives) FirstDuplicate() (Directive, bool) {
+	seen := make(map[DirectiveKind]struct{}, len(d))
+	for i := range d {
+		directive := d[i]
+		if _, ok := seen[directive.Kind]; ok {
+			return directive, true
+		}
+		seen[directive.Kind] = struct{}{}
+	}
+
+	return Directive{}, false
+}
+
+// NewBindDirective constructs a compiler-generated #bind directive.
+func NewBindDirective(value string) Directive {
+	return Directive{
+		Kind: BindDirective,
+		Identifier: &DirectiveIdentifier{
+			Value: value,
+		},
+	}
+}
 
 // Interface describes abstract component.
 type Interface struct {
@@ -194,13 +260,13 @@ func (t TypeParams) String() string {
 }
 
 type Node struct {
-	Directives    map[Directive]string `json:"directives,omitempty"`
-	DIArgs        map[string]Node      `json:"diArgs,omitempty"`
-	OverloadIndex *int                 `json:"overloadIndex,omitempty"`
-	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
-	EntityRef     core.EntityRef       `json:"entityRef"`
-	Meta          core.Meta            `json:"meta"`
-	ErrGuard      bool                 `json:"errGuard,omitempty"`
+	Directives    Directives      `json:"directives,omitempty"`
+	DIArgs        map[string]Node `json:"diArgs,omitempty"`
+	OverloadIndex *int            `json:"overloadIndex,omitempty"`
+	TypeArgs      TypeArgs        `json:"typeArgs,omitempty"`
+	EntityRef     core.EntityRef  `json:"entityRef"`
+	Meta          core.Meta       `json:"meta"`
+	ErrGuard      bool            `json:"errGuard,omitempty"`
 }
 
 const MissingNodeNamePrefix = "__missing_node_name__"

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/nevalang/neva/internal/compiler"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
 )
@@ -73,7 +72,7 @@ func (Desugarer) handleNode(
 	}
 
 	// only if node component uses #autoports
-	_, hasAutportsDirectory := version.Directives[compiler.AutoportsDirective]
+	hasAutportsDirectory := version.Directives.Has(src.AutoportsDirective)
 
 	// autoports and anonymous dependency are everything we need to desugar
 	if !hasAutportsDirectory && len(node.DIArgs) != 1 {
