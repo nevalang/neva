@@ -11,9 +11,8 @@ import (
 func TestFormatGolden(t *testing.T) {
 	t.Parallel()
 
-	cases, err := os.ReadDir("testdata/format")
+	cases, err := os.ReadDir("testdata")
 	require.NoError(t, err)
-	formatDir := filepath.Join("testdata", "format")
 
 	for _, testCase := range cases {
 		if !testCase.IsDir() {
@@ -23,7 +22,7 @@ func TestFormatGolden(t *testing.T) {
 		t.Run(testCase.Name(), func(t *testing.T) {
 			t.Parallel()
 
-			dir := filepath.Join(formatDir, testCase.Name())
+			dir := filepath.Join("testdata", testCase.Name())
 			input, err := os.ReadFile(filepath.Join(dir, "input.neva"))
 			require.NoError(t, err)
 			want, err := os.ReadFile(filepath.Join(dir, "golden.neva"))

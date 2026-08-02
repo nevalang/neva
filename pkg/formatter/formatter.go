@@ -29,9 +29,11 @@ func FormatParsed(parsed parser.ParsedSource) []byte {
 		return nil
 	}
 
+	// Mark syntax contexts whose delimiters require exceptional spacing.
 	layout := newLayoutAnnotations(parsed.Tokens)
 	antlr.ParseTreeWalkerDefault.Walk(layout, parsed.Tree)
 
+	// Group non-newline tokens by their original physical line.
 	lines := strings.Split(strings.ReplaceAll(string(parsed.Source), "\r\n", "\n"), "\n")
 	byLine := tokensByLine(parsed.Tokens)
 
@@ -40,28 +42,33 @@ func FormatParsed(parsed parser.ParsedSource) []byte {
 	for line := 1; line <= len(lines); line++ {
 		tokens := byLine[line]
 		if len(tokens) == 0 {
+			// Preserve blank lines while removing whitespace-only content.
 			if line < len(lines) {
 				output.WriteByte('\n')
 			}
 			continue
 		}
 
+		// Align a line with its enclosing brace depth before rendering it.
 		lineDepth := max(depth-leadingClosers(tokens), 0)
 		output.WriteString(strings.Repeat("\t", lineDepth))
 		output.WriteString(renderLine(tokens, layout))
 		output.WriteByte('\n')
 
+		// Carry brace depth to the next physical line.
 		depth += braceDelta(tokens)
 	}
 
 	return []byte(output.String())
 }
 
+// indexedToken retains a token's source-stream index with its printable text.
 type indexedToken struct {
 	text  string
 	index int
 }
 
+// tokensByLine groups all printable tokens by their ANTLR source line.
 func tokensByLine(tokens []antlr.Token) map[int][]indexedToken {
 	result := make(map[int][]indexedToken)
 	for index, token := range tokens {
@@ -76,6 +83,7 @@ func tokensByLine(tokens []antlr.Token) map[int][]indexedToken {
 	return result
 }
 
+// leadingClosers reports how many closing braces start a source line.
 func leadingClosers(tokens []indexedToken) int {
 	closers := 0
 	for _, token := range tokens {
@@ -87,6 +95,7 @@ func leadingClosers(tokens []indexedToken) int {
 	return closers
 }
 
+// braceDelta reports the net nesting change produced by one source line.
 func braceDelta(tokens []indexedToken) int {
 	delta := 0
 	for _, token := range tokens {
@@ -100,6 +109,7 @@ func braceDelta(tokens []indexedToken) int {
 	return delta
 }
 
+// renderLine joins a line's tokens with their canonical horizontal spacing.
 func renderLine(tokens []indexedToken, layout *layoutAnnotations) string {
 	var output strings.Builder
 	for index, token := range tokens {
@@ -111,6 +121,7 @@ func renderLine(tokens []indexedToken, layout *layoutAnnotations) string {
 	return output.String()
 }
 
+// needsSpace reports whether a space belongs between two adjacent tokens.
 func needsSpace(previous, current indexedToken, layout *layoutAnnotations) bool {
 	if space, handled := spaceBefore(current, previous, layout); handled {
 		return space
@@ -119,6 +130,7 @@ func needsSpace(previous, current indexedToken, layout *layoutAnnotations) bool 
 	return spaceAfter(previous, layout)
 }
 
+// spaceBefore handles spacing rules determined by the current token.
 func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (bool, bool) {
 	if strings.HasPrefix(current.text, "//") {
 		return true, true
@@ -143,6 +155,7 @@ func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (boo
 	return false, false
 }
 
+// spaceAfter handles spacing rules determined by the previous token.
 func spaceAfter(previous indexedToken, layout *layoutAnnotations) bool {
 	switch previous.text {
 	case "(", "[", "<", ">", ".", "$", "@", "#", "::":
@@ -160,6 +173,7 @@ func spaceAfter(previous indexedToken, layout *layoutAnnotations) bool {
 	return true
 }
 
+// layoutAnnotations records syntax-context exceptions to generic token spacing.
 type layoutAnnotations struct {
 	generated.BasenevaListener
 	structValueFieldColons map[int]bool
@@ -167,6 +181,7 @@ type layoutAnnotations struct {
 	tokens                 []antlr.Token
 }
 
+// newLayoutAnnotations creates a listener backed by one complete token stream.
 func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 	return &layoutAnnotations{
 		tokens:                 tokens,
@@ -175,15 +190,18 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 	}
 }
 
+// EnterStructValueField marks a struct-literal colon, which requires a trailing space.
 func (l *layoutAnnotations) EnterStructValueField(ctx *generated.StructValueFieldContext) {
 	l.markFirst(ctx, ":", l.structValueFieldColons)
 }
 
+// EnterNodeDIArgs marks dependency-injection braces, which bind to their contents.
 func (l *layoutAnnotations) EnterNodeDIArgs(ctx *generated.NodeDIArgsContext) {
 	l.markFirst(ctx, "{", l.nodeDIArgBraces)
 	l.markLast(ctx, "}", l.nodeDIArgBraces)
 }
 
+// markFirst records the first matching token inside one parser-rule context.
 func (l *layoutAnnotations) markFirst(ctx antlr.ParserRuleContext, text string, marks map[int]bool) {
 	for index := ctx.GetStart().GetTokenIndex(); index <= ctx.GetStop().GetTokenIndex(); index++ {
 		if l.tokens[index].GetText() == text {
@@ -193,6 +211,7 @@ func (l *layoutAnnotations) markFirst(ctx antlr.ParserRuleContext, text string, 
 	}
 }
 
+// markLast records the last matching token inside one parser-rule context.
 func (l *layoutAnnotations) markLast(ctx antlr.ParserRuleContext, text string, marks map[int]bool) {
 	for index := ctx.GetStop().GetTokenIndex(); index >= ctx.GetStart().GetTokenIndex(); index-- {
 		if l.tokens[index].GetText() == text {
