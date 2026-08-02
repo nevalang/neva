@@ -254,7 +254,9 @@ Compiler will ensure that `foo` is a struct that has `bar` field, which is itsel
 **Example**
 
 ```neva
-import { fmt }
+import {
+    fmt
+}
 
 type Person struct { age int }
 
@@ -296,7 +298,9 @@ As you can see `Field` is one of few components that are expected to be used wit
 `Range` generates a `stream<int>` of messages within a specified range.
 
 ```neva
-import { streams }
+import {
+    streams
+}
 
 range streams.Range
 ---
@@ -312,7 +316,9 @@ In this example we generate stream of 100 integers from `0` up to `99` - that is
 Negative ranging is also supported:
 
 ```neva
-import { streams }
+import {
+    streams
+}
 
 range streams.Range
 ---

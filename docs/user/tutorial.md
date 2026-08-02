@@ -191,7 +191,9 @@ When this program runs:
 Most components do more interesting work by using nodes to process data:
 
 ```neva
-import { fmt }
+import {
+    fmt
+}
 
 def Main(start any) (stop any) {
     println fmt.Println<string>
@@ -217,7 +219,9 @@ This program:
 Back to hello world:
 
 ```neva
-import { fmt }
+import {
+    fmt
+}
 
 def Main(start any) (stop any) {
     println fmt.Println<string>
@@ -304,7 +308,9 @@ This defines the Nevalang version for our project. As your project grows, you ca
 A package is a directory with `.neva` files. In our Hello World example, the `src` package is our _main_ package, used as the compilation entry point with `neva run my_awesome_project/src` or `neva build my_awesome_project/src`. The main package must include a `Main` component, which serves as the program's entry point. Here's our Hello World program:
 
 ```neva
-import { fmt }
+import {
+    fmt
+}
 
 def Main(start any) (stop any) {
    println fmt.Println<string>
@@ -585,7 +591,9 @@ Fan-out allows a single sender to connect with multiple receivers using square b
 Let's add a component to `src/utils/utils.neva` that receives two strings, parses them as integers, and returns their sum as a result if successful, or an error otherwise:
 
 ```neva
-import { strconv }
+import {
+    strconv
+}
 
 // ...existing code...
 

@@ -105,21 +105,24 @@ func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	require.Equal(t, "file must contain at most one import statement", err.Message)
 }
 
-func TestParser_ParseFile_AllowsOneImportPerLine(t *testing.T) {
+func TestParser_ParseFile_RequiresMultilineImportBlock(t *testing.T) {
 	tests := []struct {
-		name string
-		text string
+		name  string
+		text  string
+		valid bool
 	}{
 		{
-			name: "single line",
-			text: "import { fmt }",
+			name:  "single line is rejected",
+			text:  "import { fmt }",
+			valid: false,
 		},
 		{
-			name: "block",
+			name: "one import per line is accepted",
 			text: `import {
 				fmt
 				runtime
 			}`,
+			valid: true,
 		},
 	}
 
@@ -129,7 +132,12 @@ func TestParser_ParseFile_AllowsOneImportPerLine(t *testing.T) {
 
 			_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(tt.text))
 
-			require.Nil(t, err)
+			if tt.valid {
+				require.Nil(t, err)
+				return
+			}
+
+			require.Error(t, err)
 		})
 	}
 }
