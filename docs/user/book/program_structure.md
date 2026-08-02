@@ -200,10 +200,11 @@ Here, `myFloat` from `pkg/bar.neva` is used without import as it's defined in `p
 To reference entities from other packages, imports are used. Imports are grouped inside curly braces `{}`:
 
 ```neva
-import {}
+import {
+}
 ```
 
-Single import can be one-liner `import { strings }`. Multiple imports:
+Import blocks are always multiline, with one import per line:
 
 ```neva
 import {
@@ -216,7 +217,7 @@ import {
 Each import consists of `[<module_name>:]<package_path>`. The module name and colon are omitted for stdlib imports. Example:
 
 ```neva
-imports {
+import {
   strings // module omitted, package is "strings"
   @:lib // module is "@" (entry), package is "lib"
   github.com/nevalang/x:foo/bar/baz // module is "github.com/nevalang/x" (third-party), package is "foo/bar/baz"
@@ -253,7 +254,7 @@ Imports are categorized into three types:
 
 ### Stdlib Imports
 
-Stdlib imports are imports of packages from the `std` module. For stdlib imports, omit the module name and `:` separator. Instead of `import { std:strings }`, use `import { strings }`. The compiler will automatically prefix it with `std`.
+Stdlib imports are imports of packages from the `std` module. For stdlib imports, omit the module name and `:` separator. The compiler automatically prefixes the package path with `std`.
 
 #### Builtin Package
 
@@ -285,7 +286,9 @@ Now let's import entities from `foo` to `foo/bar` and both into `main`:
 pub const p int = 3.14
 
 // foo/bar/bar.neva
-import { @/foo }
+import {
+  @:foo
+}
 
 pub def AddP(data float) (res float) {
   add Add
@@ -297,8 +300,8 @@ pub def AddP(data float) (res float) {
 
 // main/main.neva
 import {
-  @/foo
-  @/foo/bar
+  @:foo
+  @:foo/bar
 }
 
 def Main(start any) (stop any) {
@@ -320,7 +323,7 @@ deps:
     version: 0.0.16
 ```
 
-Then when you `import { github.com/nevalang/x }` compiler will know exactly path and version of the module you are referring to.
+Then an import block containing `github.com/nevalang/x` lets the compiler resolve exactly the module path and version you are referring to.
 
 ## Entity
 

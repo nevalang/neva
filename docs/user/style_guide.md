@@ -22,7 +22,7 @@ Use tabs over spaces.
 
 ### Imports
 
-Group imports by type: stdlib, third-party, local. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
+Group imports by type: stdlib, third-party, local. An import without a module prefix is stdlib, an `@:` prefix is local, and every other explicit module prefix is third-party. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions
 
