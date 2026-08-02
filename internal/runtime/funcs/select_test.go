@@ -57,3 +57,67 @@ func TestSelectorSendsIfCause(t *testing.T) {
 	cancel()
 	<-done
 }
+
+func TestSelectorReceivesInputsConcurrently(t *testing.T) {
+	tracer := runtime.NewTracer()
+	interceptor := runtime.NoEffectInterceptor{}
+	ifInput := make(chan runtime.OrderedMsg)
+	thenInput := make(chan runtime.OrderedMsg)
+	resOut := make(chan runtime.OrderedMsg, 1)
+
+	io := runtime.IO{
+		In: runtime.NewInports(map[string]runtime.Inport{
+			"if":   runtime.NewInport(runtime.NewArrayInport(tracer, []<-chan runtime.OrderedMsg{ifInput}, runtime.PortAddr{Path: "test/in", Port: "if"}, interceptor), nil),
+			"then": runtime.NewInport(runtime.NewArrayInport(tracer, []<-chan runtime.OrderedMsg{thenInput}, runtime.PortAddr{Path: "test/in", Port: "then"}, interceptor), nil),
+		}),
+		Out: runtime.NewOutports(map[string]runtime.Outport{
+			"res": runtime.NewOutport(runtime.NewSingleOutport(tracer, runtime.PortAddr{Path: "test/out", Port: "res"}, interceptor, resOut), nil),
+		}),
+	}
+
+	handler, err := (selector{}).Create(io, nil)
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+
+	cancel, handlerDone := runHandler(handler)
+	t.Cleanup(func() {
+		cancel()
+		<-handlerDone
+	})
+
+	stopSender := make(chan struct{})
+	t.Cleanup(func() { close(stopSender) })
+	sent := make(chan struct{})
+	go func() {
+		for _, input := range []struct {
+			ch  chan runtime.OrderedMsg
+			msg messages.Msg
+		}{
+			{thenInput, messages.NewStringMsg("selected")},
+			{ifInput, messages.NewBoolMsg(true)},
+		} {
+			select {
+			case input.ch <- runtime.OrderedMsg{Msg: input.msg}:
+			case <-stopSender:
+				return
+			}
+		}
+		close(sent)
+	}()
+
+	select {
+	case <-sent:
+	case <-time.After(time.Second):
+		t.Fatal("select blocked before receiving all independent inputs")
+	}
+
+	select {
+	case out := <-resOut:
+		if !messages.Equal(out.Msg, messages.NewStringMsg("selected")) {
+			t.Fatalf("payload = %v, want selected", out)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("timeout waiting result")
+	}
+}

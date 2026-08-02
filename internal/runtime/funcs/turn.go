@@ -29,6 +29,22 @@ func (turn) Create(runtimeIO runtime.IO, _ messages.Msg) (func(ctx context.Conte
 	return newTurnHandler(doneIn, dataIn, resOut), nil
 }
 
+// receiveTurnInputs receives the first data message directly and each following data/done pair concurrently.
+func receiveTurnInputs(
+	ctx context.Context,
+	first bool,
+	dataIn, doneIn runtime.SingleInport,
+) (runtime.OrderedMsg, runtime.OrderedMsg, bool) {
+	if first {
+		data, received := dataIn.Receive(ctx)
+		return data, runtime.OrderedMsg{}, received
+	}
+
+	// The previous acknowledgement and the next data message form one operation.
+	// Receive both concurrently so either sender can arrive first.
+	return receive2(ctx, dataIn, doneIn)
+}
+
 // newTurnHandler releases the first message, then pairs each following message with done.
 func newTurnHandler(
 	doneIn, dataIn runtime.SingleInport,
@@ -37,20 +53,19 @@ func newTurnHandler(
 	return func(ctx context.Context) {
 		first := true
 		for {
-			if !first {
-				if _, received := doneIn.Receive(ctx); !received {
-					return
-				}
-			}
-
-			data, received := dataIn.Receive(ctx)
+			data, done, received := receiveTurnInputs(ctx, first, dataIn, doneIn)
 			if !received {
 				return
 			}
 
-			if !resOut.Send(ctx, data) {
+			if first {
+				if !resOut.Send(ctx, data) {
+					return
+				}
+			} else if !resOut.Send(ctx, data, data, done) {
 				return
 			}
+
 			first = false
 		}
 	}

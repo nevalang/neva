@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -48,30 +49,35 @@ func (matchSelector) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Con
 
 	return func(ctx context.Context) {
 		for {
-			//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-			dataMsg, ok := dataIn.Receive(ctx)
-			if !ok {
-				return
-			}
-
+			var dataMsg, elseInMsg runtime.OrderedMsg
+			var dataOK, ifOK, thenOK, elseOK bool
 			ifMsgs := make([]runtime.OrderedMsg, ifIn.Len())
-			if !ifIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
-				ifMsgs[idx] = ordered
-				return true
-			}) {
-				return
-			}
-
 			thenMsgs := make([]runtime.OrderedMsg, thenOut.Len())
-			if !thenOut.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
-				thenMsgs[idx] = ordered
-				return true
-			}) {
-				return
-			}
 
-			elseInMsg, ok := elseIn.Receive(ctx)
-			if !ok {
+			// All inputs select one result. Receive them concurrently so their
+			// producers may send in any order.
+			var group sync.WaitGroup
+			group.Go(func() {
+				dataMsg, dataOK = dataIn.Receive(ctx)
+			})
+			group.Go(func() {
+				ifOK = ifIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+					ifMsgs[idx] = ordered
+					return true
+				})
+			})
+			group.Go(func() {
+				thenOK = thenOut.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+					thenMsgs[idx] = ordered
+					return true
+				})
+			})
+			group.Go(func() {
+				elseInMsg, elseOK = elseIn.Receive(ctx)
+			})
+			group.Wait()
+
+			if !dataOK || !ifOK || !thenOK || !elseOK {
 				return
 			}
 
