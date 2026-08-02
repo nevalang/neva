@@ -2,6 +2,7 @@
 package formatter
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -57,7 +58,15 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 		line = nil
 	}
 
-	for index, token := range tokens {
+	for index := 0; index < len(tokens); index++ {
+		if importBlock, ok := layout.importBlocks[index]; ok {
+			flush()
+			output.Write(renderImportBlock(importBlock, layout))
+			index = importBlock.end
+			continue
+		}
+
+		token := tokens[index]
 		text := token.GetText()
 		if token.GetTokenType() == antlr.TokenEOF {
 			break
@@ -215,6 +224,7 @@ type layoutAnnotations struct {
 	compositeCloses        map[int]bool
 	compositeCommas        map[int]bool
 	compositeNewlines      map[int]bool
+	importBlocks           map[int]importBlock
 	tokens                 []antlr.Token
 }
 
@@ -228,7 +238,146 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		compositeCloses:        make(map[int]bool),
 		compositeCommas:        make(map[int]bool),
 		compositeNewlines:      make(map[int]bool),
+		importBlocks:           make(map[int]importBlock),
 	}
+}
+
+// EnterImportStmt records one import block for canonical ordering and grouping.
+func (l *layoutAnnotations) EnterImportStmt(ctx *generated.ImportStmtContext) {
+	entries := make([]importEntry, 0, len(ctx.AllImportBlockItem()))
+	var leadingComments []string
+
+	for _, item := range ctx.AllImportBlockItem() {
+		if definition := item.ImportDef(); definition != nil {
+			def, ok := definition.(antlr.ParserRuleContext)
+			if !ok {
+				continue
+			}
+			path := definition.ImportPath().GetText()
+			entries = append(entries, importEntry{
+				comments:  leadingComments,
+				group:     classifyImport(path),
+				start:     def.GetStart().GetTokenIndex(),
+				stop:      def.GetStop().GetTokenIndex(),
+				pathStart: definition.ImportPath().GetStart().GetTokenIndex(),
+				pathStop:  definition.ImportPath().GetStop().GetTokenIndex(),
+			})
+			leadingComments = nil
+			continue
+		}
+
+		if comment := item.COMMENT(); comment != nil {
+			leadingComments = append(leadingComments, comment.GetText())
+		}
+	}
+
+	if len(entries) == 0 {
+		return
+	}
+	entries[len(entries)-1].comments = append(entries[len(entries)-1].comments, leadingComments...)
+	start := ctx.GetStart().GetTokenIndex()
+	l.importBlocks[start] = importBlock{end: ctx.GetStop().GetTokenIndex(), entries: entries}
+}
+
+// tokenRange returns printable tokens in one inclusive source-token range.
+func tokenRange(tokens []antlr.Token, start, stop int) []indexedToken {
+	line := make([]indexedToken, 0, stop-start+1)
+	for index := start; index <= stop; index++ {
+		text := tokens[index].GetText()
+		if text != "\n" && text != "\r\n" {
+			line = append(line, indexedToken{text: text, index: index})
+		}
+	}
+	return line
+}
+
+type importGroup uint8
+
+const (
+	stdlibImportGroup importGroup = iota
+	thirdPartyImportGroup
+	localImportGroup
+)
+
+// importEntry keeps one import and the comments that travel with it.
+type importEntry struct {
+	comments  []string
+	start     int
+	stop      int
+	pathStart int
+	pathStop  int
+	group     importGroup
+}
+
+// importBlock is a complete import statement marked by its token range.
+type importBlock struct {
+	entries []importEntry
+	end     int
+}
+
+// classifyImport assigns the source-level import group defined by the style guide.
+func classifyImport(path string) importGroup {
+	switch {
+	case strings.HasPrefix(path, "@:"):
+		return localImportGroup
+	case strings.Contains(path, ":"):
+		return thirdPartyImportGroup
+	default:
+		return stdlibImportGroup
+	}
+}
+
+// renderImportBlock sorts imports within their source-level groups and emits
+// group spacing defined by the style guide.
+func renderImportBlock(block importBlock, layout *layoutAnnotations) []byte {
+	groups := [3][]importEntry{}
+	for _, entry := range block.entries {
+		groups[entry.group] = append(groups[entry.group], entry)
+	}
+
+	separateGroups := false
+	for index := range groups {
+		sort.SliceStable(groups[index], func(left, right int) bool {
+			return tokenText(layout.tokens, groups[index][left].pathStart, groups[index][left].pathStop) <
+				tokenText(layout.tokens, groups[index][right].pathStart, groups[index][right].pathStop)
+		})
+		separateGroups = separateGroups || len(groups[index]) > 2
+	}
+
+	var output strings.Builder
+	output.WriteString("import {\n")
+	for groupIndex, group := range groups {
+		if len(group) == 0 {
+			continue
+		}
+		if groupIndex > 0 && separateGroups && output.Len() > len("import {\n") {
+			output.WriteByte('\n')
+		}
+		for _, entry := range group {
+			for _, comment := range entry.comments {
+				output.WriteByte('\t')
+				output.WriteString(comment)
+				output.WriteByte('\n')
+			}
+			output.WriteByte('\t')
+			output.WriteString(renderLine(tokenRange(layout.tokens, entry.start, entry.stop), layout))
+			output.WriteByte('\n')
+		}
+	}
+	output.WriteString("}\n")
+	return []byte(output.String())
+}
+
+// tokenText joins printable tokens in one inclusive range.
+func tokenText(tokens []antlr.Token, start, stop int) string {
+	var output strings.Builder
+	for index := start; index <= stop; index++ {
+		text := tokens[index].GetText()
+		if text != "\n" && text != "\r\n" {
+			output.WriteString(text)
+		}
+	}
+	return output.String()
 }
 
 // EnterListLit marks non-empty list literals for canonical multiline rendering.

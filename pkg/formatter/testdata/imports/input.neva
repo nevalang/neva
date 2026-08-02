@@ -1,0 +1,15 @@
+import {
+  // operating system helpers
+  os
+  third:omega
+  @:zeta
+  bytes
+  third:alpha
+  io // stream helpers
+  // local helpers
+  @:alpha
+}
+
+def Main(start any) (stop any) {
+	:start -> :stop
+}
