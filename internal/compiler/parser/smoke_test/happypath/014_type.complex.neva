@@ -1,8 +1,11 @@
 type MyInt int
 
-type MyNum union { Int Int, Float Float }
-type Int union { Int int, Int2 int }
-pub type Float union { Float float, Float2 float }
+type MyNum union { Int Int
+Float Float }
+type Int union { Int int
+Int2 int }
+pub type Float union { Float float
+Float2 float }
 
 type MyEmptyRec struct {}
 type MyNonEmptyRec struct {
@@ -17,10 +20,19 @@ pub type MyNestedRec struct {
 }
 
 type MyShortEnum union { Monday }
-type MyNormalEnum union { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday }
+type MyNormalEnum union { Monday
+Tuesday
+Wednesday
+Thursday
+Friday
+Saturday }
 pub type MyNormalNewlinedEnum union {
-    Monday, Tuesday, Wednesday
-    Thursday, Friday, Saturday
+    Monday
+Tuesday
+Wednesday
+    Thursday
+Friday
+Saturday
 }
 
 pub type MyArr string

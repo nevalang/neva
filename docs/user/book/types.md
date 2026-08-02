@@ -31,7 +31,11 @@ Literal expressions are used for structs and unions, which cannot be expressed a
 
 ```neva
 struct { a int, b float } // struct with 2 fields
-union { Foo, Bar, Baz } // tagged union with 3 variants
+union {
+	Foo
+	Bar
+	Baz
+} // tagged union with 3 variants
 ```
 
 Nevalang has tagged unions only. A union literal declares named tags, and a

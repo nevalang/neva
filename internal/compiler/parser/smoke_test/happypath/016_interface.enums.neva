@@ -12,87 +12,153 @@ interface IReader5 (x union {
     Monday
 }) ()
 
-interface IReader6 (x union { Monday, Tuesday, Wednesday }) ()
+interface IReader6 (x union { Monday
+Tuesday
+Wednesday }) ()
 
 interface IReader7 (x union {
-    Monday, Tuesday, Wednesday
+    Monday
+Tuesday
+Wednesday
 }) ()
 
-interface IReader8 (x union { Monday, Tuesday, Wednesday }) (a union { Monday, Tuesday, Wednesday })
+interface IReader8 (x union { Monday
+Tuesday
+Wednesday }) (a union { Monday
+Tuesday
+Wednesday })
 
-interface IReader9 (x union { Monday, Tuesday, Wednesday }) (a union {
-    Monday, Tuesday, Wednesday })
+interface IReader9 (x union { Monday
+Tuesday
+Wednesday }) (a union {
+    Monday
+Tuesday
+Wednesday })
 
-interface IReader10 (x union { Monday, Tuesday, Wednesday }) (a union { Monday, Tuesday, Wednesday
+interface IReader10 (x union { Monday
+Tuesday
+Wednesday }) (a union { Monday
+Tuesday
+Wednesday
 })
 
 interface IReader11 (x union {
-    Monday, Tuesday, Wednesday
+    Monday
+Tuesday
+Wednesday
 }) (a union {
-    Monday, Tuesday, Wednesday
+    Monday
+Tuesday
+Wednesday
 })
 
 interface IReader12 (x union {
-    Monday,
-    Tuesday,
+    Monday
+
+    Tuesday
+
     Wednesday
 }) (a union {
-    Monday,
-    Tuesday,
+    Monday
+
+    Tuesday
+
     Wednesday
 })
 
-interface IReader12 (x union { Monday, Tuesday, Wednesday }, y union { January, February }) (a union { Monday, Tuesday, Wednesday }, b  union { January, February })
+interface IReader12 (x union { Monday
+Tuesday
+Wednesday }, y union { January
+February }) (a union { Monday
+Tuesday
+Wednesday }, b  union { January
+February })
 
 interface IReader12 (
-    x union { Monday, Tuesday, Wednesday }, y union { January, February }
-) (a union { Monday, Tuesday, Wednesday }, b  union { January, February })
+    x union { Monday
+Tuesday
+Wednesday }, y union { January
+February }
+) (a union { Monday
+Tuesday
+Wednesday }, b  union { January
+February })
 
 interface IReader12 (
-    x union { Monday, Tuesday, Wednesday }, y union { January, February }
+    x union { Monday
+Tuesday
+Wednesday }, y union { January
+February }
 ) (
-    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
+    a union { Monday
+Tuesday
+Wednesday }, b  union { January
+February }
 )
 
 interface IReader12 (
     x union {
-        Monday, Tuesday, Wednesday
-    }, y union { January, February }
+        Monday
+Tuesday
+Wednesday
+    }, y union { January
+February }
 ) (
-    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
+    a union { Monday
+Tuesday
+Wednesday }, b  union { January
+February }
 )
 
 
 interface IReader12 (
     x union {
-        Monday, Tuesday, Wednesday
+        Monday
+Tuesday
+Wednesday
     }, y union {
-        January, February
+        January
+February
     }
 ) (
-    a union { Monday, Tuesday, Wednesday }, b  union { January, February }
+    a union { Monday
+Tuesday
+Wednesday }, b  union { January
+February }
 )
 
 interface IReader12 (
     x union {
-        Monday, Tuesday, Wednesday
+        Monday
+Tuesday
+Wednesday
     }, y union {
-        January, February
+        January
+February
     }
 ) (
     a union {
-        Monday, Tuesday, Wednesday }, b  union { January, February }
+        Monday
+Tuesday
+Wednesday }, b  union { January
+February }
 )
 
 interface IReader12 (
     x union {
-        Monday, Tuesday, Wednesday
+        Monday
+Tuesday
+Wednesday
     }, y union {
-        January, February
+        January
+February
     }
 ) (
     a union {
-        Monday, Tuesday, Wednesday }, b  union { January, February
+        Monday
+Tuesday
+Wednesday }, b  union { January
+February
     }
 )
 
@@ -111,6 +177,7 @@ pub interface IReader12 (
         Tuesday
         Wednesday
     }, b  union {
-        January, February
+        January
+February
     }
 )

@@ -39,17 +39,17 @@ entityName: IDENTIFIER;
 typeStmt: PUB? TYPE typeDef;
 typeDef: IDENTIFIER typeParams? typeExpr? COMMENT?;
 typeParams: LT NEWLINE* typeParamList? GT;
-typeParamList: typeParam (COMMA NEWLINE* typeParam)*;
+typeParamList: typeParam (COMMA NEWLINE* typeParam)* (COMMA NEWLINE*)?;
 typeParam: IDENTIFIER typeExpr? NEWLINE*;
 typeExpr: typeInstExpr | typeLitExpr;
 typeInstExpr: entityRef typeArgs?;
-typeArgs: LT NEWLINE* typeExpr (COMMA NEWLINE* typeExpr)* NEWLINE* GT;
+typeArgs: LT NEWLINE* typeExpr (COMMA NEWLINE* typeExpr)* COMMA? NEWLINE* GT;
 typeLitExpr: structTypeExpr | unionTypeExpr;
 structTypeExpr: STRUCT NEWLINE* LBRACE NEWLINE* structFields? RBRACE;
 structFields: structField (NEWLINE+ structField)*;
 structField: IDENTIFIER typeExpr NEWLINE*;
 unionTypeExpr: UNION NEWLINE* LBRACE NEWLINE* unionFields? RBRACE;
-unionFields: unionField ((COMMA NEWLINE* | NEWLINE+) unionField)*;
+unionFields: unionField (NEWLINE+ unionField)*;
 unionField: IDENTIFIER typeExpr? NEWLINE*;
 
 // Interfaces
@@ -57,7 +57,7 @@ interfaceStmt: PUB? INTERFACE interfaceDef;
 interfaceDef: IDENTIFIER typeParams? inPortsDef outPortsDef NEWLINE*;
 inPortsDef: portsDef;
 outPortsDef: portsDef;
-portsDef: LPAREN (NEWLINE* | portDef? | portDef (COMMA portDef)*) RPAREN;
+portsDef: LPAREN NEWLINE* (portDef (COMMA portDef)* (COMMA NEWLINE*)?)? RPAREN;
 portDef: singlePortDef | arrayPortDef;
 singlePortDef: NEWLINE* IDENTIFIER? typeExpr NEWLINE*;
 arrayPortDef: NEWLINE* LBRACK IDENTIFIER RBRACK typeExpr? NEWLINE*;
@@ -104,7 +104,7 @@ connDefList: (connDef | COMMENT) (NEWLINE* (connDef | COMMENT))*;
 connDef: senderSide ARROW receiverSide;
 senderSide: multipleSenderSide | singleSenderSide;
 multipleSenderSide:
-	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* RBRACK;
+	LBRACK NEWLINE* singleSenderSide (COMMA NEWLINE* singleSenderSide NEWLINE*)* (COMMA NEWLINE*)? RBRACK;
 singleSenderSide:
 	portAddr
 	| senderConstRef
@@ -131,7 +131,7 @@ singleReceiverSide:
 	chainedNormConn
 	| portAddr;
 multipleReceiverSide:
-	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* RBRACK;
+	LBRACK NEWLINE* singleReceiverSide (COMMA NEWLINE* singleReceiverSide NEWLINE*)* (COMMA NEWLINE*)? RBRACK;
 
 /* LEXER */
 

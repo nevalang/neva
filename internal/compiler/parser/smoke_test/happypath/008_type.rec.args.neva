@@ -17,25 +17,41 @@ pub type Rec struct {
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union { Monday, Tuesday, Wednesday, Thursday, Friday }>
+    bar vec<union { Monday
+Tuesday
+Wednesday
+Thursday
+Friday }>
 }
 
 pub type Rec struct {
     foo dict<string, int>
     bar vec<union {
-        Monday, Tuesday, Wednesday, Thursday, Friday }>
+        Monday
+Tuesday
+Wednesday
+Thursday
+Friday }>
 }
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union { Monday, Tuesday, Wednesday, Thursday, Friday
+    bar vec<union { Monday
+Tuesday
+Wednesday
+Thursday
+Friday
     }>
 }
 
 pub type Rec struct {
     foo dict<string, int>
     bar vec<union {
-        Monday, Tuesday, Wednesday, Thursday, Friday
+        Monday
+Tuesday
+Wednesday
+Thursday
+Friday
     }>
 }
 
