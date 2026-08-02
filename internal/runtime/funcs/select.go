@@ -3,6 +3,7 @@ package funcs
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/nevalang/neva/internal/runtime"
 	"github.com/nevalang/neva/internal/runtime/messages"
@@ -36,16 +37,25 @@ func (selector) Create(io runtime.IO, _ messages.Msg) (func(ctx context.Context)
 
 	return func(ctx context.Context) {
 		for {
-			ifMsg, ok := ifArrIn.Select(ctx)
-			if !ok {
-				return
-			}
-
+			var ifMsg runtime.SelectedMsg
+			var ifOK, thenOK bool
 			then := make([]messages.Msg, thenArrIn.Len())
-			if !thenArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
-				then[idx] = ordered.Msg
-				return true
-			}) {
+
+			// The trigger and candidate values form one selection operation.
+			// Receive them concurrently so either side may arrive first.
+			var group sync.WaitGroup
+			group.Go(func() {
+				ifMsg, ifOK = ifArrIn.Select(ctx)
+			})
+			group.Go(func() {
+				thenOK = thenArrIn.ReceiveAll(ctx, func(idx int, ordered runtime.OrderedMsg) bool {
+					then[idx] = ordered.Msg
+					return true
+				})
+			})
+			group.Wait()
+
+			if !ifOK || !thenOK {
 				return
 			}
 
