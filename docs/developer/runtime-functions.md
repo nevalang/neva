@@ -98,6 +98,24 @@ have the same scalar representation; mixed, nested, and empty collections
 remain untyped. Use `NewUntypedListMsg` or `NewUntypedDictMsg` only when boxed
 storage is deliberately required.
 
+## Resolved Type Descriptors
+
+`std/reflect.Type` is the portable runtime representation of a
+compiler-resolved structural type. It is an ordinary immutable Neva message,
+not a new runtime message kind and not metadata attached to every value.
+
+The descriptor is a flat `list<reflect.TypeNode>` rooted at index zero. Every
+composite edge stores an integer index into the same list. This represents
+ordinary nesting, shared sub-shapes, and recursive back-edges with one finite
+format. The representation contains runtime-relevant structural shape only;
+source aliases, constraints, and generic parameters are absent.
+
+`internal/runtime/messages` owns canonical conversion between that wire value
+and its native Go representation. Consumers may compile a private execution
+plan from it, but must not introduce a process-global type registry or attach
+the descriptor to ordinary messages. The initial descriptor substrate does not
+provide public `TypeOf` or general reflection.
+
 ## Concurrent Inputs
 
 Inputs that belong to one logical operation must be received concurrently.

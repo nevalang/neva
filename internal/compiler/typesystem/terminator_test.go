@@ -51,6 +51,15 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    true,
 			wantErr: nil,
 		},
+		{
+			name:  "nested use of the same base type is finite",
+			trace: h.Trace("list", "list"),
+			scope: TestScope{
+				"list": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
+			},
+			want:    false,
+			wantErr: nil,
+		},
 		{ // [t1 t2 t1], {t1=t2, t2=t1}
 			name:  "invalid indirect recursion",
 			trace: h.Trace("t1", "t2", "t1"),

@@ -1,0 +1,29 @@
+// Type describes one fully resolved Neva type as a finite indexed graph.
+// Element zero is the root. Composite nodes refer to other elements by index.
+pub type Type list<TypeNode>
+
+// TypeNode describes one node in a resolved type graph.
+pub type TypeNode union {
+	Any
+	Bool
+	Int
+	Float
+	String
+	Bytes
+	List int
+	Dict int
+	Struct list<StructField>
+	Union list<UnionCase>
+}
+
+// StructField associates a struct field name with its type-node index.
+pub type StructField struct {
+	name string
+	node int
+}
+
+// UnionCase associates a union tag with an optional payload type-node index.
+pub type UnionCase struct {
+	tag string
+	data maybe<int>
+}

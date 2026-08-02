@@ -33,6 +33,12 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	}
 
 	if sameRefs(cur.cur, cur.prev.cur) {
+		// Repeating a bodyless type constructor is ordinary finite nesting, as
+		// in list<list<int>>. Only a definition that expands directly to itself
+		// is direct recursion.
+		if def, _, err := scope.GetType(cur.cur); err == nil && def.BodyExpr == nil {
+			return false, nil
+		}
 		return false, fmt.Errorf("%w: %v", ErrDirectRecursion, cur)
 	}
 

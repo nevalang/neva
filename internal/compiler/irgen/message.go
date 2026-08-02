@@ -56,7 +56,17 @@ func getIRMsgBySrcRef(
 			},
 		}
 		if constant.Message.Union.Data != nil {
-			dataMsg, err := getIRMsgBySrcRef(*constant.Message.Union.Data, scope, typeExpr)
+			if typeExpr.Lit == nil || typeExpr.Lit.Union == nil {
+				return nil, errors.New("union message requires resolved union type")
+			}
+			payloadType, found := typeExpr.Lit.Union[constant.Message.Union.Tag]
+			if !found || payloadType == nil {
+				return nil, fmt.Errorf(
+					"union payload type not found for tag %q",
+					constant.Message.Union.Tag,
+				)
+			}
+			dataMsg, err := getIRMsgBySrcRef(*constant.Message.Union.Data, scope, *payloadType)
 			if err != nil {
 				return nil, err
 			}

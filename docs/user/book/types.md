@@ -73,6 +73,17 @@ Argument `A` is [compatible](https://en.wikipedia.org/wiki/Subtyping) with param
 
 A type is recursive if it refers to itself in its own definition. For example: `type l list<l>`. The compiler determines which type support recursion.
 
+### Runtime Type Descriptors
+
+The low-level `std/reflect` package defines `reflect.Type`, an immutable value
+that describes one fully resolved structural type. It is a flat list of
+`reflect.TypeNode` values rooted at index zero; composite nodes refer to other
+nodes by integer index, so recursive types have a finite representation.
+
+This substrate does not add type metadata to ordinary values and does not yet
+provide a public `TypeOf` operation. It is intended for standard-library and
+interop components that explicitly receive compiler-resolved type metadata.
+
 ## Expression Resolving
 
 > Note: This section describes a simplified algorithm. For actual implementation, refer to the typesystem package source code.
