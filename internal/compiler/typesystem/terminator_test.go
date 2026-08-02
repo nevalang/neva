@@ -60,6 +60,15 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    false,
 			wantErr: nil,
 		},
+		{
+			name:  "definition that directly expands to itself is invalid",
+			trace: h.Trace("recursive", "recursive"),
+			scope: TestScope{
+				"recursive": h.Def(h.Inst("recursive")),
+			},
+			want:    false,
+			wantErr: ts.ErrDirectRecursion,
+		},
 		{ // [t1 t2 t1], {t1=t2, t2=t1}
 			name:  "invalid indirect recursion",
 			trace: h.Trace("t1", "t2", "t1"),

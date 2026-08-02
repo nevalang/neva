@@ -1,4 +1,6 @@
-import { reflect }
+import {
+	reflect
+}
 
 const recursive reflect.Type = [
 	reflect.TypeNode::Struct([

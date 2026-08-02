@@ -9,6 +9,15 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
+// getIRMsgBySrcRef resolves a constant reference, then recursively lowers its
+// literal value into an IR message. typeExpr is the constant's already-resolved
+// type; container branches use it to select the type of each child value.
+//
+// In particular, a union payload must be lowered with the selected tag's
+// payload type rather than the enclosing union type. Scalar payloads used to
+// hide this distinction because scalar lowering does not inspect typeExpr,
+// while composite payloads need their own type to lower their children.
+//
 //nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getIRMsgBySrcRef(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.

@@ -17,11 +17,20 @@ var (
 
 type Terminator struct{}
 
+// ShouldTerminate classifies the newest reference in a type-resolution trace.
+// It returns true when resolution has reached a permitted recursive back-edge,
+// false when normal finite expansion should continue, and an error for an
+// invalid direct or indirect recursive definition.
+//
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Terminator) ShouldTerminate(cur Trace, scope Scope) (bool, error) {
 	return r.shouldTerminate(cur, scope, 0)
 }
 
+// shouldTerminate performs ShouldTerminate's bounded secondary check for
+// indirect recursion. counter prevents that internal re-check from recursing
+// indefinitely; it is not the depth of the user's type.
+//
 //nolint:cyclop,gocognit,gocritic,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, error) {
 	if counter > 1 {
@@ -33,9 +42,9 @@ func (r Terminator) shouldTerminate(cur Trace, scope Scope, counter int) (bool, 
 	}
 
 	if sameRefs(cur.cur, cur.prev.cur) {
-		// Repeating a bodyless type constructor is ordinary finite nesting, as
-		// in list<list<int>>. Only a definition that expands directly to itself
-		// is direct recursion.
+		// A base type has parameters but no body to expand. Seeing the same base
+		// constructor twice in adjacent expressions is therefore finite nesting,
+		// as in list<list<int>>, not the self-expanding alias `type T T`.
 		if def, _, err := scope.GetType(cur.cur); err == nil && def.BodyExpr == nil {
 			return false, nil
 		}
