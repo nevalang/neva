@@ -1272,6 +1272,33 @@ func TestParser_ParseFile_StructLiteralTrailingComma(t *testing.T) {
 	require.Equal(t, "Ada", *fields["name"].Message.Str)
 }
 
+func TestParser_ParseFile_ListLiteralTrailingComma(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+	}{
+		{
+			name: "trailing comma",
+			text: "const nums list<int> = [1, 2,]",
+		},
+		{
+			name: "final item before closing delimiter",
+			text: "const nums list<int> = [\n1,\n2\n]",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			p := New()
+			got, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(test.text))
+			require.Nil(t, err)
+
+			items := got.Entities["nums"].Const.Value.Message.List
+			require.Len(t, items, 2)
+		})
+	}
+}
+
 func TestParser_ParseFile_OverloadedComponentDefinitions(t *testing.T) {
 	text := []byte(`
 		#extern(v1)

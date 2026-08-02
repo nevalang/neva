@@ -326,3 +326,21 @@ Neva uses overloading internally to keep the standard library conceptually small
 use the formatter version that matches the parser. It needs no project config
 or successful build. Separately installed tools belong under `neva tool`; lint
 and refactorings remain separate from formatting.
+
+## Why are formatting, linting, and refactoring separate tools?
+
+`neva fmt` is a syntax-only source renderer. It parses one file and uses its
+tokens and parse tree to produce canonical whitespace, indentation, delimiters,
+and other local layout. It does not use the semantic AST, resolve imports or
+modules, analyze types, or decide what a program means.
+
+`neva lint` runs with workspace-level semantic information. It enforces the
+official style guide when a rule depends on resolved interfaces, names, file
+references, or other program facts. For example, it can prove that `node:port`
+may become `node` only when the resolved node has one port in that direction.
+
+Every lint rule must have a deterministic safe fix. A change that can affect a
+public interface or needs a broader migration is a refactoring or language
+rule, not a lint diagnostic. In particular, existing named single-port
+interfaces are not silently rewritten; new interfaces should omit those names
+to preserve structural compatibility.
