@@ -5,7 +5,7 @@ import {
 const HELLO string = 'hello'
 
 def Main(start any) (stop any) {
-	printer fmt.Println
+	println fmt.Println
 	---
-	:start -> HELLO -> printer -> :stop
+	:start -> HELLO -> println -> :stop
 }

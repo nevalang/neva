@@ -6,7 +6,7 @@ import {
 }
 
 def Main(start any) (stop any) {
-    stream_to_list lists.FromStream<int>
+    from_stream lists.FromStream<int>
     range streams.Range
     println fmt.Println<list<int>>
     panic runtime.Panic
@@ -15,7 +15,7 @@ def Main(start any) (stop any) {
         1 -> range:from,
         11 -> range:to
     ]
-    range -> stream_to_list -> println:data
+    range -> from_stream -> println:data
     println:res -> :stop
     println:err -> panic
 }

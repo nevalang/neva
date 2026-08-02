@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
 	remove os.Remove
 	read_dir_after os.ReadDir
 	remove_all os.RemoveAll
-	print fmt.Printf
+	printf fmt.Printf
 	lock_before Lock<string>
 	lock_create Lock<string>
 	lock_after Lock<string>
@@ -27,28 +27,28 @@ def Main(start any) (stop any) {
 	:start -> [
 		'' -> mkdir_temp:dir,
 		'neva-os-*' -> mkdir_temp:pattern,
-		'dir=$0|file=$1|before=$2|size0=$3|size1=$4|after=$5' -> print:tpl,
+		'dir=$0|file=$1|before=$2|size0=$3|size1=$4|after=$5' -> printf:tpl,
 		'sample-*' -> create_temp:pattern
 	]
 	mkdir_temp:res -> [
-		print:args[0],
+		printf:args[0],
 		lock_create:data,
 		lock_dir:data,
 		read_dir_before:path
 	]
 	create_temp:res -> [
-		print:args[1],
+		printf:args[1],
 		stat_before:path,
 		lock_before:data,
 		lock_after:data
 	]
 	read_dir_before:res -> [
-		print:args[2],
+		printf:args[2],
 		lock_create:sig
 	]
 	lock_create -> create_temp:dir
 	stat_before:res -> [
-		.size -> print:args[3],
+		.size -> printf:args[3],
 		lock_before:sig
 	]
 	lock_before -> [
@@ -61,7 +61,7 @@ def Main(start any) (stop any) {
 		lock_remove:data
 	]
 	stat_after:res -> [
-		.size -> print:args[4],
+		.size -> printf:args[4],
 		lock_remove:sig
 	]
 	lock_remove -> remove:path
@@ -71,12 +71,12 @@ def Main(start any) (stop any) {
 		lock_dir_after:data
 	]
 	read_dir_after:res -> [
-		print:args[5],
+		printf:args[5],
 		lock_dir_after:sig
 	]
 	lock_dir_after -> remove_all:path
 	remove_all:res -> lock_finish:data
-	print:sig -> lock_finish:sig
+	printf:sig -> lock_finish:sig
 	lock_finish -> :stop
-	[mkdir_temp:err, create_temp:err, read_dir_before:err, stat_before:err, truncate:err, stat_after:err, remove:err, read_dir_after:err, remove_all:err, print:err] -> panic
+	[mkdir_temp:err, create_temp:err, read_dir_before:err, stat_before:err, truncate:err, stat_after:err, remove:err, read_dir_after:err, remove_all:err, printf:err] -> panic
 }

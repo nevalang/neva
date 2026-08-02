@@ -7,15 +7,15 @@ import {
 
 def Main(start any) (stop any) {
 	write_all io.WriteAll
-	bytes_from_string bytes.FromString
+	from_string bytes.FromString
 	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> [
 		'file_writer_example.txt' -> write_all:filename,
-		'Hello, io.WriteAll!' -> bytes_from_string
+		'Hello, io.WriteAll!' -> from_string
 	]
-	bytes_from_string:res -> write_all:data
+	from_string:res -> write_all:data
 	write_all:err -> println
 	[write_all:res, println:res] -> :stop
 	println:err -> panic

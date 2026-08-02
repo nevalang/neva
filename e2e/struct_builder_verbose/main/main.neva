@@ -11,14 +11,14 @@ def MyStructBuilder(age int, name string) (res User)
 
 def Main(start any) (stop any) {
     println fmt.Println<any>
-    builder MyStructBuilder
+    my_struct_builder MyStructBuilder
     panic runtime.Panic
     ---
     :start -> [
-        'John' -> builder:name,
-        32 -> builder:age
+        'John' -> my_struct_builder:name,
+        32 -> my_struct_builder:age
     ]
-    builder:res -> println:data
+    my_struct_builder:res -> println:data
     println:res -> :stop
     println:err -> panic
 }

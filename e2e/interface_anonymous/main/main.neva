@@ -4,12 +4,12 @@ import {
 }
 
 def Main(start any) (stop any) {
-    second_flow Secondflow{fmt.Println<any>}
+    secondflow Secondflow{fmt.Println<any>}
     panic runtime.Panic
     ---
-    :start -> second_flow:data
-    second_flow:res -> :stop
-    second_flow:err -> panic
+    :start -> secondflow:data
+    secondflow:res -> :stop
+    secondflow:err -> panic
 }
 
 def Secondflow (data any) (res any, err error) {

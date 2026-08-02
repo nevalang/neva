@@ -7,12 +7,12 @@ import {
 
 def Main(start any) (stop any) {
         args os.Args
-        list_to_stream streams.FromList<string>
+        from_list streams.FromList<string>
         for_each streams.ForEach<string>{fmt.Println<string>}
         wait streams.Wait
         panic runtime.Panic
         ---
-        :start -> args -> list_to_stream -> for_each
+        :start -> args -> from_list -> for_each
         for_each:res -> wait -> :stop
         for_each:err -> panic
 }

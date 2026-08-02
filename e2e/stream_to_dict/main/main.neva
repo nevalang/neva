@@ -18,11 +18,11 @@ const entries list<DictEntry<string>> = [
 
 def Main(start any) (stop any) {
     entries_to_stream streams.FromList<DictEntry<string>>
-    entries_to_dict dicts.FromStream<string>
+    from_stream dicts.FromStream<string>
     println fmt.Println<any>
     panic runtime.Panic
     ---
-    :start -> $entries -> entries_to_stream -> entries_to_dict -> println:data
+    :start -> $entries -> entries_to_stream -> from_stream -> println:data
     println:err -> panic
     println:res -> :stop
 }

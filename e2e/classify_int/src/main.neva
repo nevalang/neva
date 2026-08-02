@@ -8,12 +8,12 @@ import {
 def Main(start any) (stop any) {
     ternary Ternary<string>
     classify_int utils.ClassifyInt
-    must_println errors.Must<any, any>{fmt.Println<string>}
+    must errors.Must<any, any>{fmt.Println<string>}
     ---
     :start -> [
         -42 -> classify_int -> ternary:if,
         'positive :)' -> ternary:then,
         'negative :(' -> ternary:else
     ]
-    ternary -> must_println -> :stop
+    ternary -> must -> :stop
 }

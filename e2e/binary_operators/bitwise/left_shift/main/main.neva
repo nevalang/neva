@@ -4,15 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
-    lshift BitLsh
+    bit_lsh BitLsh
     println fmt.Println<any>
     panic runtime.Panic
     ---
     :start -> [
-        5 -> lshift:left,
-        1 -> lshift:right
+        5 -> bit_lsh:left,
+        1 -> bit_lsh:right
     ]
-    lshift:res -> println
+    bit_lsh:res -> println
     println:res -> :stop
     println:err -> panic
 }

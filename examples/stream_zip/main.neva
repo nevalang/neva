@@ -7,7 +7,7 @@ import {
 const strings list<string> = ['a', 'b', 'c']
 
 def Main(start any) (stop any) {
-    list_to_stream streams.FromList<string>
+    from_list streams.FromList<string>
     zip streams.Zip<int, string>
     for_each streams.ForEach<streams.ZipResult<int, string>>{fmt.Println<streams.ZipResult<int, string>>}
     range streams.Range
@@ -17,7 +17,7 @@ def Main(start any) (stop any) {
     :start -> [
         0 -> range:from,
         10 -> range:to,
-        $strings -> list_to_stream -> zip:right
+        $strings -> from_list -> zip:right
     ]
     range -> zip:left
     zip:res -> for_each

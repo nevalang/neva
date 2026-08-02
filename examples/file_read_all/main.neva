@@ -8,12 +8,12 @@ import {
 
 def Main(start any) (stop any) {
 	read_all io.ReadAll
-	string_from_bytes strings.FromBytes
+	from_bytes strings.FromBytes
 	println fmt.Println<any>
 	panic runtime.Panic
 	---
 	:start -> 'main.neva' -> read_all:filename
-	read_all:res -> string_from_bytes -> println:data
+	read_all:res -> from_bytes -> println:data
 	println:res -> :stop
 	[read_all:err, println:err] -> panic
 }

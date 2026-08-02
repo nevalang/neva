@@ -18,7 +18,7 @@ import {
 pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 	turn sync.Turn<stream<T>>
 	hold Lock<stream<T>>
-	hold_signals FanIn<any>
+	fan_in FanIn<any>
 	event_switch Switch<stream<T>>
 	handler IForEachHandler<T>
 	---
@@ -30,12 +30,12 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 		stream<T>::Data -> event_switch:case[1],
 		stream<T>::Close -> event_switch:case[2]
 	]
-	event_switch:case[0] -> hold_signals:data[0]
+	event_switch:case[0] -> fan_in:data[0]
 	event_switch:case[1] -> handler
-	handler:res -> hold_signals:data[1]
-	event_switch:case[2] -> hold_signals:data[2]
-	handler:err -> [hold_signals:data[3], :err]
-	hold_signals -> hold:sig
+	handler:res -> fan_in:data[1]
+	event_switch:case[2] -> fan_in:data[2]
+	handler:err -> [fan_in:data[3], :err]
+	fan_in -> hold:sig
 	hold -> [turn:done, :res]
 }
 

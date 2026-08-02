@@ -49,27 +49,27 @@ def FizzBuzz(data int) (res any) {
 }
 
 def Mod15(num int) (then int, else int) {
-    h ModHelper
+    mod_helper ModHelper
     ---
-    :num -> [h:num, 15 -> h:den]
-    h:then -> :then
-    h:else -> :else
+    :num -> [mod_helper:num, 15 -> mod_helper:den]
+    mod_helper:then -> :then
+    mod_helper:else -> :else
 }
 
 def Mod3(num int) (then int, else int) {
-    h ModHelper
+    mod_helper ModHelper
     ---
-    :num -> [h:num, 3 -> h:den]
-    h:then -> :then
-    h:else -> :else
+    :num -> [mod_helper:num, 3 -> mod_helper:den]
+    mod_helper:then -> :then
+    mod_helper:else -> :else
 }
 
 def Mod5(num int) (then int, else int) {
-    h ModHelper
+    mod_helper ModHelper
     ---
-    :num -> [h:num, 5 -> h:den]
-    h:then -> :then
-    h:else -> :else
+    :num -> [mod_helper:num, 5 -> mod_helper:den]
+    mod_helper:then -> :then
+    mod_helper:else -> :else
 }
 
 def ModHelper(num int, den int) (then int, else int) {

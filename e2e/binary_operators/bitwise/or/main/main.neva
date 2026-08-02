@@ -4,15 +4,15 @@ import {
 }
 
 def Main(start any) (stop any) {
-    or BitOr
+    bit_or BitOr
     println fmt.Println<any>
     panic runtime.Panic
     ---
     :start -> [
-        5 -> or:left,
-        3 -> or:right
+        5 -> bit_or:left,
+        3 -> bit_or:right
     ]
-    or:res -> println
+    bit_or:res -> println
     println:res -> :stop
     println:err -> panic
 }
