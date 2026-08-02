@@ -48,31 +48,23 @@ type ReflectUnionCase struct {
 	Tag  string
 }
 
-// ReflectTypeToMessage builds the ordinary message representation of a
-// std/reflect.Type value.
+// ReflectTypeToMessage builds the compiler-produced std/reflect.Type wire
+// representation. The compiler guarantees that value is valid, so malformed
+// native descriptors are compiler invariant violations and may panic here.
 //
-//nolint:ireturn // Msg is the value-layer contract.
-func ReflectTypeToMessage(value ReflectType) (Msg, error) {
-	if err := reflectTypeValidate(value); err != nil {
-		return nil, err
-	}
-
+//nolint:ireturn // ListMsg is the precise value-layer contract for this list.
+func ReflectTypeToMessage(value ReflectType) ListMsg {
 	nodes := make([]Msg, len(value.Nodes))
 	for i := range value.Nodes {
 		nodes[i] = reflectTypeNodeToMessage(value.Nodes[i])
 	}
-	return NewUntypedListMsg(nodes), nil
+	return NewUntypedListMsg(nodes)
 }
 
-// ReflectTypeFromMessage reads and validates an ordinary std/reflect.Type
-// message without retaining its backing message storage.
-func ReflectTypeFromMessage(value Msg) (ReflectType, error) {
-	list, ok := value.(ListMsg)
-	if !ok {
-		return ReflectType{}, fmt.Errorf("reflect type must be a list, got %T", value)
-	}
-
-	messages := ListToMessageSlice(list)
+// ReflectTypeFromMessage reads and validates a std/reflect.Type list without
+// retaining its backing message storage.
+func ReflectTypeFromMessage(value ListMsg) (ReflectType, error) {
+	messages := ListToMessageSlice(value)
 	result := ReflectType{Nodes: make([]ReflectTypeNode, len(messages))}
 	for i := range messages {
 		node, err := reflectTypeNodeFromMessage(messages[i])
@@ -88,6 +80,8 @@ func ReflectTypeFromMessage(value Msg) (ReflectType, error) {
 	return result, nil
 }
 
+// reflectTypeNodeToMessage encodes one validated native type node as its
+// TypeNode tagged-union message.
 func reflectTypeNodeToMessage(node ReflectTypeNode) UnionMsg {
 	switch node.Kind {
 	case ReflectTypeAny, ReflectTypeBool, ReflectTypeInt, ReflectTypeFloat,
@@ -124,6 +118,7 @@ func reflectTypeNodeToMessage(node ReflectTypeNode) UnionMsg {
 	}
 }
 
+// reflectTypeNodeFromMessage decodes one TypeNode tagged-union message.
 func reflectTypeNodeFromMessage(value Msg) (ReflectTypeNode, error) {
 	union, ok := AsUnion(value)
 	if !ok {
@@ -155,6 +150,7 @@ func reflectTypeNodeFromMessage(value Msg) (ReflectTypeNode, error) {
 	}
 }
 
+// reflectStructFieldsFromMessage decodes the Struct payload's field list.
 func reflectStructFieldsFromMessage(value Msg) ([]ReflectStructField, error) {
 	list, ok := value.(ListMsg)
 	if !ok {
@@ -181,6 +177,7 @@ func reflectStructFieldsFromMessage(value Msg) ([]ReflectStructField, error) {
 	return result, nil
 }
 
+// reflectUnionCasesFromMessage decodes the Union payload's case list.
 func reflectUnionCasesFromMessage(value Msg) ([]ReflectUnionCase, error) {
 	list, ok := value.(ListMsg)
 	if !ok {
@@ -207,6 +204,7 @@ func reflectUnionCasesFromMessage(value Msg) ([]ReflectUnionCase, error) {
 	return result, nil
 }
 
+// reflectNamedNode reads a {name, node} struct used by a struct field.
 func reflectNamedNode(value StructMsg, nameField string) (string, int64, error) {
 	if len(value.fields) != 2 {
 		return "", 0, errors.New("expected exactly two fields")
@@ -230,6 +228,7 @@ func reflectNamedNode(value StructMsg, nameField string) (string, int64, error) 
 	return nameMsg.Str(), nodeMsg.Int(), nil
 }
 
+// reflectUnionCaseFromMessage reads a {tag, data} struct used by a union case.
 func reflectUnionCaseFromMessage(value StructMsg) (string, *int64, error) {
 	if len(value.fields) != 2 {
 		return "", nil, errors.New("expected exactly two fields")
@@ -268,6 +267,8 @@ func reflectUnionCaseFromMessage(value StructMsg) (string, *int64, error) {
 	}
 }
 
+// reflectTypeValidate checks that a decoded Type graph has a root and that all
+// composite node indexes refer to the same finite node list.
 func reflectTypeValidate(value ReflectType) error {
 	if len(value.Nodes) == 0 {
 		return errors.New("reflect type must contain a root node at index 0")
@@ -280,6 +281,7 @@ func reflectTypeValidate(value ReflectType) error {
 	return nil
 }
 
+// reflectTypeNodeValidate checks one node's active variant and child indexes.
 func reflectTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	switch node.Kind {
 	case ReflectTypeAny, ReflectTypeBool, ReflectTypeInt, ReflectTypeFloat,
@@ -302,6 +304,7 @@ func reflectTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	}
 }
 
+// reflectStructTypeNodeValidate checks a Struct node's fields and indexes.
 func reflectStructTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	if node.Item != 0 || len(node.Cases) != 0 {
 		return errors.New("Struct type node contains data for another variant")
@@ -323,6 +326,7 @@ func reflectStructTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	return nil
 }
 
+// reflectUnionTypeNodeValidate checks a Union node's cases and payload indexes.
 func reflectUnionTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	if node.Item != 0 || len(node.Fields) != 0 {
 		return errors.New("Union type node contains data for another variant")
@@ -346,6 +350,7 @@ func reflectUnionTypeNodeValidate(node ReflectTypeNode, nodeCount int) error {
 	return nil
 }
 
+// reflectTypeIndexValidate checks that index selects one node in the graph.
 func reflectTypeIndexValidate(index int64, nodeCount int) error {
 	if index < 0 || index >= int64(nodeCount) {
 		return fmt.Errorf("type node index %d out of bounds for %d nodes", index, nodeCount)

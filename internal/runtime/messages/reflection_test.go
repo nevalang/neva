@@ -28,9 +28,7 @@ func TestReflectTypeMessageRoundTrip(t *testing.T) {
 		},
 	}}
 
-	message, err := ReflectTypeToMessage(typeValue)
-	require.NoError(t, err)
-
+	message := ReflectTypeToMessage(typeValue)
 	got, err := ReflectTypeFromMessage(message)
 	require.NoError(t, err)
 	require.Equal(t, typeValue, got)
@@ -41,14 +39,9 @@ func TestReflectTypeFromMessageRejectsInvalidDescriptor(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		message Msg
+		message ListMsg
 		wantErr string
 	}{
-		{
-			name:    "not a list",
-			message: NewIntMsg(0),
-			wantErr: "must be a list",
-		},
 		{
 			name:    "empty",
 			message: NewUntypedListMsg(nil),
@@ -84,29 +77,5 @@ func TestReflectTypeFromMessageRejectsInvalidDescriptor(t *testing.T) {
 			_, err := ReflectTypeFromMessage(test.message)
 			require.ErrorContains(t, err, test.wantErr)
 		})
-	}
-}
-
-func TestReflectTypeToMessageRejectsDuplicateNames(t *testing.T) {
-	t.Parallel()
-
-	for _, typeValue := range []ReflectType{
-		{Nodes: []ReflectTypeNode{{
-			Kind: ReflectTypeStruct,
-			Fields: []ReflectStructField{
-				{Name: "value", Node: 0},
-				{Name: "value", Node: 0},
-			},
-		}}},
-		{Nodes: []ReflectTypeNode{{
-			Kind: ReflectTypeUnion,
-			Cases: []ReflectUnionCase{
-				{Tag: "Value"},
-				{Tag: "Value"},
-			},
-		}}},
-	} {
-		_, err := ReflectTypeToMessage(typeValue)
-		require.ErrorContains(t, err, "duplicate")
 	}
 }

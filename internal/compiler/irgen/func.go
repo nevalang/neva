@@ -22,6 +22,11 @@ func (Generator) getFuncRef(versions []src.Component, node src.Node) (string, sr
 	return extern.Extern.Ref, version
 }
 
+// getConfigMsg lowers the existing node-level #bind constant into the Msg field
+// of an IR runtime-function call. The compiler-to-runtime type bridge is not
+// implemented here yet: #bind_type will resolve a TypeExpr and lower its
+// reflect.Type-shaped value through this same IR message boundary in PR #1160.
+//
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getConfigMsg(node src.Node, scope src.Scope) (*ir.Message, error) {
 	bind, hasBind := node.Directives.Find(src.DirectiveKindBind)

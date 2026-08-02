@@ -7,9 +7,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test verifies that users can construct finite descriptors, including a
-// recursive back-edge, using the public std/reflect types.
+// Test verifies the public wire representation of a finite descriptor with a
+// recursive back-edge. The value must pass through a generic component without
+// changing its graph indexes before Println renders it.
 func Test(t *testing.T) {
+	const want = `[` +
+		`{"tag":"Struct","data":[{"name":"text","node":1},{"name":"child","node":2}]},` +
+		`{"tag":"String"},` +
+		`{"tag":"Union","data":[` +
+		`{"data":{"tag":"Some","data":0},"tag":"Some"},` +
+		`{"data":{"tag":"None"},"tag":"None"}` +
+		`]}` +
+		`]` + "\n"
+
 	out, _ := e2e.Run(t, []string{"run", "main"})
-	require.Empty(t, out)
+	require.Equal(t, want, out)
 }

@@ -1,5 +1,7 @@
 import {
+	fmt
 	reflect
+	runtime
 }
 
 const recursive reflect.Type = [
@@ -16,6 +18,10 @@ const recursive reflect.Type = [
 
 def Main(start any) (stop any) {
 	pass Pass<reflect.Type>
+	println fmt.Println<reflect.Type>
+	panic runtime.Panic
 	---
-	:start -> $recursive -> pass -> :stop
+	:start -> $recursive -> pass -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

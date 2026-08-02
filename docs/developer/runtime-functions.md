@@ -120,6 +120,17 @@ permits many instances.
 Prefer an explicit public runtime API or a dependency passed through an
 existing runtime boundary over package-level mutable singletons.
 
+## Tests and Comments
+
+Add focused unit tests for every runtime behavior changed, including normal,
+termination, and meaningful corner cases. Add e2e coverage for the exposed
+Neva component when a graph-level contract is affected. Benchmarks measure a
+performance claim; they do not replace behavior tests.
+
+New Go functions and types need doc comments. For non-obvious concurrency,
+ordering, or state blocks, explain the invariant and why the chosen protocol is
+safe.
+
 ## Resolved Type Descriptors
 
 `std/reflect.Type` is the portable runtime representation of a
@@ -137,14 +148,3 @@ and its native Go representation. Consumers may compile a private execution
 plan from it, but must not introduce a process-global type registry or attach
 the descriptor to ordinary messages. The initial descriptor substrate does not
 provide public `TypeOf` or general reflection.
-
-## Tests and Comments
-
-Add focused unit tests for every runtime behavior changed, including normal,
-termination, and meaningful corner cases. Add e2e coverage for the exposed
-Neva component when a graph-level contract is affected. Benchmarks measure a
-performance claim; they do not replace behavior tests.
-
-New Go functions and types need doc comments. For non-obvious concurrency,
-ordering, or state blocks, explain the invariant and why the chosen protocol is
-safe.
