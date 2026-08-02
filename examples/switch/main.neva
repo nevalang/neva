@@ -17,17 +17,17 @@ def Main(start any) (stop any) {
 def App(start any) (stop any, err any) {
     print fmt.Print<any>?
     scanln fmt.Scanln?
-    upper strings.ToUpper
-    lower strings.ToLower
+    to_upper strings.ToUpper
+    to_lower strings.ToLower
     println fmt.Println<any>?
     switch Switch<string>
     ---
     :start -> [
         'Enter the name: ' -> print -> scanln -> switch:data,
-        'Alice' -> switch:case[0] -> upper,
-        'Bob' -> switch:case[1] -> lower
+        'Alice' -> switch:case[0] -> to_upper,
+        'Bob' -> switch:case[1] -> to_lower
     ]
     switch:else -> :err
-    [upper, lower] -> println
+    [to_upper, to_lower] -> println
     println -> :stop
 }

@@ -20,17 +20,17 @@ def Main(start any) (stop any) {
 }
 
 def Print2Lines(data int) (res any, err error) {
-	print_first_line Tap<int>{PrintFirstLine}?
+	tap Tap<int>{PrintFirstLine}?
 	dec Dec
 	print_second_line PrintSecondLine?
 	---
-	:data -> print_first_line -> dec -> print_second_line -> :res
+	:data -> tap -> dec -> print_second_line -> :res
 }
 
 def PrintFirstLine(data int) (res any, err error) {
 	p1 fmt.Println<any>?
 	p2 fmt.Println<any>?
-	p3 fmt.Printf?
+	printf fmt.Printf?
 	switch Switch<int>
 	---
 	:data -> [
@@ -39,17 +39,17 @@ def PrintFirstLine(data int) (res any, err error) {
 		1 -> switch:case[1] -> '1 bottle of beer on the wall, 1 bottle of beer.' -> p2
 	]
 	switch:else -> [
-		p3:args[0],
-		'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> p3:tpl
+		printf:args[0],
+		'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> printf:tpl
 	]
-	[p1, p2, p3] -> :res
+	[p1, p2, printf] -> :res
 }
 
 def PrintSecondLine(data int) (res any, err error) {
 	p1 fmt.Println<any>?
 	p2 fmt.Println<any>?
 	p3 fmt.Println<any>?
-	p4 fmt.Printf?
+	printf fmt.Printf?
 	switch Switch<int>
 	---
 	:data -> [
@@ -59,8 +59,8 @@ def PrintSecondLine(data int) (res any, err error) {
 		1 -> switch:case[2] -> 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3
 	]
 	switch:else -> [
-		p4:args[0],
-		'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> p4:tpl
+		printf:args[0],
+		'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> printf:tpl
 	]
-	[p1, p2, p3, p4] -> :res
+	[p1, p2, p3, printf] -> :res
 }

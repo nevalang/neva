@@ -8,18 +8,18 @@ import {
 def Main(start any) (stop any) {
 	// we use explicit lock to implement fan-in to printNext2Lines
 	switch Switch<int>
-	print_next_2_lines PrintNext2Lines
+	print_next2_lines PrintNext2Lines
 	lock Lock<int>
 	panic runtime.Panic
 	---
 	:start -> [lock:sig, 99 -> lock:data]
-	[lock:res, switch:else] -> print_next_2_lines
-	print_next_2_lines:n -> [
+	[lock:res, switch:else] -> print_next2_lines
+	print_next2_lines:n -> [
 		switch:data,
 		-1 -> switch:case[0]
 	]
 	switch:case[0] -> :stop
-	print_next_2_lines:err -> panic
+	print_next2_lines:err -> panic
 }
 
 def PrintNext2Lines(n int) (n int, err error) {

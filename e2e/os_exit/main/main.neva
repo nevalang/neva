@@ -6,11 +6,11 @@ import {
 def Main(start any) (stop any) {
 	exit os.Exit
 	lock Lock<int>
-	scan fmt.Scanln
+	scanln fmt.Scanln
 	del Del
 	---
-	:start -> [2 -> exit:code, scan, 2 -> lock:data]
-	scan:res -> lock:sig
-	scan:err -> del
+	:start -> [2 -> exit:code, scanln, 2 -> lock:data]
+	scanln:res -> lock:sig
+	scanln:err -> del
 	lock -> :stop
 }

@@ -16,37 +16,37 @@ type State struct {
 // 2) rate update,
 // 3) balance update.
 def Main(start any) (stop any) {
-	init InitialDeposit
-	calc InterestCalc
-	change_rate RateChange
-	change_balance BalanceChange
+	initial_deposit InitialDeposit
+	interest_calc InterestCalc
+	rate_change RateChange
+	balance_change BalanceChange
 	p1 fmt.Println<int>
 	p2 fmt.Println<int>
 	p3 fmt.Println<int>
-	wg sync.WaitGroup
+	wait_group sync.WaitGroup
 	panic runtime.Panic
 	---
 	:start -> [
-		3 -> wg:count,
-		5 -> init:rate,
-		1000 -> init:balance,
-		0 -> init:now,
-		1 -> calc:now,
-		6 -> change_rate:new_rate,
-		2 -> change_rate:now,
-		1200 -> change_balance:new_balance,
-		3 -> change_balance:now
+		3 -> wait_group:count,
+		5 -> initial_deposit:rate,
+		1000 -> initial_deposit:balance,
+		0 -> initial_deposit:now,
+		1 -> interest_calc:now,
+		6 -> rate_change:new_rate,
+		2 -> rate_change:now,
+		1200 -> balance_change:new_balance,
+		3 -> balance_change:now
 	]
 
-	init:state -> calc:state
-	calc:state -> change_rate:state
-	change_rate:state -> change_balance:state
+	initial_deposit:state -> interest_calc:state
+	interest_calc:state -> rate_change:state
+	rate_change:state -> balance_change:state
 
-	calc:interest -> p1
-	change_rate:interest -> p2
-	change_balance:interest -> p3
-	[p1:res, p2:res, p3:res] -> wg:sig
-	wg -> :stop
+	interest_calc:interest -> p1
+	rate_change:interest -> p2
+	balance_change:interest -> p3
+	[p1:res, p2:res, p3:res] -> wait_group:sig
+	wait_group -> :stop
 	[p1:err, p2:err, p3:err] -> panic
 }
 
@@ -69,15 +69,15 @@ def InitialDeposit(rate int, balance int, now int) (
 // InterestCalc computes interest using the current state and updates last_time.
 def InterestCalc(state State, now int) (state State, interest int) {
 	builder Struct<State>
-	calc ComputeInterest
+	compute_interest ComputeInterest
 	---
 	:state -> [
-		calc:state,
+		compute_interest:state,
 		.rate -> builder:rate,
 		.balance -> builder:balance
 	]
-	:now -> [calc:now, builder:last_time]
-	calc -> :interest
+	:now -> [compute_interest:now, builder:last_time]
+	compute_interest -> :interest
 	builder -> :state
 }
 

@@ -6,27 +6,27 @@ import {
 }
 
 def Main(start any) (stop any) {
-	println MustPrint
+	must_print MustPrint
 	w1 PrintAfter1Sec
 	w2 PrintAfter1Sec
 	w3 PrintAfter1Sec
 	w4 PrintAfter1Sec
 	w5 PrintAfter1Sec
 	w6 PrintAfter1Sec
-	wg sync.WaitGroup
+	wait_group sync.WaitGroup
 	---
 	:start -> [
-		'Hello' -> println,
+		'Hello' -> must_print,
 		1 -> w1,
 		2 -> w2,
 		3 -> w3,
 		4 -> w4,
 		5 -> w5,
 		'World' -> w6,
-		7 -> wg:count
+		7 -> wait_group:count
 	]
-	[w1, w2, w3, w4, w5, w6, println] -> wg:sig
-	wg -> :stop
+	[w1, w2, w3, w4, w5, w6, must_print] -> wait_group:sig
+	wait_group -> :stop
 }
 
 def PrintAfter1Sec(data any) (res any) {

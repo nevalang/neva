@@ -5,16 +5,16 @@ import {
 }
 
 def Main(start any) (stop any) {
-    to_list lists.FromArray<int>
+    from_array lists.FromArray<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
     ---
     :start -> [
-        1 -> to_list:port[0],
-        2 -> to_list:port[1],
-        3 -> to_list:port[2]
+        1 -> from_array:port[0],
+        2 -> from_array:port[1],
+        3 -> from_array:port[2]
     ]
-    to_list -> println:data
+    from_array -> println:data
     println:res -> :stop
     println:err -> panic
 }

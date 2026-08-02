@@ -45,15 +45,15 @@ pub def Lift<T, Y>(data T) (res Y, err error) {
     handler ILiftHandler<T, Y>
     del Del
     new New
-    s Switch<bool>
+    switch Switch<bool>
     ---
     :data -> [
         handler -> :res,
-        false -> s:data,
-        true -> s:case[0]
+        false -> switch:data,
+        true -> switch:case[0]
     ]
-    s:case[0] -> '' -> new -> :err
-    s:else -> del
+    switch:case[0] -> '' -> new -> :err
+    switch:else -> del
 }
 
 // ILiftHandler supplies a result for Lift without an error path.

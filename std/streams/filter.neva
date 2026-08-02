@@ -39,18 +39,18 @@ pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 def Classify<T>(data stream<T>) (res stream<T>, condition bool) {
 	hold Lock<stream<T>>
 	event_switch Switch<stream<T>>
-	signals FanIn<any>
+	fan_in FanIn<any>
 	predicate IPredicate<T>
 	---
 	:data -> [
 		hold:data,
 		event_switch:data,
-		stream<T>::Open -> event_switch:case[0] -> signals:data[0],
+		stream<T>::Open -> event_switch:case[0] -> fan_in:data[0],
 		stream<T>::Data -> event_switch:case[1] -> predicate,
-		stream<T>::Close -> event_switch:case[2] -> signals:data[2]
+		stream<T>::Close -> event_switch:case[2] -> fan_in:data[2]
 	]
-	predicate -> [signals:data[1], :condition]
-	signals -> hold:sig
+	predicate -> [fan_in:data[1], :condition]
+	fan_in -> hold:sig
 	hold -> :res
 }
 
@@ -61,7 +61,7 @@ def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, don
 	data_union Union<stream<T>>
 	then_output FanIn<stream<T>>
 	else_output FanIn<stream<T>>
-	done_output FanIn<any>
+	fan_in FanIn<any>
 	---
 	:data -> [
 		event_switch:data,
@@ -73,23 +73,23 @@ def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, don
 	event_switch:case[0] -> [
 		then_output:data[0],
 		else_output:data[0],
-		done_output:data[0]
+		fan_in:data[0]
 	]
 	event_switch:case[1] -> [
 		data_union:data,
 		stream<T>::Data -> data_union:tag
 	]
 	data_union -> route:data
-	route:then -> [then_output:data[1], done_output:data[1]]
-	route:else -> [else_output:data[1], done_output:data[2]]
+	route:then -> [then_output:data[1], fan_in:data[1]]
+	route:else -> [else_output:data[1], fan_in:data[2]]
 	event_switch:case[2] -> [
 		then_output:data[2],
 		else_output:data[2],
-		done_output:data[3]
+		fan_in:data[3]
 	]
 	then_output -> :then
 	else_output -> :else
-	done_output -> :done
+	fan_in -> :done
 }
 
 // IPredicate decides whether a stream Data message is accepted.

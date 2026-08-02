@@ -12,13 +12,13 @@ import {
 const numbers list<int> = [2, 4, 6, 8, 9]
 
 def Main(start any) (stop any) {
-    list_to_stream streams.FromList<int>
-    filter_even streams.Filter<int>{predicate IsEven}
-    to_list lists.FromStream<int>
+    from_list streams.FromList<int>
+    filter streams.Filter<int>{predicate IsEven}
+    from_stream lists.FromStream<int>
     println fmt.Println<list<int>>
     panic runtime.Panic
     ---
-    :start -> $numbers -> list_to_stream -> filter_even -> to_list -> println:data
+    :start -> $numbers -> from_list -> filter -> from_stream -> println:data
     println:res -> :stop
     println:err -> panic
 }

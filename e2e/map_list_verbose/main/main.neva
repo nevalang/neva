@@ -10,13 +10,13 @@ import {
 const lst list<int> = [50, 30, 20, 100]
 
 def Main(start any) (stop any) {
-    map_decr streams.Map<int, int>{Dec}
-    stream_to_list lists.FromStream<int>
+    map streams.Map<int, int>{Dec}
+    from_stream lists.FromStream<int>
     println fmt.Println<list<int>>
-    list_to_stream streams.FromList<int>
+    from_list streams.FromList<int>
     panic runtime.Panic
     ---
-    :start -> $lst -> list_to_stream -> map_decr -> stream_to_list -> println:data
+    :start -> $lst -> from_list -> map -> from_stream -> println:data
     println:res -> :stop
     println:err -> panic
 }

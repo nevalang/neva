@@ -14,7 +14,7 @@ type Result struct {
 }
 
 def Main(start any) (stop any) {
-    source streams.FromList<int>
+    from_list streams.FromList<int>
     split streams.Split<int>{predicate IsEven}
     then_list lists.FromStream<int>
     else_list lists.FromStream<int>
@@ -22,7 +22,7 @@ def Main(start any) (stop any) {
     println fmt.Println<Result>
     panic runtime.Panic
     ---
-    :start -> $numbers -> source -> split
+    :start -> $numbers -> from_list -> split
     split:then -> then_list -> result:then
     split:else -> else_list -> result:else
     result -> println:data

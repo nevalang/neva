@@ -16,22 +16,22 @@ pub interface IReducer<T, Y>(left T, right T) (res Y)
 //
 // @outport res Sends the final accumulated result after the stream closes.
 pub def Reduce<T, Y>(data stream<T>, init Y) (res Y) {
-	del_open Del
+	del Del
 	reducer IReducer<T, Y>
-	acc Accumulate<Y>
+	accumulate Accumulate<Y>
 	switch Switch<stream<T>>
 	---
-	:init -> acc:init
+	:init -> accumulate:init
 	:data -> [
 		switch:data,
 		stream<T>::Open -> switch:case[0],
-		stream<T>::Close -> switch:case[1] -> true -> acc:flush,
+		stream<T>::Close -> switch:case[1] -> true -> accumulate:flush,
 		stream<T>::Data -> switch:case[2] -> reducer:right
 	]
-	switch:case[0] -> del_open
-	acc:cur -> reducer:left
-	acc:res -> :res
-	reducer -> acc:upd
+	switch:case[0] -> del
+	accumulate:cur -> reducer:left
+	accumulate:res -> :res
+	reducer -> accumulate:upd
 }
 
 // Accumulate maintains the current state of the reduction.
