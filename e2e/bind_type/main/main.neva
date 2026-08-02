@@ -1,0 +1,10 @@
+#extern(int_inc)
+#bind_type(T)
+def Trace<T int>(data T) (res T)
+
+def Main(start any) (stop any) {
+	trace Trace<int>
+	---
+	:start -> 2 -> trace:data
+	trace:res -> :stop
+}

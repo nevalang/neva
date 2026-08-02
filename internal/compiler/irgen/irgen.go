@@ -4,12 +4,15 @@ import (
 	"fmt"
 
 	"github.com/nevalang/neva/internal/compiler/ir"
+	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	"github.com/nevalang/neva/pkg"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
 )
 
-type Generator struct{}
+type Generator struct {
+	resolver ts.Resolver
+}
 
 type (
 	nodeContext struct {
@@ -142,7 +145,12 @@ func (g Generator) processNode(
 	runtimeFuncRef, version := g.getFuncRef(components, nodeCtx.node)
 
 	if runtimeFuncRef != "" {
-		cfgMsg, err := getConfigMsg(nodeCtx.node, scope)
+		cfgMsg, err := g.getConfigMsg(
+			nodeCtx.node,
+			version,
+			scope,
+			scope.Relocate(location),
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -288,5 +296,12 @@ func (Generator) insertAndReturnOutports(nodeCtx nodeContext) []ir.PortAddr {
 }
 
 func New() Generator {
-	return Generator{}
+	terminator := ts.Terminator{}
+	return Generator{
+		resolver: ts.MustNewResolver(
+			ts.Validator{},
+			ts.MustNewSubtypeChecker(terminator),
+			terminator,
+		),
+	}
 }

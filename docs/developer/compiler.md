@@ -62,6 +62,15 @@ directives such as `#extern`, `#bind`, and `#autoports` require analysis that
 cannot be expressed solely in Neva source. Keep that knowledge explicit and
 narrowly scoped; do not disguise it as a component-specific language exception.
 
+`#bind_type(TypeExpr)` is the corresponding generic static-metadata contract.
+It is allowed once on an `#extern` component only, and its argument is resolved
+in the component declaration's type-parameter scope. At each native call, IR
+generation substitutes that node's resolved type arguments and writes one
+ordinary `std/reflect.Type`-shaped message to `ir.FuncCall.Msg`. It is mutually
+exclusive with the node-level `#bind` configuration producer. The compiler does
+not know the eventual consumer (such as a JSON codec), and generated Go carries
+only the message value rather than importing the Neva `reflect` package.
+
 ## IR Generation
 
 `irgen.Generator` recursively expands an exported root component. For each
