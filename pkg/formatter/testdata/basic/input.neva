@@ -1,0 +1,4 @@
+// Passes the start signal through.
+def Main( start any )( stop any ){
+:start->:stop // preserve this comment
+}

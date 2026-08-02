@@ -1,0 +1,9 @@
+type Person struct {
+	name string
+	age int
+}
+
+const person Person = {
+	name: 'Ada',
+	age: 42,
+}
