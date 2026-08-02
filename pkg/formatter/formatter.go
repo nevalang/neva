@@ -33,32 +33,63 @@ func FormatParsed(parsed parser.ParsedSource) []byte {
 	layout := newLayoutAnnotations(parsed.Tokens)
 	antlr.ParseTreeWalkerDefault.Walk(layout, parsed.Tree)
 
-	// Group non-newline tokens by their original physical line.
-	lines := strings.Split(strings.ReplaceAll(string(parsed.Source), "\r\n", "\n"), "\n")
-	byLine := tokensByLine(parsed.Tokens)
+	return renderTokens(parsed.Tokens, layout)
+}
 
+// renderTokens preserves source line breaks except inside non-empty composite
+// literals, whose parser contexts define their canonical multiline layout.
+//
+//nolint:gocognit,gocyclo,cyclop // Token emission must combine source breaks and parse-tree layout marks.
+func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 	var output strings.Builder
-	depth := 0
-	for line := 1; line <= len(lines); line++ {
-		tokens := byLine[line]
-		if len(tokens) == 0 {
-			// Preserve blank lines while removing whitespace-only content.
-			if line < len(lines) {
-				output.WriteByte('\n')
+	var line []indexedToken
+
+	depth, previousWasNewline := 0, false
+	flush := func() {
+		if len(line) == 0 {
+			return
+		}
+		lineDepth := max(depth-leadingClosers(line, layout), 0)
+		output.WriteString(strings.Repeat("\t", lineDepth))
+		output.WriteString(renderLine(line, layout))
+		output.WriteByte('\n')
+		depth += delimiterDelta(line, layout)
+		line = nil
+	}
+
+	for index, token := range tokens {
+		text := token.GetText()
+		if token.GetTokenType() == antlr.TokenEOF {
+			break
+		}
+		//nolint:nestif // A source newline is either preserved, collapsed, or suppressed by literal layout.
+		if text == "\n" || text == "\r\n" {
+			if !layout.compositeNewlines[index] {
+				if len(line) > 0 {
+					flush()
+				} else if previousWasNewline {
+					output.WriteByte('\n')
+				}
+				previousWasNewline = true
 			}
 			continue
 		}
+		previousWasNewline = false
 
-		// Align a line with its enclosing brace depth before rendering it.
-		lineDepth := max(depth-leadingClosers(tokens), 0)
-		output.WriteString(strings.Repeat("\t", lineDepth))
-		output.WriteString(renderLine(tokens, layout))
-		output.WriteByte('\n')
+		if layout.compositeCloses[index] {
+			if len(line) > 0 && line[len(line)-1].text != "," {
+				line = append(line, indexedToken{text: ",", index: -1})
+			}
+			flush()
+		}
 
-		// Carry brace depth to the next physical line.
-		depth += braceDelta(tokens)
+		line = append(line, indexedToken{text: text, index: index})
+		if layout.compositeOpens[index] || layout.compositeCommas[index] {
+			flush()
+		}
 	}
 
+	flush()
 	return []byte(output.String())
 }
 
@@ -68,26 +99,11 @@ type indexedToken struct {
 	index int
 }
 
-// tokensByLine groups all printable tokens by their ANTLR source line.
-func tokensByLine(tokens []antlr.Token) map[int][]indexedToken {
-	result := make(map[int][]indexedToken)
-	for index, token := range tokens {
-		if token.GetTokenType() == antlr.TokenEOF || token.GetText() == "\n" || token.GetText() == "\r\n" {
-			continue
-		}
-		result[token.GetLine()] = append(result[token.GetLine()], indexedToken{
-			index: index,
-			text:  token.GetText(),
-		})
-	}
-	return result
-}
-
-// leadingClosers reports how many closing braces start a source line.
-func leadingClosers(tokens []indexedToken) int {
+// leadingClosers reports how many layout delimiters close at a source line's start.
+func leadingClosers(tokens []indexedToken, layout *layoutAnnotations) int {
 	closers := 0
 	for _, token := range tokens {
-		if token.text != "}" {
+		if token.text != "}" && !layout.compositeCloses[token.index] {
 			break
 		}
 		closers++
@@ -95,8 +111,8 @@ func leadingClosers(tokens []indexedToken) int {
 	return closers
 }
 
-// braceDelta reports the net nesting change produced by one source line.
-func braceDelta(tokens []indexedToken) int {
+// delimiterDelta reports the net indentation change produced by one source line.
+func delimiterDelta(tokens []indexedToken, layout *layoutAnnotations) int {
 	delta := 0
 	for _, token := range tokens {
 		switch token.text {
@@ -104,6 +120,14 @@ func braceDelta(tokens []indexedToken) int {
 			delta++
 		case "}":
 			delta--
+		case "[":
+			if layout.compositeOpens[token.index] {
+				delta++
+			}
+		case "]":
+			if layout.compositeCloses[token.index] {
+				delta--
+			}
 		}
 	}
 	return delta
@@ -131,6 +155,8 @@ func needsSpace(previous, current indexedToken, layout *layoutAnnotations) bool 
 }
 
 // spaceBefore handles spacing rules determined by the current token.
+//
+//nolint:gocyclo,cyclop // Token categories map directly to the language punctuation table.
 func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (bool, bool) {
 	if strings.HasPrefix(current.text, "//") {
 		return true, true
@@ -145,7 +171,9 @@ func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (boo
 		return !layout.nodeDIArgBraces[current.index] && previous.text != "{", true
 	case "(":
 		return previous.text == ")", true
-	case "[", "<", ">":
+	case "[":
+		return spaceBeforeOpenBracket(previous), true
+	case "<", ">":
 		return false, true
 	case "{":
 		return !layout.nodeDIArgBraces[current.index], true
@@ -155,10 +183,15 @@ func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (boo
 	return false, false
 }
 
+// spaceBeforeOpenBracket keeps square brackets attached except after an operator.
+func spaceBeforeOpenBracket(previous indexedToken) bool {
+	return previous.text == "=" || previous.text == "->"
+}
+
 // spaceAfter handles spacing rules determined by the previous token.
 func spaceAfter(previous indexedToken, layout *layoutAnnotations) bool {
 	switch previous.text {
-	case "(", "[", "<", ">", ".", "$", "@", "#", "::":
+	case "(", "[", "<", ".", "$", "@", "#", "::":
 		return false
 	case "{":
 		return !layout.nodeDIArgBraces[previous.index]
@@ -178,6 +211,10 @@ type layoutAnnotations struct {
 	generated.BasenevaListener
 	structValueFieldColons map[int]bool
 	nodeDIArgBraces        map[int]bool
+	compositeOpens         map[int]bool
+	compositeCloses        map[int]bool
+	compositeCommas        map[int]bool
+	compositeNewlines      map[int]bool
 	tokens                 []antlr.Token
 }
 
@@ -187,6 +224,47 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		tokens:                 tokens,
 		structValueFieldColons: make(map[int]bool),
 		nodeDIArgBraces:        make(map[int]bool),
+		compositeOpens:         make(map[int]bool),
+		compositeCloses:        make(map[int]bool),
+		compositeCommas:        make(map[int]bool),
+		compositeNewlines:      make(map[int]bool),
+	}
+}
+
+// EnterListLit marks non-empty list literals for canonical multiline rendering.
+func (l *layoutAnnotations) EnterListLit(ctx *generated.ListLitContext) {
+	items, ok := ctx.ListItems().(antlr.ParserRuleContext)
+	if !ok {
+		return
+	}
+	l.markComposite(ctx, items)
+}
+
+// EnterStructLit marks non-empty struct literals for canonical multiline rendering.
+func (l *layoutAnnotations) EnterStructLit(ctx *generated.StructLitContext) {
+	fields, ok := ctx.StructValueFields().(antlr.ParserRuleContext)
+	if !ok {
+		return
+	}
+	l.markComposite(ctx, fields)
+}
+
+// markComposite records one literal's delimiter, separator, and newline layout.
+func (l *layoutAnnotations) markComposite(ctx antlr.ParserRuleContext, items antlr.ParserRuleContext) {
+	start := ctx.GetStart().GetTokenIndex()
+	stop := ctx.GetStop().GetTokenIndex()
+	l.compositeOpens[start] = true
+	l.compositeCloses[stop] = true
+	for index := start; index <= stop; index++ {
+		if text := l.tokens[index].GetText(); text == "\n" || text == "\r\n" {
+			l.compositeNewlines[index] = true
+		}
+	}
+	for _, child := range items.GetChildren() {
+		terminal, ok := child.(antlr.TerminalNode)
+		if ok && terminal.GetText() == "," {
+			l.compositeCommas[terminal.GetSymbol().GetTokenIndex()] = true
+		}
 	}
 }
 

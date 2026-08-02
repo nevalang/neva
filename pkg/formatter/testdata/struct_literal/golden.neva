@@ -7,3 +7,20 @@ const person Person = {
 	name: 'Ada',
 	age: 42,
 }
+
+const empty list<int> = []
+const numbers list<int> = [
+	1,
+	2,
+	3,
+]
+const nested list<list<int>> = [
+	[
+		1,
+		2,
+	],
+	[
+		3,
+		4,
+	],
+]

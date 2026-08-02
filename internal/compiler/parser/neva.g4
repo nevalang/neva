@@ -76,7 +76,7 @@ constLit:
 bool: TRUE | FALSE;
 unionLit: typeInstExpr DCOLON IDENTIFIER (LPAREN constLit RPAREN)?;
 listLit: LBRACK NEWLINE* listItems? RBRACK;
-listItems: compositeItem | compositeItem (COMMA NEWLINE* compositeItem NEWLINE*)*;
+listItems: compositeItem NEWLINE* (COMMA NEWLINE* compositeItem NEWLINE*)* (COMMA NEWLINE*)?;
 compositeItem: entityRef | constLit;
 structLit: LBRACE NEWLINE* structValueFields? RBRACE;
 structValueFields: structValueField (COMMA NEWLINE* structValueField)* (COMMA NEWLINE*)?;

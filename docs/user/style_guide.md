@@ -20,6 +20,12 @@ Use tabs over spaces.
 - Tabs let users set their preferred width
 - Tabs reduce file size
 
+### Composite Literals
+
+Keep empty list and struct literals compact: `[]` and `{}`. Write every
+non-empty list or struct literal with one item or field per line, a trailing
+comma after the final item, and the closing delimiter on its own line.
+
 ### Imports
 
 Group imports by type: stdlib, third-party, local. An import without a module prefix is stdlib, an `@:` prefix is local, and every other explicit module prefix is third-party. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
@@ -53,6 +59,8 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Ports `data` and `res` of type `any` are interpreted as signals.
 - Use name `sig` if you have _extra_ trigger-inport.
 - Use names `then` and `else` if you implement boolean branching.
+- Omit the name on each interface side that has exactly one port. This keeps
+  the interface structural and lets components use their own port names.
 - Use specific inport names if you have more than one - e.g. `(filename, data)` for `io.WriteAll`.
 - Use type-parameters to preserve type info between input and output if needed.
 
@@ -61,8 +69,9 @@ Names should inherit context from parent scope. Good naming eliminates need for 
 - Keep components small and focused. Aim for about 3 nodes and 5 connections;
   split at 5 nodes or 10 connections unless the flat graph has a clear reason
   to stay together.
-- Omit port names when possible. It enables renaming of ports without updating
-  the networks.
+- Omit a node's port name when its resolved interface has exactly one port in
+  that direction. This lets implementations rename that port without updating
+  the network.
 - Use `?` to propagate errors unless custom error handling is needed.
 - Prefer chaining connections inline when possible
   (e.g. `c -> switch:case[0] -> println`) to keep the dataflow compact and
