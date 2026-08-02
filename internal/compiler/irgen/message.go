@@ -9,6 +9,15 @@ import (
 	src "github.com/nevalang/neva/pkg/ast"
 )
 
+// getIRMsgBySrcRef resolves a constant reference, then recursively lowers its
+// literal value into an IR message. typeExpr is the constant's already-resolved
+// type; container branches use it to select the type of each child value.
+//
+// In particular, a union payload must be lowered with the selected tag's
+// payload type rather than the enclosing union type. Scalar payloads used to
+// hide this distinction because scalar lowering does not inspect typeExpr,
+// while composite payloads need their own type to lower their children.
+//
 //nolint:cyclop,funlen,gocognit,gocyclo // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func getIRMsgBySrcRef(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
@@ -56,7 +65,17 @@ func getIRMsgBySrcRef(
 			},
 		}
 		if constant.Message.Union.Data != nil {
-			dataMsg, err := getIRMsgBySrcRef(*constant.Message.Union.Data, scope, typeExpr)
+			if typeExpr.Lit == nil || typeExpr.Lit.Union == nil {
+				return nil, errors.New("union message requires resolved union type")
+			}
+			payloadType, found := typeExpr.Lit.Union[constant.Message.Union.Tag]
+			if !found || payloadType == nil {
+				return nil, fmt.Errorf(
+					"union payload type not found for tag %q",
+					constant.Message.Union.Tag,
+				)
+			}
+			dataMsg, err := getIRMsgBySrcRef(*constant.Message.Union.Data, scope, *payloadType)
 			if err != nil {
 				return nil, err
 			}

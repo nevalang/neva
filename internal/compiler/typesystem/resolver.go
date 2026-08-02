@@ -283,10 +283,12 @@ func (r Resolver) resolveInstExpr(
 		cur:  expr.Inst.Ref, // FIXME t1
 	}
 
-	shouldReturn, err := r.terminator.ShouldTerminate(newTrace, scope)
+	reachedRecursiveBackEdge, err := r.terminator.ShouldTerminate(newTrace, scope)
 	if err != nil {
 		return Expr{}, fmt.Errorf("%w: %w", ErrTerminator, err)
-	} else if shouldReturn {
+	} else if reachedRecursiveBackEdge {
+		// Keep the reference instead of expanding its definition again. The
+		// surrounding resolved type will point back to this recursive position.
 		return *expr, nil
 	}
 

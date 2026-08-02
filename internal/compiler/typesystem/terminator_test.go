@@ -19,8 +19,9 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 		trace   ts.Trace
 		want    bool
 	}{
-		{ // list<t1> [t1] { t1=list<t1>, list<t> }
-			name:  "non valid recursive case",
+		{
+			// Resolving the first reference cannot form a cycle yet.
+			name:  "single reference continues resolution",
 			trace: ts.NewTrace(nil, core.EntityRef{Name: "t1"}),
 			scope: TestScope{
 				"t1": h.Def(
@@ -31,8 +32,9 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    false,
 			wantErr: nil,
 		},
-		{ // t1 [t1 list t1] { t1=list<t1>, list<t> }
-			name:  "recursive valid case, recursive type ref",
+		{
+			// type t1 list<t1> closes a permitted cycle through list.
+			name:  "recursive reference through base type terminates",
 			trace: h.Trace("t1", "list", "t1"),
 			scope: TestScope{
 				"t1":   h.Def(h.Inst("list", h.Inst("t1"))),
@@ -41,8 +43,9 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    true,
 			wantErr: nil,
 		},
-		{ // list<t1> [list t1 list] { t1=list<t1>, list<t> }
-			name:  "recursive valid case, recursive type as arg",
+		{
+			// The same cycle is valid when resolution enters it from list.
+			name:  "recursive base type through alias terminates",
 			trace: h.Trace("list", "t1", "list"),
 			scope: TestScope{
 				"t1":   h.Def(h.Inst("list", h.Inst("t1"))),
@@ -51,7 +54,28 @@ func TestRecursionTerminator_ShouldTerminate(t *testing.T) {
 			want:    true,
 			wantErr: nil,
 		},
-		{ // [t1 t2 t1], {t1=t2, t2=t1}
+		{
+			// list<list<int>> visits list twice but contains no cycle.
+			name:  "nested use of the same base type is finite",
+			trace: h.Trace("list", "list"),
+			scope: TestScope{
+				"list": h.BaseDefWithRecursionAllowed(h.ParamWithNoConstr("t")),
+			},
+			want:    false,
+			wantErr: nil,
+		},
+		{
+			// type recursive recursive expands its body forever.
+			name:  "definition that directly expands to itself is invalid",
+			trace: h.Trace("recursive", "recursive"),
+			scope: TestScope{
+				"recursive": h.Def(h.Inst("recursive")),
+			},
+			want:    false,
+			wantErr: ts.ErrDirectRecursion,
+		},
+		{
+			// type t1 t2; type t2 t1 cycles without a base-type boundary.
 			name:  "invalid indirect recursion",
 			trace: h.Trace("t1", "t2", "t1"),
 			scope: TestScope{

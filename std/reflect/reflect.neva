@@ -1,0 +1,34 @@
+// Type describes one fully resolved Neva type as a finite indexed graph.
+// Element zero is the root. Every index is a zero-based position in this same
+// list, so edges may point forward, backward for recursion, or to a shared node.
+// For example, list<string> is [TypeNode::List(1), TypeNode::String].
+pub type Type list<TypeNode>
+
+// TypeNode describes one node in a resolved type graph.
+// List and Dict contain their item type's index. Struct fields and Union cases
+// carry indexes through StructField.node and UnionCase.data respectively.
+pub type TypeNode union {
+	Any
+	Bool
+	Int
+	Float
+	String
+	Bytes
+	List int
+	Dict int
+	Struct list<StructField>
+	Union list<UnionCase>
+}
+
+// StructField associates a field name with the index of its type in Type.
+pub type StructField struct {
+	name string
+	node int
+}
+
+// UnionCase associates a tag with its optional payload type's index in Type.
+// None means a tag-only case; Some(index) means that the case has a payload.
+pub type UnionCase struct {
+	tag string
+	data maybe<int>
+}
