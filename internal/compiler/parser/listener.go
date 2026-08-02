@@ -130,9 +130,12 @@ func (s *treeShapeListener) EnterCompStmt(actx *generated.CompStmtContext) {
 	}
 	name := nameIdent.GetText()
 
-	parsedComponent.Directives = s.parseCompilerDirectives(
+	parsedComponent.Directives, err = s.parseCompilerDirectives(
 		actx.CompilerDirectives(),
 	)
+	if err != nil {
+		panic(err)
+	}
 	comments, err := s.parseLeadingComments(compDef.GetStart().GetLine(), &parsedComponent.IO)
 	if err != nil {
 		panic(err)

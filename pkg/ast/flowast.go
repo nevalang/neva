@@ -141,15 +141,94 @@ const (
 //
 
 type Component struct {
-	Directives map[Directive]string `json:"directives,omitempty"`
-	Nodes      map[string]Node      `json:"nodes,omitempty"`
-	Net        []Connection         `json:"net,omitempty"`
+	Directives Directives      `json:"directives,omitempty"`
+	Nodes      map[string]Node `json:"nodes,omitempty"`
+	Net        []Connection    `json:"net,omitempty"`
 	Interface  `json:"interface"`
 	Meta       core.Meta `json:"meta"`
 }
 
-// Directive is an explicit instruction for compiler.
-type Directive string
+// DirectiveKind identifies a compiler directive understood by the parser.
+type DirectiveKind string
+
+const (
+	DirectiveKindExtern    DirectiveKind = "extern"
+	DirectiveKindBind      DirectiveKind = "bind"
+	DirectiveKindAutoports DirectiveKind = "autoports"
+	DirectiveKindBindType  DirectiveKind = "bind_type"
+)
+
+// Directive is a typed compiler instruction. Exactly one variant must be set.
+type Directive struct {
+	Extern    *ExternDirective    `json:"extern,omitempty"`
+	Bind      *BindDirective      `json:"bind,omitempty"`
+	Autoports *AutoportsDirective `json:"autoports,omitempty"`
+	BindType  *BindTypeDirective  `json:"bindType,omitempty"`
+	Meta      core.Meta           `json:"meta"`
+}
+
+// ExternDirective names a runtime-function registry entry.
+type ExternDirective struct {
+	Ref string `json:"ref"`
+}
+
+// BindDirective identifies the constant bound to a node.
+type BindDirective struct {
+	ConstRef core.EntityRef `json:"constRef"`
+}
+
+// AutoportsDirective requests ports derived from a component type argument.
+type AutoportsDirective struct{}
+
+// BindTypeDirective carries a source-level type expression for later resolution.
+type BindTypeDirective struct {
+	TypeExpr ts.Expr `json:"typeExpr"`
+}
+
+// Directives preserves source order and duplicate directives for analysis.
+type Directives []Directive
+
+// Kind returns the kind of the populated directive variant.
+func (d *Directive) Kind() DirectiveKind {
+	switch {
+	case d.Extern != nil:
+		return DirectiveKindExtern
+	case d.Bind != nil:
+		return DirectiveKindBind
+	case d.Autoports != nil:
+		return DirectiveKindAutoports
+	case d.BindType != nil:
+		return DirectiveKindBindType
+	default:
+		return ""
+	}
+}
+
+// Find returns the first directive with the requested kind.
+func (d Directives) Find(kind DirectiveKind) (Directive, bool) {
+	for i := range d {
+		if d[i].Kind() == kind {
+			return d[i], true
+		}
+	}
+
+	return Directive{}, false
+}
+
+// Has reports whether a directive of the requested kind is present.
+func (d Directives) Has(kind DirectiveKind) bool {
+	_, ok := d.Find(kind)
+	return ok
+}
+
+// NewBindDirective constructs a compiler-generated #bind directive.
+func NewBindDirective(ref *core.EntityRef) Directive {
+	return Directive{
+		Bind: &BindDirective{
+			ConstRef: *ref,
+		},
+	}
+}
 
 // Interface describes abstract component.
 type Interface struct {
@@ -194,13 +273,13 @@ func (t TypeParams) String() string {
 }
 
 type Node struct {
-	Directives    map[Directive]string `json:"directives,omitempty"`
-	DIArgs        map[string]Node      `json:"diArgs,omitempty"`
-	OverloadIndex *int                 `json:"overloadIndex,omitempty"`
-	TypeArgs      TypeArgs             `json:"typeArgs,omitempty"`
-	EntityRef     core.EntityRef       `json:"entityRef"`
-	Meta          core.Meta            `json:"meta"`
-	ErrGuard      bool                 `json:"errGuard,omitempty"`
+	Directives    Directives      `json:"directives,omitempty"`
+	DIArgs        map[string]Node `json:"diArgs,omitempty"`
+	OverloadIndex *int            `json:"overloadIndex,omitempty"`
+	TypeArgs      TypeArgs        `json:"typeArgs,omitempty"`
+	EntityRef     core.EntityRef  `json:"entityRef"`
+	Meta          core.Meta       `json:"meta"`
+	ErrGuard      bool            `json:"errGuard,omitempty"`
 }
 
 const MissingNodeNamePrefix = "__missing_node_name__"

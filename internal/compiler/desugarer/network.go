@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nevalang/neva/internal/compiler"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
 	src "github.com/nevalang/neva/pkg/ast"
 	"github.com/nevalang/neva/pkg/core"
@@ -465,8 +464,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{constTypeExpr},
-				Directives: map[src.Directive]string{
-					compiler.BindDirective: chainHead.Const.Value.Ref.String(),
+				Directives: src.Directives{
+					src.NewBindDirective(chainHead.Const.Value.Ref),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -482,8 +481,8 @@ func (d *Desugarer) desugarChainedConnection(
 					Meta: locOnlyMeta,
 				},
 				TypeArgs: []ts.Expr{chainHead.Const.TypeExpr},
-				Directives: map[src.Directive]string{
-					compiler.BindDirective: virtualConstName,
+				Directives: src.Directives{
+					src.NewBindDirective(&core.EntityRef{Name: virtualConstName}),
 				},
 				Meta: locOnlyMeta,
 			}
@@ -737,9 +736,7 @@ func (d *Desugarer) handleLiteralSender(
 	locOnlyMeta := core.Meta{Location: constant.Meta.Location}
 
 	emitterNode := src.Node{
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: constName,
-		},
+		Directives: src.Directives{src.NewBindDirective(&core.EntityRef{Name: constName})},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef().Pkg,
 			Name: newComponentRef().Name,
@@ -778,9 +775,7 @@ func (d *Desugarer) handleConstRefSender(
 
 	emitterNode := src.Node{
 		// don't forget to bind
-		Directives: map[src.Directive]string{
-			compiler.BindDirective: ref.String(),
-		},
+		Directives: src.Directives{src.NewBindDirective(&ref)},
 		EntityRef: core.EntityRef{
 			Pkg:  newComponentRef().Pkg,
 			Name: newComponentRef().Name,

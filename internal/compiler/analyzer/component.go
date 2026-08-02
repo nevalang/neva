@@ -12,13 +12,11 @@ func (a Analyzer) analyzeComponent(
 	//nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	scope src.Scope,
 ) (src.Component, *compiler.Error) {
-	externArg, hasExtern := component.Directives[compiler.ExternDirective]
-	if hasExtern && externArg == "" {
-		return src.Component{}, &compiler.Error{
-			Message: "Component that use #extern directive must provide at least one argument",
-			Meta:    &component.Meta,
-		}
+	if err := validateDuplicateDirectives(component.Directives); err != nil {
+		return src.Component{}, err
 	}
+
+	_, hasExtern := component.Directives.Find(src.DirectiveKindExtern)
 
 	resolvedIface, err := a.analyzeInterface(
 		component.Interface,

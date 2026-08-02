@@ -89,6 +89,9 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 	net []src.Connection, // network of the component that contains the node
 ) (src.Node, foundInterface, *compiler.Error) {
 	parentTypeParams := iface.TypeParams
+	if err := validateDuplicateDirectives(node.Directives); err != nil {
+		return src.Node{}, foundInterface{}, err
+	}
 
 	if node.EntityRef.Pkg == "" && node.EntityRef.Name == parentComponentName {
 		return src.Node{}, foundInterface{}, &compiler.Error{
@@ -118,13 +121,7 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 		}
 	}
 
-	bindArg, hasBind := node.Directives[compiler.BindDirective]
-	if hasBind && bindArg == "" {
-		return src.Node{}, foundInterface{}, &compiler.Error{
-			Message: "Node with #bind directive must provide exactly one argument",
-			Meta:    nodeEntity.Meta(),
-		}
-	}
+	_, hasBind := node.Directives.Find(src.DirectiveKindBind)
 
 	if hasBind && nodeEntity.Kind == src.InterfaceEntity {
 		return src.Node{}, foundInterface{}, &compiler.Error{
@@ -327,7 +324,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 		}
 	}
 
-	_, hasExtern := version.Directives[compiler.ExternDirective]
+	hasExtern := version.Directives.Has(src.DirectiveKindExtern)
 	if hasBind && !hasExtern {
 		return src.Interface{}, nil, &compiler.Error{
 			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
@@ -337,7 +334,7 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 
 	versionIface := version.Interface
 
-	_, hasAutoPortsDirective := version.Directives[compiler.AutoportsDirective]
+	hasAutoPortsDirective := version.Directives.Has(src.DirectiveKindAutoports)
 	if !hasAutoPortsDirective {
 		return versionIface, overloadIndex, nil
 	}
@@ -1471,7 +1468,7 @@ func (a Analyzer) doesCandidateSatisfyTypeConstraints(
 //nolint:gocritic // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 func (a Analyzer) isNativeComponentWithMultipleExterns(component src.Component, entity src.Entity) bool {
 	// check if this component has extern directive
-	_, hasExtern := component.Directives[compiler.ExternDirective]
+	hasExtern := component.Directives.Has(src.DirectiveKindExtern)
 	if !hasExtern {
 		return false
 	}

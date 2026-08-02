@@ -8,12 +8,6 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-const (
-	ExternDirective    src.Directive = "extern"
-	BindDirective      src.Directive = "bind"
-	AutoportsDirective src.Directive = "autoports"
-)
-
 type (
 	Builder interface {
 		Build(ctx context.Context, workdir string) (RawBuild, string, *Error)

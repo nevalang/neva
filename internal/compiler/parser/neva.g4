@@ -13,8 +13,8 @@ stmt:
 
 // Compiler Directives
 compilerDirectives: (compilerDirective NEWLINE)+;
-compilerDirective: HASH IDENTIFIER compilerDirectivesArg?;
-compilerDirectivesArg: LPAREN IDENTIFIER RPAREN;
+compilerDirective: HASH IDENTIFIER compilerDirectiveArg?;
+compilerDirectiveArg: LPAREN typeExpr RPAREN;
 
 // Imports
 importStmt:
