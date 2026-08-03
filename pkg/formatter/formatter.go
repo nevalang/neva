@@ -61,6 +61,7 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 		if importBlock, ok := layout.importBlocks[index]; ok {
 			flush()
 			output.Write(renderImportBlock(importBlock, layout))
+			previousWasNewline = false
 			index = importBlock.end
 			continue
 		}
@@ -72,7 +73,7 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 		}
 		//nolint:nestif // A source newline is either preserved, collapsed, or suppressed by literal layout.
 		if text == "\n" || text == "\r\n" {
-			if !layout.compositeNewlines[index] && !layout.sequenceNewlines[index] {
+			if layout.declarationNewlines[index] || (!layout.compositeNewlines[index] && !layout.sequenceNewlines[index]) {
 				if len(line) > 0 {
 					flush()
 				} else if previousWasNewline {
@@ -132,6 +133,12 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 // logical line in its compact form. Multiline literals are deliberately
 // decided as a unit: once one does not fit, each item is rendered vertically.
 func compositeExceedsLineWidth(line []indexedToken, composite compositeLayout, layout *layoutAnnotations, depth int) bool {
+	for index := composite.start; index <= composite.stop; index++ {
+		if layout.declarationOpens[index] {
+			return true
+		}
+	}
+
 	flat := append(append([]indexedToken(nil), line...), layout.compactTokens(composite.start, composite.stop)...)
 	indent := strings.Repeat("\t", depth-leadingClosers(line, layout))
 	return utf8.RuneCountInString(indent)+utf8.RuneCountInString(renderLine(flat, layout)) > maxLineLength
@@ -307,6 +314,7 @@ type layoutAnnotations struct {
 	sequences              map[int]compositeLayout
 	declarationOpens       map[int]bool
 	declarationCloses      map[int]bool
+	declarationNewlines    map[int]bool
 	importBlocks           map[int]importBlock
 	tokens                 []antlr.Token
 }
@@ -331,6 +339,7 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		sequences:              make(map[int]compositeLayout),
 		declarationOpens:       make(map[int]bool),
 		declarationCloses:      make(map[int]bool),
+		declarationNewlines:    make(map[int]bool),
 		importBlocks:           make(map[int]importBlock),
 	}
 }
@@ -616,6 +625,12 @@ func (l *layoutAnnotations) markDeclarationBlock(ctx antlr.ParserRuleContext) {
 	}
 	l.declarationOpens[open] = true
 	l.declarationCloses[closing] = true
+	for index := open; index <= closing; index++ {
+		text := l.tokens[index].GetText()
+		if text == "\n" || text == "\r\n" {
+			l.declarationNewlines[index] = true
+		}
+	}
 }
 
 // firstToken returns the first matching token index in one parser-rule context.
