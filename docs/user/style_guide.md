@@ -32,9 +32,9 @@ type arguments, interface ports, fan-in, and fan-out. Every vertical sequence
 has a trailing comma after its final item. Union variants are structural
 declarations: write each on its own line without commas.
 
-For struct and union type declarations, keep an empty or single-item body
-compact. Write two or more fields or variants as a block: place the opening
-and closing braces on their own lines and indent every item once.
+For struct and union type declarations, keep an empty body compact. Write every
+non-empty body as a block: place the opening and closing braces on their own
+lines and indent every field or variant once.
 
 ### Imports
 

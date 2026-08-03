@@ -1,11 +1,19 @@
-type OneStruct struct { value string }
+type EmptyStruct struct {}
+
+type OneStruct struct {
+	value string
+}
 
 type ManyStruct struct {
 	first string
 	second string
 }
 
-type OneUnion union { Value string }
+type EmptyUnion union {}
+
+type OneUnion union {
+	Value string
+}
 
 type ManyUnion union {
 	First string

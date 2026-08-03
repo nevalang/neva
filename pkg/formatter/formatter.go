@@ -354,18 +354,16 @@ func (l *layoutAnnotations) EnterTypeArgs(ctx *generated.TypeArgsContext) {
 	l.markSequence(ctx, ctx, "<", ">")
 }
 
-// EnterStructTypeExpr makes multi-field struct declarations into blocks.
+// EnterStructTypeExpr makes non-empty struct declarations into blocks.
 func (l *layoutAnnotations) EnterStructTypeExpr(ctx *generated.StructTypeExprContext) {
-	fields := ctx.StructFields()
-	if fields != nil && len(fields.AllStructField()) > 1 {
+	if ctx.StructFields() != nil {
 		l.markDeclarationBlock(ctx)
 	}
 }
 
-// EnterUnionTypeExpr makes multi-variant union declarations into blocks.
+// EnterUnionTypeExpr makes non-empty union declarations into blocks.
 func (l *layoutAnnotations) EnterUnionTypeExpr(ctx *generated.UnionTypeExprContext) {
-	fields := ctx.UnionFields()
-	if fields != nil && len(fields.AllUnionField()) > 1 {
+	if ctx.UnionFields() != nil {
 		l.markDeclarationBlock(ctx)
 	}
 }
