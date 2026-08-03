@@ -1,4 +1,8 @@
-type U union { A, I int, F float, S string, B bool }
+type U union { A
+I int
+F float
+S string
+B bool }
 
 const c_tag U = U::A
 const c_int U = U::I(1)

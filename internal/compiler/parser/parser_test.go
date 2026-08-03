@@ -697,9 +697,12 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 			},
 		},
 		{
-			name: "one-line union",
+			name: "multiline union",
 			text: `
-				type Result union { Ok int, Err string }
+				type Result union {
+					Ok int
+					Err string
+				}
 			`,
 			check: func(t *testing.T, got src.File) {
 				t.Helper()
@@ -727,6 +730,16 @@ func TestParser_ParseFile_TaggedUnionTypeExpr(t *testing.T) {
 			tt.check(t, got)
 		})
 	}
+}
+
+func TestParser_RejectsCommaSeparatedUnionFields(t *testing.T) {
+	t.Parallel()
+
+	p := New()
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+		type Result union { Ok int, Err string }
+	`))
+	require.Error(t, err)
 }
 
 func TestParser_ParseFile_TaggedUnionConstLiteral(t *testing.T) {

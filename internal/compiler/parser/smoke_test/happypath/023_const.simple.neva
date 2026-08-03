@@ -24,15 +24,19 @@ const REC struct {
     bar: [1, 2, 3, 4]
 }
 
-const ENUM union { Monday, Tuesday } = 4
+const ENUM union { Monday
+Tuesday } = 4
 
 const ENUM union {
-    Monday, Tuesday } = 5
+    Monday
+Tuesday } = 5
 
-const ENUM union { Monday, Tuesday } = 6
+const ENUM union { Monday
+Tuesday } = 6
 
 const ENUM union {
-    Monday, Tuesday
+    Monday
+Tuesday
 } = 7
 
 const ENUM union {
@@ -40,8 +44,10 @@ const ENUM union {
     Tuesday
 } = 8
 
-const UNION union { Int int, String string } = UNION::Int(42)
+const UNION union { Int int
+String string } = UNION::Int(42)
 
-pub const UNION union { Int int, String string } = UNION::String('hello!')
+pub const UNION union { Int int
+String string } = UNION::String('hello!')
 
 const msg string = 'hello!'

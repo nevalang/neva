@@ -22,9 +22,19 @@ Use tabs over spaces.
 
 ### Composite Literals
 
-Keep empty list and struct literals compact: `[]` and `{}`. Write every
-non-empty list or struct literal with one item or field per line, a trailing
-comma after the final item, and the closing delimiter on its own line.
+Keep an empty list or struct literal compact: `[]` and `{}`. Keep a non-empty
+literal on one line when its complete surrounding line fits under 80
+characters. Otherwise write one item or field per line, with a trailing comma
+after the final item and the closing delimiter on its own line.
+
+Apply the same compact-or-vertical rule to comma-separated type parameters,
+type arguments, interface ports, fan-in, and fan-out. Every vertical sequence
+has a trailing comma after its final item. Union variants are structural
+declarations: write each on its own line without commas.
+
+For struct and union type declarations, keep an empty body compact. Write every
+non-empty body as a block: place the opening and closing braces on their own
+lines and indent every field or variant once.
 
 ### Imports
 

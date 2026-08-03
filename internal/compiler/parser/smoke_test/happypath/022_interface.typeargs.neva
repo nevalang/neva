@@ -16,16 +16,19 @@ interface IReader12<T int> (
         Tuesday
         Wednesday
     }, b  union {
-        January, February
+        January
+February
     }
 )
 
 interface IReader1 (
-    arr union { Monday, Tuesday },
+    arr union { Monday
+Tuesday },
     arr2 struct { foo int },
     arr3 struct { baz struct {} }
 ) (
-    arr union { January, February },
+    arr union { January
+February },
     arr2 struct { bar bool },
     arr3 struct { bax struct {} }
 )
@@ -49,7 +52,8 @@ pub interface IReader1 (
     a union {
         Bool bool
         Int int
-        Struct struct { foo union { Int int, String string } }
+        Struct struct { foo union { Int int
+String string } }
     },
     b struct{ bar int }
 ) (
@@ -58,7 +62,8 @@ pub interface IReader1 (
         Float float
         Days union { Monday }
         Struct struct {
-            foo union { January, Empty struct {} }
+            foo union { January
+Empty struct {} }
         }
     }
 )

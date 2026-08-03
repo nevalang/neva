@@ -1,35 +1,55 @@
-type num union { Int int, Float float }
+type num union { Int int
+Float float }
 
 type num union { Int int
     Float float }
 
-pub type num union { Int int, Float float }
+pub type num union { Int int
+Float float }
 
 type time union {
-    Days union { Monday, Tuesday, Wednesday }
-    Months union { January, February, March }
+    Days union { Monday
+Tuesday
+Wednesday }
+    Months union { January
+February
+March }
 }
 
-type Obj union { Empty struct {}, Full struct { foo int } }
+type Obj union { Empty struct {}
+Full struct { foo int } }
 
-type Obj union { Empty struct {}, Full struct { foo union { Int int, Float float } } }
+type Obj union { Empty struct {}
+Full struct { foo union { Int int
+Float float } } }
 
 type SomeTyp union {
-    Struct struct { foo union { Int int, Float float } }
+    Struct struct { foo union { Int int
+Float float } }
     Int int
-    Days union { Monday, Tuesday, Wednesday }
-    Months union { January, February, March }
+    Days union { Monday
+Tuesday
+Wednesday }
+    Months union { January
+February
+March }
     Float float
 }
 
 type T union {
     Int int
-    Days union { Monday, Tuesday, Wednesday }
-    Struct struct { foo union { Int int, Float float } }
+    Days union { Monday
+Tuesday
+Wednesday }
+    Struct struct { foo union { Int int
+Float float } }
 }
 
 pub type T union {
     Int int
-    Days union { Monday, Tuesday, Wednesday }
-    Struct struct { foo union { Int int, Float float } }
+    Days union { Monday
+Tuesday
+Wednesday }
+    Struct struct { foo union { Int int
+Float float } }
 }

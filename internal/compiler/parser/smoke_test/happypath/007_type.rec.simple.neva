@@ -34,16 +34,22 @@ type Rec struct {
 
 type Rec struct {
     foo int
-    bar union { Monday, Tuesday, Wednesday }
+    bar union { Monday
+Tuesday
+Wednesday }
 }
 
 type Rec struct { foo int
-    bar union { Monday, Tuesday, Wednesday }
+    bar union { Monday
+Tuesday
+Wednesday }
 }
 
 type Rec struct {
     foo int
-    bar union { Monday, Tuesday, Wednesday } }
+    bar union { Monday
+Tuesday
+Wednesday } }
 
 type Rec struct {
     foo int

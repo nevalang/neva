@@ -1,0 +1,18 @@
+type ExtremelyLongAlias very_long_package.SomeVeryLongGeneric<first_type, second_type, third_type>
+
+interface VeryLongInterfaceName<first_very_long_type_parameter, second_very_long_type_parameter, third_very_long_type_parameter> () ()
+
+type VeryLongUnionName union {
+    FirstVeryLongUnionVariant
+    SecondVeryLongUnionVariant
+    ThirdVeryLongUnionVariant
+}
+
+def ComponentWithALongName(first_argument some_very_long_type_name, second_argument some_very_long_type_name, third_argument some_very_long_type_name) ()
+
+def Network() () {
+	long_generic_node very_long_package.VeryLongGenericComponent<first_very_long_type_argument, second_very_long_type_argument, third_very_long_type_argument>
+	---
+	[first_very_long_sender_name, second_very_long_sender_name, third_very_long_sender_name] -> receiver
+	sender -> [first_very_long_receiver_name, second_very_long_receiver_name, third_very_long_receiver_name]
+}
