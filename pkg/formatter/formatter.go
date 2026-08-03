@@ -113,10 +113,13 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 			}
 			flush()
 		}
+		if layout.declarationCloses[index] {
+			flush()
+		}
 
 		line = append(line, indexedToken{text: text, index: index})
 		if layout.compositeOpens[index] || layout.compositeCommas[index] ||
-			layout.sequenceOpens[index] || layout.sequenceCommas[index] {
+			layout.sequenceOpens[index] || layout.sequenceCommas[index] || layout.declarationOpens[index] {
 			flush()
 		}
 	}
@@ -302,6 +305,8 @@ type layoutAnnotations struct {
 	sequenceNewlines       map[int]bool
 	sequenceTrailing       map[int]bool
 	sequences              map[int]compositeLayout
+	declarationOpens       map[int]bool
+	declarationCloses      map[int]bool
 	importBlocks           map[int]importBlock
 	tokens                 []antlr.Token
 }
@@ -324,6 +329,8 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		sequenceNewlines:       make(map[int]bool),
 		sequenceTrailing:       make(map[int]bool),
 		sequences:              make(map[int]compositeLayout),
+		declarationOpens:       make(map[int]bool),
+		declarationCloses:      make(map[int]bool),
 		importBlocks:           make(map[int]importBlock),
 	}
 }
@@ -345,6 +352,22 @@ func (l *layoutAnnotations) EnterTypeParams(ctx *generated.TypeParamsContext) {
 // EnterTypeArgs marks grammar-approved line-break positions in type arguments.
 func (l *layoutAnnotations) EnterTypeArgs(ctx *generated.TypeArgsContext) {
 	l.markSequence(ctx, ctx, "<", ">")
+}
+
+// EnterStructTypeExpr makes multi-field struct declarations into blocks.
+func (l *layoutAnnotations) EnterStructTypeExpr(ctx *generated.StructTypeExprContext) {
+	fields := ctx.StructFields()
+	if fields != nil && len(fields.AllStructField()) > 1 {
+		l.markDeclarationBlock(ctx)
+	}
+}
+
+// EnterUnionTypeExpr makes multi-variant union declarations into blocks.
+func (l *layoutAnnotations) EnterUnionTypeExpr(ctx *generated.UnionTypeExprContext) {
+	fields := ctx.UnionFields()
+	if fields != nil && len(fields.AllUnionField()) > 1 {
+		l.markDeclarationBlock(ctx)
+	}
 }
 
 // EnterMultipleSenderSide marks grammar-approved line-break positions in fan-in.
@@ -584,6 +607,17 @@ func (l *layoutAnnotations) markSequence(ctx, items antlr.ParserRuleContext, ope
 		}
 	}
 	l.sequences[sequence.start] = sequence
+}
+
+// markDeclarationBlock records the braces that delimit a multi-item type declaration.
+func (l *layoutAnnotations) markDeclarationBlock(ctx antlr.ParserRuleContext) {
+	open := l.firstToken(ctx, "{")
+	closing := l.lastToken(ctx, "}")
+	if open < 0 || closing < 0 {
+		return
+	}
+	l.declarationOpens[open] = true
+	l.declarationCloses[closing] = true
 }
 
 // firstToken returns the first matching token index in one parser-rule context.

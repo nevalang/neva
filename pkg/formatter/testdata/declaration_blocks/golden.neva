@@ -1,0 +1,13 @@
+type OneStruct struct { value string }
+
+type ManyStruct struct {
+	first string
+	second string
+}
+
+type OneUnion union { Value string }
+
+type ManyUnion union {
+	First string
+	Second string
+}

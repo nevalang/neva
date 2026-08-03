@@ -32,6 +32,10 @@ type arguments, interface ports, fan-in, and fan-out. Every vertical sequence
 has a trailing comma after its final item. Union variants are structural
 declarations: write each on its own line without commas.
 
+For struct and union type declarations, keep an empty or single-item body
+compact. Write two or more fields or variants as a block: place the opening
+and closing braces on their own lines and indent every item once.
+
 ### Imports
 
 Group imports by type: stdlib, third-party, local. An import without a module prefix is stdlib, an `@:` prefix is local, and every other explicit module prefix is third-party. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
