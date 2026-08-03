@@ -11,3 +11,6 @@ type OneUnion union { Value string }
 
 type ManyUnion union { First string
 Second string }
+
+type Wrapper vec<union { First
+Second }>

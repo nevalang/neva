@@ -1,0 +1,10 @@
+// Selects one matching branch.
+
+import {
+	fmt
+	streams
+}
+
+def Main(start any) (stop any) {
+	:start -> :stop
+}
