@@ -10,6 +10,18 @@ permissions:
   pull-requests: read
 
 jobs:
+  neva_fmt_check:
+    name: neva-fmt-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.5'
+          cache: false
+      - name: neva-fmt-check
+        run: make neva-fmt-check
+
   gofix_check:
     name: gofix-check
     runs-on: ubuntu-latest

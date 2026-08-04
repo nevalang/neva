@@ -1,9 +1,9 @@
 pub def ClassifyInt(data int) (res bool) {
-    ge Ge
-    ---
-    :data -> [
-        ge:left,
-        0 -> ge:right
-    ]
-    ge -> :res
+	ge Ge
+	---
+	:data -> [
+		ge:left,
+		0 -> ge:right,
+	]
+	ge -> :res
 }

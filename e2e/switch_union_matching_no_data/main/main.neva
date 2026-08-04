@@ -1,22 +1,25 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 type MyEnum union {
-    A
-    B
+	A
+	B
 }
 
 def Main(start any) (stop any) {
-    switch Switch<MyEnum>
+	switch Switch<MyEnum>
 	println fmt.Println<MyEnum>
 	panic runtime.Panic
 	---
 	:start -> [
-        MyEnum::A -> switch:data,
-	    MyEnum::A -> switch:case[0] -> println:data
-    ]
-    [switch:else, println:err] -> panic
-    println:res -> :stop
+		MyEnum::A -> switch:data,
+		MyEnum::A -> switch:case[0] -> println:data,
+	]
+	[
+		switch:else,
+		println:err,
+	] -> panic
+	println:res -> :stop
 }

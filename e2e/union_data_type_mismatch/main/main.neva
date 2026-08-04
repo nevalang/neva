@@ -7,7 +7,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		MaybeInt::Int -> union_node:tag,
-		'nope' -> union_node:data
+		'nope' -> union_node:data,
 	]
 	union_node -> :stop
 }

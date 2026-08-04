@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		'John' -> builder:name,
-		32 -> builder:age
+		32 -> builder:age,
 	]
 	builder -> :stop
 }

@@ -1,18 +1,18 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    bit_or BitOr
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :start -> [
-        5 -> bit_or:left,
-        3 -> bit_or:right
-    ]
-    bit_or:res -> println
-    println:res -> :stop
-    println:err -> panic
+	bit_or BitOr
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> [
+		5 -> bit_or:left,
+		3 -> bit_or:right,
+	]
+	bit_or:res -> println
+	println:res -> :stop
+	println:err -> panic
 }

@@ -1,23 +1,31 @@
 import {
-	sync
 	fmt
 	runtime
+	sync
 }
 
 def Main(start any) (stop any) {
 	p1 fmt.Println<any>
 	p2 fmt.Println<any>
 	p3 fmt.Println<any>
-    wait_group sync.WaitGroup
-    panic runtime.Panic
-    ---
-    :start -> [
-            'Hello' -> p1,
-            'Neva' -> p2,
-            'World!' -> p3,
-            3 -> wait_group:count
-    ]
-    [p1:res, p2:res, p3:res] -> wait_group:sig
-    wait_group -> :stop
-    [p1:err, p2:err, p3:err] -> panic
+	wait_group sync.WaitGroup
+	panic runtime.Panic
+	---
+	:start -> [
+		'Hello' -> p1,
+		'Neva' -> p2,
+		'World!' -> p3,
+		3 -> wait_group:count,
+	]
+	[
+		p1:res,
+		p2:res,
+		p3:res,
+	] -> wait_group:sig
+	wait_group -> :stop
+	[
+		p1:err,
+		p2:err,
+		p3:err,
+	] -> panic
 }

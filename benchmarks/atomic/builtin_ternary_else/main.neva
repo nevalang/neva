@@ -5,7 +5,7 @@ def Main(start any) (stop any) {
 	:start -> [
 		false -> ternary:if,
 		42 -> ternary:then,
-		0 -> ternary:else
+		0 -> ternary:else,
 	]
 	ternary -> :stop
 }

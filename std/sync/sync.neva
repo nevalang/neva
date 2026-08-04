@@ -44,11 +44,20 @@ pub def Sync<T>(data T) (res T, err error) {
 	handler ISyncHandler<T>
 	---
 	:data -> turn:data
-	turn -> [lock:data, handler]
+	turn -> [
+		lock:data,
+		handler,
+	]
 	handler:res -> fan_in:data[0]
-	handler:err -> [fan_in:data[1], :err]
+	handler:err -> [
+		fan_in:data[1],
+		:err,
+	]
 	fan_in -> lock:sig
-	lock -> [turn:done, :res]
+	lock -> [
+		turn:done,
+		:res,
+	]
 }
 
 // ISyncHandler completes one sequential unit of work for Sync.

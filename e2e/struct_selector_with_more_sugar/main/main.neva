@@ -2,33 +2,32 @@
 // by using another one syntax sugare `.` called "struct selectors".
 
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 type User struct {
-    name string
-    pet Pet
+	name string
+	pet Pet
 }
 
-type Pet struct { name string }
+type Pet struct {
+	name string
+}
 
 def Main(start any) (stop any) {
-    userSender UserSender
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :start -> userSender:sig
-    userSender -> .pet.name -> println:data
-    println:res -> :stop
-    println:err -> panic
+	userSender UserSender
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> userSender:sig
+	userSender -> .pet.name -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
 
-const user User = {
-    name: 'John',
-    pet: { name: 'Charley' }
-}
+const user User = { name: 'John', pet: { name: 'Charley' } }
 
 def UserSender(sig any) (u User) {
-    :sig -> $user -> :u
+	:sig -> $user -> :u
 }

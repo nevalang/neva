@@ -11,7 +11,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		Other::Str('x') -> union_node:tag,
-		1 -> union_node:data
+		1 -> union_node:data,
 	]
 	union_node -> :stop
 }

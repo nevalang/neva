@@ -15,5 +15,8 @@ def Main(start any) (stop any) {
 	:start -> 'main.neva' -> read_all:filename
 	read_all:res -> from_bytes -> println:data
 	println:res -> :stop
-	[read_all:err, println:err] -> panic
+	[
+		read_all:err,
+		println:err,
+	] -> panic
 }

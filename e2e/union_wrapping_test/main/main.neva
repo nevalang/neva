@@ -1,35 +1,38 @@
 import {
-    fmt
-    errors
-    runtime
+	errors
+	fmt
+	runtime
 }
 
 type MaybeInt union {
-    Int int
-    None
+	Int int
+	None
 }
 
 def Main(start any) (stop any) {
-    box Union<MaybeInt>
-    unbox Unbox
+	box Union<MaybeInt>
+	unbox Unbox
 	---
 	:start -> [
-        42 -> box:data,
-        MaybeInt::Int -> box:tag
-    ]
+		42 -> box:data,
+		MaybeInt::Int -> box:tag,
+	]
 	box -> unbox -> :stop
 }
 
 // Unwraps the int, prints it and sends further.
 def Unbox(data MaybeInt) (res int) {
-    println fmt.Println<int>
-    panic runtime.Panic
-    switch Switch<MaybeInt>
-    ---
-    :data -> [
-        switch:data,
-        MaybeInt::Int -> switch:case[0] -> println
-    ]
-    println:res -> :res
-    [switch:else, println:err] -> panic
+	println fmt.Println<int>
+	panic runtime.Panic
+	switch Switch<MaybeInt>
+	---
+	:data -> [
+		switch:data,
+		MaybeInt::Int -> switch:case[0] -> println,
+	]
+	println:res -> :res
+	[
+		switch:else,
+		println:err,
+	] -> panic
 }

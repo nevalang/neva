@@ -1,6 +1,5 @@
 import {
 	runtime
-
 	@:foo
 	@:foo/bar
 }
@@ -13,5 +12,8 @@ def Main(start any) (stop any) {
 	:start -> 42 -> foo:data
 	foo:sig -> bar:data
 	bar:sig -> :stop
-	[foo:err, bar:err] -> panic
+	[
+		foo:err,
+		bar:err,
+	] -> panic
 }

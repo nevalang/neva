@@ -1,12 +1,12 @@
 type Rec1Lvl1 struct {
     rec1Lvl2 struct {
-        foo vec<int>
+        foo list<int>
     }
 }
 
 type Rec2Lvl1 struct  {
     rec2Lvl2 struct {
-        foo vec<struct {
+        foo list<struct {
             foo int
         }>
     }
@@ -14,8 +14,8 @@ type Rec2Lvl1 struct  {
 
 type Rec3Lvl1 struct {
     rec3Lvl2 struct {
-        foo vec<struct {
-            bar vec<struct {
+        foo list<struct {
+            bar list<struct {
                 baz int
             }>
         }>
@@ -24,8 +24,8 @@ type Rec3Lvl1 struct {
 
 pub type Rec4Lvl1 struct {
     rec4Lvl2 struct {
-        foo vec<struct {
-            bar vec<struct {
+        foo list<struct {
+            bar list<struct {
                 baz dict<string, struct { baz bool }>
             }>
         }>

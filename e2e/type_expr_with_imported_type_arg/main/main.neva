@@ -3,8 +3,8 @@
 // can be resolved by type-system, because there was a bug with it
 
 import {
-	@:foo
 	streams
+	@:foo
 }
 
 def Main(start any) (stop any) {

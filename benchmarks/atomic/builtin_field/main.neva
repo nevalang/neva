@@ -4,9 +4,7 @@ type User struct {
 	name string
 }
 
-const value User = {
-	name: 'John'
-}
+const value User = { name: 'John' }
 
 def Main(start any) (stop any) {
 	:start -> $value -> .name -> :stop

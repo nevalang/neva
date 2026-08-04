@@ -9,7 +9,9 @@ import {
 //
 // @outport res Sends boundaries and Data messages accepted by the predicate.
 pub def Filter<T>(data stream<T>) (res stream<T>) {
-	split Split<T>{predicate IPredicate<T>}
+	split Split<T>{
+		predicate IPredicate<T>
+	}
 	---
 	:data -> split
 	split:then -> :res
@@ -23,7 +25,9 @@ pub def Filter<T>(data stream<T>) (res stream<T>) {
 // @outport else Sends boundaries and Data messages rejected by the predicate.
 pub def Split<T>(data stream<T>) (then stream<T>, else stream<T>) {
 	turn sync.Turn<stream<T>>
-	classify Classify<T>{predicate IPredicate<T>}
+	classify Classify<T>{
+		predicate IPredicate<T>
+	}
 	emit Emit<T>
 	---
 	:data -> turn:data
@@ -47,15 +51,22 @@ def Classify<T>(data stream<T>) (res stream<T>, condition bool) {
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0] -> fan_in:data[0],
 		stream<T>::Data -> event_switch:case[1] -> predicate,
-		stream<T>::Close -> event_switch:case[2] -> fan_in:data[2]
+		stream<T>::Close -> event_switch:case[2] -> fan_in:data[2],
 	]
-	predicate -> [fan_in:data[1], :condition]
+	predicate -> [
+		fan_in:data[1],
+		:condition,
+	]
 	fan_in -> hold:sig
 	hold -> :res
 }
 
 // Emit sends classified Data to one output and stream boundaries to both.
-def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, done any) {
+def Emit<T>(data stream<T>, condition bool) (
+	then stream<T>,
+	else stream<T>,
+	done any,
+) {
 	event_switch Switch<stream<T>>
 	route Cond<stream<T>>
 	data_union Union<stream<T>>
@@ -67,25 +78,31 @@ def Emit<T>(data stream<T>, condition bool) (then stream<T>, else stream<T>, don
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0],
 		stream<T>::Data -> event_switch:case[1],
-		stream<T>::Close -> event_switch:case[2]
+		stream<T>::Close -> event_switch:case[2],
 	]
 	:condition -> route:if
 	event_switch:case[0] -> [
 		then_output:data[0],
 		else_output:data[0],
-		fan_in:data[0]
+		fan_in:data[0],
 	]
 	event_switch:case[1] -> [
 		data_union:data,
-		stream<T>::Data -> data_union:tag
+		stream<T>::Data -> data_union:tag,
 	]
 	data_union -> route:data
-	route:then -> [then_output:data[1], fan_in:data[1]]
-	route:else -> [else_output:data[1], fan_in:data[2]]
+	route:then -> [
+		then_output:data[1],
+		fan_in:data[1],
+	]
+	route:else -> [
+		else_output:data[1],
+		fan_in:data[2],
+	]
 	event_switch:case[2] -> [
 		then_output:data[2],
 		else_output:data[2],
-		fan_in:data[3]
+		fan_in:data[3],
 	]
 	then_output -> :then
 	else_output -> :else

@@ -57,6 +57,53 @@ func TestFormatNormalizesCRLF(t *testing.T) {
 	require.Equal(t, []byte("def Main(start any) (stop any) {\n\t:start -> :stop\n}\n"), got)
 }
 
+func TestFormatCanonicalPunctuation(t *testing.T) {
+	t.Parallel()
+
+	source := []byte(`import {
+path:with / parts
+}
+def Main(start any) (stop any) {
+:start -> .name -> output
+output -> [turn:done,:res]
+}
+def Inline(start any) (stop any) { :start->:stop }
+`)
+
+	got, err := Format(source)
+	require.Nil(t, err)
+	require.Equal(t, []byte(`import {
+	path:with/parts
+}
+def Main(start any) (stop any) {
+	:start -> .name -> output
+	output -> [
+		turn:done,
+		:res,
+	]
+}
+def Inline(start any) (stop any) {
+	:start -> :stop
+}
+`), got)
+}
+
+func TestFormatAlwaysExpandsMultiBranchConnections(t *testing.T) {
+	t.Parallel()
+
+	got, err := Format([]byte("def Main(start any) (stop any) {\n:start -> [first, second]\n[first, second] -> :stop\n}\n"))
+	require.Nil(t, err)
+	require.Equal(t, []byte("def Main(start any) (stop any) {\n\t:start -> [\n\t\tfirst,\n\t\tsecond,\n\t]\n\t[\n\t\tfirst,\n\t\tsecond,\n\t] -> :stop\n}\n"), got)
+}
+
+func TestFormatExpandsCompactDeclarationBlocks(t *testing.T) {
+	t.Parallel()
+
+	got, err := Format([]byte("import { fmt }\ndef Main() () {\n\tparent Parent{child Child}\n\t---\n}\n"))
+	require.Nil(t, err)
+	require.Equal(t, []byte("import {\n\tfmt\n}\ndef Main() () {\n\tparent Parent{\n\t\tchild Child\n\t}\n\t---\n}\n"), got)
+}
+
 func TestFormatCorpus(t *testing.T) {
 	roots := []string{
 		"../../std",

@@ -1,6 +1,6 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 const l list<int> = [-215]

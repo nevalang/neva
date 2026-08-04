@@ -1,19 +1,20 @@
 import {
-    fmt
-    errors
-
-    @:src/utils
+	errors
+	fmt
+	@:src/utils
 }
 
 def Main(start any) (stop any) {
-    ternary Ternary<string>
-    classify_int utils.ClassifyInt
-    must errors.Must<any, any>{fmt.Println<string>}
-    ---
-    :start -> [
-        -42 -> classify_int -> ternary:if,
-        'positive :)' -> ternary:then,
-        'negative :(' -> ternary:else
-    ]
-    ternary -> must -> :stop
+	ternary Ternary<string>
+	classify_int utils.ClassifyInt
+	must errors.Must<any, any>{
+		fmt.Println<string>
+	}
+	---
+	:start -> [
+		-42 -> classify_int -> ternary:if,
+		'positive :)' -> ternary:then,
+		'negative :(' -> ternary:else,
+	]
+	ternary -> must -> :stop
 }

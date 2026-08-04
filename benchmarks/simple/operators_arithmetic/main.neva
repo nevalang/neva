@@ -14,9 +14,13 @@ def Main(start any) (stop any) {
 		int_ops,
 		float_ops,
 		string_ops,
-		3 -> wg:count
+		3 -> wg:count,
 	]
-	[int_ops, float_ops, string_ops] -> wg:sig
+	[
+		int_ops,
+		float_ops,
+		string_ops,
+	] -> wg:sig
 	wg -> :stop
 }
 
@@ -28,12 +32,30 @@ def IntArithmetic(start any) (sig any) {
 	mod Mod
 	pow Pow
 	---
-	:start -> [1 -> add:left, 1 -> add:right]
-	add -> [sub:left, 1 -> sub:right]
-	sub -> [mul:left, 2 -> mul:right]
-	mul -> [div:left, 2 -> div:right]
-	div -> [mod:left, 7 -> mod:right]
-	mod -> [pow:left, 2 -> pow:right]
+	:start -> [
+		1 -> add:left,
+		1 -> add:right,
+	]
+	add -> [
+		sub:left,
+		1 -> sub:right,
+	]
+	sub -> [
+		mul:left,
+		2 -> mul:right,
+	]
+	mul -> [
+		div:left,
+		2 -> div:right,
+	]
+	div -> [
+		mod:left,
+		7 -> mod:right,
+	]
+	mod -> [
+		pow:left,
+		2 -> pow:right,
+	]
 	pow -> true -> :sig
 }
 
@@ -50,14 +72,29 @@ def FloatArithmetic(start any) (sig any) {
 		1 -> mod:left,
 		2 -> mod:right,
 		1.25 -> pick:then,
-		2.75 -> pick:else
+		2.75 -> pick:else,
 	]
-	mod -> [eq:left, 0 -> eq:right]
+	mod -> [
+		eq:left,
+		0 -> eq:right,
+	]
 	eq -> pick:if
-	pick -> [add:left, 1.5 -> add:right]
-	add -> [sub:left, 0.5 -> sub:right]
-	sub -> [mul:left, 1.5 -> mul:right]
-	mul -> [div:left, 1.5 -> div:right]
+	pick -> [
+		add:left,
+		1.5 -> add:right,
+	]
+	add -> [
+		sub:left,
+		0.5 -> sub:right,
+	]
+	sub -> [
+		mul:left,
+		1.5 -> mul:right,
+	]
+	mul -> [
+		div:left,
+		1.5 -> div:right,
+	]
 	div -> true -> :sig
 }
 
@@ -71,10 +108,16 @@ def StringArithmetic(start any) (sig any) {
 		1 -> mod:left,
 		2 -> mod:right,
 		'alpha' -> pick:then,
-		'beta' -> pick:else
+		'beta' -> pick:else,
 	]
-	mod -> [eq:left, 0 -> eq:right]
+	mod -> [
+		eq:left,
+		0 -> eq:right,
+	]
 	eq -> pick:if
-	pick -> [add:left, '_tail' -> add:right]
+	pick -> [
+		add:left,
+		'_tail' -> add:right,
+	]
 	add -> true -> :sig
 }

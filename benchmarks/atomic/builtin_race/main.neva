@@ -4,7 +4,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		42 -> race:data,
-		true -> race:case[0]
+		true -> race:case[0],
 	]
 	race:case[0] -> :stop
 }

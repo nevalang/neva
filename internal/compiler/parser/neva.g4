@@ -18,8 +18,9 @@ compilerDirectiveArg: LPAREN typeExpr RPAREN;
 
 // Imports
 importStmt:
-	IMPORT NEWLINE* LBRACE NEWLINE+ importBlockItem* RBRACE;
-importBlockItem: (importDef | COMMENT) NEWLINE+;
+	IMPORT NEWLINE* LBRACE NEWLINE*
+	(importBlockItem (NEWLINE+ importBlockItem)*)? NEWLINE* RBRACE;
+importBlockItem: importDef | COMMENT;
 importDef: importAlias? importPath COMMENT?;
 importAlias: IDENTIFIER;
 importPath: (importPathMod COLON)? importPathPkg;

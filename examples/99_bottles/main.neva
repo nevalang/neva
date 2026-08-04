@@ -1,26 +1,30 @@
 import {
-    fmt
-    runtime
-    streams
+	fmt
+	runtime
+	streams
 }
 
 def Main(start any) (stop any) {
-    for_each streams.ForEach<int>{Print2Lines}
-    range streams.Range
-    wait streams.Wait
-    panic runtime.Panic
-    ---
-    :start -> [
-        99 -> range:from,
-        -1 -> range:to
-    ]
-    range -> for_each
-    for_each:res -> wait -> :stop
-    for_each:err -> panic
+	for_each streams.ForEach<int>{
+		Print2Lines
+	}
+	range streams.Range
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> [
+		99 -> range:from,
+		-1 -> range:to,
+	]
+	range -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }
 
 def Print2Lines(data int) (res any, err error) {
-	tap Tap<int>{PrintFirstLine}?
+	tap Tap<int>{
+		PrintFirstLine
+	}?
 	dec Dec
 	print_second_line PrintSecondLine?
 	---
@@ -36,13 +40,17 @@ def PrintFirstLine(data int) (res any, err error) {
 	:data -> [
 		switch:data,
 		0 -> switch:case[0] -> 'No more bottles of beer on the wall, no more bottles of beer.' -> p1,
-		1 -> switch:case[1] -> '1 bottle of beer on the wall, 1 bottle of beer.' -> p2
+		1 -> switch:case[1] -> '1 bottle of beer on the wall, 1 bottle of beer.' -> p2,
 	]
 	switch:else -> [
 		printf:args[0],
-		'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> printf:tpl
+		'$0 bottles of beer on the wall, $0 bottles of beer.\n' -> printf:tpl,
 	]
-	[p1, p2, printf] -> :res
+	[
+		p1,
+		p2,
+		printf,
+	] -> :res
 }
 
 def PrintSecondLine(data int) (res any, err error) {
@@ -56,11 +64,16 @@ def PrintSecondLine(data int) (res any, err error) {
 		switch:data,
 		-1 -> switch:case[0] -> 'Go to the store and buy some more, 99 bottles of beer on the wall.' -> p1,
 		0 -> switch:case[1] -> 'Take one down and pass it around, no more bottles of beer on the wall.\n' -> p2,
-		1 -> switch:case[2] -> 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3
+		1 -> switch:case[2] -> 'Take one down and pass it around, 1 bottle of beer on the wall.\n' -> p3,
 	]
 	switch:else -> [
 		printf:args[0],
-		'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> printf:tpl
+		'Take one down and pass it around, $0 bottles of beer on the wall.\n\n' -> printf:tpl,
 	]
-	[p1, p2, p3, printf] -> :res
+	[
+		p1,
+		p2,
+		p3,
+		printf,
+	] -> :res
 }

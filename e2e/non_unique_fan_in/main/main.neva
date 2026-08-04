@@ -1,3 +1,6 @@
 def Main(start any) (stop any) {
-	:start -> [:stop, :stop]
+	:start -> [
+		:stop,
+		:stop,
+	]
 }

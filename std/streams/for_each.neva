@@ -28,15 +28,21 @@ pub def ForEach<T>(data stream<T>) (res stream<T>, err error) {
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0],
 		stream<T>::Data -> event_switch:case[1],
-		stream<T>::Close -> event_switch:case[2]
+		stream<T>::Close -> event_switch:case[2],
 	]
 	event_switch:case[0] -> fan_in:data[0]
 	event_switch:case[1] -> handler
 	handler:res -> fan_in:data[1]
 	event_switch:case[2] -> fan_in:data[2]
-	handler:err -> [fan_in:data[3], :err]
+	handler:err -> [
+		fan_in:data[3],
+		:err,
+	]
 	fan_in -> hold:sig
-	hold -> [turn:done, :res]
+	hold -> [
+		turn:done,
+		:res,
+	]
 }
 
 // IForEachHandler performs one side effect for ForEach.

@@ -1,15 +1,15 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    inc Inc
-    println fmt.Println<int>
-    panic runtime.Panic
-    ---
-    :start -> 41 -> inc
-    inc -> println:data
-    println:res -> :stop
-    println:err -> panic
+	inc Inc
+	println fmt.Println<int>
+	panic runtime.Panic
+	---
+	:start -> 41 -> inc
+	inc -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

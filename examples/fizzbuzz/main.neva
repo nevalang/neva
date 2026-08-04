@@ -1,88 +1,107 @@
 import {
-    fmt
-    runtime
-    streams
+	fmt
+	runtime
+	streams
 }
 
 def Main(start any) (stop any) {
-    map streams.Map<int, any>{FizzBuzz}
-    for_each streams.ForEach<any>{fmt.Println<any>}
-    range streams.Range
-    wait streams.Wait
-    panic runtime.Panic
-    ---
-    :start -> [
-        1 -> range:from,
-        101 -> range:to
-    ]
-    range -> map -> for_each
-    for_each:res -> wait -> :stop
-    for_each:err -> panic
+	map streams.Map<int, any>{
+		FizzBuzz
+	}
+	for_each streams.ForEach<any>{
+		fmt.Println<any>
+	}
+	range streams.Range
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> [
+		1 -> range:from,
+		101 -> range:to,
+	]
+	range -> map -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }
 
 def FizzBuzz(data int) (res any) {
-    select Select<any>
-    mod15 Mod15
-    mod3 Mod3
-    mod5 Mod5
-    
-    ---
-    
-    :data -> [
-        mod15,
-        select:then[3],
-        'FizzBuzz' -> select:then[0],
-        'Fizz' -> select:then[1],
-        'Buzz' -> select:then[2]
-    ]
+	select Select<any>
+	mod15 Mod15
+	mod3 Mod3
+	mod5 Mod5
 
-    mod15:then -> select:if[0]
-    mod15:else -> mod3
-    
-    mod3:then -> select:if[1]
-    mod3:else -> mod5
+	---
 
-    mod5:then -> select:if[2]
-    mod5:else -> select:if[3]
+	:data -> [
+		mod15,
+		select:then[3],
+		'FizzBuzz' -> select:then[0],
+		'Fizz' -> select:then[1],
+		'Buzz' -> select:then[2],
+	]
 
-    select -> :res
+	mod15:then -> select:if[0]
+	mod15:else -> mod3
+
+	mod3:then -> select:if[1]
+	mod3:else -> mod5
+
+	mod5:then -> select:if[2]
+	mod5:else -> select:if[3]
+
+	select -> :res
 }
 
 def Mod15(num int) (then int, else int) {
-    mod_helper ModHelper
-    ---
-    :num -> [mod_helper:num, 15 -> mod_helper:den]
-    mod_helper:then -> :then
-    mod_helper:else -> :else
+	mod_helper ModHelper
+	---
+	:num -> [
+		mod_helper:num,
+		15 -> mod_helper:den,
+	]
+	mod_helper:then -> :then
+	mod_helper:else -> :else
 }
 
 def Mod3(num int) (then int, else int) {
-    mod_helper ModHelper
-    ---
-    :num -> [mod_helper:num, 3 -> mod_helper:den]
-    mod_helper:then -> :then
-    mod_helper:else -> :else
+	mod_helper ModHelper
+	---
+	:num -> [
+		mod_helper:num,
+		3 -> mod_helper:den,
+	]
+	mod_helper:then -> :then
+	mod_helper:else -> :else
 }
 
 def Mod5(num int) (then int, else int) {
-    mod_helper ModHelper
-    ---
-    :num -> [mod_helper:num, 5 -> mod_helper:den]
-    mod_helper:then -> :then
-    mod_helper:else -> :else
+	mod_helper ModHelper
+	---
+	:num -> [
+		mod_helper:num,
+		5 -> mod_helper:den,
+	]
+	mod_helper:then -> :then
+	mod_helper:else -> :else
 }
 
 def ModHelper(num int, den int) (then int, else int) {
-    mod Mod
-    cond Cond<int>
-    eq Eq<int>
-    ---
-    :num -> [mod:left, cond:data]
-    :den -> mod:right
+	mod Mod
+	cond Cond<int>
+	eq Eq<int>
+	---
+	:num -> [
+		mod:left,
+		cond:data,
+	]
+	:den -> mod:right
 
-    mod -> [eq:left, 0 -> eq:right]
-    eq -> cond:if
+	mod -> [
+		eq:left,
+		0 -> eq:right,
+	]
+	eq -> cond:if
 
-    cond:then -> :then
-    cond:else -> :else
+	cond:then -> :then
+	cond:else -> :else
 }

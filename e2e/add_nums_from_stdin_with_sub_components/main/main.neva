@@ -12,7 +12,10 @@ def Main(start any) (stop any) {
 	:start -> app
 	app:res -> println
 	println:res -> :stop
-	[app:err, println:err] -> panic
+	[
+		app:err,
+		println:err,
+	] -> panic
 }
 
 def App(sig any) (res int, err error) {
@@ -21,7 +24,10 @@ def App(sig any) (res int, err error) {
 	add Add
 	---
 	:sig -> read_int_1
-	read_int_1 -> [add:left, read_int_2]
+	read_int_1 -> [
+		add:left,
+		read_int_2,
+	]
 	read_int_2 -> add:right
 	add -> :res
 }

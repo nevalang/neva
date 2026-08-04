@@ -1,18 +1,20 @@
 import {
-	os
 	fmt
+	os
 	runtime
 	streams
 }
 
 def Main(start any) (stop any) {
-        args os.Args
-        from_list streams.FromList<string>
-        for_each streams.ForEach<string>{fmt.Println<string>}
-        wait streams.Wait
-        panic runtime.Panic
-        ---
-        :start -> args -> from_list -> for_each
-        for_each:res -> wait -> :stop
-        for_each:err -> panic
+	args os.Args
+	from_list streams.FromList<string>
+	for_each streams.ForEach<string>{
+		fmt.Println<string>
+	}
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> args -> from_list -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }

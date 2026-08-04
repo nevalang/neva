@@ -1,6 +1,6 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
@@ -10,20 +10,20 @@ def Main(start any) (stop any) {
 }
 
 type Day union {
-    Monday
-    Tuesday
-    Wednesday
-    Thursday
-    Friday
-    Saturday
-    Sunday
+	Monday
+	Tuesday
+	Wednesday
+	Thursday
+	Friday
+	Saturday
+	Sunday
 }
 
 def DayPrinter(day Day) (sig any) {
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :day -> println:data
-    println:res -> :sig
-    println:err -> panic
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:day -> println:data
+	println:res -> :sig
+	println:err -> panic
 }

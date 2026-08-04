@@ -1,38 +1,35 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 // Here we learn how to read struct field
 // by using builtin def with compiler directive.
 
 type User struct {
-    name string
-    pet Pet
+	name string
+	pet Pet
 }
 
 type Pet struct {
-    name string
+	name string
 }
 
-const user User = {
-    name: 'John',
-    pet: { name: 'Charley' }
-}
+const user User = { name: 'John', pet: { name: 'Charley' } }
 
 const path list<string> = ['pet', 'name']
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
-    panic runtime.Panic
+	println fmt.Println<any>
+	panic runtime.Panic
 
-    #bind(path)
-    field Field<any>
+	#bind(path)
+	field Field<any>
 
-    ---
+	---
 
-    :start -> $user -> field:data
-    field:res -> println:data
-    println:res -> :stop
-    println:err -> panic
+	:start -> $user -> field:data
+	field:res -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

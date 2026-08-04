@@ -1,7 +1,5 @@
 // Benchmarks builtin component `Get` error-path in one-shot mode.
-const value dict<string> = {
-	answer: '42'
-}
+const value dict<string> = { answer: '42' }
 
 def Main(start any) (stop any) {
 	dict_key Get<string>
@@ -9,7 +7,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		$value -> dict_key:dict,
-		'missing' -> dict_key:key
+		'missing' -> dict_key:key,
 	]
 	dict_key:res -> del
 	dict_key:err -> :stop

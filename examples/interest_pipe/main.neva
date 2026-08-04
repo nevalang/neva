@@ -35,7 +35,7 @@ def Main(start any) (stop any) {
 		6 -> rate_change:new_rate,
 		2 -> rate_change:now,
 		1200 -> balance_change:new_balance,
-		3 -> balance_change:now
+		3 -> balance_change:now,
 	]
 
 	initial_deposit:state -> interest_calc:state
@@ -45,23 +45,28 @@ def Main(start any) (stop any) {
 	interest_calc:interest -> p1
 	rate_change:interest -> p2
 	balance_change:interest -> p3
-	[p1:res, p2:res, p3:res] -> wait_group:sig
+	[
+		p1:res,
+		p2:res,
+		p3:res,
+	] -> wait_group:sig
 	wait_group -> :stop
-	[p1:err, p2:err, p3:err] -> panic
+	[
+		p1:err,
+		p2:err,
+		p3:err,
+	] -> panic
 }
 
 // InitialDeposit creates the initial account state and emits zero interest.
-def InitialDeposit(rate int, balance int, now int) (
-	state State,
-	interest int
-) {
+def InitialDeposit(rate int, balance int, now int) (state State, interest int) {
 	builder Struct<State>
 	---
 	:rate -> builder:rate
 	:balance -> builder:balance
 	:now -> [
 		builder:last_time,
-		0 -> :interest
+		0 -> :interest,
 	]
 	builder -> :state
 }
@@ -74,27 +79,30 @@ def InterestCalc(state State, now int) (state State, interest int) {
 	:state -> [
 		compute_interest:state,
 		.rate -> builder:rate,
-		.balance -> builder:balance
+		.balance -> builder:balance,
 	]
-	:now -> [compute_interest:now, builder:last_time]
+	:now -> [
+		compute_interest:now,
+		builder:last_time,
+	]
 	compute_interest -> :interest
 	builder -> :state
 }
 
 // RateChange recalculates interest and updates the account rate.
-def RateChange(state State, new_rate int, now int) (
-	state State,
-	interest int
-) {
+def RateChange(state State, new_rate int, now int) (state State, interest int) {
 	builder Struct<State>
 	calc ComputeInterest
 	---
 	:state -> [
 		calc:state,
-		.balance -> builder:balance
+		.balance -> builder:balance,
 	]
 	:new_rate -> builder:rate
-	:now -> [calc:now, builder:last_time]
+	:now -> [
+		calc:now,
+		builder:last_time,
+	]
 	calc -> :interest
 	builder -> :state
 }
@@ -102,17 +110,20 @@ def RateChange(state State, new_rate int, now int) (
 // BalanceChange recalculates interest and updates the account balance.
 def BalanceChange(state State, new_balance int, now int) (
 	state State,
-	interest int
+	interest int,
 ) {
 	builder Struct<State>
 	calc ComputeInterest
 	---
 	:state -> [
 		calc:state,
-		.rate -> builder:rate
+		.rate -> builder:rate,
 	]
 	:new_balance -> builder:balance
-	:now -> [calc:now, builder:last_time]
+	:now -> [
+		calc:now,
+		builder:last_time,
+	]
 	calc -> :interest
 	builder -> :state
 }
@@ -127,7 +138,7 @@ def ComputeInterest(state State, now int) (interest int) {
 	:state -> [
 		.rate -> mul_rate_balance:left,
 		.balance -> mul_rate_balance:right,
-		.last_time -> sub:right
+		.last_time -> sub:right,
 	]
 	:now -> sub:left
 	mul_rate_balance -> mul_total:left

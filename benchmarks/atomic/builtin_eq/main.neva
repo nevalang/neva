@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	eq Eq<int>
 	---
-	:start -> [2 -> eq:left, 2 -> eq:right]
+	:start -> [
+		2 -> eq:left,
+		2 -> eq:right,
+	]
 	eq -> :stop
 }

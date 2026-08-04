@@ -1,5 +1,7 @@
 def Main(start any) (stop any) {
-	second_flow Secondflow{fmt.Println<any>}
+	second_flow Secondflow{
+		fmt.Println<any>
+	}
 	---
 	:start -> :stop
 }

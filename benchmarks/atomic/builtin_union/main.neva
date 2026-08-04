@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		42 -> box:data,
-		MaybeInt::Some -> box:tag
+		MaybeInt::Some -> box:tag,
 	]
 	box -> :stop
 }

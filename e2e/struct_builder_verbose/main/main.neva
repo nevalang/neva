@@ -2,23 +2,23 @@
 // by creating custom component with compiler directives.
 
 type User struct {
-    age int
-    name string
+	age int
+	name string
 }
 
 #extern(struct_builder)
 def MyStructBuilder(age int, name string) (res User)
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
-    my_struct_builder MyStructBuilder
-    panic runtime.Panic
-    ---
-    :start -> [
-        'John' -> my_struct_builder:name,
-        32 -> my_struct_builder:age
-    ]
-    my_struct_builder:res -> println:data
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println<any>
+	my_struct_builder MyStructBuilder
+	panic runtime.Panic
+	---
+	:start -> [
+		'John' -> my_struct_builder:name,
+		32 -> my_struct_builder:age,
+	]
+	my_struct_builder:res -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

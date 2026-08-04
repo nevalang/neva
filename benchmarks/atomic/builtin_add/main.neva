@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	add Add
 	---
-	:start -> [1 -> add:left, 2 -> add:right]
+	:start -> [
+		1 -> add:left,
+		2 -> add:right,
+	]
 	add -> :stop
 }

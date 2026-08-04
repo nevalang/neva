@@ -1,34 +1,37 @@
 import {
-    fmt
-    strings
-    runtime
+	fmt
+	runtime
+	strings
 }
 
 def Main(start any) (stop any) {
-    app App
-    panic runtime.Panic
-    ---
-    :start -> app:start
-    app:err -> panic
-    app:stop -> :stop
+	app App
+	panic runtime.Panic
+	---
+	:start -> app:start
+	app:err -> panic
+	app:stop -> :stop
 }
 
 // We keep :err as any to forward the unmatched string to Panic.
 def App(start any) (stop any, err any) {
-    print fmt.Print<any>?
-    scanln fmt.Scanln?
-    switch Switch<string>
-    to_upper strings.ToUpper
-    to_lower strings.ToLower
-    add Add
-    println fmt.Println<any>?
-    ---
-    :start -> [
-        'Enter the name: ' -> print -> scanln -> switch:data,
-        'Alice' -> switch:case[0] -> [to_upper, to_lower]
-    ]
-    switch:else -> :err
-    to_upper -> add:left
-    to_lower -> add:right
-    add -> println -> :stop
+	print fmt.Print<any>?
+	scanln fmt.Scanln?
+	switch Switch<string>
+	to_upper strings.ToUpper
+	to_lower strings.ToLower
+	add Add
+	println fmt.Println<any>?
+	---
+	:start -> [
+		'Enter the name: ' -> print -> scanln -> switch:data,
+		'Alice' -> switch:case[0] -> [
+			to_upper,
+			to_lower,
+		],
+	]
+	switch:else -> :err
+	to_upper -> add:left
+	to_lower -> add:right
+	add -> println -> :stop
 }

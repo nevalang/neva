@@ -6,14 +6,17 @@ import {
 
 def Main(start any) (stop any) {
 	println fmt.Println<any>
-    submatch regexp.Submatch
-    panic runtime.Panic
-    ---
-    :start -> [
-        '-axxxbyc-' -> submatch:data,
-        'a(x*)b(y|z)c' -> submatch:regexp
-    ]
-    submatch:res -> println:data
-    println:res    -> :stop
-    [submatch:err, println:err] -> panic
+	submatch regexp.Submatch
+	panic runtime.Panic
+	---
+	:start -> [
+		'-axxxbyc-' -> submatch:data,
+		'a(x*)b(y|z)c' -> submatch:regexp,
+	]
+	submatch:res -> println:data
+	println:res -> :stop
+	[
+		submatch:err,
+		println:err,
+	] -> panic
 }

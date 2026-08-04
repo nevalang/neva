@@ -12,7 +12,10 @@ def Main(start any) (stop any) {
 	lock Lock<string>
 	panic runtime.Panic
 	---
-	:start -> [lock:sig, greeting:sig]
+	:start -> [
+		lock:sig,
+		greeting:sig,
+	]
 	greeting:res -> lock:data
 	lock:res -> println:data
 	println:res -> :stop

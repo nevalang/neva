@@ -1,8 +1,8 @@
 import {
 	fmt
-	time
-	sync
 	runtime
+	sync
+	time
 }
 
 def Main(start any) (stop any) {
@@ -23,9 +23,17 @@ def Main(start any) (stop any) {
 		4 -> w4,
 		5 -> w5,
 		'World' -> w6,
-		7 -> wait_group:count
+		7 -> wait_group:count,
 	]
-	[w1, w2, w3, w4, w5, w6, must_print] -> wait_group:sig
+	[
+		w1,
+		w2,
+		w3,
+		w4,
+		w5,
+		w6,
+		must_print,
+	] -> wait_group:sig
 	wait_group -> :stop
 }
 
@@ -36,7 +44,7 @@ def PrintAfter1Sec(data any) (res any) {
 	---
 	:data -> [
 		delay:data,
-		$time.second -> delay:dur
+		$time.second -> delay:dur,
 	]
 	delay -> println
 	println:res -> :res

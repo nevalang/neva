@@ -72,7 +72,7 @@ pub type Rec1Lvl1 struct {
             foo int
         }
         Rec1Lvl3_2 struct {
-            bar vec<int>
+            bar list<int>
         }
     }
 }

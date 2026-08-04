@@ -18,12 +18,12 @@ pub def New(data string) (res error)
 //
 // @outport res Sends the handler result when it succeeds.
 pub def Must<T, Y>(data T) (res Y) {
-    handler IMustHandler<T, Y>
-    panic runtime.Panic
-    ---
-    :data -> handler
-    handler:res -> :res
-    handler:err -> panic
+	handler IMustHandler<T, Y>
+	panic runtime.Panic
+	---
+	:data -> handler
+	handler:res -> :res
+	handler:err -> panic
 }
 
 // IMustHandler supplies a result or fatal error for Must.
@@ -42,18 +42,18 @@ pub interface IMustHandler<T, Y>(T) (res Y, err error)
 // @outport res Sends the handler result.
 // @outport err Never sends; it makes Lift compatible with error flows.
 pub def Lift<T, Y>(data T) (res Y, err error) {
-    handler ILiftHandler<T, Y>
-    del Del
-    new New
-    switch Switch<bool>
-    ---
-    :data -> [
-        handler -> :res,
-        false -> switch:data,
-        true -> switch:case[0]
-    ]
-    switch:case[0] -> '' -> new -> :err
-    switch:else -> del
+	handler ILiftHandler<T, Y>
+	del Del
+	new New
+	switch Switch<bool>
+	---
+	:data -> [
+		handler -> :res,
+		false -> switch:data,
+		true -> switch:case[0],
+	]
+	switch:case[0] -> '' -> new -> :err
+	switch:else -> del
 }
 
 // ILiftHandler supplies a result for Lift without an error path.

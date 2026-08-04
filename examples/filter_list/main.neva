@@ -1,28 +1,38 @@
 import {
-    fmt
-    runtime
-    streams
+	fmt
+	runtime
+	streams
 }
 
 const numbers list<int> = [2, 4, 6, 8, 10]
 
 def Main(start any) (stop any) {
-    from_list streams.FromList<int>
-    filter streams.Filter<int>{predicate IsEven}
-    for_each streams.ForEach<int>{fmt.Println<int>}
-    wait streams.Wait
-    panic runtime.Panic
-    ---
-    :start -> $numbers -> from_list -> filter -> for_each
-    for_each:res -> wait -> :stop
-    for_each:err -> panic
+	from_list streams.FromList<int>
+	filter streams.Filter<int>{
+		predicate IsEven
+	}
+	for_each streams.ForEach<int>{
+		fmt.Println<int>
+	}
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> $numbers -> from_list -> filter -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }
 
 def IsEven(data int) (res bool) {
-    mod Mod
-    eq Eq<int>
-    ---
-    :data -> [mod:left, 2 -> mod:right]
-    mod -> [eq:left, 0 -> eq:right]
-    eq -> :res
+	mod Mod
+	eq Eq<int>
+	---
+	:data -> [
+		mod:left,
+		2 -> mod:right,
+	]
+	mod -> [
+		eq:left,
+		0 -> eq:right,
+	]
+	eq -> :res
 }

@@ -28,17 +28,35 @@ characters. Otherwise write one item or field per line, with a trailing comma
 after the final item and the closing delimiter on its own line.
 
 Apply the same compact-or-vertical rule to comma-separated type parameters,
-type arguments, interface ports, fan-in, and fan-out. Every vertical sequence
-has a trailing comma after its final item. Union variants are structural
-declarations: write each on its own line without commas.
+type arguments, and interface ports. Every vertical sequence has a trailing
+comma after its final item. Union variants are structural declarations: write
+each on its own line without commas.
+
+Write a fan-in or fan-out with more than one branch vertically, even when it
+fits on one line. This intentionally differs from other comma-separated
+sequences: each graph branch is an independent connection, and vertical layout
+makes its endpoints and routing easier to inspect.
 
 For struct and union type declarations, keep an empty body compact. Write every
 non-empty body as a block: place the opening and closing braces on their own
 lines and indent every field or variant once.
 
+Write every non-empty component body as a block too. The parser accepts a
+single-line body for concise input, but the formatter expands it so nodes and
+connections remain readable.
+
+Write every non-empty dependency-injection block as a block too. It contains
+node definitions, so it follows the same layout as the node section of a
+component body.
+
 ### Imports
 
-Group imports by type: stdlib, third-party, local. An import without a module prefix is stdlib, an `@:` prefix is local, and every other explicit module prefix is third-party. Separate groups with newlines if any group has more than 2 imports. Sort alphabetically within groups.
+Write every non-empty import block vertically. The parser accepts a compact
+single-import block, but the formatter expands it to the canonical form.
+Group imports by type: stdlib, third-party, local. An import without a module
+prefix is stdlib, an `@:` prefix is local, and every other explicit module
+prefix is third-party. Separate groups with newlines if any group has more than
+2 imports. Sort alphabetically within groups.
 
 ## Naming Conventions
 

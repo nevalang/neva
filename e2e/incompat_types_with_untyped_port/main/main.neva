@@ -1,15 +1,15 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    print_any PrintAny
-    panic runtime.Panic
-    ---
-    :start -> 42 -> print_any
-    print_any:sig -> :stop
-    print_any:err -> panic
+	print_any PrintAny
+	panic runtime.Panic
+	---
+	:start -> 42 -> print_any
+	print_any:sig -> :stop
+	print_any:err -> panic
 }
 
 def PrintAny(data any) (sig any, err error) {

@@ -1,15 +1,15 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 const x float = 42
 
 def Main(start any) (stop any) {
-    println fmt.Println<float>
-    panic runtime.Panic
-    ---
-    :start -> $x -> println:data
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println<float>
+	panic runtime.Panic
+	---
+	:start -> $x -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

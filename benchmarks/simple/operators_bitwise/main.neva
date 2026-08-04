@@ -12,10 +12,25 @@ def Bitwise(start any) (res any) {
 	lsh BitLsh
 	rsh BitRsh
 	---
-	:start -> [42 -> and:left, 255 -> and:right]
-	and -> [or:left, 1 -> or:right]
-	or -> [xor:left, 1023 -> xor:right]
-	xor -> [lsh:left, 2 -> lsh:right]
-	lsh -> [rsh:left, 1 -> rsh:right]
+	:start -> [
+		42 -> and:left,
+		255 -> and:right,
+	]
+	and -> [
+		or:left,
+		1 -> or:right,
+	]
+	or -> [
+		xor:left,
+		1023 -> xor:right,
+	]
+	xor -> [
+		lsh:left,
+		2 -> lsh:right,
+	]
+	lsh -> [
+		rsh:left,
+		1 -> rsh:right,
+	]
 	rsh -> true -> :res
 }

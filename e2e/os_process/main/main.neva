@@ -21,7 +21,7 @@ def Main(start any) (stop any) {
 		getppid,
 		hostname,
 		executable,
-		temp_dir
+		temp_dir,
 	]
 	getwd:res -> printf:args[0]
 	getpid -> printf:args[1]
@@ -30,5 +30,10 @@ def Main(start any) (stop any) {
 	executable:res -> printf:args[4]
 	temp_dir -> printf:args[5]
 	printf:sig -> :stop
-	[getwd:err, hostname:err, executable:err, printf:err] -> panic
+	[
+		getwd:err,
+		hostname:err,
+		executable:err,
+		printf:err,
+	] -> panic
 }

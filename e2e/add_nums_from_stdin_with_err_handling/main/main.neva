@@ -15,7 +15,10 @@ def Main(start any) (stop any) {
 	---
 	:start -> scanner1:sig
 	scanner1:res -> parser1:data
-	parser1:res -> [add:left, scanner2:sig]
+	parser1:res -> [
+		add:left,
+		scanner2:sig,
+	]
 	scanner2:res -> parser2:data
 	parser2:res -> add:right
 	add:res -> println:data
@@ -25,6 +28,6 @@ def Main(start any) (stop any) {
 		parser2:err,
 		println:err,
 		scanner1:err,
-		scanner2:err
+		scanner2:err,
 	] -> panic
 }

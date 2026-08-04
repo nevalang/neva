@@ -14,7 +14,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		$left -> concat:left,
-		$right -> concat:right
+		$right -> concat:right,
 	]
 	concat -> println:data
 	println:res -> :stop

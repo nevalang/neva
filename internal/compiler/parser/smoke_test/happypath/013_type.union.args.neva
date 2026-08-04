@@ -1,102 +1,102 @@
 type bar union { I32 i32
-Vec vec<i32> }
+Vec list<i32> }
 
 pub type bar union { I32 i32
-Vec vec<i32> }
+Vec list<i32> }
 
 type bar union {
     I32 i32
-    Vec vec<i32>
+    Vec list<i32>
 }
 
 type bar union { I32 i32
-    Vec vec<i32>
+    Vec list<i32>
 }
 
 type bar union { I32 i32
-Vec vec<
+Vec list<
     i32
 > }
 
 type bar union { I32 i32
-Vec vec<union { I32 i32
+Vec list<union { I32 i32
 F32 f32 }> }
 
 type bar union { I32 i32
-Vec vec<
+Vec list<
     union { I32 i32
 F32 f32 }> }
 
 type bar union { I32 i32
-Vec vec<union { I32 i32
+Vec list<union { I32 i32
 F32 f32 }
 > }
 
 type bar union { I32 i32
-Vec vec<
+Vec list<
     union { I32 i32
 F32 f32 }
 > }
 
-type bar union { Vec vec<union { I32 i32
-Vec vec<i32> }> }
+type bar union { Vec list<union { I32 i32
+Vec list<i32> }> }
 
-type bar union { Vec vec<
+type bar union { Vec list<
     union { I32 i32
-Vec vec<i32> }> }
+Vec list<i32> }> }
     
-type bar union { Vec vec<union { I32 i32
-    Vec vec<i32> }> }
+type bar union { Vec list<union { I32 i32
+    Vec list<i32> }> }
     
-type bar union { Vec vec<
+type bar union { Vec list<
     union { I32 i32
-Vec vec<i32> }
+Vec list<i32> }
 > }
 
-type bar union { Vec vec<union { I32 i32
-Vec vec<i32> }>
+type bar union { Vec list<union { I32 i32
+Vec list<i32> }>
 Dict dict<i32, union { I32 i32
 F32 f32 }> }
 
-type bar union { Vec vec<
+type bar union { Vec list<
     union { I32 i32
-Vec vec<i32> }>
+Vec list<i32> }>
 Dict dict<i32, union { I32 i32
 F32 f32 }
 > }
 
-type bar union { Vec vec<
+type bar union { Vec list<
     union { I32 i32
-Vec vec<i32> }
+Vec list<i32> }
 >
 Dict dict<i32, union { I32 i32
 F32 f32 }> }
 
-type bar union { Vec vec<union { I32 i32
-Vec vec<i32> }>
+type bar union { Vec list<union { I32 i32
+Vec list<i32> }>
 Dict dict<
     i32, union { I32 i32
 F32 f32 }
 > }
 
-type bar union { Vec vec<union { I32 i32
-Vec vec<union { I32 i32
+type bar union { Vec list<union { I32 i32
+Vec list<union { I32 i32
 F32 f32 }> }>
 Dict dict<i32, union { I32 i32
-Vec vec<f32> }> }
+Vec list<f32> }> }
 
-type bar union { Vec vec<
+type bar union { Vec list<
     union { I32 i32
-Vec vec<union { I32 i32
+Vec list<union { I32 i32
 F32 f32 }> }>
 Dict dict<i32, union { I32 i32
-Vec vec<f32> }
+Vec list<f32> }
 > }
 
-pub type bar union { Vec vec<
+pub type bar union { Vec list<
     union { I32 i32
-    Vec vec<union { I32 i32
+    Vec list<union { I32 i32
 F32 f32 }> }
 >
 Dict dict<i32, union { I32 i32
-Vec vec<f32> }> }
+Vec list<f32> }> }

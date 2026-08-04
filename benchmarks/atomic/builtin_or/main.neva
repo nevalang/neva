@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	or Or
 	---
-	:start -> [true -> or:left, false -> or:right]
+	:start -> [
+		true -> or:left,
+		false -> or:right,
+	]
 	or -> :stop
 }

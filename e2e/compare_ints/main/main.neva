@@ -11,12 +11,12 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		50 -> gt:left,
-		10 -> gt:right
+		10 -> gt:right,
 	]
 	gt:res -> [
 		ternary:if,
 		'Actual is greater' -> ternary:then,
-		'Actual is lower' -> ternary:else
+		'Actual is lower' -> ternary:else,
 	]
 	ternary:res -> println:data
 	println:res -> :stop

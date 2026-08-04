@@ -11,7 +11,11 @@ def BoolLogical(start any) (res any) {
 	and And
 	or Or
 	---
-	:start -> [true -> not:data, true -> and:left, false -> or:right]
+	:start -> [
+		true -> not:data,
+		true -> and:left,
+		false -> or:right,
+	]
 	not -> and:right
 	and -> or:left
 	or -> true -> :res

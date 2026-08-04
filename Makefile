@@ -7,6 +7,18 @@ GOVULNCHECK_VERSION ?= v1.4.0
 install:
 	@go install ./cmd/neva
 
+# format tracked Neva source files, excluding intentionally non-canonical fixtures
+.PHONY: neva-fmt
+neva-fmt:
+	@git ls-files -z -- '*.neva' ':(exclude)pkg/formatter/testdata/**' ':(exclude)internal/compiler/parser/smoke_test/**' \
+		| xargs -0 go run ./cmd/neva fmt -w
+
+# check that tracked Neva source files have canonical formatting (CI-friendly)
+.PHONY: neva-fmt-check
+neva-fmt-check:
+	@git ls-files -z -- '*.neva' ':(exclude)pkg/formatter/testdata/**' ':(exclude)internal/compiler/parser/smoke_test/**' \
+		| xargs -0 go run ./cmd/neva fmt -check
+
 # generate go parser from antlr grammar
 .PHONY: antlr
 antlr:

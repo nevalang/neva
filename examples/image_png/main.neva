@@ -37,15 +37,30 @@ def Main(start any) (stop any) {
 	panic runtime.Panic
 	---
 	:start -> [
-		0 -> [newColor:r, newColor:g, newColor:b, newColor:a],
-		15 -> [newPixel:x, newPixel:y],
-		'minimal.png' -> writeAll:filename
+		0 -> [
+			newColor:r,
+			newColor:g,
+			newColor:b,
+			newColor:a,
+		],
+		15 -> [
+			newPixel:x,
+			newPixel:y,
+		],
+		'minimal.png' -> writeAll:filename,
 	]
 	newColor -> newPixel:c
 	newPixel -> just -> new
 	new:img -> encode:img
 	encode:res -> writeAll:data
-	[new:err, encode:err, writeAll:err] -> printErr
-	[writeAll:res, printErr:res] -> :stop
+	[
+		new:err,
+		encode:err,
+		writeAll:err,
+	] -> printErr
+	[
+		writeAll:res,
+		printErr:res,
+	] -> :stop
 	printErr:err -> panic
 }

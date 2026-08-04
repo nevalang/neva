@@ -1,22 +1,22 @@
 import {
-    fmt
-    lists
-    runtime
-    streams
+	fmt
+	lists
+	runtime
+	streams
 }
 
 def Main(start any) (stop any) {
-    from_array streams.FromArray<int>
-    from_stream lists.FromStream<int>
-    println fmt.Println<list<int>>
-    panic runtime.Panic
-    ---
-    :start -> [
-        1 -> from_array:port[0],
-        2 -> from_array:port[1],
-        3 -> from_array:port[2]
-    ]
-    from_array -> from_stream -> println:data
-    println:res -> :stop
-    println:err -> panic
+	from_array streams.FromArray<int>
+	from_stream lists.FromStream<int>
+	println fmt.Println<list<int>>
+	panic runtime.Panic
+	---
+	:start -> [
+		1 -> from_array:port[0],
+		2 -> from_array:port[1],
+		3 -> from_array:port[2],
+	]
+	from_array -> from_stream -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

@@ -1,6 +1,6 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
@@ -11,5 +11,8 @@ def Main(start any) (stop any) {
 	:start -> scanln
 	scanln:res -> println:data
 	println:res -> :stop
-	[println:err, scanln:err] -> panic
+	[
+		println:err,
+		scanln:err,
+	] -> panic
 }

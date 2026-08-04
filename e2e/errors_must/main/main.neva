@@ -1,31 +1,33 @@
 import {
-    bytes
-    io
-    fmt
-    errors
-    runtime
+	bytes
+	errors
+	fmt
+	io
+	runtime
 }
 
 // errors.Must wraps handler so it behaves like a node without error outport.
 def Main(start any) (stop any) {
-    println fmt.Println<any>
-    must errors.Must<any, any>{Handler}
-    panic runtime.Panic
-    ---
-    :start -> 'create_me.txt' -> must -> 'success!' -> println
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println<any>
+	must errors.Must<any, any>{
+		Handler
+	}
+	panic runtime.Panic
+	---
+	:start -> 'create_me.txt' -> must -> 'success!' -> println
+	println:res -> :stop
+	println:err -> panic
 }
 
 // Handler have error outport.
 def Handler(data string) (res any, err error) {
-    write_all io.WriteAll?
-    from_string bytes.FromString
-    ---
-    :data -> [
-        write_all:filename,
-        'Hello, io.WriteAll!' -> from_string
-    ]
-    from_string:res -> write_all:data
-    write_all:res -> :res
+	write_all io.WriteAll?
+	from_string bytes.FromString
+	---
+	:data -> [
+		write_all:filename,
+		'Hello, io.WriteAll!' -> from_string,
+	]
+	from_string:res -> write_all:data
+	write_all:res -> :res
 }
