@@ -28,6 +28,7 @@ func NewApp(
 		Usage: "Dataflow programming language with static types and implicit parallelism",
 		Commands: []*cli.Command{
 			newVersionCmd(),
+			newFmtCmd(),
 			newUpgradeCmd(),
 			newToolCmd(),
 			newNewCmd(),

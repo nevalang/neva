@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+
+	urfavecli "github.com/urfave/cli/v2"
 
 	"github.com/nevalang/neva/internal/builder"
 	"github.com/nevalang/neva/internal/cli"
@@ -35,9 +38,28 @@ func main() {
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {
-		if _, err := fmt.Fprintln(os.Stderr, err); err != nil {
-			panic(err)
-		}
-		os.Exit(1)
+		exitWithError(err)
 	}
+}
+
+func exitWithError(err error) {
+	printError(err)
+	os.Exit(exitCode(err))
+}
+
+func printError(err error) {
+	if err.Error() == "" {
+		return
+	}
+	if _, printErr := fmt.Fprintln(os.Stderr, err); printErr != nil {
+		panic(printErr)
+	}
+}
+
+func exitCode(err error) int {
+	var exitCoder urfavecli.ExitCoder
+	if errors.As(err, &exitCoder) {
+		return exitCoder.ExitCode()
+	}
+	return 1
 }
