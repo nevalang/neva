@@ -6,7 +6,6 @@ Use these documents to learn Neva and write Neva programs.
 - **[Tutorial](./tutorial.md)** - Best place to start.
 - **[Questions and Answers](./qna.md)** - Why the language works the way it does.
 - **[Style Guide](./style_guide.md)** - Best practices for Neva code.
-- **[Formatter](./formatter.md)** - Canonical source formatting with `neva fmt`.
 - **[Comparison](./comparison.md)** - How Neva compares to other languages.
 - **[History](./history.md)** - How the project started.
 - **[Terminology](./terminology.md)** - Shared language for dataflow concepts.

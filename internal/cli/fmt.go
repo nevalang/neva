@@ -19,27 +19,31 @@ import (
 
 const nevaSourceExtension = ".neva"
 
-type fmtMode uint8
+// fmtMode selects the formatter's output behavior.
+type fmtMode string
 
 const (
-	fmtPrint fmtMode = iota
-	fmtWrite
-	fmtDiff
-	fmtList
-	fmtCheck
+	fmtPrint fmtMode = ""
+	fmtWrite fmtMode = "write"
+	fmtDiff  fmtMode = "diff"
+	fmtList  fmtMode = "list"
+	fmtCheck fmtMode = "check"
 )
 
+// fmtOptions collects CLI flags that affect formatting output.
 type fmtOptions struct {
 	mode         fmtMode
 	reportErrors bool
 }
 
+// fmtResult contains the result of formatting one source file.
 type fmtResult struct {
 	err       error
 	original  []byte
 	formatted []byte
 }
 
+// newFmtCmd creates the first-party source formatting command.
 func newFmtCmd() *cli.Command {
 	return &cli.Command{
 		Name:      "fmt",
@@ -57,7 +61,7 @@ func newFmtCmd() *cli.Command {
 		Action: func(cliCtx *cli.Context) error {
 			options, err := parseFmtOptions(cliCtx)
 			if err != nil {
-				return cli.Exit(err.Error(), 2)
+				return exitWithCode(err, 2)
 			}
 
 			return runFmt(cliCtx.Args().Slice(), options, os.Stdin, os.Stdout)
@@ -65,16 +69,17 @@ func newFmtCmd() *cli.Command {
 	}
 }
 
+// parseFmtOptions validates formatter output flags.
 func parseFmtOptions(cliCtx *cli.Context) (fmtOptions, error) {
 	options := fmtOptions{reportErrors: cliCtx.Bool("e")}
 	modes := []struct {
-		set  bool
 		mode fmtMode
+		set  bool
 	}{
-		{cliCtx.Bool("w"), fmtWrite},
-		{cliCtx.Bool("d"), fmtDiff},
-		{cliCtx.Bool("l"), fmtList},
-		{cliCtx.Bool("check"), fmtCheck},
+		{fmtWrite, cliCtx.Bool("w")},
+		{fmtDiff, cliCtx.Bool("d")},
+		{fmtList, cliCtx.Bool("l")},
+		{fmtCheck, cliCtx.Bool("check")},
 	}
 
 	for _, candidate := range modes {
@@ -90,6 +95,7 @@ func parseFmtOptions(cliCtx *cli.Context) (fmtOptions, error) {
 	return options, nil
 }
 
+// runFmt formats standard input or the requested source paths.
 func runFmt(paths []string, options fmtOptions, input io.Reader, output io.Writer) error {
 	if len(paths) == 0 {
 		return formatStandardInput(options, input, output)
@@ -105,11 +111,12 @@ func runFmt(paths []string, options fmtOptions, input io.Reader, output io.Write
 		return err
 	}
 	if options.mode == fmtCheck && changed {
-		return cli.Exit("", 1)
+		return exitWithCode(nil, 1)
 	}
 	return nil
 }
 
+// formatStandardInput renders one complete source file from standard input.
 func formatStandardInput(options fmtOptions, input io.Reader, output io.Writer) error {
 	if options.mode != fmtPrint {
 		return errors.New("-w, -d, -l, and -check require at least one file or directory")
@@ -128,6 +135,7 @@ func formatStandardInput(options fmtOptions, input io.Reader, output io.Writer) 
 	return nil
 }
 
+// applyFmtResults emits or writes completed formatting results in input order.
 func applyFmtResults(paths []string, results []fmtResult, options fmtOptions, output io.Writer) (bool, error) {
 	changed := false
 	var reported []error
@@ -146,6 +154,7 @@ func applyFmtResults(paths []string, results []fmtResult, options fmtOptions, ou
 	return changed, errors.Join(reported...)
 }
 
+// applyFmtResult handles one completed result for the selected output mode.
 func applyFmtResult(path string, result *fmtResult, mode fmtMode, output io.Writer) (bool, error) {
 	if result.err != nil {
 		return false, result.err
@@ -157,6 +166,7 @@ func applyFmtResult(path string, result *fmtResult, mode fmtMode, output io.Writ
 	return changed, writeFmtResult(path, result, mode, output)
 }
 
+// collectFmtFiles expands file and directory arguments in deterministic order.
 func collectFmtFiles(paths []string) ([]string, error) {
 	files := make([]string, 0, len(paths))
 	for _, sourcePath := range paths {
@@ -179,6 +189,7 @@ func collectFmtFiles(paths []string) ([]string, error) {
 	return files, nil
 }
 
+// appendFmtFile validates and appends one explicit source file.
 func appendFmtFile(files *[]string, path string) error {
 	if filepath.Ext(path) != nevaSourceExtension {
 		return fmt.Errorf("%s is not a .neva file", path)
@@ -187,6 +198,8 @@ func appendFmtFile(files *[]string, path string) error {
 	return nil
 }
 
+// collectFmtDirectory appends source files below root while skipping generated
+// and dependency directories.
 func collectFmtDirectory(root string, files *[]string) error {
 	err := filepath.WalkDir(root, func(entryPath string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -209,6 +222,7 @@ func collectFmtDirectory(root string, files *[]string) error {
 	return nil
 }
 
+// skippedFmtDirectory reports whether a directory is outside formatter scope.
 func skippedFmtDirectory(name string) bool {
 	switch name {
 	case ".git", ".neva", "node_modules", "vendor":
@@ -218,6 +232,7 @@ func skippedFmtDirectory(name string) bool {
 	}
 }
 
+// formatFiles formats paths concurrently and retains their input order.
 func formatFiles(paths []string) []fmtResult {
 	results := make([]fmtResult, len(paths))
 	jobs := make(chan int)
@@ -240,6 +255,7 @@ func formatFiles(paths []string) []fmtResult {
 	return results
 }
 
+// formatFile reads and formats one source file without writing it.
 func formatFile(path string) fmtResult {
 	result := fmtResult{}
 	source, err := os.ReadFile(path)
@@ -257,6 +273,7 @@ func formatFile(path string) fmtResult {
 	return result
 }
 
+// writeFmtResult emits one changed result according to mode.
 func writeFmtResult(path string, result *fmtResult, mode fmtMode, output io.Writer) error {
 	switch mode {
 	case fmtPrint:
@@ -287,11 +304,12 @@ func writeFmtResult(path string, result *fmtResult, mode fmtMode, output io.Writ
 			return fmt.Errorf("write standard output: %w", err)
 		}
 	default:
-		return fmt.Errorf("unknown formatter mode %d", mode)
+		return fmt.Errorf("unknown formatter mode %q", mode)
 	}
 	return nil
 }
 
+// writeFormattedFile atomically replaces path while preserving permissions.
 func writeFormattedFile(path string, formatted []byte) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -317,6 +335,7 @@ func writeFormattedFile(path string, formatted []byte) error {
 	return nil
 }
 
+// closeAndRemoveTemporaryFile closes and removes a failed replacement file.
 func closeAndRemoveTemporaryFile(file *os.File, path string, cause error) error {
 	if err := file.Close(); err != nil {
 		cause = fmt.Errorf("%w; close temporary file %s: %w", cause, path, err)
@@ -324,6 +343,7 @@ func closeAndRemoveTemporaryFile(file *os.File, path string, cause error) error 
 	return removeTemporaryFile(path, cause)
 }
 
+// removeTemporaryFile removes a failed replacement file while preserving cause.
 func removeTemporaryFile(path string, cause error) error {
 	if err := os.Remove(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("%w; remove temporary file %s: %w", cause, path, err)

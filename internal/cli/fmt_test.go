@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"io"
 	"os"
 	"path/filepath"
@@ -68,9 +69,7 @@ func TestRunFmtModes(t *testing.T) {
 		var output bytes.Buffer
 		err := runFmt([]string{path}, fmtOptions{mode: fmtCheck}, nil, &output)
 		require.Error(t, err)
-		var exitCoder urfavecli.ExitCoder
-		require.True(t, errors.As(err, &exitCoder))
-		require.Equal(t, 1, exitCoder.ExitCode())
+		require.Equal(t, 1, ExitCode(err))
 		require.Equal(t, path+"\n", output.String())
 	})
 
@@ -150,15 +149,24 @@ func TestRunFmtRejectsOutputModesForStandardInput(t *testing.T) {
 	require.ErrorContains(t, err, "require at least one file or directory")
 }
 
-func TestFmtCommandRejectsConflictingOutputModes(t *testing.T) {
+func TestParseFmtOptionsRejectsConflictingOutputModes(t *testing.T) {
 	t.Parallel()
 
-	app := &urfavecli.App{Commands: []*urfavecli.Command{newFmtCmd()}}
-	err := app.Run([]string{"neva", "fmt", "-w", "-d", "main.neva"})
-	require.Error(t, err)
-	var exitCoder urfavecli.ExitCoder
-	require.True(t, errors.As(err, &exitCoder))
-	require.Equal(t, 2, exitCoder.ExitCode())
+	flags := flag.NewFlagSet("fmt", flag.ContinueOnError)
+	flags.Bool("w", true, "")
+	flags.Bool("d", true, "")
+	flags.Bool("l", false, "")
+	flags.Bool("check", false, "")
+	flags.Bool("e", false, "")
+	_, err := parseFmtOptions(urfavecli.NewContext(nil, flags, nil))
+	require.ErrorContains(t, err, "mutually exclusive")
+}
+
+func TestExitCode(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, 1, ExitCode(errors.New("ordinary error")))
+	require.Equal(t, 2, ExitCode(exitWithCode(errors.New("usage error"), 2)))
 }
 
 func writeFmtTestFile(t *testing.T, dir, name, contents string) string {
