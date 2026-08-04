@@ -44,14 +44,14 @@ def Main(start any) (stop any) {
 }
 ```
 
-This code imports fmt and runtime to use Println and Panic components, and defines Main with one input (start) and one output (stop). The two nodes are connected: when the program starts, 'hello world' is sent to println; if printing fails, errors go to panic; after printing, the program ends.
+This code imports fmt and runtime to use Println and Panic components, and defines Main with one input (start) and one output (stop). The two nodes are connected: when the program starts, 'Hello, World!' is sent to println; if printing fails, errors go to panic; after printing, the program ends.
 
 ## Key Features
 
 - **Flow-Based Runtime** - Everything runs in parallel by default
-- **Hybrid Programming** (WIP) - Program both in text and visual editor
+- **Hybrid Programming** (WIP) - Program in both text and a visual editor
 - **Powerful Compiler** - Strict static types and machine code compilation
-- **Go Interop** - call Go code from Neva and vice versa for gradual adoption and reuse of the ecosystem
+- **Go Interop** - Call Go code from Neva and vice versa for gradual adoption and reuse of the ecosystem
 - **Modern Language Design** - errors as values, pattern matching, null safety, etc.
 - And many more!
 
@@ -77,16 +77,16 @@ flowchart LR
 
 ## Why?
 
-1. Controlflow paradigm is is well established while dataflow is underrepresented.
-2. Existing visual tools lacks the expressiveness of traditional languages.
+1. The control flow paradigm is well established, while dataflow is underrepresented.
+2. Existing visual tools lack the expressiveness of traditional languages.
 3. Many languages treat concurrency as an advanced feature, not the default.
-4. Not many languages compiles to Go or interops with it, while it has state of the art runtime and standard library.
+4. Not many languages compile to Go or interop with it, while it has a state-of-the-art runtime and standard library.
 
 ## Contributing
 
-1. Join [discord server](https://discord.gg/dmXbC79UuH) or [telegram group](https://t.me/+H1kRClL8ppI1MWJi)
+1. Join the [Discord server](https://discord.gg/dmXbC79UuH) or [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
 2. Read the [user documentation](./docs/user/README.md), [developer documentation](./docs/developer/README.md), [AGENTS](./AGENTS.md) and [CoC](./CODE_OF_CONDUCT.md)
-3. Support project on [Open Collective](https://opencollective.com/nevalang) ❤️‍🔥
+3. Support the project on [Open Collective](https://opencollective.com/nevalang) ❤️‍🔥
 
 <p align="center">
   <img src="https://contrib.rocks/image?repo=nevalang/neva" />
