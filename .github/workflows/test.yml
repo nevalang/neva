@@ -5,6 +5,11 @@ on:
     branches:
       - main
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.codex/**'
+      - '.vscode/**'
+      - 'assets/**'
 
 jobs:
 
