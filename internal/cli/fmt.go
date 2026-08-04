@@ -106,7 +106,15 @@ func runFmt(paths []string, options fmtOptions, input io.Reader, output io.Write
 		return err
 	}
 
-	changed, err := applyFmtResults(files, formatFiles(files), options, output)
+	results := formatFiles(files)
+	if options.mode == fmtWrite {
+		if err := reportFmtErrors(results, options.reportErrors); err != nil {
+			return err
+		}
+		return writeFmtFiles(files, results, options.reportErrors)
+	}
+
+	changed, err := applyFmtResults(files, results, options, output)
 	if err != nil {
 		return err
 	}
@@ -114,6 +122,21 @@ func runFmt(paths []string, options fmtOptions, input io.Reader, output io.Write
 		return exitWithCode(nil, 1)
 	}
 	return nil
+}
+
+// reportFmtErrors returns source or write errors in input order.
+func reportFmtErrors(results []fmtResult, reportAll bool) error {
+	var reported []error
+	for index := range results {
+		if results[index].err == nil {
+			continue
+		}
+		if !reportAll {
+			return results[index].err
+		}
+		reported = append(reported, results[index].err)
+	}
+	return errors.Join(reported...)
 }
 
 // formatStandardInput renders one complete source file from standard input.
@@ -224,13 +247,35 @@ func collectFmtDirectory(root string, files *[]string) error {
 // formatFiles formats paths concurrently and retains their input order.
 func formatFiles(paths []string) []fmtResult {
 	results := make([]fmtResult, len(paths))
+	forEachFmtFile(paths, func(index int) {
+		results[index] = formatFile(paths[index])
+	})
+	return results
+}
+
+// writeFmtFiles atomically writes changed files concurrently after preflight.
+func writeFmtFiles(paths []string, results []fmtResult, reportAll bool) error {
+	forEachFmtFile(paths, func(index int) {
+		result := &results[index]
+		if bytes.Equal(result.original, result.formatted) {
+			return
+		}
+		result.err = writeFormattedFile(paths[index], result.formatted)
+	})
+	return reportFmtErrors(results, reportAll)
+}
+
+// forEachFmtFile runs process with a bounded worker pool. GOMAXPROCS(0) reads
+// the runtime's current CPU limit without changing it; bounding work prevents
+// file descriptors and memory use from growing with the number of source files.
+func forEachFmtFile(paths []string, process func(index int)) {
 	jobs := make(chan int)
 	workers := min(runtime.GOMAXPROCS(0), len(paths))
 	var group sync.WaitGroup
 	for range workers {
 		group.Go(func() {
 			for index := range jobs {
-				results[index] = formatFile(paths[index])
+				process(index)
 			}
 		})
 	}
@@ -239,7 +284,6 @@ func formatFiles(paths []string) []fmtResult {
 	}
 	close(jobs)
 	group.Wait()
-	return results
 }
 
 // formatFile reads and formats one source file without writing it.

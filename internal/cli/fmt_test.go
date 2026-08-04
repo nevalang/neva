@@ -142,6 +142,21 @@ func TestRunFmtRejectsInvalidInputsWithoutWriting(t *testing.T) {
 	require.ErrorContains(t, err, "is not a .neva file")
 }
 
+func TestRunFmtWritePreflightsAllFiles(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	valid := writeFmtTestFile(t, dir, "valid.neva", unformattedFmtSource)
+	invalid := writeFmtTestFile(t, dir, "invalid.neva", "def Invalid(\n")
+
+	err := runFmt([]string{valid, invalid}, fmtOptions{mode: fmtWrite}, nil, io.Discard)
+	require.Error(t, err)
+
+	contents, readErr := os.ReadFile(valid)
+	require.NoError(t, readErr)
+	require.Equal(t, unformattedFmtSource, string(contents))
+}
+
 func TestRunFmtRejectsOutputModesForStandardInput(t *testing.T) {
 	t.Parallel()
 
