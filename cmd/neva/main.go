@@ -35,9 +35,20 @@ func main() {
 
 	// run CLI app
 	if err := app.Run(os.Args); err != nil {
-		if _, err := fmt.Fprintln(os.Stderr, err); err != nil {
-			panic(err)
-		}
-		os.Exit(1)
+		exitWithError(err)
+	}
+}
+
+func exitWithError(err error) {
+	printError(err)
+	os.Exit(cli.ExitCode(err))
+}
+
+func printError(err error) {
+	if err.Error() == "" {
+		return
+	}
+	if _, printErr := fmt.Fprintln(os.Stderr, err); printErr != nil {
+		panic(printErr)
 	}
 }
