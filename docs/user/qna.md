@@ -344,3 +344,17 @@ public interface or needs a broader migration is a refactoring or language
 rule, not a lint diagnostic. In particular, existing named single-port
 interfaces are not silently rewritten; new interfaces should omit those names
 to preserve structural compatibility.
+
+## Which style-guide rules can the formatter enforce?
+
+The formatter owns local syntax and layout rules with one unambiguous output:
+indentation, whitespace, line breaks, trailing commas in vertical sequences,
+the block layout of non-empty struct and union declarations, and import order
+and grouping. It also chooses between compact and vertical layouts for
+comma-separated forms according to the 80-character rule, but only where the
+grammar provides a safe break.
+
+It deliberately leaves semantic style rules to `neva lint`. Those include
+names, documentation, component size, and whether a node or interface port
+name can be omitted. Deciding the last rule requires resolving the component's
+interface, so it cannot be a file-local formatting operation.
