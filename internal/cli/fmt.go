@@ -50,7 +50,7 @@ func newFmtCmd() *cli.Command {
 		Usage:     "Format Neva source files",
 		ArgsUsage: "[file or directory ...]",
 		Description: "With no paths, formats one source file from standard input. " +
-			"Directories are walked recursively; .git, .neva, node_modules, and vendor are skipped.",
+			"Directories are walked recursively; only .git is skipped.",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Name: "w", Usage: "write formatted source back to files"},
 			&cli.BoolFlag{Name: "d", Usage: "display a unified diff instead of formatted source"},
@@ -198,15 +198,14 @@ func appendFmtFile(files *[]string, path string) error {
 	return nil
 }
 
-// collectFmtDirectory appends source files below root while skipping generated
-// and dependency directories.
+// collectFmtDirectory appends source files below root while skipping Git metadata.
 func collectFmtDirectory(root string, files *[]string) error {
 	err := filepath.WalkDir(root, func(entryPath string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
 		if entry.IsDir() {
-			if entryPath != root && skippedFmtDirectory(entry.Name()) {
+			if entryPath != root && entry.Name() == ".git" {
 				return filepath.SkipDir
 			}
 			return nil
@@ -222,30 +221,18 @@ func collectFmtDirectory(root string, files *[]string) error {
 	return nil
 }
 
-// skippedFmtDirectory reports whether a directory is outside formatter scope.
-func skippedFmtDirectory(name string) bool {
-	switch name {
-	case ".git", ".neva", "node_modules", "vendor":
-		return true
-	default:
-		return false
-	}
-}
-
 // formatFiles formats paths concurrently and retains their input order.
 func formatFiles(paths []string) []fmtResult {
 	results := make([]fmtResult, len(paths))
 	jobs := make(chan int)
 	workers := min(runtime.GOMAXPROCS(0), len(paths))
 	var group sync.WaitGroup
-	group.Add(workers)
 	for range workers {
-		go func() {
-			defer group.Done()
+		group.Go(func() {
 			for index := range jobs {
 				results[index] = formatFile(paths[index])
 			}
-		}()
+		})
 	}
 	for index := range paths {
 		jobs <- index

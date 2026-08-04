@@ -7,7 +7,7 @@ Welcome to a tour of the Neva programming language. This tutorial will introduce
    - [Installation](#installation)
    - [Hello, World!](#hello-world)
    - [Compiling programs](#compiling-programs)
-   - [Formatting source](#formatting-source)
+   - [Command-line help](#command-line-help)
 2. [Core Concepts](#core-concepts)
    - [Components](#components)
    - [Messages and Basic Types](#messages-and-basic-types)
@@ -151,33 +151,11 @@ Once again you should see `Hello, World!`.
 
 > Execute `neva build --help` to learn more - how to compile to Go, WASM or how to do cross-compilation e.g. compile linux binaries in windows.
 
-### Formatting Source
+### Command-Line Help
 
-Run `neva fmt` before committing source. It applies Neva's one canonical style
-without project configuration, so editor formatting, local commands, and CI
-produce the same result.
-
-By default, the command reads one complete source file from standard input and
-writes the formatted source to standard output. That makes it suitable for an
-editor integration:
-
-```shell
-neva fmt < my_awesome_project/src/main.neva
-```
-
-To format files in place, pass `-w`. Directories are walked recursively:
-
-```shell
-neva fmt -w my_awesome_project/src
-```
-
-Use `-d` to inspect the patch without changing files, or `-check` in CI to
-list files that need formatting and fail the command when it finds any:
-
-```shell
-neva fmt -d my_awesome_project/src
-neva fmt -check my_awesome_project/src
-```
+Run `neva --help` to see the available commands, and append `--help` to a
+command to see its options. During development, `neva run` builds and runs a
+project; use `neva build` when you need a standalone executable.
 
 The formatter handles file-local syntax and layout only. It does not resolve
 modules, type-check, or change program meaning. Rules that need semantic

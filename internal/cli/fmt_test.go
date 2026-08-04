@@ -98,14 +98,14 @@ func TestRunFmtWalksDirectoriesDeterministically(t *testing.T) {
 	first := writeFmtTestFile(t, dir, "a.neva", unformattedFmtSource)
 	second := writeFmtTestFile(t, dir, "nested/b.neva", unformattedFmtSource)
 	writeFmtTestFile(t, dir, ".git/ignored.neva", unformattedFmtSource)
-	writeFmtTestFile(t, dir, ".neva/deps/ignored.neva", unformattedFmtSource)
-	writeFmtTestFile(t, dir, "node_modules/ignored.neva", unformattedFmtSource)
-	writeFmtTestFile(t, dir, "vendor/ignored.neva", unformattedFmtSource)
+	third := writeFmtTestFile(t, dir, ".neva/deps/c.neva", unformattedFmtSource)
+	fourth := writeFmtTestFile(t, dir, "node_modules/d.neva", unformattedFmtSource)
+	fifth := writeFmtTestFile(t, dir, "vendor/e.neva", unformattedFmtSource)
 
 	var output bytes.Buffer
 	err := runFmt([]string{dir}, fmtOptions{mode: fmtList}, nil, &output)
 	require.NoError(t, err)
-	require.Equal(t, first+"\n"+second+"\n", output.String())
+	require.Equal(t, third+"\n"+first+"\n"+second+"\n"+fourth+"\n"+fifth+"\n", output.String())
 }
 
 func TestRunFmtReportsAllRequestedErrors(t *testing.T) {
