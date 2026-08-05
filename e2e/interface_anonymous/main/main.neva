@@ -1,22 +1,24 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    secondflow Secondflow{fmt.Println<any>}
-    panic runtime.Panic
-    ---
-    :start -> secondflow:data
-    secondflow:res -> :stop
-    secondflow:err -> panic
+	secondflow Secondflow{
+		fmt.Println<any>
+	}
+	panic runtime.Panic
+	---
+	:start -> secondflow:data
+	secondflow:res -> :stop
+	secondflow:err -> panic
 }
 
-def Secondflow (data any) (res any, err error) {
-    printer IPrinter<any>?
-    ---
-    :data -> printer:data
-    printer:res -> :res
+def Secondflow(data any) (res any, err error) {
+	printer IPrinter<any>?
+	---
+	:data -> printer:data
+	printer:res -> :res
 }
 
 interface IPrinter<T>(data T) (res T, err error)

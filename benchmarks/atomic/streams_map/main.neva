@@ -12,7 +12,9 @@ const input list<int> = [1]
 
 def Main(start any) (stop any) {
 	to_stream streams.FromList<int>
-	map_passthrough streams.Map<int, int>{Identity}
+	map_passthrough streams.Map<int, int>{
+		Identity
+	}
 	to_list lists.FromStream<int>
 	---
 	:start -> $input -> to_stream -> map_passthrough -> to_list -> :stop

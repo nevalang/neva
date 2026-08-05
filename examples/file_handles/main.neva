@@ -1,7 +1,7 @@
 import {
 	bytes
-	io
 	fmt
+	io
 	runtime
 	strings
 }
@@ -23,7 +23,10 @@ def App(start any) (stop any, err error) {
 	:start -> write_example:start
 	write_example:stop -> read_example:start
 	read_example:res -> println:data
-	[println:res, read_example:closed] -> :stop
+	[
+		println:res,
+		read_example:closed,
+	] -> :stop
 }
 
 def WriteExample(start any) (stop any, err error) {
@@ -40,7 +43,11 @@ def WriteExample(start any) (stop any, err error) {
 	create:res -> write_all_file:file
 	write_all_file:res -> close:file
 	close:res -> :stop
-	[create:err, write_all_file:err, close:err] -> :err
+	[
+		create:err,
+		write_all_file:err,
+		close:err,
+	] -> :err
 }
 
 def ReadExample(start any) (res string, closed any, err error) {
@@ -55,5 +62,9 @@ def ReadExample(start any) (res string, closed any, err error) {
 	from_bytes:res -> :res
 	read_all_file:handle -> close:file
 	close:res -> :closed
-	[open:err, read_all_file:err, close:err] -> :err
+	[
+		open:err,
+		read_all_file:err,
+		close:err,
+	] -> :err
 }

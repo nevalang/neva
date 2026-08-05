@@ -12,8 +12,11 @@ def Main(start any) (stop any) {
 	:start -> [
 		42 -> inc,
 		42 -> dec,
-		2 -> wg:count
+		2 -> wg:count,
 	]
-	[inc, dec] -> true -> wg:sig
+	[
+		inc,
+		dec,
+	] -> true -> wg:sig
 	wg -> :stop
 }

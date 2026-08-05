@@ -3,8 +3,8 @@ import {
 }
 
 def Main(start any) (stop any) {
-    fmt.Println<any>
-    ---
-    :start -> :stop
+	fmt.Println<any>
+	---
+	:start -> :stop
 }
 

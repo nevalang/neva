@@ -6,5 +6,8 @@ def Main(start any) (stop any) {
 	fanOut FanOut<any>
 	---
 	:start -> fanOut
-	[fanOut[0], fanOut[2]] -> :stop
+	[
+		fanOut[0],
+		fanOut[2],
+	] -> :stop
 }

@@ -1,23 +1,23 @@
-pub type Rec struct { foo vec<int> }
+pub type Rec struct { foo list<int> }
 
 pub type Rec struct {
-    foo vec<int>
+    foo list<int>
 }
 
 pub type Rec struct {
-    foo vec<
+    foo list<
         int
     >
 }
 
 pub type Rec struct {
-    foo vec<int>
+    foo list<int>
     bar dict<string, int>
 }
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union { Monday
+    bar list<union { Monday
 Tuesday
 Wednesday
 Thursday
@@ -26,7 +26,7 @@ Friday }>
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union {
+    bar list<union {
         Monday
 Tuesday
 Wednesday
@@ -36,7 +36,7 @@ Friday }>
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union { Monday
+    bar list<union { Monday
 Tuesday
 Wednesday
 Thursday
@@ -46,7 +46,7 @@ Friday
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union {
+    bar list<union {
         Monday
 Tuesday
 Wednesday
@@ -57,7 +57,7 @@ Friday
 
 pub type Rec struct {
     foo dict<string, int>
-    bar vec<union {
+    bar list<union {
         Monday
         Tuesday
         Wednesday

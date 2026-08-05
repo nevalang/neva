@@ -3,8 +3,8 @@ import {
 }
 
 pub def Println(data any) (sig any, err error) {
-    println fmt.Println<any>?
-    ---
+	println fmt.Println<any>?
+	---
 	:data -> println:data
 	println:res -> :sig
 }

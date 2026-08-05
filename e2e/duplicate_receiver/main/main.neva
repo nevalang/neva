@@ -1,6 +1,6 @@
 import {
-	io
 	fmt
+	io
 	runtime
 }
 

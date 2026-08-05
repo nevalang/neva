@@ -12,11 +12,17 @@ def Main(start any) (stop any) {
 	lock Lock<int>
 	panic runtime.Panic
 	---
-	:start -> [lock:sig, 99 -> lock:data]
-	[lock:res, switch:else] -> print_next2_lines
+	:start -> [
+		lock:sig,
+		99 -> lock:data,
+	]
+	[
+		lock:res,
+		switch:else,
+	] -> print_next2_lines
 	print_next2_lines:n -> [
 		switch:data,
-		-1 -> switch:case[0]
+		-1 -> switch:case[0],
 	]
 	switch:case[0] -> :stop
 	print_next2_lines:err -> panic
@@ -32,7 +38,7 @@ def PrintNext2Lines(n int) (n int, err error) {
 	:n -> print_first_line:n
 	print_first_line:n -> dec:data
 	dec:res -> print_second_line:n
-	print_second_line:n -> :n 
+	print_second_line:n -> :n
 }
 
 // === First Line ===
@@ -52,13 +58,17 @@ def PrintFirstLine(n int) (n int, err error) {
 		lock:data,
 		switch:data,
 		0 -> switch:case[0] -> $firstLine3 -> p1:data,
-		1 -> switch:case[1] -> $firstLine2 -> p2:data
+		1 -> switch:case[1] -> $firstLine2 -> p2:data,
 	]
 	switch:else -> [
 		printf:args[0],
-		$firstLine1 -> printf:tpl
+		$firstLine1 -> printf:tpl,
 	]
-	[p1:res, p2:res, printf:sig] -> lock:sig
+	[
+		p1:res,
+		p2:res,
+		printf:sig,
+	] -> lock:sig
 	lock:res -> :n
 }
 
@@ -81,13 +91,18 @@ def PrintSecondLine(n int) (n int, err error) {
 		switch:data,
 		lock:data,
 		-1 -> switch:case[0] -> $secondLine4 -> p1:data,
-		0  -> switch:case[1] -> $secondLine3 -> p2:data,
-		1  -> switch:case[2] -> $secondLine2 -> p3:data
+		0 -> switch:case[1] -> $secondLine3 -> p2:data,
+		1 -> switch:case[2] -> $secondLine2 -> p3:data,
 	]
 	switch:else -> [
 		printf:args[0],
-		$secondLine1 -> printf:tpl
+		$secondLine1 -> printf:tpl,
 	]
-	[p1:res, p2:res, p3:res, printf:sig] -> lock:sig
+	[
+		p1:res,
+		p2:res,
+		p3:res,
+		printf:sig,
+	] -> lock:sig
 	lock:res -> :n
 }

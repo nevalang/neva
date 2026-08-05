@@ -1,24 +1,24 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
-    gt Gt
-    ternary Ternary<any>
-    panic runtime.Panic
-    ---
-    :start -> [
-        'Z' -> gt:left,
-        'A' -> gt:right
-    ]
-    gt:res -> [
-        ternary:if,
-        'Actual is greater' -> ternary:then,
-        'Actual is lower' -> ternary:else
-    ]
-    ternary -> println:data
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println<any>
+	gt Gt
+	ternary Ternary<any>
+	panic runtime.Panic
+	---
+	:start -> [
+		'Z' -> gt:left,
+		'A' -> gt:right,
+	]
+	gt:res -> [
+		ternary:if,
+		'Actual is greater' -> ternary:then,
+		'Actual is lower' -> ternary:else,
+	]
+	ternary -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

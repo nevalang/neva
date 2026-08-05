@@ -7,14 +7,16 @@ import {
 const lst list<bool> = [true, false]
 
 def Main(start any) (stop any) {
-    from_list streams.FromList<bool>
-    for_each streams.ForEach<bool>{PrintAsNum}
-    wait streams.Wait
-    panic runtime.Panic
-    ---
-    :start -> $lst -> from_list -> for_each
-    for_each:res -> wait -> :stop
-    for_each:err -> panic
+	from_list streams.FromList<bool>
+	for_each streams.ForEach<bool>{
+		PrintAsNum
+	}
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> $lst -> from_list -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }
 
 def PrintAsNum(data bool) (res any, err error) {
@@ -24,7 +26,7 @@ def PrintAsNum(data bool) (res any, err error) {
 	:data -> [
 		ternary:if,
 		1 -> ternary:then,
-		0 -> ternary:else
+		0 -> ternary:else,
 	]
 	ternary -> println
 	println:res -> :res

@@ -7,13 +7,13 @@ import {
 const recursive reflect.Type = [
 	reflect.TypeNode::Struct([
 		{ name: 'text', node: 1 },
-		{ name: 'child', node: 2 }
+		{ name: 'child', node: 2 },
 	]),
 	reflect.TypeNode::String,
 	reflect.TypeNode::Union([
 		{ tag: 'Some', data: maybe<int>::Some(0) },
-		{ tag: 'None', data: maybe<int>::None }
-	])
+		{ tag: 'None', data: maybe<int>::None },
+	]),
 ]
 
 def Main(start any) (stop any) {

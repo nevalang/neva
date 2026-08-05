@@ -1,11 +1,11 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 type NumsStruct struct {
-    l list<int>
-    d dict<int>
+	l list<int>
+	d dict<int>
 }
 
 const one int = 1
@@ -13,16 +13,13 @@ const two int = 2
 const three int = 3
 const numsList list<int> = [one, two, three]
 const numsMap dict<int> = { key: one }
-const numsStruct NumsStruct = {
-    l: numsList,
-    d: numsMap
-}
+const numsStruct NumsStruct = { l: numsList, d: numsMap }
 
 def Main(start any) (stop any) {
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :start -> $numsStruct -> println:data
-    println:res -> :stop
-    println:err -> panic
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> $numsStruct -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

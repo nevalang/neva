@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	and And
 	---
-	:start -> [true -> and:left, false -> and:right]
+	:start -> [
+		true -> and:left,
+		false -> and:right,
+	]
 	and -> :stop
 }

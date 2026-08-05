@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	div Div
 	---
-	:start -> [6 -> div:left, 2 -> div:right]
+	:start -> [
+		6 -> div:left,
+		2 -> div:right,
+	]
 	div -> :stop
 }

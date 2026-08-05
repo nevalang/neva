@@ -350,7 +350,8 @@ to preserve structural compatibility.
 The formatter owns local syntax and layout rules with one unambiguous output:
 indentation, whitespace, line breaks, trailing commas in vertical sequences,
 the block layout of non-empty struct and union declarations, and import order
-and grouping. It also chooses between compact and vertical layouts for
+and grouping, as well as the block layout of non-empty component and DI bodies.
+It also chooses between compact and vertical layouts for
 comma-separated forms according to the 80-character rule, but only where the
 grammar provides a safe break.
 
@@ -358,3 +359,12 @@ It deliberately leaves semantic style rules to `neva lint`. Those include
 names, documentation, component size, and whether a node or interface port
 name can be omitted. Deciding the last rule requires resolving the component's
 interface, so it cannot be a file-local formatting operation.
+
+## Why are multi-branch fan-in and fan-out always multiline?
+
+Most comma-separated forms use compact-or-vertical layout based on the
+80-character line limit. Fan-in and fan-out deliberately differ: each element
+is a separate graph branch, not merely an element of one value. Formatting two
+or more branches vertically keeps their endpoints and routing independently
+scannable. This is an intentional readability exception, not a general rule
+for lists, structs, ports, or type arguments.

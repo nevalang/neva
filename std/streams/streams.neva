@@ -83,7 +83,7 @@ pub def Wait(data stream<any>) (sig any) {
 	---
 	:data -> [
 		switch:data,
-		stream<any>::Close -> switch:case[0]
+		stream<any>::Close -> switch:case[0],
 	]
 	switch:case[0] -> :sig
 }
@@ -121,7 +121,9 @@ pub def ZipMany<T>([data] stream<T>) (res stream<list<T>>)
 //
 // @outport res Sends an Open/Data/Close stream of every product pair.
 #extern(stream_product)
-pub def Product<T, Y>(first stream<T>, second stream<Y>) (res stream<ProductResult<T, Y>>)
+pub def Product<T, Y>(first stream<T>, second stream<Y>) (
+	res stream<ProductResult<T, Y>>,
+)
 
 // ProductResult carries one pair emitted by Product.
 pub type ProductResult<T, Y> struct {

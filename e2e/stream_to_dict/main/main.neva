@@ -1,28 +1,22 @@
 import {
-    dicts
-    fmt
-    runtime
-    streams
+	dicts
+	fmt
+	runtime
+	streams
 }
 
 const entries list<DictEntry<string>> = [
-    {
-        key: 'dup',
-        value: 'one'
-    },
-    {
-        key: 'dup',
-        value: 'forty-two'
-    }
+	{ key: 'dup', value: 'one' },
+	{ key: 'dup', value: 'forty-two' },
 ]
 
 def Main(start any) (stop any) {
-    entries_to_stream streams.FromList<DictEntry<string>>
-    from_stream dicts.FromStream<string>
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :start -> $entries -> entries_to_stream -> from_stream -> println:data
-    println:err -> panic
-    println:res -> :stop
+	entries_to_stream streams.FromList<DictEntry<string>>
+	from_stream dicts.FromStream<string>
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> $entries -> entries_to_stream -> from_stream -> println:data
+	println:err -> panic
+	println:res -> :stop
 }

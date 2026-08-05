@@ -105,16 +105,16 @@ func TestParser_ParseFile_RejectsMultipleImportStatements(t *testing.T) {
 	require.Equal(t, "file must contain at most one import statement", err.Message)
 }
 
-func TestParser_ParseFile_RequiresMultilineImportBlock(t *testing.T) {
+func TestParser_ParseFile_AllowsCompactImportBlock(t *testing.T) {
 	tests := []struct {
 		name  string
 		text  string
 		valid bool
 	}{
 		{
-			name:  "single line is rejected",
+			name:  "single import is accepted",
 			text:  "import { fmt }",
-			valid: false,
+			valid: true,
 		},
 		{
 			name: "one import per line is accepted",
@@ -147,6 +147,16 @@ func TestParser_ParseFile_RejectsCommaSeparatedImports(t *testing.T) {
 
 	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
 		import { fmt, runtime }
+	`))
+
+	require.NotNil(t, err)
+}
+
+func TestParser_ParseFile_RejectsImportsWithoutNewlineSeparator(t *testing.T) {
+	p := New()
+
+	_, err := p.parseFile(location.ModRef, location.Package, location.Filename, []byte(`
+		import { first second third }
 	`))
 
 	require.NotNil(t, err)

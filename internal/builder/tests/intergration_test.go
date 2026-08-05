@@ -27,7 +27,7 @@ func TestBuilder_WDIsModRoot(t *testing.T) {
 	file, ok := pkg["main"]
 	require.True(t, ok)
 
-	expected := `def Main(start any) (stop any) { :start -> :stop }`
+	expected := "def Main(start any) (stop any) {\n\t:start -> :stop\n}\n"
 
 	require.Equal(t, expected, string(file))
 }
@@ -50,7 +50,7 @@ func TestBuilder_WDIsPkg(t *testing.T) {
 	file, ok := pkg["main"]
 	require.True(t, ok)
 
-	expected := `def Main(start any) (stop any) { :start -> :stop }`
+	expected := "def Main(start any) (stop any) {\n\t:start -> :stop\n}\n"
 
 	require.Equal(t, expected, string(file))
 }

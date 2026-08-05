@@ -1,6 +1,6 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
@@ -10,7 +10,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		false -> or:left,
-		false -> or:right
+		false -> or:right,
 	]
 	or -> println:data
 	println:res -> :stop

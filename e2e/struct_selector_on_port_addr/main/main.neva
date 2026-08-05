@@ -1,21 +1,27 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
 def Main(start any) (stop any) {
-    foo Foo
-    println fmt.Println<int>
-    panic runtime.Panic
-    ---
-    :start -> foo:sig
-    foo:res -> .a -> println:data
-    println:res -> :stop
-    println:err -> panic
+	foo Foo
+	println fmt.Println<int>
+	panic runtime.Panic
+	---
+	:start -> foo:sig
+	foo:res -> .a -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
 
-const s struct { a int } = { a: 42 }
+const s struct {
+	a int
+} = { a: 42 }
 
-def Foo(sig any) (res struct{a int}) {
-    :sig -> $s -> :res
+def Foo(sig any) (
+	res struct {
+		a int
+	},
+) {
+	:sig -> $s -> :res
 }

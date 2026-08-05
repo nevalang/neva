@@ -1,23 +1,23 @@
 import {
-    fmt
-    runtime
+	fmt
+	runtime
 }
 
-const d dict<string> = {
-    name: 'John',
-    age: '20'
-}
+const d dict<string> = { name: 'John', age: '20' }
 
 def Main(start any) (stop any) {
-    get Get<any>
-    println fmt.Println<any>
-    panic runtime.Panic
-    ---
-    :start -> [
-        'name' -> get:key,
-        $d -> get:dict
-    ]
-    [get:res, get:err] -> println:data
-    println:res -> :stop
-    println:err -> panic
+	get Get<any>
+	println fmt.Println<any>
+	panic runtime.Panic
+	---
+	:start -> [
+		'name' -> get:key,
+		$d -> get:dict,
+	]
+	[
+		get:res,
+		get:err,
+	] -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

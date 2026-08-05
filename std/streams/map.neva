@@ -29,9 +29,15 @@ pub def Map<T, Y>(data stream<T>) (res stream<Y>) {
 		event_switch:data,
 		stream<T>::Open -> event_switch:case[0] -> stream<Y>::Open -> output:data[0],
 		stream<T>::Data -> event_switch:case[1] -> handler,
-		stream<T>::Close -> event_switch:case[2] -> stream<Y>::Close -> output:data[2]
+		stream<T>::Close -> event_switch:case[2] -> stream<Y>::Close -> output:data[2],
 	]
-	handler -> [data_union:data, stream<Y>::Data -> data_union:tag]
+	handler -> [
+		data_union:data,
+		stream<Y>::Data -> data_union:tag,
+	]
 	data_union -> output:data[1]
-	output -> [turn:done, :res]
+	output -> [
+		turn:done,
+		:res,
+	]
 }

@@ -13,7 +13,11 @@ def CompareFamily(start any) (res any) {
 	and_a And
 	and_b And
 	---
-	:start -> [int_ok, float_ok, string_ok]
+	:start -> [
+		int_ok,
+		float_ok,
+		string_ok,
+	]
 	int_ok -> and_a:left
 	float_ok -> and_a:right
 	and_a -> and_b:left
@@ -46,7 +50,7 @@ def IntCompare(start any) (res bool) {
 		10 -> gt:right,
 		100001 -> lt:right,
 		1 -> ge:right,
-		100000 -> le:right
+		100000 -> le:right,
 	]
 	eq -> and_a:left
 	ne -> and_a:right
@@ -78,7 +82,7 @@ def FloatCompare(start any) (res bool) {
 		42.0 -> eq:right,
 		42.0 -> ne:right,
 		40.0 -> gt:right,
-		100.0 -> lt:right
+		100.0 -> lt:right,
 	]
 	eq -> and_a:left
 	ne -> and_a:right
@@ -106,7 +110,7 @@ def StringCompare(start any) (res bool) {
 		'alpha' -> eq:right,
 		'alpha' -> ne:right,
 		'a' -> gt:right,
-		'z' -> lt:right
+		'z' -> lt:right,
 	]
 	eq -> and_a:left
 	ne -> and_a:right

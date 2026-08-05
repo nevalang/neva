@@ -10,18 +10,24 @@ def Main(start any) (stop any) {
 	panic runtime.Panic
 	---
 	:start -> aux:sig
-	[aux:res, aux:err] -> println:data
+	[
+		aux:res,
+		aux:err,
+	] -> println:data
 	println:res -> :stop
 	println:err -> panic
 }
-	
+
 def Aux(sig any) (res int, err error) {
 	reader1 IntReader?
 	reader2 IntReader?
 	add Add
 	---
 	:sig -> reader1
-	reader1 -> [add:left, reader2]
+	reader1 -> [
+		add:left,
+		reader2,
+	]
 	reader2 -> add:right
 	add:res -> :res
 }

@@ -1,6 +1,6 @@
 import {
-	lists
 	fmt
+	lists
 	runtime
 }
 
@@ -13,9 +13,12 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		$lst -> at:data,
-		4 -> at:idx
+		4 -> at:idx,
 	]
-	[at:res, at:err] -> println:data
+	[
+		at:res,
+		at:err,
+	] -> println:data
 	println:res -> :stop
 	println:err -> panic
 }

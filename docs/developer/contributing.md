@@ -88,6 +88,14 @@ Here you'll find explanations for specific implementation choices.
 
 It's a perfect match. Go has builtin green threads, scheduler and garbage collector. Even more than that - it has goroutines and channels that are 1-1 mappings to FBP's ports and connections. Last but not least is that it's a pretty fast compiled language. Having Go as a compile target allows to reuse its state of the art standart library and increase performance for free by just updating the underlaying compiler.
 
+### Why does the parser accept a compact import block when the formatter expands it?
+
+The parser accepts reasonable layout variants; `neva fmt` selects the one
+canonical style. A compact `import { fmt }` is valid input, but formatting it
+produces a vertical import block. This is the same separation used for compact
+component and dependency-injection bodies: layout is a formatter concern, not
+a distinct language construct.
+
 ### Why Neva is not self hosted?
 
 - Runtime will never be written in Neva itself because of the overhead of dataflow runtime on to of Go's runtime. Neva programs should be as fast as possible.

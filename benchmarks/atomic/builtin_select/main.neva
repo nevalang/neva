@@ -4,7 +4,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		true -> select:if[0],
-		42 -> select:then[0]
+		42 -> select:then[0],
 	]
 	select -> :stop
 }

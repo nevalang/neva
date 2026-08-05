@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	gt Gt
 	---
-	:start -> [3 -> gt:left, 2 -> gt:right]
+	:start -> [
+		3 -> gt:left,
+		2 -> gt:right,
+	]
 	gt -> :stop
 }

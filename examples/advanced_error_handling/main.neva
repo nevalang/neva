@@ -11,7 +11,10 @@ def Main(start any) (stop any) {
 	panic runtime.Panic // terminates the program
 	---
 	:start -> app:sig
-	[app:err, println:err] -> panic // we only handle `:err` at this lvl
+	[
+		app:err,
+		println:err,
+	] -> panic // we only handle `:err` at this lvl
 	app:res -> println:data
 	println:res -> :stop
 }

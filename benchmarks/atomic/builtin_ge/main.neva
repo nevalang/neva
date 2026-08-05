@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	ge Ge
 	---
-	:start -> [3 -> ge:left, 3 -> ge:right]
+	:start -> [
+		3 -> ge:left,
+		3 -> ge:right,
+	]
 	ge -> :stop
 }

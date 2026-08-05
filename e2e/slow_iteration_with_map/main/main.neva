@@ -3,34 +3,36 @@
 // all elements of the array must be printed befofe program terminate
 
 import {
-    fmt
-    time
-    runtime
-    streams
-    lists
+	fmt
+	lists
+	runtime
+	streams
+	time
 }
 
 const lst list<int> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 def Main(start any) (stop any) {
-    from_list streams.FromList<int>
-    map streams.Map<int, int>{Slow}
-    from_stream lists.FromStream<int>
-    println fmt.Println<list<int>>
-    panic runtime.Panic
-    ---
-    :start -> $lst -> from_list -> map -> from_stream -> println:data
-    println:res -> :stop
-    println:err -> panic
+	from_list streams.FromList<int>
+	map streams.Map<int, int>{
+		Slow
+	}
+	from_stream lists.FromStream<int>
+	println fmt.Println<list<int>>
+	panic runtime.Panic
+	---
+	:start -> $lst -> from_list -> map -> from_stream -> println:data
+	println:res -> :stop
+	println:err -> panic
 }
 
 def Slow(data int) (res int) {
-    delay time.Delay<int>
-    dec Dec
-    ---
-    :data -> [
-        delay:data,
-        $time.second -> delay:dur
-    ]
-    delay -> dec -> :res
+	delay time.Delay<int>
+	dec Dec
+	---
+	:data -> [
+		delay:data,
+		$time.second -> delay:dur,
+	]
+	delay -> dec -> :res
 }

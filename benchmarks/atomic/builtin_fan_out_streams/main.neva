@@ -9,7 +9,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		fan_out,
-		2 -> wg:count
+		2 -> wg:count,
 	]
 	fan_out:data[0] -> true -> fan_in:data[0]
 	fan_out:data[1] -> true -> fan_in:data[1]

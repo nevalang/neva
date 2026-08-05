@@ -1,17 +1,17 @@
-type MyVec vec<int>
+type MyVec list<int>
 
-type MyVec vec<
+type MyVec list<
 int>
 
-type MyVec vec<
+type MyVec list<
 int
 >
 
-type MyVec vec<
+type MyVec list<
     int
 >
 
-type MyVec vec<int>
+type MyVec list<int>
 
 pub type MyVec2 Vec<int>
 
@@ -25,6 +25,6 @@ type MyMap1<T, Y> dict<T, Y>
 
 type MyMap2<T int, Y> dict<T, Y>
 
-type MyMap3<T int, Y vec<float>> dict<T, Y>
+type MyMap3<T int, Y list<float>> dict<T, Y>
 
-type MyMap3<T int, Y vec<float>> dict<T, vec<Y>>
+type MyMap3<T int, Y list<float>> dict<T, list<Y>>

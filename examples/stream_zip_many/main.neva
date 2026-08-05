@@ -1,7 +1,7 @@
 import {
-	streams
 	fmt
 	runtime
+	streams
 }
 
 const first list<int> = [1, 2, 3]
@@ -9,21 +9,23 @@ const second list<int> = [10, 20, 30]
 const third list<int> = [100, 200, 300]
 
 def Main(start any) (stop any) {
-        list_to_stream_first streams.FromList<int>
-        list_to_stream_second streams.FromList<int>
-        list_to_stream_third streams.FromList<int>
-        zip_many streams.ZipMany<int>
-        for_each streams.ForEach<list<int>>{fmt.Println<list<int>>}
-        wait streams.Wait
-        panic runtime.Panic
-        ---
-        :start -> [
-                $first -> list_to_stream_first -> zip_many:data[0],
-                $second -> list_to_stream_second -> zip_many:data[1],
-                $third -> list_to_stream_third -> zip_many:data[2]
-        ]
+	list_to_stream_first streams.FromList<int>
+	list_to_stream_second streams.FromList<int>
+	list_to_stream_third streams.FromList<int>
+	zip_many streams.ZipMany<int>
+	for_each streams.ForEach<list<int>>{
+		fmt.Println<list<int>>
+	}
+	wait streams.Wait
+	panic runtime.Panic
+	---
+	:start -> [
+		$first -> list_to_stream_first -> zip_many:data[0],
+		$second -> list_to_stream_second -> zip_many:data[1],
+		$third -> list_to_stream_third -> zip_many:data[2],
+	]
 
-        zip_many:res -> for_each
-        for_each:res -> wait -> :stop
-        for_each:err -> panic
+	zip_many:res -> for_each
+	for_each:res -> wait -> :stop
+	for_each:err -> panic
 }

@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	ne Ne<int>
 	---
-	:start -> [2 -> ne:left, 3 -> ne:right]
+	:start -> [
+		2 -> ne:left,
+		3 -> ne:right,
+	]
 	ne -> :stop
 }

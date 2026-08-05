@@ -14,5 +14,8 @@ def Main(start any) (stop any) {
 	:start -> 'http://www.example.com' -> get
 	get:res -> .body -> from_bytes -> println
 	println:res -> :stop
-	[get:err, println:err] -> panic
+	[
+		get:err,
+		println:err,
+	] -> panic
 }

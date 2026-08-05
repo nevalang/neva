@@ -9,7 +9,11 @@ def Main(start any) (stop any) {
 	scanln fmt.Scanln
 	del Del
 	---
-	:start -> [2 -> exit:code, scanln, 2 -> lock:data]
+	:start -> [
+		2 -> exit:code,
+		scanln,
+		2 -> lock:data,
+	]
 	scanln:res -> lock:sig
 	scanln:err -> del
 	lock -> :stop

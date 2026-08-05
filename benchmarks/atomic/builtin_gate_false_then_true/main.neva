@@ -6,7 +6,7 @@ def Main(start any) (stop any) {
 	:start -> [
 		42 -> gate:data,
 		false -> signals:data[0],
-		true -> signals:data[1]
+		true -> signals:data[1],
 	]
 	signals -> gate:if
 	gate -> :stop

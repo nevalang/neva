@@ -16,11 +16,15 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		'Hello, bytes!' -> from_string,
-		'bytes_roundtrip.txt' -> write_all:filename
+		'bytes_roundtrip.txt' -> write_all:filename,
 	]
 	from_string:res -> write_all:data
 	write_all:res -> 'bytes_roundtrip.txt' -> read_all:filename
 	read_all:res -> from_bytes -> println
 	println:res -> :stop
-	[write_all:err, read_all:err, println:err] -> panic
+	[
+		write_all:err,
+		read_all:err,
+		println:err,
+	] -> panic
 }

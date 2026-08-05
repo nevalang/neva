@@ -94,7 +94,8 @@ func renderTokens(tokens []antlr.Token, layout *layoutAnnotations) []byte {
 			layout.activateComposite(composite)
 		}
 		if sequence, ok := layout.sequences[index]; ok {
-			if !compositeExceedsLineWidth(line, sequence, layout, depth) {
+			if !layout.sequenceAlwaysVertical[sequence.start] &&
+				!compositeExceedsLineWidth(line, sequence, layout, depth) {
 				line = append(line, layout.compactTokens(sequence.start, sequence.stop)...)
 				index = sequence.stop
 				continue
@@ -252,10 +253,14 @@ func spaceBefore(current, previous indexedToken, layout *layoutAnnotations) (boo
 	}
 
 	switch current.text {
-	case ")", "]", ",", ".", "?", "::":
+	case ")", "]", ",", "::":
 		return false, true
-	case ":":
+	case ".", "?":
 		return previous.text == "->", true
+	case ":":
+		return previous.text == "->" || previous.text == "," || previous.text == "{", true
+	case "/":
+		return !layout.importPathSlashes[current.index], true
 	case "}":
 		return !layout.nodeDIArgBraces[current.index] && previous.text != "{", true
 	case "(":
@@ -288,6 +293,8 @@ func spaceAfter(previous indexedToken, layout *layoutAnnotations) bool {
 		return layout.structValueFieldColons[previous.index]
 	case ",", "=", "->":
 		return true
+	case "/":
+		return !layout.importPathSlashes[previous.index]
 	case "-":
 		return false
 	}
@@ -300,6 +307,7 @@ type layoutAnnotations struct {
 	generated.BasenevaListener
 	structValueFieldColons map[int]bool
 	nodeDIArgBraces        map[int]bool
+	importPathSlashes      map[int]bool
 	compositeOpens         map[int]bool
 	compositeCloses        map[int]bool
 	compositeCommas        map[int]bool
@@ -311,6 +319,7 @@ type layoutAnnotations struct {
 	sequenceCommas         map[int]bool
 	sequenceNewlines       map[int]bool
 	sequenceTrailing       map[int]bool
+	sequenceAlwaysVertical map[int]bool
 	sequences              map[int]compositeLayout
 	declarationOpens       map[int]bool
 	declarationCloses      map[int]bool
@@ -325,6 +334,7 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		tokens:                 tokens,
 		structValueFieldColons: make(map[int]bool),
 		nodeDIArgBraces:        make(map[int]bool),
+		importPathSlashes:      make(map[int]bool),
 		compositeOpens:         make(map[int]bool),
 		compositeCloses:        make(map[int]bool),
 		compositeCommas:        make(map[int]bool),
@@ -336,11 +346,21 @@ func newLayoutAnnotations(tokens []antlr.Token) *layoutAnnotations {
 		sequenceCommas:         make(map[int]bool),
 		sequenceNewlines:       make(map[int]bool),
 		sequenceTrailing:       make(map[int]bool),
+		sequenceAlwaysVertical: make(map[int]bool),
 		sequences:              make(map[int]compositeLayout),
 		declarationOpens:       make(map[int]bool),
 		declarationCloses:      make(map[int]bool),
 		declarationNewlines:    make(map[int]bool),
 		importBlocks:           make(map[int]importBlock),
+	}
+}
+
+// EnterImportPath marks package path separators, which have no surrounding spaces.
+func (l *layoutAnnotations) EnterImportPath(ctx *generated.ImportPathContext) {
+	for index := ctx.GetStart().GetTokenIndex(); index <= ctx.GetStop().GetTokenIndex(); index++ {
+		if l.tokens[index].GetText() == "/" {
+			l.importPathSlashes[index] = true
+		}
 	}
 }
 
@@ -380,11 +400,23 @@ func (l *layoutAnnotations) EnterUnionTypeExpr(ctx *generated.UnionTypeExprConte
 // EnterMultipleSenderSide marks grammar-approved line-break positions in fan-in.
 func (l *layoutAnnotations) EnterMultipleSenderSide(ctx *generated.MultipleSenderSideContext) {
 	l.markSequence(ctx, ctx, "[", "]")
+	l.markAlwaysVerticalSequence(ctx, "[")
 }
 
 // EnterMultipleReceiverSide marks grammar-approved line-break positions in fan-out.
 func (l *layoutAnnotations) EnterMultipleReceiverSide(ctx *generated.MultipleReceiverSideContext) {
 	l.markSequence(ctx, ctx, "[", "]")
+	l.markAlwaysVerticalSequence(ctx, "[")
+}
+
+// EnterCompBody renders every non-empty component body as a block.
+func (l *layoutAnnotations) EnterCompBody(ctx *generated.CompBodyContext) {
+	open := l.firstToken(ctx, "{")
+	closing := l.lastToken(ctx, "}")
+	if open < 0 || closing < 0 || l.hasOnlyNewlines(open+1, closing) {
+		return
+	}
+	l.markDeclarationBlock(ctx)
 }
 
 // EnterImportStmt records one import block for canonical ordering and grouping.
@@ -616,6 +648,15 @@ func (l *layoutAnnotations) markSequence(ctx, items antlr.ParserRuleContext, ope
 	l.sequences[sequence.start] = sequence
 }
 
+// markAlwaysVerticalSequence records a graph branch sequence that never uses compact layout.
+func (l *layoutAnnotations) markAlwaysVerticalSequence(ctx antlr.ParserRuleContext, open string) {
+	start := l.firstToken(ctx, open)
+	sequence, ok := l.sequences[start]
+	if ok && len(sequence.commas) > 0 {
+		l.sequenceAlwaysVertical[start] = true
+	}
+}
+
 // markDeclarationBlock records the braces that delimit a multi-item type declaration.
 func (l *layoutAnnotations) markDeclarationBlock(ctx antlr.ParserRuleContext) {
 	open := l.firstToken(ctx, "{")
@@ -694,10 +735,11 @@ func (l *layoutAnnotations) EnterStructValueField(ctx *generated.StructValueFiel
 	l.markFirst(ctx, ":", l.structValueFieldColons)
 }
 
-// EnterNodeDIArgs marks dependency-injection braces, which bind to their contents.
+// EnterNodeDIArgs renders every non-empty dependency-injection block vertically.
 func (l *layoutAnnotations) EnterNodeDIArgs(ctx *generated.NodeDIArgsContext) {
 	l.markFirst(ctx, "{", l.nodeDIArgBraces)
 	l.markLast(ctx, "}", l.nodeDIArgBraces)
+	l.markDeclarationBlock(ctx)
 }
 
 // markFirst records the first matching token inside one parser-rule context.

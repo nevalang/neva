@@ -1,19 +1,19 @@
 import {
-    fmt
-    lists
-    runtime
-    streams
+	fmt
+	lists
+	runtime
+	streams
 }
 
 const lst list<int> = [1, 2, 3]
 
 def Main(start any) (stop any) {
-    from_list streams.FromList<int>
-    from_stream lists.FromStream<int>
-    println fmt.Println<list<int>>
-    panic runtime.Panic
-    ---
-    :start -> $lst -> from_list -> from_stream -> println:data
-    println:res -> :stop
-    println:err -> panic
+	from_list streams.FromList<int>
+	from_stream lists.FromStream<int>
+	println fmt.Println<list<int>>
+	panic runtime.Panic
+	---
+	:start -> $lst -> from_list -> from_stream -> println:data
+	println:res -> :stop
+	println:err -> panic
 }

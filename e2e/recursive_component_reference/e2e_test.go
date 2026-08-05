@@ -12,6 +12,6 @@ func Test(t *testing.T) {
 	require.Contains(
 		t,
 		stderr,
-		"main/main.neva:9:4: Recursive reference to component \"Printer\" is not allowed. If you meant the builtin component, explicitly import the builtin package and use builtin.Printer.\n",
+		"main/main.neva:9:1: Recursive reference to component \"Printer\" is not allowed. If you meant the builtin component, explicitly import the builtin package and use builtin.Printer.\n",
 	)
 }

@@ -10,7 +10,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		1 -> add:left,
-		2 -> add:right
+		2 -> add:right,
 	]
 	add:res -> println:data
 	println:res -> :stop

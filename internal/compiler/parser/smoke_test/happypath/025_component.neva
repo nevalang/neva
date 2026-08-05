@@ -39,7 +39,7 @@ def Doer<T>(x int) (y T) {
     absNodeWithTypeArgs INode<
         int,
         dict<
-            string, vec<bool>
+            string, list<bool>
         >
     >
     ---
@@ -56,7 +56,7 @@ def Doer<T>(x int) (y T) {
 }
 
 def Doer<T>(x int) (y T) {
-    concreteNodeWithTypeArgs  Node<int, vec<string>>
+    concreteNodeWithTypeArgs  Node<int, list<string>>
     ---
 }
 
@@ -85,7 +85,7 @@ def Doer<T>(x int) (y T) {
         int,
         dict<
             string,
-            vec<bool>
+            list<bool>
         >
     > {
         foo Node2
@@ -100,7 +100,7 @@ def Doer<T>(x int) (y T) {
     absNodeWithTypeArgs INode<
         int,
         dict<
-            string, vec<bool>
+            string, list<bool>
         >
     >
 
@@ -110,7 +110,7 @@ def Doer<T>(x int) (y T) {
         int,
         dict<
             string,
-            vec<bool>
+            list<bool>
         >
     >{
         foo Node2

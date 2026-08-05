@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	le Le
 	---
-	:start -> [3 -> le:left, 3 -> le:right]
+	:start -> [
+		3 -> le:left,
+		3 -> le:right,
+	]
 	le -> :stop
 }

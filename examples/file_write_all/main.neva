@@ -13,10 +13,13 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		'file_writer_example.txt' -> write_all:filename,
-		'Hello, io.WriteAll!' -> from_string
+		'Hello, io.WriteAll!' -> from_string,
 	]
 	from_string:res -> write_all:data
 	write_all:err -> println
-	[write_all:res, println:res] -> :stop
+	[
+		write_all:res,
+		println:res,
+	] -> :stop
 	println:err -> panic
 }

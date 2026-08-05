@@ -4,7 +4,7 @@ def Main(start any) (stop any) {
 	---
 	:start -> [
 		42 -> gate:data,
-		true -> gate:if
+		true -> gate:if,
 	]
 	gate -> :stop
 }

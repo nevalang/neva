@@ -2,6 +2,9 @@
 def Main(start any) (stop any) {
 	mul Mul
 	---
-	:start -> [3 -> mul:left, 2 -> mul:right]
+	:start -> [
+		3 -> mul:left,
+		2 -> mul:right,
+	]
 	mul -> :stop
 }

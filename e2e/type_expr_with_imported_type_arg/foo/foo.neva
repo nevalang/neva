@@ -1,1 +1,3 @@
-pub type Foo struct { bar int }
+pub type Foo struct {
+	bar int
+}
