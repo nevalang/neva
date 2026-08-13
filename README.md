@@ -105,11 +105,11 @@ Your support by donating to our open collective or joining us will show interest
 ## ⭐️ Star History
 
 <p align="center">
-  <a href="https://star-history.com/#nevalang/neva&Timeline">
+  <a href="https://star-history.dera.page/#nevalang/neva&Timeline">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=nevalang/neva&type=Timeline&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=nevalang/neva&type=Timeline" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=nevalang/neva&type=Timeline" />
   </picture>
   </a>
 </p>
