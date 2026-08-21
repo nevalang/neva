@@ -1,7 +1,6 @@
 package typesystem
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/nevalang/neva/pkg/core"
@@ -30,8 +29,8 @@ func (t Trace) String() string {
 
 	var firstToLast strings.Builder
 	firstToLast.WriteString("[")
-	for i, l := range slices.Backward(lastToFirst) {
-		firstToLast.WriteString(l.String())
+	for i := range lastToFirst {
+		firstToLast.WriteString(lastToFirst[len(lastToFirst)-1-i].String())
 		if i > 0 {
 			firstToLast.WriteString(", ")
 		}

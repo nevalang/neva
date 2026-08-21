@@ -8,8 +8,7 @@ package analyzer
 import (
 	"fmt"
 
-	//nolint:exptostd // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
-	"golang.org/x/exp/maps"
+	"maps"
 
 	"github.com/nevalang/neva/internal/compiler"
 	ts "github.com/nevalang/neva/internal/compiler/typesystem"
