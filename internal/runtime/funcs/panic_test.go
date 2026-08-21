@@ -9,8 +9,8 @@ import (
 
 func TestFormatTraceHopFlow_NormalizesSendToReceive(t *testing.T) {
 	hop := runtime.TraceHop{
-		Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "http/in", Port: "req"}},
-		Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "parse/in", Port: "data"}},
+		Sender:   &runtime.PortSlotAddr{Path: "http/in", Port: "req"},
+		Receiver: &runtime.PortSlotAddr{Path: "parse/in", Port: "data"},
 	}
 
 	stats := collectTraceRenderStats(&traceTree{Hop: hop})
@@ -23,26 +23,26 @@ func TestFormatTraceHopFlow_NormalizesSendToReceive(t *testing.T) {
 func TestFormatTraceTree_FanInRendersAllParents(t *testing.T) {
 	tree := traceTree{
 		Hop: runtime.TraceHop{
-			Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/out", Port: "res"}},
-			Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "prog/out", Port: "stop"}},
+			Sender:   &runtime.PortSlotAddr{Path: "fanin/out", Port: "res"},
+			Receiver: &runtime.PortSlotAddr{Path: "prog/out", Port: "stop"},
 		},
 		Parents: []traceTree{
 			{
 				Hop: runtime.TraceHop{
-					Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "first/out", Port: "res"}},
-					Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/in", Port: "first"}},
+					Sender:   &runtime.PortSlotAddr{Path: "first/out", Port: "res"},
+					Receiver: &runtime.PortSlotAddr{Path: "fanin/in", Port: "first"},
 				},
 			},
 			{
 				Hop: runtime.TraceHop{
-					Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "second/out", Port: "res"}},
-					Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/in", Port: "second"}},
+					Sender:   &runtime.PortSlotAddr{Path: "second/out", Port: "res"},
+					Receiver: &runtime.PortSlotAddr{Path: "fanin/in", Port: "second"},
 				},
 			},
 			{
 				Hop: runtime.TraceHop{
-					Sender:   &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "third/out", Port: "res"}},
-					Receiver: &runtime.PortSlotAddr{PortAddr: runtime.PortAddr{Path: "fanin/in", Port: "third"}},
+					Sender:   &runtime.PortSlotAddr{Path: "third/out", Port: "res"},
+					Receiver: &runtime.PortSlotAddr{Path: "fanin/in", Port: "third"},
 				},
 			},
 		},

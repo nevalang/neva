@@ -131,10 +131,8 @@ func (s SingleInport) Receive(ctx context.Context) (OrderedMsg, bool) {
 	}
 
 	slotAddr := PortSlotAddr{
-		PortAddr: PortAddr{
-			Path: s.addr.Path,
-			Port: s.addr.Port,
-		},
+		Path: s.addr.Path,
+		Port: s.addr.Port,
 	}
 	s.tracer.recordReceived(slotAddr, ordered)
 	ordered = s.interceptor.Received(ctx, slotAddr, ordered)
@@ -187,10 +185,8 @@ func (a *ArrayInport) Receive(ctx context.Context, idx int) (OrderedMsg, bool) {
 	case v := <-a.chans[idx]: //nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 		index := Uint8Index(idx)
 		slotAddr := PortSlotAddr{
-			PortAddr: PortAddr{
-				Path: a.addr.Path,
-				Port: a.addr.Port,
-			},
+			Path:  a.addr.Path,
+			Port:  a.addr.Port,
 			Index: &index,
 		}
 		a.tracer.recordReceived(slotAddr, v)
@@ -220,10 +216,8 @@ func (a *ArrayInport) ReceiveAll(ctx context.Context, f func(idx int, ordered Or
 			case received := <-a.chans[idx]:
 				index := Uint8Index(idx)
 				slotAddr := PortSlotAddr{
-					PortAddr: PortAddr{
-						Path: a.addr.Path,
-						Port: a.addr.Port,
-					},
+					Path:  a.addr.Path,
+					Port:  a.addr.Port,
 					Index: &index,
 				}
 				a.tracer.recordReceived(slotAddr, received)
@@ -278,8 +272,8 @@ func (a ArrayInport) _select(ctx context.Context) ([]SelectedMsg, bool) {
 			case orderedMsg := <-ch:
 				index := Uint8Index(slotIdx)
 				slotAddr := PortSlotAddr{
-					PortAddr: PortAddr{Path: a.addr.Path, Port: a.addr.Port},
-					Index:    &index,
+					Path: a.addr.Path, Port: a.addr.Port,
+					Index: &index,
 				}
 				a.tracer.recordReceived(slotAddr, orderedMsg)
 				orderedMsg = a.interceptor.Received(ctx, slotAddr, orderedMsg)
@@ -386,10 +380,8 @@ func NewSingleOutport(
 func (s SingleOutport) Send(ctx context.Context, msg messages.Msg, causes ...OrderedMsg) bool {
 	ordered, causes := newOrderedMsg(msg, causes)
 	slotAddr := PortSlotAddr{
-		PortAddr: PortAddr{
-			Path: s.addr.Path,
-			Port: s.addr.Port,
-		},
+		Path: s.addr.Path,
+		Port: s.addr.Port,
 	}
 	select {
 	case <-ctx.Done():
@@ -425,10 +417,8 @@ func NewArrayOutport(tracer *Tracer, addr PortAddr, interceptor Interceptor, slo
 func (a *ArrayOutport) Send(ctx context.Context, idx uint8, msg messages.Msg, causes ...OrderedMsg) bool {
 	ordered, causes := newOrderedMsg(msg, causes)
 	slotAddr := PortSlotAddr{
-		PortAddr: PortAddr{
-			Path: a.addr.Path,
-			Port: a.addr.Port,
-		},
+		Path:  a.addr.Path,
+		Port:  a.addr.Port,
 		Index: &idx,
 	}
 	select {

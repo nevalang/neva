@@ -54,14 +54,12 @@ func analyzerBuildWithGenericNode(nodeTypeArgs src.TypeArgs) src.Build {
 									IsPublic: false,
 									Component: []src.Component{
 										{
-											Interface: src.Interface{
-												IO: src.IO{
-													In: map[string]src.Port{
-														"start": {TypeExpr: anyExpr},
-													},
-													Out: map[string]src.Port{
-														"stop": {TypeExpr: anyExpr},
-													},
+											IO: src.IO{
+												In: map[string]src.Port{
+													"start": {TypeExpr: anyExpr},
+												},
+												Out: map[string]src.Port{
+													"stop": {TypeExpr: anyExpr},
 												},
 											},
 											Nodes: map[string]src.Node{
@@ -101,22 +99,20 @@ func analyzerBuildWithGenericNode(nodeTypeArgs src.TypeArgs) src.Build {
 									Kind: src.ComponentEntity,
 									Component: []src.Component{
 										{
-											Interface: src.Interface{
-												TypeParams: src.TypeParams{
-													Params: []ts.Param{
-														{
-															Name:   "T",
-															Constr: anyExpr,
-														},
+											TypeParams: src.TypeParams{
+												Params: []ts.Param{
+													{
+														Name:   "T",
+														Constr: anyExpr,
 													},
 												},
-												IO: src.IO{
-													In: map[string]src.Port{
-														"in": {TypeExpr: genericExpr},
-													},
-													Out: map[string]src.Port{
-														"out": {TypeExpr: genericExpr},
-													},
+											},
+											IO: src.IO{
+												In: map[string]src.Port{
+													"in": {TypeExpr: genericExpr},
+												},
+												Out: map[string]src.Port{
+													"out": {TypeExpr: genericExpr},
 												},
 											},
 											Net: []src.Connection{

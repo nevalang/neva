@@ -23,23 +23,21 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {
-													TypeExpr: ts.Expr{
-														Inst: &ts.InstExpr{
-															Ref: core.EntityRef{Name: "string"},
-														},
+									IO: IO{
+										In: map[string]Port{
+											"input": {
+												TypeExpr: ts.Expr{
+													Inst: &ts.InstExpr{
+														Ref: core.EntityRef{Name: "string"},
 													},
 												},
 											},
-											Out: map[string]Port{
-												"output": {
-													TypeExpr: ts.Expr{
-														Inst: &ts.InstExpr{
-															Ref: core.EntityRef{Name: "string"},
-														},
+										},
+										Out: map[string]Port{
+											"output": {
+												TypeExpr: ts.Expr{
+													Inst: &ts.InstExpr{
+														Ref: core.EntityRef{Name: "string"},
 													},
 												},
 											},
@@ -63,14 +61,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -81,14 +77,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"data": {},
-											},
-											Out: map[string]Port{
-												"result": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"data": {},
+										},
+										Out: map[string]Port{
+											"result": {},
 										},
 									},
 								},
@@ -109,14 +103,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -127,14 +119,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -155,14 +145,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -173,26 +161,22 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -213,14 +197,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
@@ -253,14 +235,12 @@ func TestPackage_GetInteropableComponents(t *testing.T) {
 							Kind:     ComponentEntity,
 							Component: []Component{
 								{
-									Interface: Interface{
-										IO: IO{
-											In: map[string]Port{
-												"input": {},
-											},
-											Out: map[string]Port{
-												"output": {},
-											},
+									IO: IO{
+										In: map[string]Port{
+											"input": {},
+										},
+										Out: map[string]Port{
+											"output": {},
 										},
 									},
 								},
