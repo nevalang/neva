@@ -16,7 +16,7 @@ jobs:
   installer_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: test Unix installers
       run: bash scripts/install_test.sh
 
@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: setup go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version: '1.27.0'
     - name: test (unit and non-e2e integration)
@@ -38,9 +38,9 @@ jobs:
     needs: unit_tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: setup go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version: '1.27.0'
     - name: test (e2e and examples)
