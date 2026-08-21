@@ -120,15 +120,12 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
-	if err := r.checker.Check(
+	//nolint:wrapcheck // The checker error is the user-facing subtype diagnostic.
+	return r.checker.Check(
 		resolvedSub,
 		resolvedSup,
 		TerminatorParams{Scope: scope},
-	); err != nil {
-		return fmt.Errorf("check subtype: %w", err)
-	}
-
-	return nil
+	)
 }
 
 // CheckArgsCompatibility resolves args
@@ -161,7 +158,8 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			resolvedSup,
 			TerminatorParams{Scope: scope},
 		); err != nil {
-			return fmt.Errorf("check argument compatibility: %w", err)
+			//nolint:wrapcheck // The checker error is the user-facing subtype diagnostic.
+			return err
 		}
 	}
 
