@@ -31,7 +31,7 @@ func (t Trace) String() string {
 	firstToLast.WriteString("[")
 	for i := range lastToFirst {
 		firstToLast.WriteString(lastToFirst[len(lastToFirst)-1-i].String())
-		if i > 0 {
+		if i < len(lastToFirst)-1 {
 			firstToLast.WriteString(", ")
 		}
 	}
