@@ -20,6 +20,13 @@ optimized for visual programming workflows.
 This is not "visual-only" positioning. It is a unified language that supports
 both manual coding and visual graph workflows without semantic mismatch.
 
+Text and visual graphs are equal views of one program, and developers should
+be able to use both. People naturally understand computation as a process that
+transforms and routes data; a graph makes that shape much faster to inspect than
+an instruction stream. Visual-only tools lose the strengths of text for
+versioning, review, and generation, so Neva combines the two rather than
+treating visual programming as an auxiliary feature.
+
 ### 2) Concurrency-First By Design
 
 Neva is designed around explicit node/edge dataflow, where concurrent execution
@@ -52,6 +59,14 @@ people understand and validate programs also help coding agents: a small,
 opinionated core; explicit dataflow; strong static semantics; predictable
 compilation; and useful diagnostics. They provide a clear feedback loop:
 generate, compile, diagnose, and improve.
+
+Modern coding agents can produce hundreds or thousands of lines in minutes,
+shifting the bottleneck from writing code to reviewing it. An engineer still
+needs to reject incorrect output and maintain a mental model of the system; in
+Neva, they can inspect the generated program's dataflow as a graph before
+reading its details. Visual inspection complements compilation, tests, and code
+review, but makes structural mistakes and the overall shape of a program much
+faster to understand.
 
 AI-native direction must not degrade manual development quality. It also does
 not mean adding GenAI-specific language features to the core.
