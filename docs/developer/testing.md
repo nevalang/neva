@@ -19,6 +19,28 @@ change crosses compiler, runtime, or public standard-library boundaries.
 Generated tests should carry a short intent comment. Runtime benchmarks never
 substitute for unit tests.
 
+## Fuzzing
+
+Fuzz targets turn a parser or runtime boundary's safety invariant into a
+repeatable regression test. Their seed corpus runs with ordinary `go test` and
+therefore in unit CI; mutation-based fuzzing is a bounded local investigation,
+not a per-push CI job.
+
+Run the source-parser target with:
+
+```sh
+make fuzz-parser
+```
+
+It sends arbitrary Neva source through parsing and semantic tree construction.
+The invariant is that malformed input produces a diagnostic, never a panic.
+Override `FUZZ_TIME` when investigating a change, for example
+`make fuzz-parser FUZZ_TIME=5m`. When Go finds a failure it saves a minimized
+reproducer under the target package's `testdata/fuzz/`; commit that file with
+the fix so normal unit tests retain the regression case. The target uses one
+worker to avoid monopolizing a developer machine; use `go test` directly when
+an investigation needs more parallelism.
+
 ## E2E and Examples
 
 Each `e2e/` package is an independent Neva module. Run focused e2e packages
