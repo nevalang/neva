@@ -11,8 +11,10 @@
   performance questions.
 
 `make test-unit` and the unit CI job run non-e2e packages with Go's race
-detector. E2E and example tests remain ordinary `go test` runs because their
-Go harness launches a separately compiled Neva CLI.
+detector and a shuffled test order. `-count=1` prevents cached results; Go
+prints the shuffle seed so an order-dependent failure can be reproduced. E2E
+and example tests remain ordinary `go test` runs because their Go harness
+launches a separately compiled Neva CLI.
 
 Run the smallest meaningful scope while iterating, then widen validation when a
 change crosses compiler, runtime, or public standard-library boundaries.
