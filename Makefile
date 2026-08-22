@@ -1,7 +1,6 @@
 # === Development ===
 GOLANGCI_LINT_VERSION ?= latest
 GOVULNCHECK_VERSION ?= v1.4.0
-FUZZ_TIME ?= 30s
 
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
@@ -51,11 +50,6 @@ test-unit:
 	go list ./... \
 		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
 		| xargs -r go test -race -count=1 -v
-
-# Fuzz source parsing and semantic-tree construction. Override FUZZ_TIME as needed.
-.PHONY: fuzz-parser
-fuzz-parser:
-	go test ./internal/compiler/parser -run '^$$' -fuzz '^FuzzParserParseFiles$$' -fuzztime=$(FUZZ_TIME) -parallel=1
 
 .PHONY: vulncheck
 vulncheck:

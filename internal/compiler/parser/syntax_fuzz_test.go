@@ -6,9 +6,22 @@ import (
 	"github.com/nevalang/neva/pkg/core"
 )
 
-// FuzzParserParseFiles verifies that arbitrary source returns a diagnostic
-// instead of panicking while the parser builds the semantic tree.
+// FuzzParserParseFiles checks that arbitrary source either parses or returns a
+// diagnostic with its input location, never panicking during tree construction.
 func FuzzParserParseFiles(f *testing.F) {
+	const (
+		packageName = "fuzz"
+		fileName    = "main.neva"
+	)
+	modRef := core.ModuleRef{Path: "fuzz"}
+	wantLocation := core.Location{
+		ModRef:   modRef,
+		Package:  packageName,
+		Filename: fileName,
+	}
+
+	// These seeds run in ordinary go test. With -fuzz, Go mutates their []byte
+	// values and retains variants that cover new parser or listener paths.
 	for _, source := range [][]byte{
 		nil,
 		[]byte("def Main(start any) (stop any) {\n\t:start -> :stop\n}\n"),
@@ -20,11 +33,19 @@ func FuzzParserParseFiles(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, source []byte) {
 		if _, err := New().ParseFiles(
-			core.ModuleRef{},
-			"fuzz",
-			map[string][]byte{"main.neva": source},
-		); err != nil && err.Message == "" {
-			t.Fatal("ParseFiles returned an error without a diagnostic")
+			modRef,
+			packageName,
+			map[string][]byte{fileName: source},
+		); err != nil {
+			if err.Message == "" {
+				t.Fatal("ParseFiles returned an error without a message")
+			}
+			if err.Meta == nil {
+				t.Fatal("ParseFiles returned an error without metadata")
+			}
+			if err.Meta.Location != wantLocation {
+				t.Fatalf("error location = %#v, want %#v", err.Meta.Location, wantLocation)
+			}
 		}
 	})
 }
