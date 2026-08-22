@@ -49,7 +49,7 @@ lint:
 test-unit:
 	go list ./... \
 		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
-		| xargs -r go test -v
+		| xargs -r go test -race -count=1 -v
 
 .PHONY: vulncheck
 vulncheck:
