@@ -1,6 +1,7 @@
 # === Development ===
 GOLANGCI_LINT_VERSION ?= latest
 GOVULNCHECK_VERSION ?= v1.4.0
+PROFILE_DIR ?= /tmp/neva-runtime-profile
 
 # build neva cli for host OS and put to the PATH with `go install`
 .PHONY: install
@@ -50,6 +51,38 @@ test-unit:
 	go list ./... \
 		| grep -Ev '^github.com/nevalang/neva/(e2e|examples)(/|$$)' \
 		| xargs -r go test -race -count=1 -v
+
+# Profile a concurrent runtime workload. Override PROFILE_DIR to keep artifacts.
+.PHONY: profile-runtime profile-runtime-dir profile-runtime-cpu profile-runtime-memory profile-runtime-block profile-runtime-mutex profile-runtime-trace
+profile-runtime:
+	$(MAKE) profile-runtime-cpu
+	$(MAKE) profile-runtime-memory
+	$(MAKE) profile-runtime-block
+	$(MAKE) profile-runtime-mutex
+	$(MAKE) profile-runtime-trace
+
+profile-runtime-dir:
+	mkdir -p $(PROFILE_DIR)
+
+profile-runtime-cpu: profile-runtime-dir
+	go test -outputdir $(PROFILE_DIR) -o $(PROFILE_DIR)/funcs.test -run '^$$' -bench '^BenchmarkSelectHotpath$$' -benchmem -benchtime=3s \
+		-cpuprofile cpu.pprof ./internal/runtime/funcs
+
+profile-runtime-memory: profile-runtime-dir
+	go test -outputdir $(PROFILE_DIR) -o $(PROFILE_DIR)/funcs.test -run '^$$' -bench '^BenchmarkSelectHotpath$$' -benchmem -benchtime=3s \
+		-memprofile mem.pprof ./internal/runtime/funcs
+
+profile-runtime-block: profile-runtime-dir
+	go test -outputdir $(PROFILE_DIR) -o $(PROFILE_DIR)/funcs.test -run '^$$' -bench '^BenchmarkSelectHotpath$$' -benchmem -benchtime=3s \
+		-blockprofile block.pprof ./internal/runtime/funcs
+
+profile-runtime-mutex: profile-runtime-dir
+	go test -outputdir $(PROFILE_DIR) -o $(PROFILE_DIR)/funcs.test -run '^$$' -bench '^BenchmarkSelectHotpath$$' -benchmem -benchtime=3s \
+		-mutexprofile mutex.pprof ./internal/runtime/funcs
+
+profile-runtime-trace: profile-runtime-dir
+	go test -outputdir $(PROFILE_DIR) -o $(PROFILE_DIR)/funcs.test -run '^$$' -bench '^BenchmarkSelectHotpath$$' -benchmem -benchtime=3s \
+		-trace trace.out ./internal/runtime/funcs
 
 .PHONY: vulncheck
 vulncheck:

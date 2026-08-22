@@ -9,5 +9,7 @@ rules.
 - **[Runtime Functions](./runtime-functions.md)** - Native component contracts.
 - **[Compiler](./compiler.md)** - Compiler stages and implementation boundaries.
 - **[Testing](./testing.md)** - Unit, e2e, example, and benchmark coverage.
+- **[Go Runtime Profiling](./profiling.md)** - CPU, memory, blocking, mutex,
+  and execution-trace investigation workflow.
 - **[Generative AI Policy](./generative-ai-policy.md)** - Contribution
   responsibility for AI-assisted changes.
