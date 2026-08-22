@@ -10,6 +10,10 @@
 - `benchmarks/**` measure explicit language-level and composed runtime
   performance questions.
 
+`make test-unit` and the unit CI job run non-e2e packages with Go's race
+detector. E2E and example tests remain ordinary `go test` runs because their
+Go harness launches a separately compiled Neva CLI.
+
 Run the smallest meaningful scope while iterating, then widen validation when a
 change crosses compiler, runtime, or public standard-library boundaries.
 Generated tests should carry a short intent comment. Runtime benchmarks never
