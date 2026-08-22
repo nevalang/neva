@@ -29,9 +29,9 @@ func (t Trace) String() string {
 
 	var firstToLast strings.Builder
 	firstToLast.WriteString("[")
-	for i := len(lastToFirst) - 1; i >= 0; i-- {
-		firstToLast.WriteString(lastToFirst[i].String())
-		if i > 0 {
+	for i := range lastToFirst {
+		firstToLast.WriteString(lastToFirst[len(lastToFirst)-1-i].String())
+		if i < len(lastToFirst)-1 {
 			firstToLast.WriteString(", ")
 		}
 	}

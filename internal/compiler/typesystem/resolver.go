@@ -47,13 +47,16 @@ type (
 	}
 )
 
-// ResolveExpr resolves given expression using only global scope.
+// ResolveExpr resolves the given expression using only global scope.
+//
+//nolint:gocritic // Expr is a value object throughout the resolver API.
 func (r Resolver) ResolveExpr(expr Expr, scope Scope) (Expr, error) {
 	return r.resolveExpr(expr, scope, map[string]Def{}, nil)
 }
 
 // ResolveExprWithFrame works like ResolveExpr but allows to pass local scope.
 func (r Resolver) ResolveExprWithFrame(
+	//nolint:gocritic // Expr is a value object throughout the resolver API.
 	expr Expr,
 	frame map[string]Def,
 	scope Scope,
@@ -61,15 +64,15 @@ func (r Resolver) ResolveExprWithFrame(
 	return r.resolveExpr(expr, scope, frame, nil)
 }
 
-// ResolveExprWithFrame works like ResolveExprWithFrame but for list of expressions.
+// ResolveExprsWithFrame works like ResolveExprWithFrame but for a list of expressions.
 func (r Resolver) ResolveExprsWithFrame(
 	exprs []Expr,
 	frame map[string]Def,
 	scope Scope,
 ) ([]Expr, error) {
 	resolvedExprs := make([]Expr, 0, len(exprs))
-	for _, expr := range exprs {
-		resolvedExpr, err := r.resolveExpr(expr, scope, frame, nil)
+	for i := range exprs {
+		resolvedExpr, err := r.resolveExpr(exprs[i], scope, frame, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +92,8 @@ func (r Resolver) ResolveParams(
 ) {
 	result := make([]Param, 0, len(params))
 	frame := make(map[string]Def, len(params))
-	for _, param := range params {
+	for i := range params {
+		param := &params[i]
 		resolved, err := r.resolveExpr(param.Constr, scope, frame, nil)
 		if err != nil {
 			return nil, nil, fmt.Errorf("resolve expr: %w", err)
@@ -105,6 +109,8 @@ func (r Resolver) ResolveParams(
 
 // IsSubtypeOf resolves both `sub` and `sup` expressions
 // and returns error if `sub` is not subtype of `sup`.
+//
+//nolint:gocritic // Expr is a value object throughout the resolver API.
 func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	resolvedSub, err := r.resolveExpr(sub, scope, nil, nil)
 	if err != nil {
@@ -114,6 +120,7 @@ func (r Resolver) IsSubtypeOf(sub, sup Expr, scope Scope) error {
 	if err != nil {
 		return fmt.Errorf("resolve sup expr: %w", err)
 	}
+	//nolint:wrapcheck // The checker error is the user-facing subtype diagnostic.
 	return r.checker.Check(
 		resolvedSub,
 		resolvedSup,
@@ -151,6 +158,7 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 			resolvedSup,
 			TerminatorParams{Scope: scope},
 		); err != nil {
+			//nolint:wrapcheck // The checker error is the user-facing subtype diagnostic.
 			return err
 		}
 	}
@@ -166,6 +174,8 @@ func (r Resolver) CheckArgsCompatibility(args []Expr, params []Param, scope Scop
 // For non-native types process starts from the beginning with updated scope. New scope will contain values for params.
 // For lit exprs logic is the this:
 // for struct and union apply recursion for it's every field/element.
+//
+//nolint:gocritic // Expr is a value object throughout the resolver API.
 func (r Resolver) resolveExpr(
 	expr Expr, // expression to be resolved
 	scope Scope, // global scope
@@ -353,7 +363,9 @@ func (r Resolver) resolveInstBaseOrBody(
 	return r.resolveExpr(*def.BodyExpr, scopeWhereDefFound, newFrame, newTrace)
 }
 
+//nolint:ireturn // Scope is the resolver's intentionally abstract lookup context.
 func (Resolver) getDef(
+	//nolint:gocritic // EntityRef is a value object used as a scope lookup key.
 	ref core.EntityRef,
 	frame map[string]Def,
 	scope Scope,

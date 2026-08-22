@@ -1,23 +1,21 @@
 module github.com/nevalang/neva
 
-go 1.26
+go 1.27
 
-toolchain go1.26.5
+toolchain go1.27.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/antlr4-go/antlr/v4 v4.13.0
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/fsnotify/fsnotify v1.7.0
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/golang/mock v1.6.0
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tliron/commonlog v0.2.10
-	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
+	github.com/urfave/cli/v2 v2.27.1
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-require github.com/fsnotify/fsnotify v1.7.0
-
-require github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -35,25 +33,25 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/tliron/kutil v0.3.13 // indirect
-	github.com/urfave/cli/v2 v2.27.1
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/term v0.44.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

@@ -30,8 +30,7 @@ func exitWithCode(cause error, code int) error {
 // ExitCode returns the process status associated with err, or one for an
 // ordinary command error.
 func ExitCode(err error) int {
-	var commandExit *exitError
-	if errors.As(err, &commandExit) {
+	if commandExit, ok := errors.AsType[*exitError](err); ok {
 		return commandExit.code
 	}
 	return 1

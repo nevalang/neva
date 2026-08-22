@@ -20,7 +20,8 @@ func (def Def) String() string {
 	var params strings.Builder
 
 	params.WriteString("<")
-	for i, param := range def.Params {
+	for i := range def.Params {
+		param := &def.Params[i]
 		params.WriteString(param.Name)
 		params.WriteString(" " + param.Constr.String())
 		if i < len(def.Params)-1 {
@@ -37,7 +38,9 @@ type Param struct {
 	Constr Expr   `json:"constr"`         // Expression that must be resolved supertype of corresponding argument
 }
 
-// Instantiation or literal. Lit or Inst must be not nil, but not both
+// Expr is an instantiation or literal. Lit or Inst must be non-nil, but not both.
+//
+//nolint:recvcheck // String uses a value receiver while private helpers avoid copying Expr.
 type Expr struct {
 	Lit  *LitExpr  `json:"lit,omitempty"`
 	Inst *InstExpr `json:"inst,omitempty"`
@@ -131,7 +134,8 @@ func (expr *Expr) stringInst() string {
 
 	str.WriteString(expr.Inst.Ref.String())
 	str.WriteString("<")
-	for i, arg := range expr.Inst.Args {
+	for i := range expr.Inst.Args {
+		arg := &expr.Inst.Args[i]
 		if i > 0 {
 			str.WriteString(", ")
 		}
@@ -162,13 +166,13 @@ func sortedKeysFromStruct(structFields map[string]Expr) []string {
 	return fields
 }
 
-// Instantiation expression
+// InstExpr is an instantiation expression.
 type InstExpr struct {
 	Args []Expr         `json:"args,omitempty"`
 	Ref  core.EntityRef `json:"ref"`
 }
 
-// Literal expression. Only one field must be initialized
+// LitExpr is a literal expression. Only one field must be initialized.
 type LitExpr struct {
 	Struct map[string]Expr  `json:"struct,omitempty"`
 	Union  map[string]*Expr `json:"union,omitempty"` // tag -> constraint
@@ -180,7 +184,7 @@ func (lit *LitExpr) Empty() bool {
 			lit.Union == nil
 }
 
-// Always call Validate before
+// Type returns the literal type. Always call Validate before it.
 func (lit *LitExpr) Type() LiteralType {
 	switch {
 	case lit == nil:

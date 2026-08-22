@@ -16,18 +16,18 @@ jobs:
   installer_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: test Unix installers
       run: bash scripts/install_test.sh
 
   unit_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: setup go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.26.5'
+        go-version: '1.27.0'
     - name: test (unit and non-e2e integration)
       run: |
         go list ./... \
@@ -38,11 +38,11 @@ jobs:
     needs: unit_tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: setup go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.26.5'
+        go-version: '1.27.0'
     - name: test (e2e and examples)
       # Run with default Go package parallelism; isolation hardening is tracked in #1064.
       run: go test -v ./e2e/... ./examples/...

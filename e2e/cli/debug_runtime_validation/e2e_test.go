@@ -39,6 +39,11 @@ func TestDebugRuntimeValidation(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(debugBytes), "func DebugValidation")
 
+	// Keep the generated module on the same Go language version as the repository.
+	generatedMod, err := os.ReadFile(filepath.Join("gen", "go.mod"))
+	require.NoError(t, err)
+	require.Contains(t, string(generatedMod), "\ngo 1.27")
+
 	// Build the generated Go module to ensure the code compiles.
 	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	buildCmd := exec.Command("go", "build", "-o", "app", ".")

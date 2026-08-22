@@ -34,8 +34,10 @@ type TerminatorParams struct {
 // Check checks whether subtype is a subtype of supertype. Both subtype and supertype must be resolved.
 // It also takes traces for those expressions and scope to handle recursive types.
 func (s SubtypeChecker) Check(
+	//nolint:gocritic // Expr and TerminatorParams are value objects in the checker API.
 	expr,
 	constr Expr,
+	//nolint:gocritic // Expr and TerminatorParams are value objects in the checker API.
 	params TerminatorParams,
 ) error {
 	if params.Scope.IsTopType(constr) {
@@ -206,6 +208,7 @@ func (s SubtypeChecker) checkStructFields(expr, constr *Expr, params *Terminator
 	return nil
 }
 
+//nolint:gocritic // TerminatorParams and EntityRef are value objects in the checker API.
 func (SubtypeChecker) getNewTerminatorParams(
 	old TerminatorParams,
 	subRef, supRef core.EntityRef,
