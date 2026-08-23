@@ -63,6 +63,14 @@ func (b Builder) Build(
 	// inject stdlib module to build
 	mods[stdModRef] = stdMod
 
+	release, err := acquireLockFile()
+	if err != nil {
+		return compiler.RawBuild{}, "", &compiler.Error{
+			Message: "failed to acquire lock file: " + err.Error(),
+		}
+	}
+	defer release()
+
 	//nolint:varnamelen // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
 	q := newQueue(entryMod.Manifest.Deps)
 
@@ -73,17 +81,7 @@ func (b Builder) Build(
 			continue
 		}
 
-		// Third-party downloads mutate the shared dependency cache. Standard
-		// library-only builds are read-only and must not serialize behind them.
-		release, err := acquireLockFile()
-		if err != nil {
-			return compiler.RawBuild{}, "", &compiler.Error{
-				Message: "failed to acquire lock file: " + err.Error(),
-			}
-		}
-
 		depWD, _, err := b.downloadDep(depModRef)
-		release()
 		if err != nil {
 			return compiler.RawBuild{}, "", &compiler.Error{
 				Message: "download dep: " + err.Error(),
@@ -137,6 +135,12 @@ func New(parser ManifestParser) (Builder, error) {
 	if err != nil {
 		return Builder{}, err
 	}
+
+	release, err := acquireLockFile()
+	if err != nil {
+		return Builder{}, fmt.Errorf("acquire lock file for stdlib setup: %w", err)
+	}
+	defer release()
 
 	// Use EnsureStdlib to handle stdlib extraction with checksum validation
 	stdlibPath, err := ensureStdlib()

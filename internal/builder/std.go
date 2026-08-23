@@ -41,22 +41,6 @@ func ensureStdlib() (string, error) {
 		return path, nil
 	}
 
-	// Updating the shared stdlib is the only mutating path. Recheck after
-	// acquiring the lock because another process may have completed the update.
-	release, err := acquireLockFile()
-	if err != nil {
-		return "", fmt.Errorf("acquire lock file for stdlib setup: %w", err)
-	}
-	defer release()
-
-	existingChecksum, err = readChecksum(path)
-	if err != nil {
-		return "", fmt.Errorf("read existing checksum after locking: %w", err)
-	}
-	if existingChecksum != "" && existingChecksum == embeddedChecksum {
-		return path, nil
-	}
-
 	// If we get here, we need to update the stdlib
 	// Remove the existing directory if it exists
 	if err := os.RemoveAll(path); err != nil {
