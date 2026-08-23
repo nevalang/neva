@@ -1,0 +1,31 @@
+name: fuzz
+
+on:
+  schedule:
+    # Weekly, every Monday at 03:17 UTC.
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser:
+    name: parser-fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.0'
+          cache: false
+      - name: fuzz parser
+        run: go test ./internal/compiler/parser -run '^$' -fuzz '^FuzzParserParseFiles$' -fuzztime=5m -parallel=1
+      - name: upload failing corpus
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-fuzz-failure
+          path: internal/compiler/parser/testdata/fuzz/
+          if-no-files-found: ignore

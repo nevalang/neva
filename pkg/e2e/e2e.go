@@ -76,16 +76,17 @@ func Run(t *testing.T, args []string, opts ...Option) (stdout, stderr string) {
 		opt(cfg)
 	}
 
-	// Respect explicit per-test override; otherwise derive a safe default.
-	runTimeout := resolveRunTimeout(t, cfg.timeout)
-	ctx, cancel := context.WithTimeout(context.Background(), runTimeout)
-	defer cancel()
-
 	repoRoot := FindRepoRoot(t)
 	mainPath := filepath.Join(repoRoot, "cmd", "neva", "main.go")
 
 	// Build the CLI binary from repo root; run it from wd.
 	binPath := buildNevaBinary(t, repoRoot, mainPath)
+
+	// The execution timeout applies to the compiled Neva program. Building the
+	// shared CLI is test setup and can legitimately be slow on a cold CI cache.
+	runTimeout := resolveRunTimeout(t, cfg.timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), runTimeout)
+	defer cancel()
 
 	cmdArgs := append([]string{binPath}, args...)
 	// #nosec G204 -- test helper executes commands constructed from test inputs
