@@ -1,139 +1,93 @@
-<div align="center">
-  <img src="./assets/logo/light_gradient.svg" alt="Nevalang logo">
-</div>
-
-<div align="center" style="display:grid;place-items:center;">
-
-<h1>Neva Programming Language</h1>
-
 <p align="center">
-  <a href="https://opencollective.com/nevalang" aria-label="Back Neva on Open Collective">
-    <img alt="Back Neva on Open Collective" src="https://img.shields.io/badge/Donate-Open%20Collective-2EC866?logo=opencollective&logoColor=white&labelColor=101010" />
-  </a>
+  <img src="./assets/logo/light_gradient.svg" alt="Neva logo" width="220">
 </p>
 
-![Tests CI](https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main)
-![Linting CI](https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main)
-[![Go Report](https://goreportcard.com/badge/github.com/nevalang/neva)](https://goreportcard.com/report/github.com/nevalang/neva)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/nevalang/neva)
-[![Discord](https://img.shields.io/discord/1094102475927203921?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/dmXbC79UuH)
-![OS](https://img.shields.io/badge/os-linux%20%7C%20mac%20%7C%20win-lightgrey?logo=linux&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<h1 align="center">Neva</h1>
 
-</div>
+<p align="center">
+  A compiled, statically typed dataflow programming language.<br>
+  Build programs as networks of components that exchange messages.
+</p>
 
-Neva is a statically typed, compiled dataflow programming language.
+<p align="center">
+  <a href="./docs/user/tutorial.md">Get started</a> ·
+  <a href="./docs/user/README.md">Documentation</a> ·
+  <a href="https://github.com/nevalang/neva/releases">Releases</a> ·
+  <a href="https://discord.gg/dmXbC79UuH">Discord</a>
+</p>
 
-Instead of writing step-by-step instructions, you create networks of nodes that exchange messages through ports.
+<p align="center">
+  <a href="https://github.com/nevalang/neva/actions/workflows/test.yml"><img src="https://github.com/nevalang/neva/actions/workflows/test.yml/badge.svg?branch=main" alt="Tests"></a>
+  <a href="https://github.com/nevalang/neva/actions/workflows/lint.yml"><img src="https://github.com/nevalang/neva/actions/workflows/lint.yml/badge.svg?branch=main" alt="Lint"></a>
+  <a href="https://goreportcard.com/report/github.com/nevalang/neva"><img src="https://goreportcard.com/badge/github.com/nevalang/neva" alt="Go Report Card"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="MIT License"></a>
+</p>
 
-## Hello, World!
+<p align="center">
+  <img src="./assets/animations/dataflow.gif" alt="An animated dataflow graph: one message splits into two paths and joins again.">
+</p>
 
-```neva
-import {
-  fmt
-  runtime
-}
+## Think in dataflow
 
-def Main(start any) (stop any) {
-	println fmt.Println
-	panic runtime.Panic
-	---
-	:start -> 'Hello, World!' -> println:data
-	println:res -> :stop
-	println:err -> panic
-}
+Most languages describe a program as a sequence of instructions. Neva describes
+it as a graph: components receive messages through input ports, do one job, and
+send messages through output ports. Connections make both data dependencies and
+concurrency explicit.
+
+- **Concurrency by default.** Independent components run concurrently; order is
+  introduced only where the graph requires it.
+- **Static types, compiled binaries.** Neva compiles to dependency-free Go,
+  then uses Go's toolchain for native binaries, WebAssembly, and cross-compilation.
+- **No hidden control flow.** Routing, error handling, streams, and dependencies
+  are visible as nodes and connections.
+
+## One program, two views
+
+Text is the source of truth: it is easy to version, review, and generate. The
+same graph can also be inspected in Visual Mode, so the connections behind the
+program stay visible instead of being buried in control flow.
+
+<p align="center">
+  <img src="./assets/readme/visual-mode-hello-world.png" alt="The same Neva Hello World program in text and Visual Mode." width="100%">
+</p>
+
+<p align="center"><em>Visual Mode is an early, read-only preview.</em></p>
+
+## Get started
+
+Install the CLI on macOS or Linux:
+
+```sh
+curl -sSL https://raw.githubusercontent.com/nevalang/neva/main/scripts/install.sh | bash
 ```
 
-This code imports fmt and runtime to use Println and Panic components, and defines Main with one input (start) and one output (stop). The two nodes are connected: when the program starts, 'Hello, World!' is sent to println; if printing fails, errors go to panic; after printing, the program ends.
+Then follow the [tutorial](./docs/user/tutorial.md) to create and run your
+first program. Windows installation and building from source are documented
+there as well.
 
-## Key Features
+## Why Neva?
 
-- **Flow-Based Runtime** - Everything runs in parallel by default
-- **Hybrid Programming** (WIP) - Program in both text and a visual editor
-- **Powerful Compiler** - Strict static types and machine code compilation
-- **Go Interop** - Call Go code from Neva and vice versa for gradual adoption and reuse of the ecosystem
-- **Modern Language Design** - errors as values, pattern matching, null safety, etc.
-- And many more!
+Dataflow is a natural fit when a system is made of independent work: services,
+pipelines, stream processing, integrations, and concurrent applications. Neva
+makes that structure the language itself instead of an advanced library pattern.
 
-## Architecture
+It is inspired by flow-based programming and CSP, while deliberately keeping a
+small textual language and a path toward visual programming. Go is its backend
+and interoperability layer, so Neva can use Go's mature runtime and ecosystem.
 
-Neva compiles to clean, dependency-free Go code using goroutines and channels for message passing. The Go compiler then produces optimized binaries for any supported platform.
+## Learn more
 
-<div align="center">
+- [Tutorial](./docs/user/tutorial.md) — installation, your first program, and core concepts
+- [Language guide](./docs/user/README.md) — types, components, streams, and packages
+- [Why dataflow?](./docs/user/vision.md) — the language direction and design goals
+- [Neva and Go](./docs/user/comparison.md) — the differences in execution model and tooling
+- [Developer guide](./docs/developer/README.md) — compiler, runtime, and contributing
 
-```mermaid
-flowchart LR
-  source_code-->compiler-->|go_code| go_compiler
+## Contributing and community
 
-  subgraph compiler
-    parser-->analyzer-->backend
-  end
+Neva is open source under the [MIT License](./LICENSE). Contributions, design
+discussion, and bug reports are welcome.
 
-  go_compiler-->machine_code
-  go_compiler-->wasm
-```
-
-</div>
-
-## Why?
-
-1. The control flow paradigm is well established, while dataflow is underrepresented.
-2. Existing visual tools lack the expressiveness of traditional languages.
-3. Many languages treat concurrency as an advanced feature, not the default.
-4. Not many languages compile to Go or interop with it, while it has a state-of-the-art runtime and standard library.
-
-## Contributing
-
-1. Join the [Discord server](https://discord.gg/dmXbC79UuH) or [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
-2. Read the [user documentation](./docs/user/README.md), [developer documentation](./docs/developer/README.md), [AGENTS](./AGENTS.md) and [CoC](./CODE_OF_CONDUCT.md)
-3. Support the project on [Open Collective](https://opencollective.com/nevalang) ❤️‍🔥
-
-<p align="center">
-  <img src="https://contrib.rocks/image?repo=nevalang/neva" />
-</p>
-
-## Community
-
-Your support by donating to our open collective or joining us will show interest and motivate us to continue.
-
-[![Open Collective](https://img.shields.io/badge/Open%20Collective-2EC866?logo=opencollective&logoColor=white&labelColor=101010)](https://opencollective.com/nevalang)
-[![Discord](https://img.shields.io/badge/Discord-7289DA?logo=discord&logoColor=white)](https://discord.gg/dmXbC79UuH)
-[![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)](https://t.me/+H1kRClL8ppI1MWJi)
-[![Reddit](https://img.shields.io/badge/Reddit-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/r/nevalang/)
-[![Twitter](https://img.shields.io/badge/Twitter-000000?logo=x&logoColor=white)](https://x.com/efvaleev94)
-
-## ⭐️ Star History
-
-<p align="center">
-  <a href="https://star-history.com/#nevalang/neva&Timeline">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=nevalang/neva&type=Timeline" />
-  </picture>
-  </a>
-</p>
-
-## Support
-
-We’re exploring a future of programming that few dare to build. If you believe in this direction, backing us on Open Collective keeps the work alive: https://opencollective.com/nevalang
-
-Also give us a star to increase our chances of getting into GitHub trends. The more developers we reach, the more likely we are to build this future together.
-
-<p align="center">
-  <img src="./assets/animations/github_star.gif" alt="GitHub Star">
-</p>
-
-And tell the world about Neva! Every share helps us grow our community.
-
-<div align="center" style="display:grid;place-items:center;">
-
-[![share on x](https://img.shields.io/badge/share-000000?logo=x&logoColor=white)](https://x.com/intent/tweet?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva%20%23Programming%20%23DataFlow%20%23Concurrency)
-[![share on facebook](https://img.shields.io/badge/share-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/nevalang/neva)
-[![share on reddit](https://img.shields.io/badge/share-FF4500?logo=reddit&logoColor=white)](https://www.reddit.com/submit?title=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
-[![share on telegram](https://img.shields.io/badge/share-0088CC?logo=telegram&logoColor=white)](https://t.me/share/url?url=https://github.com/nevalang/neva&text=Check%20out%20Nevalang%20on%20GitHub)
-[![share on whatsapp](https://img.shields.io/badge/share-25D366?logo=whatsapp&logoColor=white)](https://wa.me/?text=Check%20out%20Nevalang%20on%20GitHub:%20https://github.com/nevalang/neva)
-[![share on hackernews](https://img.shields.io/badge/share-F0652F?logo=ycombinator&logoColor=white)](https://news.ycombinator.com/submitlink?u=https://github.com/nevalang/neva&t=Nevalang:%20Next-generation%20programming%20language%20with%20implicit%20parallelism)
-[![share on linkedin](https://img.shields.io/badge/linkedin-share-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/nevalang/neva)
-
-</div>
+- Join [Discord](https://discord.gg/dmXbC79UuH) or the [Telegram group](https://t.me/+H1kRClL8ppI1MWJi)
+- Read the [contributing guide](./docs/developer/contributing.md)
+- Support the project on [Open Collective](https://opencollective.com/nevalang)
