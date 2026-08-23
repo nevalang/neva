@@ -2,13 +2,16 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nevalang/neva/pkg/e2e"
 	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {
-	out, _ := e2e.Run(t, []string{"run", "main"})
+	// This intentionally emits 99 verses and can be CPU-starved by concurrent
+	// e2e packages in CI; it is not subject to the general one-minute limit.
+	out, _ := e2e.Run(t, []string{"run", "main"}, e2e.WithTimeout(2*time.Minute))
 
 	require.Equal(
 		t,
