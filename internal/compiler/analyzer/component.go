@@ -32,6 +32,10 @@ func (a Analyzer) analyzeComponent(
 		}.Wrap(err)
 	}
 
+	if err := a.validateComponentDirectives(component, resolvedIface, scope, hasExtern); err != nil {
+		return src.Component{}, err
+	}
+
 	if hasExtern {
 		if len(component.Nodes) != 0 || len(component.Net) != 0 {
 			return src.Component{}, &compiler.Error{
@@ -77,9 +81,53 @@ func (a Analyzer) analyzeComponent(
 	}
 
 	return src.Component{
-		Interface: resolvedIface,
-		Nodes:     resolvedNodes,
-		Net:       analyzedNet,
-		Meta:      component.Meta,
+		Directives: component.Directives,
+		Interface:  resolvedIface,
+		Nodes:      resolvedNodes,
+		Net:        analyzedNet,
+		Meta:       component.Meta,
 	}, nil
+}
+
+// validateComponentDirectives enforces declaration-level directive contracts
+// after interface type parameters are resolved. The raw #bind_type expression
+// remains in the AST so IR generation can substitute a call site's arguments.
+//
+//nolint:gocritic // Analyzer pipeline values are passed by value consistently.
+func (a Analyzer) validateComponentDirectives(
+	component src.Component,
+	iface src.Interface,
+	scope src.Scope,
+	hasExtern bool,
+) *compiler.Error {
+	if component.Directives.Has(src.DirectiveKindBind) {
+		return &compiler.Error{
+			Message: "#bind directive is only valid on a component node",
+			Meta:    &component.Meta,
+		}
+	}
+
+	bindType, hasBindType := component.Directives.Find(src.DirectiveKindBindType)
+	if !hasBindType {
+		return nil
+	}
+	if !hasExtern {
+		return &compiler.Error{
+			Message: "#bind_type directive requires #extern",
+			Meta:    &bindType.Meta,
+		}
+	}
+
+	if _, err := a.resolver.ResolveExprWithFrame(
+		bindType.BindType.TypeExpr,
+		iface.TypeParams.ToFrame(),
+		scope,
+	); err != nil {
+		return &compiler.Error{
+			Message: err.Error(),
+			Meta:    &bindType.Meta,
+		}
+	}
+
+	return nil
 }

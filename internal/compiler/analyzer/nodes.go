@@ -92,6 +92,12 @@ func (a Analyzer) analyzeNode( //nolint:cyclop,funlen,gocognit,lll,maintidx // T
 	if err := validateDuplicateDirectives(node.Directives); err != nil {
 		return src.Node{}, foundInterface{}, err
 	}
+	if bindType, ok := node.Directives.Find(src.DirectiveKindBindType); ok {
+		return src.Node{}, foundInterface{}, &compiler.Error{
+			Message: "#bind_type directive is only valid on a component declaration",
+			Meta:    &bindType.Meta,
+		}
+	}
 
 	if node.EntityRef.Pkg == "" && node.EntityRef.Name == parentComponentName {
 		return src.Node{}, foundInterface{}, &compiler.Error{
@@ -329,6 +335,12 @@ func (a Analyzer) getInterfaceAndOverloadingIndexForNode(
 		return src.Interface{}, nil, &compiler.Error{
 			Message: "Node can't use #bind if it isn't instantiated with the component that use #extern",
 			Meta:    entity.Meta(),
+		}
+	}
+	if hasBind && version.Directives.Has(src.DirectiveKindBindType) {
+		return src.Interface{}, nil, &compiler.Error{
+			Message: "#bind cannot be used with a component that declares #bind_type",
+			Meta:    &node.Meta,
 		}
 	}
 
