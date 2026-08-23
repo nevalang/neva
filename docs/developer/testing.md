@@ -33,9 +33,11 @@ The invariant is that malformed input produces a diagnostic, never a panic.
 To run mutation-based fuzzing during an investigation, use the standard Go
 test command with a bounded duration, for example
 `go test ./internal/compiler/parser -fuzz=FuzzParserParseFiles -fuzztime=5m`.
-When Go finds a failure it saves a minimized reproducer under the target
-package's `testdata/fuzz/`; commit that file with the fix so normal unit tests
-retain the regression case.
+GitHub Actions runs the same target weekly and on manual dispatch; it does not
+run on every pull request. When Go finds a failure it saves a minimized
+reproducer under the target package's `testdata/fuzz/`; the scheduled job also
+uploads that directory as an artifact. Commit the reproducer with the fix so
+normal unit tests retain the regression case.
 
 ## E2E and Examples
 
