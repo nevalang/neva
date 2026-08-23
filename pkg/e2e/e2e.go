@@ -367,6 +367,10 @@ func e2eCacheRootDir() (string, error) {
 // This path is for on-disk repo files only; stdlib extraction uses content hashing
 // because embed.FS metadata does not provide reliable mtimes.
 func nevaBuildFingerprint(repoRoot string) (string, error) {
+	if gitHead, ok := cleanGitHead(repoRoot); ok {
+		return gitHead, nil
+	}
+
 	files, err := compilerInputFiles(repoRoot)
 	if err != nil {
 		return "", err
@@ -389,6 +393,32 @@ func nevaBuildFingerprint(repoRoot string) (string, error) {
 	}
 
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// cleanGitHead returns the current revision when the worktree has no changes
+// that could affect a Go build. A clean revision is an exact, cheap cache key;
+// otherwise callers must use a file-level fingerprint.
+func cleanGitHead(repoRoot string) (string, bool) {
+	// #nosec G204 -- git arguments are constant and repoRoot is the test repository.
+	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	statusCmd := exec.Command("git", "status", "--porcelain", "--untracked-files=all")
+	statusCmd.Dir = repoRoot
+	status, err := statusCmd.Output()
+	if err != nil || strings.TrimSpace(string(status)) != "" {
+		return "", false
+	}
+
+	// #nosec G204 -- git arguments are constant and repoRoot is the test repository.
+	//nolint:noctx // TODO(strict-lint phase 1): temporary suppression; remove after strict cleanup.
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = repoRoot
+	head, err := headCmd.Output()
+	if err != nil {
+		return "", false
+	}
+
+	headRef := strings.TrimSpace(string(head))
+	return headRef, headRef != ""
 }
 
 // compilerInputFiles returns local files that can affect `go build ./cmd/neva`.
